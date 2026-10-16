@@ -11,11 +11,11 @@ The demo includes Today / Targets / Activity / Insights, a mixed fixed/flexible 
 1. Open **Plan my day**, select sample people and review the agenda.
 2. Edit a visit's type, time, duration and confirmation; overlapping times block saving.
 3. Open a profile to prepare or use the map to select a facility and add a visit.
-4. Log an outcome, discussion note and follow-up. Leave and resume an unfinished note from Activity.
+4. Log an outcome, discussion note and follow-up. Activity → Capture asks for the person first. Leave and resume an unfinished note from Activity.
 5. Review/edit the same interaction and complete the linked follow-up.
 6. Explore the named profile sections and Insights tools. Detailed analysis datasets remain previews.
 
-Use the demo toolbar for **Phone**, **Wide screen**, **Large text**, and light/dark appearance. Reset clears the current sample session.
+Use the demo toolbar for **Phone**, **Wide screen**, **Large text**, and light/dark appearance. Switching views retains the current plan, conversation draft and navigation. Reset clears the current sample session.
 
 ## Run locally
 
@@ -37,9 +37,11 @@ The full design inventory is **58 feature families, 39 screen families and 12 re
 ## Planning and integration documents
 
 - [Plan, prototype and endpoint status](docs/plan-status-and-endpoint-audit.md)
+- [Proposed durable daily-plan contract and delivery gates](docs/day-plan-contract.md)
 - [Surface-area audit](docs/surface-area-audit.md) and [machine-readable inventory](docs/surface-area.json)
 - [Responsive layout contract and verification](docs/responsive-design-contract.md)
 - [Daily sales-rep flow](docs/sales-rep-daily-flow.md)
+- [Flow refinements: cancel recovery, glanceable brief, booking](docs/flow-refinements.md)
 - [Map experience and routing requirement](docs/map-experience.md)
 - [Repository feature map](docs/repository-feature-map.md)
 - [HCP/HCO field inventory](docs/hcp-hco-field-inventory.md)
