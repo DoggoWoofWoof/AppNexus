@@ -6,7 +6,7 @@ Current status · 16 October 2026: `plan-status-and-endpoint-audit.md` separates
 
 Map extension · 16 October 2026: `map-experience.md` records the optional Today map card and Targets List / Map view. The latest conversation concept is `field-pro-maps.html`; it supersedes the Map placeholder in `field-pro-today.html`. The production routing requirement is Google Routes or an OSM-based routing service, with road travel times for scheduling.
 
-Current audit · 16 October 2026: `surface-area-audit.md` and `surface-area.json` supersede earlier navigation proposals in this document. The proposed app opens on Today, with four stable destinations: Today / Targets / Activity / Insights. The inventory maps 58 feature families to 39 screen families and 12 reusable sheets/dialogs. Full HCP/HCO sections remain individually named. The current interactive concept is `field-pro-today.html` in the conversation visualization directory; the older standalone mockup is historical.
+Current audit · 16 October 2026: `surface-area-audit.md` and `surface-area.json` supersede earlier navigation proposals in this document. The proposed app opens on Today, with four stable destinations: Today / Targets / Activity / Insights. The inventory maps 58 feature families to 39 screen families and 12 reusable sheets/dialogs. Full HCP/HCO sections remain individually named. The current interactive concept is `field-pro-responsive.html` (`mockup/source/` maintained fragment, `demo/` built output; `mockup/field-pro-responsive.html` is the exported conversation preview). Earlier standalone mockups were removed; the older navigation proposals in this document remain discussion history.
 
 Current product-flow discussion: `sales-rep-daily-flow.md` describes the sales-rep Today landing experience, admin-prepared assignments, discovery → plan → prepare → capture → follow-up, and the distinction between existing route helpers and new scheduling/persistence work.
 
@@ -90,6 +90,6 @@ Validate tenant isolation and role access; profile ID mapping and navigation; pa
 
 ## Prototype review
 
-Open `../mockup/index.html` in a browser. All people, metrics, report figures and notes are illustrative. Try HCO/HCP switching, list filtering, an account profile, its full-profile sections, linked provider, Search, a note draft and Activity. Notes exist only in browser memory and disappear on refresh; CRM and report actions only explain their planned state. The local prototype makes no network or CRM calls.
+Open `../demo/` (built from `../mockup/source/field-pro-responsive.html` via `../scripts/build-demo.py`) in a browser. All people, metrics, report figures and notes are illustrative. Try HCO/HCP switching, list filtering, an account profile, its full-profile sections, linked provider, Search, a note draft and Activity. Notes exist only in browser memory and disappear on refresh; CRM and report actions only explain their planned state. The local prototype makes no network or CRM calls.
 
 Review priority: Does assigned-book-first navigation match the rep's work? Which full profile sections are required for v1? Should notes/CRM follow profiles or ship with them? Which device/platform must be supported? Once repository and signed-in product access are available, replace assumptions with an endpoint and field inventory before implementation.

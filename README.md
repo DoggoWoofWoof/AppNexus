@@ -52,8 +52,7 @@ The full design inventory is **58 feature families, 39 screen families and 12 re
 - `mockup/source/field-pro-responsive.html`: maintained conversation fragment with product markup, styles, behavior and embedded public map data.
 - `scripts/build-demo.py`: extracts that source into the static demo.
 - `demo/`: GitHub Pages entry point, generated app files and standalone preview controls.
-- `mockup/field-pro-responsive.html`: exported conversation preview.
-- `mockup/field-pro-app.html` and `mockup/index.html`: preserved earlier concepts.
+- `mockup/field-pro-responsive.html`: exported conversation preview (single-file).
 - `docs/`: decisions, audits, endpoint evidence and implementation scope.
 
 Private upstream checkouts and Field Backend source snapshots are git-ignored. They are reference material, not part of the published demo.
