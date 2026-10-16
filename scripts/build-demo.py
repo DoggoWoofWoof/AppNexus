@@ -1,5 +1,6 @@
 """Build the public static demo from the maintained conversation fragment."""
 import json
+import hashlib
 import re
 from pathlib import Path
 
@@ -25,6 +26,9 @@ json.loads(re.search(r'>([\s\S]*)</script>',data[0]).group(1))
 markup=re.sub(r'<style>[\s\S]*?</style>|<script[^>]*>[\s\S]*?</script>','',source).strip()
 template=(ROOT/'demo/template.html').read_text(encoding='utf-8')
 document=template.replace('<!-- PRODUCT_MARKUP -->',markup).replace('<!-- MAP_DATA -->',data[0])
+for name,body in [('app.js',code[0]),('app.css',styles[0]),('shell.js',(ROOT/'demo/shell.js').read_text(encoding='utf-8')),('shell.css',(ROOT/'demo/shell.css').read_text(encoding='utf-8'))]:
+    version=hashlib.sha256(body.encode('utf-8')).hexdigest()[:12]
+    document=document.replace('"'+name+'"','"'+name+'?v='+version+'"')
 (ROOT/'demo/index.html').write_text(document,encoding='utf-8')
 (ROOT/'demo/app.css').write_text(styles[0],encoding='utf-8')
 (ROOT/'demo/app.js').write_text(code[0],encoding='utf-8')
