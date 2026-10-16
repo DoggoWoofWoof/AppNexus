@@ -8,20 +8,23 @@
 :root{--blue:#2447c4;--ink:#0b1220;--muted:#5b6478;--line:#d7deec;--paper:#f4f6fa;--card:#ffffff}
 *{box-sizing:border-box}body{margin:0;background:#e8ebf2;color:var(--ink);font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 button,input,select,textarea{font:inherit}button{cursor:pointer}
-.wrap{max-width:1060px;margin:0 auto;padding:24px 16px 64px}
+.wrap{max-width:430px;margin:0 auto;padding:14px 14px 24px;background:var(--paper)}
+@media(min-width:520px){body{padding:28px 12px}.wrap{border:1px solid #c9d0df;border-radius:44px;box-shadow:0 30px 75px -25px #15265355;padding:10px 14px 24px;min-height:860px}}
+.status{display:flex;justify-content:space-between;padding:8px 10px 2px;font-size:11px;font-weight:700}
 .top{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.grid{display:grid;gap:16px}
 .brand{font-weight:800;font-size:20px}.brand i{display:inline-block;width:16px;height:16px;border-radius:5px;background:linear-gradient(135deg,#5fb4f7,var(--blue));margin-left:6px}
 .demo{margin-left:auto;font-size:11px;font-weight:700;color:var(--blue);background:#e3e9fb;border-radius:20px;padding:3px 10px}
 .grid{display:grid;gap:16px}
-@media(min-width:900px){.grid.cols{grid-template-columns:1fr 1fr}}
+.grid.cols{grid-template-columns:1fr}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
 .eyebrow{font:11px/1.5 monospace;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted)}
-h1{font:30px/1.2 Georgia,serif;letter-spacing:-.5px;margin:6px 0}
+h1{font:24px/1.2 Georgia,serif;letter-spacing:-.5px;margin:6px 0}
 h2{font-size:16px;margin:0 0 8px}h3{font-size:14px;margin:12px 0 6px}
 .muted{color:var(--muted)}.small{font-size:12px}
 .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.nav{display:flex;gap:8px;margin:12px 0;flex-wrap:wrap}
-.nav button{border:1px solid var(--line);background:#fff;border-radius:12px;padding:10px 14px}
+.nav{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:12px 0;position:sticky;bottom:0;background:var(--paper);padding:10px 0;border-top:1px solid var(--line)}
+.nav button{border:1px solid var(--line);background:#fff;border-radius:12px;padding:10px 4px;font-size:13px}
 .nav button[aria-current="page"]{background:var(--blue);border-color:var(--blue);color:#fff;font-weight:700}
 .tabs{display:flex;gap:8px;margin:10px 0;flex-wrap:wrap}
 .tabs button{border:1px solid var(--line);background:#fff;border-radius:20px;padding:6px 12px}
@@ -36,7 +39,6 @@ h2{font-size:16px;margin:0 0 8px}h3{font-size:14px;margin:12px 0 6px}
 .secondary{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 14px}
 .search{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;margin:8px 0}
 .sections{display:grid;gap:6px;margin-top:8px}
-@media(min-width:600px){.sections{grid-template-columns:1fr 1fr}}
 .sec{border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:#fbfcff;font-size:13px}
 .sec b{display:block;font-size:12px}
 textarea{width:100%;min-height:90px;border:1px solid var(--line);border-radius:10px;padding:10px}
@@ -52,17 +54,18 @@ textarea{width:100%;min-height:90px;border:1px solid var(--line);border-radius:1
 </head>
 <body>
 <div class="wrap">
+  <div class="status"><span>9:41</span><span>5G ▮▮▮ ▰</span></div>
   <div class="top"><div class="brand">docnexus<i></i></div><span class="demo">DEMO DATA · NO BACKEND</span></div>
   <div class="eyebrow">Field Pro / consolidated concept 02</div>
   <h1>Today first. Everything else one tap away.</h1>
   <p class="muted">Today / Targets / Activity / Insights. Sample records only — see <a href="../docs/surface-area-audit.md">surface-area-audit.md</a>, <a href="../docs/hcp-hco-field-inventory.md">hcp-hco-field-inventory.md</a>, <a href="../docs/leakage-capture-plan.md">leakage-capture-plan.md</a>.</p>
+  <div id="view" class="grid"></div>
   <nav class="nav" aria-label="Primary">
     <button data-tab="today" aria-current="page">Today</button>
     <button data-tab="targets">Targets</button>
     <button data-tab="activity">Activity</button>
     <button data-tab="insights">Insights</button>
   </nav>
-  <div id="view" class="grid"></div>
   <p class="foot">Prototype: notes, plans and queues are in-memory and vanish on refresh. No API, CRM, routing or report service is connected. Field Pro push stays explicitly unavailable per reviewed source.</p>
 </div>
 <script>
