@@ -1,0 +1,18 @@
+#field-pro-flow>section[data-variant]{min-height:850px}
+#field-pro-flow .fpr-main{min-height:610px}
+#field-pro-flow .fpr-workspace{display:inline-flex;gap:6px;align-items:center;border:0;background:transparent;padding:3px 0;color:var(--fpr-accent);font-size:11px!important}
+#field-pro-flow .fpr-workspace svg{width:13px;height:13px}
+#field-pro-flow .fpr-search-row{display:flex;gap:8px;align-items:center;margin-bottom:10px}
+#field-pro-flow .fpr-search-row .fpr-search{flex:1;margin:0;min-width:0}
+#field-pro-flow .fpr-search-row .fpr-icon-button{position:relative}
+#field-pro-flow .fpr-filter-count{position:absolute;right:-3px;top:-4px;background:var(--fpr-button);color:var(--fpr-on-button);border-radius:50%;width:17px;height:17px;font-size:11px;display:grid;place-items:center}
+#field-pro-flow .fpr-entities .fpr-measures{border:0;padding-top:8px;margin-top:0;gap:12px}
+#field-pro-flow .fpr-measure b{font-size:14px}
+#field-pro-flow .fpr-entity{padding:14px}
+#field-pro-flow .fpr-disclosure{border-bottom:1px solid var(--fpr-line);margin:8px 0;padding:0 0 9px}
+#field-pro-flow .fpr-disclosure summary{padding:13px 0;min-height:46px;font-size:13px;font-weight:600;color:var(--fpr-text)}
+#field-pro-flow .fpr-disclosure .fpr-surface{margin-top:3px}
+#field-pro-flow .fpr-section-label{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--fpr-muted);margin:24px 0 3px}
+#field-pro-flow .fpr-entry{display:flex;align-items:center;gap:12px;width:100%;text-align:left;color:var(--fpr-text)}
+#field-pro-flow .fpr-entry>svg:first-child{color:var(--fpr-accent);width:20px;height:20px}
+#field-pro-flow .fpr-entry>svg:last-child{margin-left:auto;width:15px;color:var(--fpr-muted)}

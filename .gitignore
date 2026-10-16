@@ -1,0 +1,18 @@
+# Private upstream clones — never publish these
+reference/repos/
+reference/field-backend-source/
+reference/field-pro/uploads/
+reference/field-pro/screenshots/
+
+# Nested git metadata from reference clones
+**/.git/
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+.vscode/
+*.log
+
+# Python cache
+__pycache__/
+*.pyc

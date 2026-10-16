@@ -1,0 +1,266 @@
+[
+  {
+    "method": "GET",
+    "path": "/health",
+    "line": 99,
+    "handler": "health"
+  },
+  {
+    "method": "POST",
+    "path": "/api/field/account-brief",
+    "line": 1578,
+    "handler": "field_account_brief"
+  },
+  {
+    "method": "GET",
+    "path": "/api/field/brief-purposes",
+    "line": 2350,
+    "handler": "field_brief_purposes"
+  },
+  {
+    "method": "POST",
+    "path": "/api/field/surgeon-brief",
+    "line": 2357,
+    "handler": "field_surgeon_brief"
+  },
+  {
+    "method": "POST",
+    "path": "/api/field/hcp-email",
+    "line": 2761,
+    "handler": "field_hcp_email"
+  },
+  {
+    "method": "POST",
+    "path": "/api/field/ask",
+    "line": 4030,
+    "handler": "field_ask"
+  },
+  {
+    "method": "GET",
+    "path": "/api/field/unit-config",
+    "line": 4642,
+    "handler": "field_get_unit_config"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/field/unit-config",
+    "line": 4673,
+    "handler": "field_put_unit_config"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/field/unit-config",
+    "line": 4737,
+    "handler": "field_delete_unit_config"
+  },
+  {
+    "method": "GET",
+    "path": "/api/field/views",
+    "line": 4770,
+    "handler": "field_get_views"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/field/views",
+    "line": 4823,
+    "handler": "field_put_views"
+  },
+  {
+    "method": "GET",
+    "path": "/api/field/config",
+    "line": 5022,
+    "handler": "field_get_config"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/field/config",
+    "line": 5049,
+    "handler": "field_put_config"
+  },
+  {
+    "method": "GET",
+    "path": "/api/field/removed",
+    "line": 5170,
+    "handler": "field_get_removed"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/field/removed",
+    "line": 5181,
+    "handler": "field_put_removed"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/field/removed",
+    "line": 5223,
+    "handler": "field_delete_removed"
+  },
+  {
+    "method": "GET",
+    "path": "/api/field/company-accounts",
+    "line": 5708,
+    "handler": "field_get_company_accounts"
+  },
+  {
+    "method": "GET",
+    "path": "/api/field/managers",
+    "line": 6000,
+    "handler": "field_get_managers"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/field/managers",
+    "line": 6011,
+    "handler": "field_put_manager"
+  },
+  {
+    "method": "GET",
+    "path": "/api/field/team",
+    "line": 6066,
+    "handler": "field_get_team"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/field/team/reps",
+    "line": 6104,
+    "handler": "field_put_my_reps"
+  },
+  {
+    "method": "GET",
+    "path": "/api/field/team/book",
+    "line": 6150,
+    "handler": "field_get_team_book"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/field/team/book",
+    "line": 6198,
+    "handler": "field_put_team_book"
+  },
+  {
+    "method": "GET",
+    "path": "/api/field/team/history",
+    "line": 6262,
+    "handler": "field_get_team_history"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/field/company-accounts/batch",
+    "line": 6449,
+    "handler": "field_put_account_batch"
+  },
+  {
+    "method": "POST",
+    "path": "/api/field/company-accounts/batch/{batch_id}/retire",
+    "line": 6583,
+    "handler": "field_retire_account_batch"
+  },
+  {
+    "method": "POST",
+    "path": "/api/field/company-accounts/batch/{batch_id}/restore",
+    "line": 6625,
+    "handler": "field_restore_account_batch"
+  },
+  {
+    "method": "POST",
+    "path": "/api/field/leakage",
+    "line": 6683,
+    "handler": "field_leakage"
+  },
+  {
+    "method": "GET",
+    "path": "/api/field/account-payments",
+    "line": 7001,
+    "handler": "field_account_payments"
+  },
+  {
+    "method": "POST",
+    "path": "/api/field/payment-alerts",
+    "line": 7179,
+    "handler": "field_payment_alerts"
+  },
+  {
+    "method": "POST",
+    "path": "/api/field/org-340b",
+    "line": 7248,
+    "handler": "field_org_340b"
+  },
+  {
+    "method": "POST",
+    "path": "/api/field/account-payer-mix",
+    "line": 7377,
+    "handler": "field_account_payer_mix"
+  },
+  {
+    "method": "POST",
+    "path": "/api/field/groups/summary",
+    "line": 7469,
+    "handler": "field_group_summary"
+  },
+  {
+    "method": "GET",
+    "path": "/api/field/groups/catalog",
+    "line": 7699,
+    "handler": "field_groups_catalog"
+  },
+  {
+    "method": "POST",
+    "path": "/api/field/groups/workbench",
+    "line": 7717,
+    "handler": "field_groups_workbench"
+  },
+  {
+    "method": "POST",
+    "path": "/api/field/groups/payer-mix",
+    "line": 7736,
+    "handler": "field_groups_payer_mix"
+  },
+  {
+    "method": "POST",
+    "path": "/api/field/account-block",
+    "line": 7984,
+    "handler": "field_account_block"
+  },
+  {
+    "method": "POST",
+    "path": "/api/field/provider-leakage",
+    "line": 8013,
+    "handler": "field_provider_leakage"
+  },
+  {
+    "method": "POST",
+    "path": "/api/field/drug-block",
+    "line": 8549,
+    "handler": "field_drug_block"
+  },
+  {
+    "method": "POST",
+    "path": "/api/field/figures",
+    "line": 9095,
+    "handler": "field_figures"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/field/figures/codes",
+    "line": 9203,
+    "handler": "field_put_figure_codes"
+  },
+  {
+    "method": "GET",
+    "path": "/api/field/figures/codes",
+    "line": 9222,
+    "handler": "field_get_figure_codes"
+  },
+  {
+    "method": "POST",
+    "path": "/api/field/activity",
+    "line": 9781,
+    "handler": "field_post_activity"
+  },
+  {
+    "method": "GET",
+    "path": "/api/field/usage",
+    "line": 9892,
+    "handler": "field_get_usage"
+  }
+]

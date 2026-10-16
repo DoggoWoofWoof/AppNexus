@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  body { margin:0; background:#F3F5F9; -webkit-font-smoothing:antialiased; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif; color:#0B1220; }
+  a { color:#2447C4; text-decoration:none; } a:hover { color:#1B3494; }
+</style>
+</helmet>
+<div style="min-height:100vh; background:#F3F5F9;">
+
+  <div style="position:sticky; top:0; z-index:20; background:#fff; border-bottom:1px solid #E3E7EF;">
+    <div style="max-width:1480px; margin:0 auto; padding:10px 24px; display:flex; align-items:center; gap:14px; box-sizing:border-box;">
+      <span style="display:flex; align-items:center; gap:6px; margin-right:6px;"><span style="font-size:18px; font-weight:800; letter-spacing:-.03em;">docnexus</span><span style="width:14px; height:14px; border-radius:4px; background:linear-gradient(135deg,#4E7BF0,#2447C4);"></span></span>
+      <a href="Ottava Desktop.dc.html" style="flex:1; min-width:200px; max-width:440px; white-space:nowrap; display:flex; align-items:center; gap:9px; padding:8px 11px; border:1px solid #D7DEEC; border-radius:10px; background:#F8F9FC; font-size:13px; color:#7A839A;"><span style="color:#2447C4;">✳</span><span style="flex:1; overflow:hidden; text-overflow:ellipsis;">Ask anything, or search</span><span style="font-family:'IBM Plex Mono',monospace; font-size:10.5px; border:1px solid #D7DEEC; border-radius:5px; padding:0 5px; background:#fff;">/</span></a>
+      <div style="margin-left:auto; display:flex; align-items:center; gap:2px;">
+        <sc-for list="{{ navLinks }}" as="n" hint-placeholder-count="4">
+          <a href="Ottava Desktop.dc.html" style="display:flex; align-items:center; gap:6px; padding:7px 10px; border-radius:8px; font-size:13px; font-weight:650; color:#1B2333; white-space:nowrap;" style-hover="background:#EEF2FB; color:#2447C4;"><span style="color:#7A839A;">{{ n.icon }}</span><span style="display:{{ navLabelDisp }};">{{ n.label }}</span></a>
+        </sc-for>
+        <span style="width:1px; height:22px; background:#E3E7EF; margin:0 8px;"></span>
+        <span style="display:flex; align-items:center; gap:9px;">
+          <span style="text-align:right; display:{{ greetDisp }};"><span style="display:block; font-size:12.5px; font-weight:700;">Hi, Teresha</span><span style="display:block; font-size:11px; color:#7A839A;">teresha@docnexus.ai</span></span>
+          <span style="width:32px; height:32px; flex:0 0 32px; border-radius:50%; background:#DCE3F5; color:#22409F; display:grid; place-items:center; font-size:11px; font-weight:700;">TY</span>
+        </span>
+      </div>
+    </div>
+    <div style="border-top:1px solid #EEF1F6; background:#F8F9FC;">
+      <div style="max-width:1480px; margin:0 auto; padding:7px 24px; display:flex; align-items:center; gap:10px; box-sizing:border-box;">
+        <span style="font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:.08em; color:#7A839A;">VIEW AS</span>
+        <div style="display:flex; background:#E6EAF2; border-radius:9px; padding:2px;">
+          <sc-for list="{{ viewTabs }}" as="v" hint-placeholder-count="4">
+            <button onClick="{{ v.go }}" style="border:0; border-radius:7px; padding:5px 11px; font-size:12px; font-weight:650; cursor:pointer; font-family:inherit; background:{{ v.bg }}; color:{{ v.fg }}; box-shadow:{{ v.sh }}; white-space:nowrap;">{{ v.label }}</button>
+          </sc-for>
+        </div>
+        <span style="margin-left:auto; font-size:12px; color:#5B6478; white-space:nowrap;">{{ viewingLabel }}<button onClick="{{ clearView }}" style="display:{{ backDisp }}; border:0; background:none; padding:0 0 0 4px; font-size:12px; font-weight:700; color:#2447C4; cursor:pointer; font-family:inherit;">· Back to no view</button></span>
+      </div>
+    </div>
+    <div style="border-top:1px solid #EEF1F6; background:#fff;">
+      <div style="max-width:1480px; margin:0 auto; padding:8px 24px; display:flex; align-items:center; gap:7px; font-size:12.5px; box-sizing:border-box;">
+        <span style="color:#7A839A;">‹</span>
+        <sc-for list="{{ crumbs }}" as="cr" hint-placeholder-count="2">
+          <span style="display:flex; align-items:center; gap:7px; white-space:nowrap;">
+            <button onClick="{{ cr.go }}" style="border:0; background:none; padding:0; cursor:pointer; font-family:inherit; font-size:12.5px; color:{{ cr.fg }}; font-weight:{{ cr.w }};">{{ cr.label }}</button>
+            <span style="color:#C3CAD8; display:{{ cr.sep }};">/</span>
+          </span>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+
+  <div style="max-width:1480px; margin:0 auto; display:grid; grid-template-columns:{{ pageCols }}; box-sizing:border-box;">
+    <sc-if value="{{ showRail }}" hint-placeholder-val="{{ true }}">
+      <div style="border-right:1px solid #E3E7EF; background:#FAFBFD; position:sticky; top:128px; height:calc(100vh - 128px); overflow-y:auto;">
+        <div style="padding:14px 16px 10px; border-bottom:1px solid #EEF1F6;">
+          <div style="display:flex; align-items:center; gap:7px;"><span style="font-size:13.5px; font-weight:700;">My accounts</span><span style="font-family:'IBM Plex Mono',monospace; font-size:10px; background:#E6EAF2; padding:2px 6px; border-radius:5px;">{{ railTotal }}</span></div>
+          <div style="font-size:11px; color:#7A839A; margin-top:2px;">by opportunity $ · % out · 2025</div>
+        </div>
+        <sc-for list="{{ railPg.rows }}" as="r" hint-placeholder-count="10">
+          <button onClick="{{ r.go }}" style="display:block; width:100%; text-align:left; border:0; border-bottom:1px solid #EEF1F6; border-left:3px solid {{ r.accent }}; background:{{ r.bg }}; padding:10px 14px 10px 13px; cursor:pointer; font-family:inherit; color:#0B1220;" style-hover="background:#fff;">
+            <span style="display:flex; gap:8px; align-items:baseline;"><span style="flex:1; min-width:0; font-size:12.5px; font-weight:700; line-height:1.3;">{{ r.name }}</span><span style="font-family:'Source Serif 4',Georgia,serif; font-size:14.5px;">{{ r.opp }}</span></span>
+            <span style="display:flex; gap:8px; margin-top:2px; font-size:11px;"><span style="flex:1; color:#5B6478;">{{ r.city }}</span><span style="color:{{ r.outFg }}; font-weight:700;">{{ r.out }}</span></span>
+          </button>
+        </sc-for>
+        <div style="display:flex; align-items:center; padding:10px 14px;"><span style="display:flex; align-items:center; gap:6px; margin-left:auto; "><span style="font-size:11px; color:#7A839A; white-space:nowrap;">{{ railPg.label }}</span><button onClick="{{ railPg.prev }}" style="width:24px; height:24px; flex:0 0 24px; border:1px solid #D7DEEC; background:#fff; border-radius:7px; cursor:pointer; font-size:12px; line-height:1; color:#3C4557; padding:0; opacity:{{ railPg.pOp }};">‹</button><button onClick="{{ railPg.next }}" style="width:24px; height:24px; flex:0 0 24px; border:1px solid #D7DEEC; background:#fff; border-radius:7px; cursor:pointer; font-size:12px; line-height:1; color:#3C4557; padding:0; opacity:{{ railPg.nOp }};">›</button></span></div>
+      </div>
+    </sc-if>
+
+    <div style="min-width:0; padding:20px 24px 40px; display:flex; flex-direction:column; gap:14px;">
+
+      <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+        <div style="flex:1 1 420px; display:flex; align-items:center; gap:14px; min-width:0;">
+          <span style="width:52px; height:52px; flex:0 0 52px; border-radius:{{ head.avatarR }}; background:{{ head.avatarBg }}; border:1px solid #E3E7EF; color:{{ head.avatarFg }}; display:grid; place-items:center; font-size:{{ head.avatarFs }}; font-weight:700; letter-spacing:-.02em;">{{ head.avatar }}</span>
+          <div style="min-width:0;">
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:.09em; color:#7A839A;">{{ head.eyebrow }}</div>
+            <div style="display:flex; align-items:center; gap:8px; margin-top:3px;"><h1 style="font-family:'Source Serif 4',Georgia,serif; font-weight:400; font-size:30px; line-height:1.1; letter-spacing:-.02em; margin:0;">{{ head.name }}</h1><span style="color:#7A839A; font-size:13px;">↗</span></div>
+            <div style="font-size:12.5px; color:#5B6478; margin-top:4px;">{{ head.sub }}</div>
+          </div>
+        </div>
+        <div style="display:flex; gap:7px; flex-wrap:wrap;">
+          <sc-for list="{{ head.actions }}" as="b" hint-placeholder-count="3">
+            <a href="Ottava Desktop.dc.html" style="display:flex; align-items:center; gap:6px; border:1px solid #D7DEEC; background:#fff; border-radius:10px; padding:8px 12px; font-size:12.5px; font-weight:650; color:#1B2333; white-space:nowrap;" style-hover="border-color:#2447C4; color:#2447C4;">{{ b }}</a>
+          </sc-for>
+          <a href="Ottava Desktop.dc.html" style="display:flex; align-items:center; gap:6px; background:#2447C4; border-radius:10px; padding:9px 14px; font-size:12.5px; font-weight:700; color:#fff; white-space:nowrap;" style-hover="background:#1B3494; color:#fff;">{{ head.primary }}</a>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:1px; background:#E3E7EF; border:1px solid #E3E7EF; border-radius:14px; overflow:hidden;">
+        <sc-for list="{{ kpis }}" as="k" hint-placeholder-count="5">
+          <div style="background:#fff; padding:13px 16px 14px;">
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:9.5px; letter-spacing:.08em; color:#7A839A;">{{ k.label }}</div>
+            <div style="display:flex; align-items:baseline; gap:7px; margin-top:7px;"><span style="font-family:'Source Serif 4',Georgia,serif; font-size:26px; line-height:1; color:{{ k.fg }};">{{ k.n }}</span><span style="font-size:11.5px; font-weight:700; color:{{ k.dFg }};">{{ k.d }}</span></div>
+            <div style="font-size:11.5px; color:#5B6478; margin-top:6px; line-height:1.35;">{{ k.sub }}</div>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr)); background:#fff; border:1px solid #D6E0F5; border-radius:14px; overflow:hidden;">
+        <div style="padding:16px 18px; background:linear-gradient(160deg,#EEF3FE 0%,#FFFFFF 80%); display:flex; flex-direction:column;">
+          <div style="display:flex; align-items:center; gap:8px;"><span style="flex:0 0 auto; white-space:nowrap; font-family:'IBM Plex Mono',monospace; font-size:9.5px; letter-spacing:.08em; color:#fff; background:#2447C4; padding:3px 7px; border-radius:5px;">⚡ AI BRIEF</span><span style="font-size:11.5px; color:#3C4557;">{{ brief.for }}</span></div>
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:9.5px; letter-spacing:.08em; color:#7A839A; margin-top:13px;">OBJECTIVE FOR THIS VISIT</div>
+          <div style="font-family:'Source Serif 4',Georgia,serif; font-size:18.5px; line-height:1.38; letter-spacing:-.01em; margin-top:6px; text-wrap:pretty;">{{ brief.objective }}</div>
+          <div style="margin-top:auto; padding-top:12px; font-size:11px; color:#7A839A;">{{ brief.src }} · <span style="color:#2447C4; font-weight:650;">Write again</span></div>
+        </div>
+        <div style="padding:16px 18px; border-left:1px solid #EEF1F6;">
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:9.5px; letter-spacing:.08em; color:#7A839A;">{{ brief.midTitle }}</div>
+          <div style="display:flex; flex-direction:column; gap:10px; margin-top:10px;">
+            <sc-for list="{{ brief.mid }}" as="c" hint-placeholder-count="3">
+              <div style="display:flex; gap:9px;"><span style="width:5px; height:5px; flex:0 0 5px; border-radius:50%; background:#2447C4; margin-top:7px;"></span><span style="font-size:12.5px; line-height:1.5; color:#1B2333; text-wrap:pretty;"><strong>{{ c.b }}</strong> {{ c.t }}</span></div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="padding:16px 18px; border-left:1px solid #EEF1F6; background:#FAFBFE;">
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:9.5px; letter-spacing:.08em; color:#7A839A;">{{ brief.rightTitle }}</div>
+          <div style="display:flex; flex-direction:column; gap:10px; margin-top:10px;">
+            <sc-for list="{{ brief.right }}" as="o" hint-placeholder-count="3">
+              <div style="display:flex; gap:9px;"><span style="width:19px; height:19px; flex:0 0 19px; border-radius:50%; background:#E1E8FA; color:#22409F; display:grid; place-items:center; font-size:10.5px; font-weight:700;">{{ o.n }}</span><span style="font-size:12.5px; line-height:1.5; color:#1B2333; text-wrap:pretty;"><strong>{{ o.b }}</strong> {{ o.t }}</span></div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+
+      <sc-for list="{{ rows }}" as="row" hint-placeholder-count="6">
+        <div style="display:grid; grid-template-columns:{{ row.cols }}; gap:14px; align-items:stretch;">
+          <sc-for list="{{ row.cells }}" as="cell" hint-placeholder-count="2">
+            <div style="display:flex; flex-direction:column; gap:14px; min-width:0;">
+              <sc-for list="{{ cell.cards }}" as="c" hint-placeholder-count="1">
+                <div style="flex:{{ c.grow }} 1 auto; display:flex; min-width:0;">
+
+                  <sc-if value="{{ c.mix }}" hint-placeholder-val="{{ false }}">
+                    <div style="flex:1; min-width:0; background:#fff; border:1px solid #E3E7EF; border-radius:14px; padding:16px 18px; display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr)); gap:22px 28px;">
+                      <div style="min-width:0;">
+                        <div style="font-size:14.5px; font-weight:700;">Procedure mix</div><div style="font-size:11.5px; color:#5B6478; margin-top:2px;">{{ mixSub }}</div>
+                        <div style="display:flex; flex-direction:column; gap:10px; margin-top:13px;">
+                          <sc-for list="{{ mix }}" as="m" hint-placeholder-count="6">
+                            <div>
+                              <div style="display:flex; align-items:baseline; gap:8px; font-size:12.5px;"><span style="font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:#7A839A;">{{ m.code }}</span><span title="{{ m.desc }}" style="flex:1; min-width:0; font-weight:650; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ m.desc }}</span><span style="font-family:'IBM Plex Mono',monospace; font-size:12px;">{{ m.n }}</span><span style="width:30px; text-align:right; color:#5B6478; font-size:12px;">{{ m.pct }}</span></div>
+                              <div style="height:5px; border-radius:3px; background:#EEF1F6; margin-top:5px; overflow:hidden;"><div style="width:{{ m.w }}; height:100%; background:{{ m.c }}; border-radius:3px;"></div></div>
+                            </div>
+                          </sc-for>
+                        </div>
+                      </div>
+                      <sc-if value="{{ isAccountPage }}" hint-placeholder-val="{{ true }}">
+                        <div style="min-width:0; display:flex; flex-direction:column; gap:16px; padding-left:0;">
+                          <div>
+                            <div style="font-family:'IBM Plex Mono',monospace; font-size:9.5px; letter-spacing:.08em; color:#7A839A;">BY PROCEDURE GROUP · 2025</div>
+                            <div style="display:flex; height:22px; border-radius:6px; overflow:hidden; gap:2px; margin-top:9px;"><sc-for list="{{ groups }}" as="g" hint-placeholder-count="4"><span style="width:{{ g.w }}; background:{{ g.c }};"></span></sc-for></div>
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:7px 14px; margin-top:10px;"><sc-for list="{{ groups }}" as="g" hint-placeholder-count="4"><div style="display:flex; align-items:center; gap:7px; font-size:12px; min-width:0;"><span style="width:8px; height:8px; flex:0 0 8px; border-radius:2px; background:{{ g.c }};"></span><span style="flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ g.name }}</span><span style="font-family:'IBM Plex Mono',monospace; font-size:11.5px;">{{ g.n }}</span></div></sc-for></div>
+                          </div>
+                          <div>
+                            <div style="font-family:'IBM Plex Mono',monospace; font-size:9.5px; letter-spacing:.08em; color:#7A839A;">BY PERFORMING SPECIALTY · 2025</div>
+                            <div style="display:flex; flex-direction:column; margin-top:6px;"><sc-for list="{{ specs }}" as="s" hint-placeholder-count="6"><div style="display:flex; align-items:center; gap:10px; padding:5px 0; border-bottom:1px solid #F2F4F8; font-size:12px;"><span style="flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ s.name }}</span><span style="width:70px; height:4px; border-radius:2px; background:#EEF1F6; overflow:hidden;"><span style="display:block; width:{{ s.w }}; height:100%; background:#7C98E8;"></span></span><span style="width:44px; text-align:right; font-family:'IBM Plex Mono',monospace; font-size:11.5px;">{{ s.n }}</span></div></sc-for></div>
+                          </div>
+                        </div>
+                      </sc-if>
+                    </div>
+                  </sc-if>
+
+                  <sc-if value="{{ c.volYear }}" hint-placeholder-val="{{ false }}">
+                    <div style="flex:1; min-width:0; background:#fff; border:1px solid #E3E7EF; border-radius:14px; padding:16px 18px; display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr)); gap:18px 28px; align-items:end;">
+                      <div style="min-width:0; align-self:stretch; display:flex; flex-direction:column;">
+                        <div style="font-size:14.5px; font-weight:700;">Procedure volume by year</div><div style="font-size:11.5px; color:#5B6478; margin-top:2px;">at Cleveland Clinic · 2026* is partial, claims still flowing in</div>
+                        <div style="flex:1; min-height:150px; display:flex; gap:10px; align-items:flex-end; margin-top:14px;">
+                          <sc-for list="{{ volYears }}" as="v" hint-placeholder-count="5"><div style="flex:1; height:100%; display:flex; flex-direction:column; justify-content:flex-end; gap:4px;"><span style="text-align:center; font-size:11.5px; font-weight:700;">{{ v.n }}</span><span style="height:{{ v.h }}; background:{{ v.c }}; border-radius:5px 5px 2px 2px;"></span><span style="text-align:center; font-size:10.5px; color:#7A839A;">{{ v.y }}</span></div></sc-for>
+                        </div>
+                      </div>
+                      <div style="border:1px solid #EEF1F6; border-radius:10px; overflow:hidden;">
+                        <div style="display:grid; grid-template-columns:.8fr 1fr 1fr 1fr; padding:8px 12px; background:#F8F9FC; font-family:'IBM Plex Mono',monospace; font-size:9.5px; letter-spacing:.07em; color:#7A839A;"><span>YEAR</span><span style="text-align:right;">PROCEDURES</span><span style="text-align:right;">PATIENTS</span><span style="text-align:right;">CHARGES</span></div>
+                        <sc-for list="{{ volYears }}" as="v" hint-placeholder-count="5"><div style="display:grid; grid-template-columns:.8fr 1fr 1fr 1fr; padding:7px 12px; border-top:1px solid #F2F4F8; font-family:'IBM Plex Mono',monospace; font-size:12px; background:{{ v.rowBg }};"><span>{{ v.y }}</span><span style="text-align:right;">{{ v.n }}</span><span style="text-align:right;">{{ v.p }}</span><span style="text-align:right;">{{ v.ch }}</span></div></sc-for>
+                      </div>
+                    </div>
+                  </sc-if>
+
+                  <sc-if value="{{ c.capacity }}" hint-placeholder-val="{{ false }}">
+                    <div style="flex:1; min-width:0; background:#fff; border:1px solid #E3E7EF; border-radius:14px; padding:16px 18px; display:flex; flex-direction:column;">
+                      <div style="font-size:14.5px; font-weight:700;">Capacity &amp; profile</div><div style="font-size:11.5px; color:#5B6478; margin-top:2px;">latest hospital record</div>
+                      <div style="display:grid; grid-template-columns:1fr 1fr; gap:1px; background:#EEF1F6; border:1px solid #EEF1F6; border-radius:10px; overflow:hidden; margin-top:12px; flex:1;">
+                        <sc-for list="{{ capacity }}" as="s" hint-placeholder-count="8"><div style="background:#fff; padding:9px 12px; display:flex; flex-direction:column; justify-content:center;"><div style="font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:.08em; color:#7A839A;">{{ s.k }}</div><div style="font-family:'Source Serif 4',Georgia,serif; font-size:{{ s.fs }}; line-height:1.2; margin-top:3px;">{{ s.v }}</div></div></sc-for>
+                      </div>
+                    </div>
+                  </sc-if>
+
+                  <sc-if value="{{ c.robotic }}" hint-placeholder-val="{{ false }}">
+                    <div style="flex:1; min-width:0; background:#fff; border:1px solid #E3E7EF; border-radius:14px; padding:16px 18px; display:flex; flex-direction:column;">
+                      <div style="font-size:14.5px; font-weight:700;">Robotic-assist claims</div><div style="font-size:11.5px; color:#5B6478; margin-top:2px;">claims billed with S2900 · 2025 vs 2024</div>
+                      <div style="display:flex; gap:18px; align-items:center; margin-top:12px;">
+                        <div><span style="font-family:'Source Serif 4',Georgia,serif; font-size:32px; line-height:1;">92</span><span style="font-size:12px; color:#5B6478; margin-left:6px;">in 2025</span><div style="font-size:12px; font-weight:700; color:#DD6134; margin-top:3px;">−82% vs 499 in 2024</div></div>
+                        <div style="flex:1; display:flex; flex-direction:column; gap:7px;">
+                          <div style="display:flex; align-items:center; gap:8px; font-size:11px; color:#5B6478;"><span style="width:30px;">2024</span><span style="flex:1; height:8px; border-radius:4px; background:#C8D3F2;"></span><span style="width:26px; text-align:right; font-family:'IBM Plex Mono',monospace;">499</span></div>
+                          <div style="display:flex; align-items:center; gap:8px; font-size:11px; color:#5B6478;"><span style="width:30px;">2025</span><span style="flex:1; height:8px;"><span style="display:block; width:18%; height:100%; border-radius:4px; background:#2447C4;"></span></span><span style="width:26px; text-align:right; font-family:'IBM Plex Mono',monospace;">92</span></div>
+                        </div>
+                      </div>
+                      <div style="margin-top:auto; padding-top:10px; font-size:11px; color:#7A839A;">Not every payer requires S2900, so this undercounts robotic cases.</div>
+                    </div>
+                  </sc-if>
+
+                  <sc-if value="{{ c.leakQ }}" hint-placeholder-val="{{ false }}">
+                    <div style="flex:1; min-width:0; background:#fff; border:1px solid #E3E7EF; border-radius:14px; padding:16px 18px; display:flex; flex-direction:column;">
+                      <div style="display:flex; align-items:flex-start; gap:10px;"><div style="flex:1;"><div style="font-size:14.5px; font-weight:700;">Leakage by quarter</div><div style="font-size:11.5px; color:#5B6478; margin-top:2px;">cases kept vs. sent elsewhere · Q1 2024 – Q4 2025</div></div><div style="display:flex; gap:10px; font-size:11px; color:#3C4557;"><span style="display:flex; align-items:center; gap:4px;"><span style="width:8px; height:8px; border-radius:2px; background:#2447C4;"></span>kept</span><span style="display:flex; align-items:center; gap:4px;"><span style="width:8px; height:8px; border-radius:2px; background:#DD6134;"></span>left</span></div></div>
+                      <div style="flex:1; min-height:150px; display:flex; gap:8px; margin-top:14px;">
+                        <sc-for list="{{ quarters }}" as="q" hint-placeholder-count="8">
+                          <div style="flex:1; min-width:0; display:flex; flex-direction:column;">
+                            <span style="flex:{{ q.gap }} 1 0px;"></span>
+                            <span style="flex:{{ q.left }} 1 0px; background:#DD6134; border-radius:4px 4px 0 0; min-height:3px; opacity:{{ q.op }};"></span>
+                            <span style="flex:{{ q.kept }} 1 0px; background:#2447C4; opacity:{{ q.op }};"></span>
+                            <span style="flex:0 0 auto; text-align:center; font-family:'IBM Plex Mono',monospace; font-size:9.5px; color:{{ q.lfg }}; font-weight:{{ q.lw }}; padding-top:5px; border-top:1px solid #E3E7EF; white-space:nowrap;">{{ q.label }}</span>
+                          </div>
+                        </sc-for>
+                      </div>
+                      <div style="margin-top:12px; padding-top:10px; border-top:1px solid #EEF1F6;">
+                        <div style="display:flex; font-size:12px;"><span><strong>11,110</strong> stayed in 2025</span><span style="margin-left:auto; color:#DD6134; font-weight:700;">806 went elsewhere · 7%</span></div>
+                        <div style="display:flex; height:6px; border-radius:3px; overflow:hidden; margin-top:6px;"><span style="width:93%; background:#2447C4;"></span><span style="width:7%; background:#DD6134;"></span></div>
+                        <div style="font-size:11px; color:#7A839A; margin-top:7px; line-height:1.45;">Recent quarters still filling in (claims arrive 6–18 months late).</div>
+                      </div>
+                    </div>
+                  </sc-if>
+
+                  <sc-if value="{{ c.dest }}" hint-placeholder-val="{{ false }}">
+                    <div style="flex:1; min-width:0; background:#fff; border:1px solid #E3E7EF; border-radius:14px; padding:16px 18px; display:flex; flex-direction:column;">
+                      <div style="display:flex; align-items:flex-start; gap:10px;"><div style="flex:1;"><div style="font-size:14.5px; font-weight:700;">Where the cases go</div><div style="font-size:11.5px; color:#5B6478; margin-top:2px;">top destinations of procedures that left since 2022</div></div><a href="Ottava Desktop.dc.html" style="border:1px solid #D7DEEC; border-radius:7px; padding:4px 9px; font-size:11.5px; font-weight:650; white-space:nowrap;">◎ Map</a></div>
+                      <div style="display:grid; grid-template-columns:22px minmax(0,1fr) 62px 62px 46px; gap:10px; padding:8px 0 7px; margin-top:10px; border-bottom:1px solid #E3E7EF; font-family:'IBM Plex Mono',monospace; font-size:9.5px; letter-spacing:.07em; color:#7A839A;"><span>#</span><span>DESTINATION</span><span style="text-align:right;">CASES</span><span style="text-align:right;">BILLED</span><span style="text-align:right;">SHARE</span></div>
+                      <div style="display:flex; flex-direction:column; flex:1; justify-content:space-around;">
+                        <sc-for list="{{ destPg.rows }}" as="d" hint-placeholder-count="5">
+                          <div style="display:grid; grid-template-columns:22px minmax(0,1fr) 62px 62px 46px; gap:10px; align-items:center; padding:9px 0; border-bottom:1px solid #F2F4F8;">
+                            <span style="width:20px; height:20px; border-radius:6px; background:#F0F2F7; color:#3C4557; display:grid; place-items:center; font-size:10.5px; font-weight:700;">{{ d.rank }}</span>
+                            <span style="min-width:0;"><span style="display:block; font-size:13px; font-weight:650; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ d.name }}</span><span style="display:block; font-size:11px; color:#7A839A; margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ d.meta }}</span></span>
+                            <span style="text-align:right; font-family:'IBM Plex Mono',monospace; font-size:12px;">{{ d.n }}</span>
+                            <span style="text-align:right; font-family:'IBM Plex Mono',monospace; font-size:12px; color:#5B6478;">{{ d.billed }}</span>
+                            <span style="text-align:right; font-size:12.5px; font-weight:700; color:#0B1220;">{{ d.pct }}</span>
+                          </div>
+                        </sc-for>
+                      </div>
+                      <div style="display:flex; align-items:center; gap:10px; padding-top:9px;"><span style="font-size:11px; color:#7A839A;">Share is of the 13 destinations on file.</span><span style="display:flex; align-items:center; gap:6px; margin-left:auto; "><span style="font-size:11px; color:#7A839A; white-space:nowrap;">{{ destPg.label }}</span><button onClick="{{ destPg.prev }}" style="width:24px; height:24px; flex:0 0 24px; border:1px solid #D7DEEC; background:#fff; border-radius:7px; cursor:pointer; font-size:12px; line-height:1; color:#3C4557; padding:0; opacity:{{ destPg.pOp }};">‹</button><button onClick="{{ destPg.next }}" style="width:24px; height:24px; flex:0 0 24px; border:1px solid #D7DEEC; background:#fff; border-radius:7px; cursor:pointer; font-size:12px; line-height:1; color:#3C4557; padding:0; opacity:{{ destPg.nOp }};">›</button></span></div>
+                    </div>
+                  </sc-if>
+
+                  <sc-if value="{{ c.drg }}" hint-placeholder-val="{{ false }}">
+                    <div style="flex:1; min-width:0; background:#fff; border:1px solid #E3E7EF; border-radius:14px; padding:16px 18px; display:flex; flex-direction:column;">
+                      <div style="display:flex; align-items:flex-start; gap:10px;"><div style="flex:1;"><div style="font-size:14.5px; font-weight:700;">Case loss by DRG</div><div style="font-size:11.5px; color:#5B6478; margin-top:2px;">hospital stays by MS-DRG since 2022</div></div><div style="text-align:right; white-space:nowrap;"><span style="font-family:'Source Serif 4',Georgia,serif; font-size:20px;">6,429</span><span style="font-size:11.5px; color:#5B6478;"> of 37,402 left · </span><span style="font-family:'Source Serif 4',Georgia,serif; font-size:20px;">17%</span></div></div>
+                      <div style="display:grid; grid-template-columns:minmax(0,1fr) 92px 58px 50px; gap:10px; padding:8px 0 7px; margin-top:10px; border-bottom:1px solid #E3E7EF; font-family:'IBM Plex Mono',monospace; font-size:9.5px; letter-spacing:.07em; color:#7A839A;"><span>DRG</span><span style="text-align:right;">LEFT / STAYS</span><span style="text-align:right;">BILLED</span><span style="text-align:right;">LEFT</span></div>
+                      <div style="display:flex; flex-direction:column; flex:1;">
+                        <sc-for list="{{ drgPg.rows }}" as="r" hint-placeholder-count="7">
+                          <div style="display:grid; grid-template-columns:minmax(0,1fr) 92px 58px 50px; gap:10px; align-items:center; padding:8px 0; border-bottom:1px solid #F2F4F8; background:{{ r.rowBg }};">
+                            <span title="{{ r.name }}" style="min-width:0; display:flex; align-items:baseline; gap:6px;"><span style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#A6AEBE; width:24px; flex:0 0 24px;">{{ r.code }}</span><span style="font-size:12.5px; font-weight:{{ r.fw }}; color:{{ r.fg }}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ r.name }}</span></span>
+                            <span style="text-align:right; font-family:'IBM Plex Mono',monospace; font-size:11.5px; white-space:nowrap;">{{ r.left }}<span style="color:#A6AEBE;"> / {{ r.of }}</span></span>
+                            <span style="text-align:right; font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:#5B6478;">{{ r.billed }}</span>
+                            <span style="justify-self:end; font-size:11.5px; font-weight:700; color:{{ r.pillFg }}; background:{{ r.pillBg }}; padding:2px 7px; border-radius:6px;">{{ r.pct }}</span>
+                          </div>
+                        </sc-for>
+                        <div style="display:grid; grid-template-columns:minmax(0,1fr) 92px 58px 50px; gap:10px; align-items:center; padding:8px 0; border-bottom:1px solid #F2F4F8; background:#FAFBFD;"><span style="font-size:12.5px; color:#5B6478; padding-left:30px;">Every other DRG (66)</span><span style="text-align:right; font-family:'IBM Plex Mono',monospace; font-size:11.5px;">1,625<span style="color:#A6AEBE;"> / 12,217</span></span><span style="text-align:right; font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:#5B6478;">$180.2M</span><span style="justify-self:end; font-size:11.5px; font-weight:700; color:#3C4557; background:#F0F2F7; padding:2px 7px; border-radius:6px;">13%</span></div>
+                      </div>
+                      <div style="display:flex; align-items:center; gap:10px; margin-top:9px;"><span style="font-size:11px; color:#7A839A;">highlighted: a quarter or more of stays left</span><span style="display:flex; align-items:center; gap:6px; margin-left:auto; "><span style="font-size:11px; color:#7A839A; white-space:nowrap;">{{ drgPg.label }}</span><button onClick="{{ drgPg.prev }}" style="width:24px; height:24px; flex:0 0 24px; border:1px solid #D7DEEC; background:#fff; border-radius:7px; cursor:pointer; font-size:12px; line-height:1; color:#3C4557; padding:0; opacity:{{ drgPg.pOp }};">‹</button><button onClick="{{ drgPg.next }}" style="width:24px; height:24px; flex:0 0 24px; border:1px solid #D7DEEC; background:#fff; border-radius:7px; cursor:pointer; font-size:12px; line-height:1; color:#3C4557; padding:0; opacity:{{ drgPg.nOp }};">›</button></span></div>
+                    </div>
+                  </sc-if>
+
+                  <sc-if value="{{ c.payments }}" hint-placeholder-val="{{ false }}">
+                    <div style="flex:1; min-width:0; background:#fff; border:1px solid #E3E7EF; border-radius:14px; padding:16px 18px; display:flex; flex-direction:column;">
+                      <div style="font-size:14.5px; font-weight:700;">Industry payments</div><div style="font-size:11.5px; color:#5B6478; margin-top:2px;">{{ pay.sub }}</div>
+                      <div style="display:grid; grid-template-columns:1fr 1fr; border:1px solid #E3E7EF; border-radius:10px; margin-top:12px; overflow:hidden;">
+                        <div style="padding:10px 13px;"><div style="font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:.08em; color:#7A839A;">COMPETITORS' ROBOTS</div><div style="font-family:'Source Serif 4',Georgia,serif; font-size:24px; line-height:1; margin-top:5px;">{{ pay.comp }}</div><div style="font-size:11px; color:#5B6478; margin-top:3px;">{{ pay.compSub }}</div></div>
+                        <div style="padding:10px 13px; border-left:1px solid #E3E7EF; background:#F6F8FE;"><div style="font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:.08em; color:#7A839A;">YOUR ROBOTS</div><div style="font-family:'Source Serif 4',Georgia,serif; font-size:24px; line-height:1; margin-top:5px; color:#2447C4;">{{ pay.yours }}</div><div style="font-size:11px; color:#5B6478; margin-top:3px;">{{ pay.yoursSub }}</div></div>
+                      </div>
+                      <div style="font-family:'IBM Plex Mono',monospace; font-size:9.5px; letter-spacing:.08em; color:#7A839A; margin-top:14px;">ROBOT PAYMENTS BY COMPANY · 2025</div>
+                      <div style="display:flex; flex-direction:column; gap:9px; margin-top:8px;">
+                        <sc-for list="{{ pay.robots }}" as="r" hint-placeholder-count="3"><div><div style="display:flex; font-size:12.5px;"><span style="flex:1; color:{{ r.fg }};"><strong>{{ r.co }}</strong> <span style="color:#7A839A;">· {{ r.sys }}</span></span><span style="font-family:'IBM Plex Mono',monospace; font-size:12px;">{{ r.v }}</span></div><div style="height:5px; border-radius:3px; background:#EEF1F6; margin-top:5px; overflow:hidden;"><div style="width:{{ r.w }}; height:100%; background:{{ r.c }}; border-radius:3px;"></div></div></div></sc-for>
+                      </div>
+                      <div style="font-size:11px; color:#7A839A; margin-top:8px; line-height:1.45;">Nothing in 2025 from CMR Surgical, Virtual Incision, Karl Storz or Medtronic (Hugo).</div>
+                      <sc-if value="{{ pay.hasWho }}" hint-placeholder-val="{{ true }}">
+                        <div style="display:flex; align-items:center; margin-top:14px;"><span style="font-family:'IBM Plex Mono',monospace; font-size:9.5px; letter-spacing:.08em; color:#7A839A;">WHO COMPETITORS PAY · 2025</span><span style="display:flex; align-items:center; gap:6px; margin-left:auto; "><span style="font-size:11px; color:#7A839A; white-space:nowrap;">{{ whoPg.label }}</span><button onClick="{{ whoPg.prev }}" style="width:24px; height:24px; flex:0 0 24px; border:1px solid #D7DEEC; background:#fff; border-radius:7px; cursor:pointer; font-size:12px; line-height:1; color:#3C4557; padding:0; opacity:{{ whoPg.pOp }};">‹</button><button onClick="{{ whoPg.next }}" style="width:24px; height:24px; flex:0 0 24px; border:1px solid #D7DEEC; background:#fff; border-radius:7px; cursor:pointer; font-size:12px; line-height:1; color:#3C4557; padding:0; opacity:{{ whoPg.nOp }};">›</button></span></div>
+                        <div style="margin-top:4px;"><sc-for list="{{ whoPg.rows }}" as="w" hint-placeholder-count="5"><div style="display:flex; align-items:center; gap:10px; padding:6px 0; border-bottom:1px solid #F2F4F8; font-size:12.5px;"><span style="flex:1; color:#2447C4; font-weight:650;">{{ w.name }}</span><span style="font-size:11px; color:#7A839A;">{{ w.co }}</span><span style="width:40px; text-align:right; font-family:'IBM Plex Mono',monospace; font-size:12px;">{{ w.v }}</span></div></sc-for></div>
+                      </sc-if>
+                      <div style="margin-top:auto; padding-top:12px;">
+                        <div style="display:flex; align-items:baseline; gap:10px; padding:10px 12px; background:#F7F8FB; border-radius:9px;"><span style="font-family:'IBM Plex Mono',monospace; font-size:9.5px; letter-spacing:.08em; color:#7A839A;">ALL COMPANIES</span><span style="flex:1; font-size:11.5px; color:#3C4557; line-height:1.45;">{{ pay.all }}</span><span style="font-family:'Source Serif 4',Georgia,serif; font-size:17px;">{{ pay.allV }}</span></div>
+                      </div>
+                    </div>
+                  </sc-if>
+
+                  <sc-if value="{{ c.share }}" hint-placeholder-val="{{ false }}">
+                    <div style="flex:1; min-width:0; background:#fff; border:1px solid #E3E7EF; border-radius:14px; padding:16px 18px; display:flex; flex-direction:column;">
+                      <div style="font-size:14.5px; font-weight:700;">Market share within 100 miles</div><div style="font-size:11.5px; color:#5B6478; margin-top:2px;">of this facility's location · 2025</div>
+                      <div style="display:flex; gap:16px; align-items:center; margin-top:12px;">
+                        <div style="width:104px; height:104px; flex:0 0 104px; border-radius:50%; background:conic-gradient(#2447C4 0 23%,#E4E9F4 23% 100%); display:grid; place-items:center;"><div style="width:80px; height:80px; border-radius:50%; background:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center;"><span style="font-family:'Source Serif 4',Georgia,serif; font-size:23px; line-height:1;">23%</span><span style="font-family:'IBM Plex Mono',monospace; font-size:8.5px; letter-spacing:.08em; color:#7A839A; margin-top:3px;">IN-RADIUS</span></div></div>
+                        <div style="flex:1; min-width:0; display:flex; flex-direction:column;">
+                          <sc-for list="{{ shareLegend }}" as="l" hint-placeholder-count="3"><div style="display:flex; align-items:center; gap:8px; padding:5px 0; border-bottom:1px solid #F2F4F8;"><span style="width:8px; height:8px; border-radius:50%; background:{{ l.c }};"></span><span style="flex:1; min-width:0; font-size:11.5px; color:#5B6478;">{{ l.k }}</span><span style="font-family:'Source Serif 4',Georgia,serif; font-size:17px;">{{ l.v }}</span></div></sc-for>
+                        </div>
+                      </div>
+                      <div style="display:flex; gap:8px; margin-top:12px; padding:9px 11px; border-radius:9px; background:#EEF3FE; font-size:12px; color:#1B2E6B; line-height:1.45;"><span>⚡</span><span><strong>17,876</strong> procedures in 2025 sit with the facilities around it — room to grow outside these walls.</span></div>
+                      <div style="display:grid; grid-template-columns:auto minmax(0,1fr); gap:14px; align-items:end; margin-top:14px;">
+                        <div>
+                          <div style="font-family:'IBM Plex Mono',monospace; font-size:9.5px; letter-spacing:.08em; color:#7A839A;">SHARE BY YEAR</div>
+                          <div style="display:flex; gap:6px; align-items:flex-end; height:62px; margin-top:8px;"><sc-for list="{{ shareYears }}" as="y" hint-placeholder-count="4"><div style="width:34px; display:flex; flex-direction:column; gap:3px;"><span style="text-align:center; font-size:10.5px; font-weight:700;">{{ y.v }}</span><span style="height:{{ y.h }}px; background:#2447C4; opacity:{{ y.op }}; border-radius:4px 4px 1px 1px;"></span><span style="text-align:center; font-size:9.5px; color:#7A839A;">{{ y.y }}</span></div></sc-for></div>
+                        </div>
+                        <div style="font-size:11px; color:#5B6478; line-height:1.5;">All years since 2022: <strong style="color:#0B1220;">28%</strong> · 34,120 of 120,784. 63 of its own sites are more than 100 miles away and aren't counted.</div>
+                      </div>
+                      <div style="display:flex; align-items:center; margin-top:14px;"><span style="font-family:'IBM Plex Mono',monospace; font-size:9.5px; letter-spacing:.08em; color:#7A839A;">LARGEST IN THE RADIUS · SINCE 2022</span><span style="display:flex; align-items:center; gap:6px; margin-left:auto; "><span style="font-size:11px; color:#7A839A; white-space:nowrap;">{{ radPg.label }}</span><button onClick="{{ radPg.prev }}" style="width:24px; height:24px; flex:0 0 24px; border:1px solid #D7DEEC; background:#fff; border-radius:7px; cursor:pointer; font-size:12px; line-height:1; color:#3C4557; padding:0; opacity:{{ radPg.pOp }};">‹</button><button onClick="{{ radPg.next }}" style="width:24px; height:24px; flex:0 0 24px; border:1px solid #D7DEEC; background:#fff; border-radius:7px; cursor:pointer; font-size:12px; line-height:1; color:#3C4557; padding:0; opacity:{{ radPg.nOp }};">›</button></span></div>
+                      <div style="margin-top:4px; flex:1; display:flex; flex-direction:column; justify-content:space-around;">
+                        <sc-for list="{{ radPg.rows }}" as="r" hint-placeholder-count="5"><div style="display:flex; align-items:center; gap:10px; padding:6px 8px; margin:0 -8px; border-radius:7px; background:{{ r.bg }};"><span style="flex:1; min-width:0;"><span style="display:flex; align-items:center; gap:6px; font-size:12.5px; font-weight:650; color:{{ r.fg }};"><span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ r.name }}</span><span style="display:{{ r.tag }}; font-family:'IBM Plex Mono',monospace; font-size:8.5px; letter-spacing:.06em; color:#22409F; background:#DCE3F5; padding:2px 5px; border-radius:4px; white-space:nowrap;">THIS ACCOUNT</span></span><span style="display:block; font-size:10.5px; color:#7A839A; margin-top:1px;">{{ r.meta }}</span></span><span style="font-family:'IBM Plex Mono',monospace; font-size:12px;">{{ r.n }}</span><span style="width:36px; text-align:right; font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:#7A839A;">{{ r.pct }}</span></div></sc-for>
+                      </div>
+                    </div>
+                  </sc-if>
+
+                  <sc-if value="{{ c.hcps }}" hint-placeholder-val="{{ false }}">
+                    <div style="flex:1; min-width:0; background:#fff; border:1px solid #E3E7EF; border-radius:14px; display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr)); overflow:hidden;">
+                      <sc-for list="{{ hcpLists }}" as="hl" hint-placeholder-count="2">
+                        <div style="padding:16px 0 8px; border-left:{{ hl.bl }}; min-width:0;">
+                          <div style="padding:0 18px 6px; display:flex; align-items:flex-start; gap:10px;"><div style="flex:1; min-width:0;"><div style="font-size:14.5px; font-weight:700;">{{ hl.title }}</div><div style="font-size:11.5px; color:#5B6478; margin-top:2px;">{{ hl.sub }}</div></div><span style="display:flex; align-items:center; gap:6px; margin-left:auto; "><span style="font-size:11px; color:#7A839A; white-space:nowrap;">{{ hl.pg.label }}</span><button onClick="{{ hl.pg.prev }}" style="width:24px; height:24px; flex:0 0 24px; border:1px solid #D7DEEC; background:#fff; border-radius:7px; cursor:pointer; font-size:12px; line-height:1; color:#3C4557; padding:0; opacity:{{ hl.pg.pOp }};">‹</button><button onClick="{{ hl.pg.next }}" style="width:24px; height:24px; flex:0 0 24px; border:1px solid #D7DEEC; background:#fff; border-radius:7px; cursor:pointer; font-size:12px; line-height:1; color:#3C4557; padding:0; opacity:{{ hl.pg.nOp }};">›</button></span></div>
+                          <sc-for list="{{ hl.pg.rows }}" as="h" hint-placeholder-count="4">
+                            <button onClick="{{ h.go }}" style="display:flex; align-items:center; gap:11px; width:100%; text-align:left; border:0; border-top:1px solid #F2F4F8; background:#fff; padding:9px 18px; cursor:pointer; font-family:inherit; color:#0B1220;" style-hover="background:#F6F8FD;">
+                              <span style="width:32px; height:32px; flex:0 0 32px; border-radius:50%; background:{{ h.avBg }}; color:{{ h.avFg }}; display:grid; place-items:center; font-size:10.5px; font-weight:700;">{{ h.ini }}</span>
+                              <span style="flex:1; min-width:0;"><span style="display:block; font-size:13px; font-weight:700;">{{ h.name }}</span><span style="display:block; font-size:11px; color:#5B6478; margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ h.sub }}</span></span>
+                              <span style="width:60px; height:4px; border-radius:2px; background:#EEF1F6; overflow:hidden;"><span style="display:block; width:{{ h.w }}; height:100%; background:#2447C4;"></span></span>
+                              <span style="width:42px; text-align:right; font-family:'IBM Plex Mono',monospace; font-size:12.5px;">{{ h.n }}</span>
+                              <span style="color:#C3CAD8;">›</span>
+                            </button>
+                          </sc-for>
+                        </div>
+                      </sc-for>
+                    </div>
+                  </sc-if>
+
+                  <sc-if value="{{ c.notes }}" hint-placeholder-val="{{ false }}">
+                    <div style="flex:1; min-width:0; background:#fff; border:1px solid #E3E7EF; border-radius:14px; padding:13px 18px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+                      <span style="width:32px; height:32px; border-radius:9px; background:#EDF1FB; color:#2447C4; display:grid; place-items:center; font-size:14px;">✎</span>
+                      <span style="flex:1; min-width:220px;"><span style="display:block; font-size:14px; font-weight:700;">Notes &amp; visits</span><span style="display:block; font-size:12px; color:#5B6478; margin-top:1px;">No notes on the HCPs here yet — yours, your team's and reports land here.</span></span>
+                      <a href="Ottava Desktop.dc.html" style="flex:0 0 auto; white-space:nowrap; border:1px solid #D7DEEC; border-radius:9px; padding:7px 12px; font-size:12.5px; font-weight:700;">＋ Log a visit</a>
+                    </div>
+                  </sc-if>
+
+                  <sc-if value="{{ c.referrals }}" hint-placeholder-val="{{ false }}">
+                    <div style="flex:1; min-width:0; background:#fff; border:1px solid #E3E7EF; border-radius:14px; padding:16px 18px;">
+                      <div style="font-size:14.5px; font-weight:700;">{{ ref.title }}</div><div style="font-size:11.5px; color:#5B6478; margin-top:2px;">{{ ref.sub }}</div>
+                      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); border:1px solid #E3E7EF; border-radius:10px; margin-top:12px; overflow:hidden;">
+                        <sc-for list="{{ ref.stats }}" as="s" hint-placeholder-count="3"><div style="padding:10px 13px; border-left:{{ s.bl }};"><div style="font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:.08em; color:#7A839A;">{{ s.k }}</div><div style="font-family:'Source Serif 4',Georgia,serif; font-size:23px; line-height:1; margin-top:5px; color:{{ s.fg }};">{{ s.v }}</div><div style="font-size:11px; color:#5B6478; margin-top:3px;">{{ s.sub }}</div></div></sc-for>
+                      </div>
+                      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr)); gap:16px 28px; margin-top:14px;">
+                        <sc-for list="{{ ref.cols }}" as="col" hint-placeholder-count="2">
+                          <div style="min-width:0;">
+                            <div style="display:flex; font-family:'IBM Plex Mono',monospace; font-size:9.5px; letter-spacing:.08em; color:#7A839A; padding-bottom:5px; border-bottom:1px solid #EEF1F6;"><span style="flex:1;">{{ col.title }}</span><span>{{ col.unit }}</span></div>
+                            <sc-for list="{{ col.pg.rows }}" as="r" hint-placeholder-count="6">
+                              <div style="display:flex; align-items:center; gap:10px; padding:7px 0; border-bottom:1px solid #F2F4F8;">
+                                <span style="flex:1; min-width:0;"><span style="display:block; font-size:12.5px; font-weight:650; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ r.name }}</span><span style="display:block; font-size:10.5px; color:#7A839A;">{{ r.sub }}</span></span>
+                                <span style="width:54px; height:4px; border-radius:2px; background:#EEF1F6; overflow:hidden;"><span style="display:block; width:{{ r.w }}; height:100%; background:{{ col.c }};"></span></span>
+                                <span style="min-width:92px; text-align:right; font-family:'IBM Plex Mono',monospace; font-size:11.5px; white-space:nowrap;">{{ r.v }}</span>
+                              </div>
+                            </sc-for>
+                            <div style="display:flex; align-items:center; gap:10px; padding-top:8px;"><span style="font-size:11px; color:#7A839A;">{{ col.foot }}</span><span style="display:flex; align-items:center; gap:6px; margin-left:auto; "><span style="font-size:11px; color:#7A839A; white-space:nowrap;">{{ col.pg.label }}</span><button onClick="{{ col.pg.prev }}" style="width:24px; height:24px; flex:0 0 24px; border:1px solid #D7DEEC; background:#fff; border-radius:7px; cursor:pointer; font-size:12px; line-height:1; color:#3C4557; padding:0; opacity:{{ col.pg.pOp }};">‹</button><button onClick="{{ col.pg.next }}" style="width:24px; height:24px; flex:0 0 24px; border:1px solid #D7DEEC; background:#fff; border-radius:7px; cursor:pointer; font-size:12px; line-height:1; color:#3C4557; padding:0; opacity:{{ col.pg.nOp }};">›</button></span></div>
+                          </div>
+                        </sc-for>
+                      </div>
+                    </div>
+                  </sc-if>
+
+                  <sc-if value="{{ c.site }}" hint-placeholder-val="{{ false }}">
+                    <div style="flex:1; min-width:0; background:#fff; border:1px solid #E3E7EF; border-radius:14px; padding:16px 18px; display:flex; flex-direction:column;">
+                      <div style="display:flex; align-items:flex-start; gap:10px;"><div style="flex:1;"><div style="font-size:14.5px; font-weight:700;">Site of care</div><div style="font-size:11.5px; color:#5B6478; margin-top:2px;">encounters in these codes by care setting · 2025</div></div><div style="text-align:right;"><span style="font-family:'Source Serif 4',Georgia,serif; font-size:22px;">10,995</span><div style="font-size:10.5px; color:#7A839A;">encounters</div></div></div>
+                      <div style="display:flex; height:24px; border-radius:7px; overflow:hidden; gap:2px; margin-top:12px;"><sc-for list="{{ sites }}" as="s" hint-placeholder-count="5"><span style="width:{{ s.w }}; background:{{ s.c }};"></span></sc-for></div>
+                      <div style="display:flex; flex-direction:column; margin-top:8px; flex:1; justify-content:space-around;">
+                        <sc-for list="{{ sites }}" as="s" hint-placeholder-count="5"><div style="display:flex; align-items:center; gap:9px; padding:6px 0; border-bottom:1px solid #F2F4F8; font-size:12.5px;"><span style="width:9px; height:9px; border-radius:2px; background:{{ s.c }};"></span><span style="flex:1; font-weight:650;">{{ s.name }}</span><span style="font-family:'IBM Plex Mono',monospace; font-size:12px;">{{ s.n }}</span><span style="width:34px; text-align:right; color:#5B6478; font-size:12px;">{{ s.pct }}</span></div></sc-for>
+                      </div>
+                      <div style="font-size:11px; color:#7A839A; margin-top:10px; line-height:1.45;">6,447 encounters billed by the facility (no place of service) can repeat one above. <a href="Ottava Desktop.dc.html" style="font-weight:650;">Compare in HEMA Workbench</a></div>
+                    </div>
+                  </sc-if>
+
+                  <sc-if value="{{ c.econ }}" hint-placeholder-val="{{ false }}">
+                    <div style="flex:1; min-width:0; background:#fff; border:1px solid #E3E7EF; border-radius:14px; padding:16px 18px; display:flex; flex-direction:column;">
+                      <div style="font-size:14.5px; font-weight:700;">Economics</div><div style="font-size:11.5px; color:#5B6478; margin-top:2px;">payer-reported amounts per encounter · 2025</div>
+                      <div style="border:1px solid #EEF1F6; border-radius:10px; overflow:hidden; margin-top:12px;">
+                        <div style="display:grid; grid-template-columns:1.5fr 1fr 1fr 1fr; padding:8px 12px; background:#F8F9FC; font-family:'IBM Plex Mono',monospace; font-size:9.5px; letter-spacing:.07em; color:#7A839A;"><span>SETTING</span><span style="text-align:right;">ALLOWED</span><span style="text-align:right;">PAID</span><span style="text-align:right;">ENCOUNTERS</span></div>
+                        <sc-for list="{{ econ }}" as="e" hint-placeholder-count="5"><div style="display:grid; grid-template-columns:1.5fr 1fr 1fr 1fr; padding:7px 12px; border-top:{{ e.bt }}; font-size:12px; background:{{ e.bg }};"><span style="font-weight:650;">{{ e.s }}</span><span style="text-align:right; font-family:'IBM Plex Mono',monospace;">{{ e.a }}</span><span style="text-align:right; font-family:'IBM Plex Mono',monospace;">{{ e.p }}</span><span style="text-align:right; font-family:'IBM Plex Mono',monospace;">{{ e.n }}</span></div></sc-for>
+                      </div>
+                      <div style="margin-top:auto; padding-top:9px; font-size:11px; color:#7A839A; line-height:1.45;">Facility row is facility bills — not comparable to the rows above. Directional, on a subset of claims; not revenue.</div>
+                    </div>
+                  </sc-if>
+
+                  <sc-if value="{{ c.finances }}" hint-placeholder-val="{{ false }}">
+                    <div style="flex:1; min-width:0; background:#fff; border:1px solid #E3E7EF; border-radius:14px; padding:16px 18px; display:flex; flex-direction:column;">
+                      <div style="font-size:14.5px; font-weight:700;">Facility finances</div><div style="font-size:11.5px; color:#5B6478; margin-top:2px;">all services · hospital cost report</div>
+                      <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:12px;">
+                        <div style="background:#F5F7FC; border-radius:10px; padding:9px 12px;"><div style="font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:.08em; color:#7A839A;">NET PATIENT REVENUE</div><div style="font-family:'Source Serif 4',Georgia,serif; font-size:22px; margin-top:3px;">$13.6B</div></div>
+                        <div style="background:#F5F7FC; border-radius:10px; padding:9px 12px;"><div style="font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:.08em; color:#7A839A;">OPERATING EXPENSES</div><div style="font-family:'Source Serif 4',Georgia,serif; font-size:22px; margin-top:3px;">$15.0B</div></div>
+                      </div>
+                      <div style="font-family:'IBM Plex Mono',monospace; font-size:9.5px; letter-spacing:.08em; color:#7A839A; margin-top:13px;">REVENUE BY PAYER</div>
+                      <div style="display:flex; flex-direction:column; gap:9px; margin-top:8px; flex:1; justify-content:space-around;">
+                        <sc-for list="{{ finPayers }}" as="p" hint-placeholder-count="3"><div><div style="display:flex; gap:8px; font-size:12.5px;"><span style="flex:1; font-weight:650;">{{ p.name }}</span><span style="font-family:'IBM Plex Mono',monospace; font-size:11.5px;">{{ p.v }}</span><span style="width:36px; text-align:right; color:#5B6478; font-size:12px;">{{ p.pct }}</span></div><div style="height:5px; border-radius:3px; background:#EEF1F6; margin-top:5px; overflow:hidden;"><div style="width:{{ p.w }}; height:100%; background:{{ p.c }};"></div></div></div></sc-for>
+                      </div>
+                    </div>
+                  </sc-if>
+
+                  <sc-if value="{{ c.payer }}" hint-placeholder-val="{{ false }}">
+                    <div style="flex:1; min-width:0; background:#fff; border:1px solid #E3E7EF; border-radius:14px; padding:16px 18px; display:flex; flex-direction:column;">
+                      <div style="display:flex; align-items:flex-start;"><div style="flex:1;"><div style="font-size:14.5px; font-weight:700;">Payer mix</div><div style="font-size:11.5px; color:#5B6478; margin-top:2px;">claims in these codes by channel · 2025 · tap a channel</div></div><div style="text-align:right;"><span style="font-family:'Source Serif 4',Georgia,serif; font-size:20px;">29,241</span><div style="font-size:10.5px; color:#7A839A;">claims</div></div></div>
+                      <div style="display:flex; height:22px; border-radius:6px; overflow:hidden; gap:2px; margin-top:12px;"><sc-for list="{{ channels }}" as="ch" hint-placeholder-count="4"><span style="width:{{ ch.pct }}; background:{{ ch.c }};"></span></sc-for></div>
+                      <div style="display:flex; flex-direction:column; margin-top:8px;">
+                        <sc-for list="{{ channels }}" as="ch" hint-placeholder-count="4">
+                          <div style="border-bottom:1px solid #F2F4F8;">
+                            <button onClick="{{ ch.toggle }}" style="display:flex; align-items:center; gap:9px; width:100%; text-align:left; border:0; background:{{ ch.bg }}; padding:8px 8px; margin:0; border-radius:7px; cursor:pointer; font-family:inherit; color:#0B1220;">
+                              <span style="width:12px; font-size:10px; color:#7A839A;">{{ ch.chev }}</span><span style="width:9px; height:9px; border-radius:2px; background:{{ ch.c }};"></span>
+                              <span style="flex:1; font-size:13px; font-weight:700;">{{ ch.name }}</span>
+                              <span style="font-family:'IBM Plex Mono',monospace; font-size:12px;">{{ ch.n }}</span><span style="width:34px; text-align:right; font-size:12px; color:#5B6478;">{{ ch.pct }}</span>
+                            </button>
+                            <sc-if value="{{ ch.open }}" hint-placeholder-val="{{ false }}">
+                              <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; padding:6px 8px 12px 29px;">
+                                <sc-for list="{{ ch.groups }}" as="g" hint-placeholder-count="2">
+                                  <div style="min-width:0;">
+                                    <div style="font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:.08em; color:#7A839A;">{{ g.title }}</div>
+                                    <div style="display:flex; flex-direction:column; gap:6px; margin-top:6px;"><sc-for list="{{ g.rows }}" as="r" hint-placeholder-count="4"><div><div style="display:flex; gap:6px; font-size:11.5px;"><span style="flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ r.name }}</span><span style="font-family:'IBM Plex Mono',monospace; font-size:11px;">{{ r.n }}</span></div><div style="height:3px; border-radius:2px; background:#EEF1F6; margin-top:3px; overflow:hidden;"><div style="width:{{ r.pct }}; height:100%; background:#1E3A5F;"></div></div></div></sc-for></div>
+                                  </div>
+                                </sc-for>
+                              </div>
+                            </sc-if>
+                          </div>
+                        </sc-for>
+                      </div>
+                      <div style="margin-top:auto; padding-top:9px; font-size:11px; color:#7A839A;">57 more commercial payers · 3,275 claims · payer not recorded on 1,655.</div>
+                    </div>
+                  </sc-if>
+
+                  <sc-if value="{{ c.primary }}" hint-placeholder-val="{{ false }}">
+                    <div style="flex:1; min-width:0; background:#fff; border:1px solid #E3E7EF; border-radius:14px; padding:16px 18px; display:flex; flex-direction:column;">
+                      <div style="font-size:14.5px; font-weight:700;">Primary information</div><div style="font-size:11.5px; color:#5B6478; margin-top:2px;">from their DocNexus profile</div>
+                      <div style="display:grid; grid-template-columns:1fr 1fr; gap:1px; background:#EEF1F6; border:1px solid #EEF1F6; border-radius:10px; overflow:hidden; margin-top:12px; flex:1;">
+                        <sc-for list="{{ primary }}" as="p" hint-placeholder-count="6"><div style="background:#fff; padding:9px 12px; display:flex; gap:9px; align-items:center; grid-column:{{ p.span }};"><span style="width:24px; height:24px; flex:0 0 24px; border-radius:7px; background:#EDF1FB; color:#2447C4; display:grid; place-items:center; font-family:'IBM Plex Mono',monospace; font-size:9px; font-weight:500;">{{ p.icon }}</span><span style="min-width:0;"><span style="display:block; font-size:10.5px; color:#7A839A;">{{ p.k }}</span><span style="display:block; font-size:12.5px; font-weight:650; margin-top:1px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ p.v }}</span></span></div></sc-for>
+                      </div>
+                    </div>
+                  </sc-if>
+
+                  <sc-if value="{{ c.hosp }}" hint-placeholder-val="{{ false }}">
+                    <div style="flex:1; min-width:0; background:#fff; border:1px solid #E3E7EF; border-radius:14px; padding:16px 18px; display:flex; flex-direction:column;">
+                      <div style="display:flex; align-items:flex-start;"><div style="flex:1;"><div style="font-family:'IBM Plex Mono',monospace; font-size:9.5px; letter-spacing:.08em; color:#7A839A;">PRIMARY HOSPITAL</div><div style="font-family:'Source Serif 4',Georgia,serif; font-size:20px; color:#2447C4; margin-top:4px;">Martin North Hospital</div></div><span style="font-size:10.5px; color:#B4541F; background:#FDF1E6; border:1px solid #F5D9C2; padding:3px 7px; border-radius:6px; white-space:nowrap;">Not in your accounts</span></div>
+                      <div style="display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; margin-top:12px;">
+                        <sc-for list="{{ hospFacts }}" as="h" hint-placeholder-count="4"><div style="min-width:0;"><div style="font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:.07em; color:#7A839A;">{{ h.k }}</div><div style="font-size:12.5px; font-weight:650; margin-top:3px;">{{ h.v }}</div></div></sc-for>
+                      </div>
+                      <div style="margin-top:auto; padding-top:10px; font-size:11px; color:#7A839A;">Opens its DocNexus profile.</div>
+                    </div>
+                  </sc-if>
+
+                  <sc-if value="{{ c.whereOp }}" hint-placeholder-val="{{ false }}">
+                    <div style="flex:1; min-width:0; background:#fff; border:1px solid #E3E7EF; border-radius:14px; padding:16px 18px; display:flex; flex-direction:column;">
+                      <div style="font-size:14.5px; font-weight:700;">Where they operate</div><div style="font-size:11.5px; color:#5B6478; margin-top:2px;">share of their visits · all claims, all years</div>
+                      <div style="display:flex; height:22px; border-radius:6px; overflow:hidden; gap:2px; margin-top:12px;"><sc-for list="{{ opSites }}" as="s" hint-placeholder-count="3"><span style="width:{{ s.pct }}; background:{{ s.c }};"></span></sc-for></div>
+                      <div style="display:flex; flex-direction:column; margin-top:6px;"><sc-for list="{{ opSites }}" as="s" hint-placeholder-count="3"><div style="display:flex; align-items:center; gap:9px; padding:6px 0; border-bottom:1px solid #F2F4F8; font-size:12.5px;"><span style="width:9px; height:9px; border-radius:2px; background:{{ s.c }};"></span><span style="flex:1; font-weight:650; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ s.name }}</span><span style="font-family:'IBM Plex Mono',monospace; font-size:12px;">{{ s.n }}</span><span style="width:34px; text-align:right; color:#5B6478;">{{ s.pct }}</span></div></sc-for></div>
+                    </div>
+                  </sc-if>
+
+                  <sc-if value="{{ c.catch }}" hint-placeholder-val="{{ false }}">
+                    <div style="flex:1; min-width:0; background:#fff; border:1px solid #E3E7EF; border-radius:14px; padding:16px 18px; display:flex; flex-direction:column;">
+                      <div style="font-size:14.5px; font-weight:700;">When to catch them</div><div style="font-size:11.5px; color:#5B6478; margin-top:2px;">visits by weekday · all claims · 2025</div>
+                      <div style="flex:1; min-height:70px; display:grid; grid-template-columns:repeat(7,1fr); gap:6px; margin-top:12px;">
+                        <sc-for list="{{ weekdays }}" as="w" hint-placeholder-count="7"><div style="display:flex; flex-direction:column; gap:4px;"><span style="flex:1; display:flex; flex-direction:column; justify-content:flex-end; background:#F0F2F7; border-radius:6px; overflow:hidden;"><span style="height:{{ w.h }}; background:{{ w.c }}; border-radius:6px;"></span></span><span style="text-align:center; font-size:10.5px; color:{{ w.lfg }}; font-weight:{{ w.lw }};">{{ w.d }}</span></div></sc-for>
+                      </div>
+                      <div style="margin-top:10px; display:flex; gap:8px; padding:9px 11px; border-radius:9px; background:#EEF3FE; font-size:12px; color:#1B2E6B; line-height:1.45;"><span>◷</span><span style="flex:1;">Heaviest on <strong>Friday</strong>, mostly at Martin North. <strong>Wednesday</strong> is the quietest weekday — ask for time then.</span></div>
+                    </div>
+                  </sc-if>
+
+                </div>
+              </sc-for>
+            </div>
+          </sc-for>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;view&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;none&quot;,&quot;capital&quot;,&quot;clinical&quot;,&quot;hema&quot;,&quot;enable&quot;],&quot;default&quot;:&quot;capital&quot;,&quot;tsType&quot;:&quot;'none'|'capital'|'clinical'|'hema'|'enable'&quot;}}">
+class Component extends DCLogic {
+  state = { pg: {}, page: 'account', view: null, drgAll: false, openCh: 'Commercial', acct: 0, w: typeof window !== 'undefined' ? window.innerWidth : 1440 };
+
+  componentDidMount() { this._r = () => this.setState({ w: window.innerWidth }); window.addEventListener('resize', this._r); }
+  componentWillUnmount() { window.removeEventListener('resize', this._r); }
+  pager(key, arr, size) {
+    const n = arr.length, pages = Math.max(1, Math.ceil(n / size));
+    const p = Math.min((this.state.pg || {})[key] || 0, pages - 1);
+    const set = q => this.setState(s => ({ pg: Object.assign({}, s.pg, { [key]: q }) }));
+    const a = p * size;
+    return { rows: arr.slice(a, a + size), label: n > size ? (a + 1) + '–' + Math.min(n, a + size) + ' of ' + n : n + ' of ' + n,
+      prev: () => { if (p > 0) set(p - 1); }, next: () => { if (p < pages - 1) set(p + 1); }, pOp: p > 0 ? 1 : .35, nOp: p < pages - 1 ? 1 : .35 };
+  }
+  nav = (page, extra) => () => { this.setState(Object.assign({ page }, extra || {})); window.scrollTo(0, 0); };
+
+  renderVals() {
+    const st = this.state, w = st.w, blue = '#2447C4', orange = '#DD6134', green = '#0E7A55';
+    const IDS = ['capital', 'clinical', 'hema', 'enable'];
+    const LBL = { capital: 'Capital Sales', clinical: 'Clinical Sales', hema: 'HEMA', enable: 'Sales Enablement', none: 'No view' };
+    const v = st.view || (IDS.indexOf(this.props.view) >= 0 ? this.props.view : 'none');
+    const isAcc = st.page === 'account';
+    const seg = on => ({ bg: on ? '#fff' : 'transparent', fg: on ? blue : '#4A546A', sh: on ? '0 1px 2px rgba(11,18,32,.12)' : 'none' });
+    const viewTabs = IDS.map(id => Object.assign({ label: LBL[id], go: () => this.setState({ view: v === id ? 'none' : id }) }, seg(v === id)));
+
+    const RAIL = [['Cleveland Clinic', 'Cleveland', '$264.7M', '7% out'], ['NYU Langone Tisch Hospital', 'New York', '$124.9M', '5% out'], ['Christus Mother Frances Hospital - Tyler', 'Tyler', '$105.3M', '5% out'], ['Stanford Hospital', 'Stanford', '$90.7M', '14% out'], ['Henry Ford Health', 'Detroit', '$74.4M', '— out'], ['John T Mather Memorial Hospital', 'Port Jefferson', '$69.9M', '7% out'], ['Baptist Health Louisville', 'Louisville', '$59.0M', '2% out'], ['IU Health Methodist Hospital', 'Indianapolis', '$55.5M', '8% out'], ['Spectrum Health Butterworth', 'Grand Rapids', '$53.8M', '6% out'], ['Ohio State University Wexner', 'Columbus', '$51.2M', '9% out'], ['Mayo Clinic Hospital - Rochester', 'Rochester', '$49.6M', '3% out'], ['Northwestern Memorial Hospital', 'Chicago', '$47.1M', '6% out'], ['Cedars-Sinai Medical Center', 'Los Angeles', '$44.8M', '4% out'], ['Houston Methodist Hospital', 'Houston', '$42.3M', '7% out'], ['Duke University Hospital', 'Durham', '$40.9M', '5% out'], ['Vanderbilt University Medical Center', 'Nashville', '$38.5M', '8% out'], ['Barnes-Jewish Hospital', 'St. Louis', '$36.2M', '6% out'], ['UPMC Presbyterian', 'Pittsburgh', '$34.7M', '10% out'], ['Beaumont Hospital - Royal Oak', 'Royal Oak', '$33.1M', '7% out'], ['Advocate Christ Medical Center', 'Oak Lawn', '$31.4M', '5% out']];
+    const railAll = RAIL.map((r, i) => ({ name: r[0], city: r[1], opp: r[2], out: r[3], outFg: r[3][0] === '—' ? '#A6AEBE' : orange, go: this.nav('account', { acct: i }), bg: isAcc && st.acct === i ? '#fff' : 'transparent', accent: isAcc && st.acct === i ? blue : 'transparent' }));
+    const A = RAIL[st.acct] || RAIL[0];
+
+    const crumbs = (isAcc ? [{ label: 'My accounts', href: 1 }, { label: A[0] }] : [{ label: 'My accounts', href: 1 }, { label: 'Cleveland Clinic', go: this.nav('account', { acct: 0 }) }, { label: 'Federico Serrot' }])
+      .map((c, i, a) => ({ label: c.label, go: c.go || (c.href ? () => { window.location.href = 'Ottava Desktop v2.dc.html'; } : () => {}), fg: i === a.length - 1 ? '#0B1220' : '#5B6478', w: i === a.length - 1 ? 700 : 500, sep: i === a.length - 1 ? 'none' : 'inline' }));
+
+    const navLinks = [{ icon: '⌖', label: 'Route planner' }, { icon: '◎', label: 'Opportunity Map' }, { icon: '▤', label: 'Reports' }].concat(v === 'hema' ? [{ icon: '▥', label: 'HEMA' }] : []).concat([{ icon: '↑', label: 'Sync to CRM' }]);
+
+    const head = isAcc ? {
+      avatar: A[0].split(' ').filter(x => /^[A-Z]/.test(x)).slice(0, 2).map(x => x[0]).join(''), avatarR: '12px', avatarBg: '#fff', avatarFg: '#0F766E', avatarFs: '17px',
+      eyebrow: st.acct === 0 ? 'HEALTH SYSTEM · OH' : 'HOSPITAL',
+      name: A[0], sub: A[1] + (st.acct === 0 ? ', OH' : '') + ' · Ottava-field-pro codes · 2025 · whole system · 272 NPIs',
+      actions: ['＋ Log a visit', '↓ Save as PDF', '◎ View on a map'], primary: '▤ Open leakage report'
+    } : {
+      avatar: 'FS', avatarR: '50%', avatarBg: '#DCE3F5', avatarFg: '#22409F', avatarFs: '17px',
+      eyebrow: 'SURGERY · NPI 1386906550', name: 'Federico Serrot', sub: 'Cleveland Clinic Martin North Hospital · Stuart, FL · Ottava-field-pro codes · 2025',
+      actions: ['＋ Log a visit', '↓ Save as PDF', '✉ Email'], primary: '↗ Full profile'
+    };
+    const k = (label, n, sub, o) => Object.assign({ label, n, sub, fg: '#0B1220', d: '', dFg: green }, o || {});
+    const kpis = isAcc ? [
+      k('PROCEDURES', '15,420', '2025 · in your 42 codes', { d: '+20%' }),
+      k('LEFT THE ACCOUNT', '7%', '806 of 11,916 in 2025 · +1 pt vs 2024', { fg: orange }),
+      k('OPPORTUNITY', A[2], 'billed charges of its claims in your codes'),
+      k('IN-RADIUS SHARE', '23%', 'of procedures within 100 mi · 2025'),
+      k('LEAKING $', '$76.3M', 'billed charges of cases that left · since 2022', { fg: orange })
+    ] : [
+      k('CLAIMS', '503', 'in 2025 · 564 in 2024', { d: '−11%', dFg: orange }),
+      k('BUSIEST DAY', 'Fri', 'most visits, all claims · 2025'),
+      k('CODE 47562', '282', '55% of their 2025 volume'),
+      k('REFERRED IN', '85', 'in 2025 · from 50 providers')
+    ];
+
+    const who = [{ n: 1, b: 'Federico Serrot — 1,850 cases here since 2022.', t: 'Highest-volume surgeon; 47562 is where volume concentrates (9,888, 33%).' }, { n: 2, b: 'Asadulla Chaudhary — 1,079 cases.', t: 'Aligns with 44970 at 5,846 (20%) — prime target for growth.' }, { n: 3, b: 'Cathleen Khandelwal — 851 cases.', t: 'Bariatric volume: 43775 at 1,072 (4%) plus bypass 43644 at 1,055.' }];
+    const BRIEF_ACC = {
+      capital: { for: 'For: Grow robotic procedure volume', objective: 'Grow robotic volume in these codes: 15,420 procedures in 2025 (up 20% YoY). Focus on Serrot, Chaudhary and Khandelwal — 55% of volume combined.', midTitle: 'VOLUME OVER THE YEARS', mid: [{ b: 'Up to 15,420 in 2025.', t: 'Volume rose every year since 2022 (11,006 → 15,420) — sustain the momentum.' }, { b: '20% year-over-year lift.', t: 'Align conversion efforts to the biggest drivers before volume slips.' }, { b: 'Top drivers: 47562 and 47563.', t: 'Cholecystectomy codes total 9,888 (33%) and 6,199 (21%).' }] },
+      clinical: { for: 'For: Grow share', objective: 'Win more of these codes by converting 20% procedure growth into share, targeting the high-volume codes behind the $264.7M opportunity.', midTitle: 'WHERE TO FOCUS', mid: [{ b: '47562: 9,888 (33% of mix).', t: 'Largest share — win more of the base cholecystectomy volume.' }, { b: '47563: 6,199 (21%).', t: 'Support cholecystectomy with cholangiography to grow volume here.' }, { b: '$264.7M opportunity.', t: 'Anchor the conversation on capturing more of it across these codes.' }] },
+      hema: { for: 'For: Value analysis committee', objective: 'Make the value case: 56% of encounters are inpatient at $1,825 allowed, against $1,398 in HOPD — where care sits drives cost.', midTitle: 'THE ECONOMICS', mid: [{ b: 'Inpatient 6,107 (56%).', t: 'Highest allowed per encounter at $1,825; paid $1,291.' }, { b: 'HOPD 4,632 (42%).', t: '$1,398 allowed — the setting with room to grow.' }, { b: 'Operating expenses $15.0B', t: 'against $13.6B net patient revenue — cost pressure is real.' }] },
+      enable: { for: 'For: Account planning', objective: 'Plan the account: 15,420 procedures (+20%), 7% leaving to 13 destinations, and $76.3M in charges gone since 2022.', midTitle: 'THE PLAN IN THREE LINES', mid: [{ b: 'Volume is growing.', t: '11,006 in 2022 to 15,420 in 2025.' }, { b: 'Leakage is low but steady.', t: '806 left in 2025, Aultman Hospital takes 21%.' }, { b: 'Payers are commercial-heavy.', t: '62% commercial, led by Elevance and CVS Health.' }] },
+      none: { for: 'Read this first', objective: 'Grow these codes at Cleveland Clinic: 15,420 procedures in 2025 (up 20%), with 806 leaving — mostly to Aultman and Summa.', midTitle: 'WHAT THE CLAIMS SAY', mid: [{ b: '15,420 procedures in 2025,', t: 'up 20% on 12,887 in 2024.' }, { b: '7% left the account', t: '— 806 of 11,916, Aultman Hospital takes 21%.' }, { b: '23% in-radius share', t: 'of 23,320 procedures within 100 miles.' }] }
+    };
+    const BRIEF_HCP = {
+      capital: { for: 'For: Robotic adoption', objective: 'Open by noting 503 claims in these codes in 2025 (down 11% vs 564) and align on robotic adoption priorities for Dr. Serrot.', midTitle: 'INDUSTRY RELATIONSHIPS', mid: [{ b: '$22K from Intuitive Surgical in 2025.', t: 'Public Open Payments record — existing robotics-industry engagement.' }, { b: '$0 from your robots.', t: 'No Monarch payments on file in 2025.' }] },
+      clinical: { for: 'For: Grow share', objective: 'Grow your share of Dr. Serrot\u2019s 503 claims — 55% sit in one code (47562), and 83% happen at Martin North.', midTitle: 'WHERE THEY WORK', mid: [{ b: 'Martin North Hospital: 83%', t: 'of visits across all years.' }, { b: '47562 is 55%', t: 'of their 2025 volume — 282 claims.' }] },
+      hema: { for: 'For: Value analysis committee', objective: 'Bring Dr. Serrot into the value conversation — 503 claims in 2025 and the busiest surgeon at the account.', midTitle: 'INDUSTRY RELATIONSHIPS', mid: [{ b: '$23K across all companies', t: 'in 2025; $196K across all years on file.' }, { b: '$22K of it from Intuitive.', t: 'Competitor robot relationship to plan around.' }] },
+      enable: { for: 'For: Account planning', objective: 'Dr. Serrot anchors the plan — 1,850 cases at Cleveland Clinic since 2022 and 85 referrals in from 50 providers in 2025.', midTitle: 'WHAT THE CLAIMS SAY', mid: [{ b: '503 claims in 2025,', t: 'down 11% on 564.' }, { b: '85 referred in', t: 'from 50 providers; family medicine sends 27%.' }] },
+      none: { for: 'Read this first', objective: 'Open by noting 503 claims in these codes in 2025 (down 11% vs 564) and ask what is driving the change.', midTitle: 'WHAT THE CLAIMS SAY', mid: [{ b: '503 claims in 2025,', t: 'down 11% on 564 in 2024.' }, { b: '$22K from Intuitive Surgical', t: 'in 2025 Open Payments.' }] }
+    };
+    const hcpOpen = [{ n: 1, b: 'Top mix code.', t: '282 claims for 47562 (55% of mix) in 2025 — what share of those are going robotic?' }, { n: 2, b: 'YoY volume trend.', t: 'Claims fell 11% (503 vs 564). What\u2019s the main driver, and does it relate to robotics?' }];
+    const B = isAcc ? BRIEF_ACC[v] : BRIEF_HCP[v];
+    const brief = Object.assign({}, B, { src: isAcc ? 'Built from Ottava-field-pro procedures · 2025 vs 2024' : 'Built from Ottava-field-pro claims · 2025 vs 2024', rightTitle: isAcc ? 'WHO TO SEE' : 'WHAT TO OPEN WITH', right: isAcc ? who : hcpOpen });
+
+    const pair = 'repeat(auto-fit, minmax(min(100%, 440px), 1fr))', one = 'minmax(0,1fr)';
+    const R = (...cells) => ({ cols: cells.length > 1 ? pair : one, cells: cells.map(ids => ({ cards: [].concat(ids).map((id, i, arr) => ({ [id]: true, grow: i === arr.length - 1 ? 1 : 0 })) })) });
+    const ACC_ROWS = {
+      capital: [R('mix'), R('volYear'), R(['capacity', 'robotic'], 'leakQ'), R('dest', 'drg'), R('payments', 'share'), R('hcps'), R('notes'), R('referrals')],
+      clinical: [R('hcps'), R('drg', ['dest', 'notes']), R('mix'), R('share', 'leakQ'), R('referrals')],
+      hema: [R(['site', 'capacity'], ['econ', 'finances']), R('share', 'leakQ'), R('payer', 'payments'), R('notes')],
+      enable: [R('mix'), R('volYear'), R(['capacity', 'robotic'], 'leakQ'), R('dest', 'drg'), R('payer', 'payments'), R('share', ['econ', 'finances']), R('hcps'), R('notes'), R('referrals')],
+      none: [R('mix'), R('volYear'), R(['capacity', 'robotic'], 'leakQ'), R('dest', 'drg'), R('share', 'payments'), R('hcps'), R('notes'), R('referrals')]
+    };
+    const h1 = R('payments', ['primary', 'hosp']), h2 = R('mix', ['whereOp', 'catch']), h3 = R('referrals');
+    const HCP_ROWS = { capital: [h1, h2, h3], clinical: [h2, h3, h1], hema: [h1, h2, h3], enable: [h2, h1, h3], none: [h1, h2, h3] };
+
+    const CC = ['#2447C4', '#0F766E', '#A16207', '#9F1239', '#475569', '#4D7C0F'];
+    const MIX_A = [['47562', 'Laparoscopy, surgical; cholecystectomy', 9888, '33%'], ['47563', 'Laparoscopy, surgical; cholecystectomy with cholangiography', 6199, '21%'], ['44970', 'Laparoscopy, surgical, appendectomy', 5846, '20%'], ['44120', 'Enterectomy, resection of small intestine; single resection and anastomosis', 1297, '4%'], ['43281', 'Laparoscopy, repair of paraesophageal hernia, with fundoplasty; without mesh', 1081, '4%'], ['43775', 'Laparoscopy, gastric restrictive procedure; sleeve gastrectomy', 1072, '4%']];
+    const MIX_H = [['47562', 'Laparoscopy, surgical; cholecystectomy', 282, '55%'], ['43281', 'Laparoscopy, repair of paraesophageal hernia, with fundoplasty', 69, '14%'], ['44970', 'Laparoscopy, surgical, appendectomy', 55, '11%'], ['43644', 'Laparoscopy, gastric restrictive procedure; gastric bypass and Roux-en-Y', 44, '9%'], ['47563', 'Laparoscopy, surgical; cholecystectomy with cholangiography', 15, '3%'], ['44202', 'Laparoscopy, enterectomy, resection of small intestine, single resection', 13, '3%']];
+    const MX = isAcc ? MIX_A : MIX_H;
+    const mix = MX.map((m, i) => ({ code: m[0], desc: m[1], n: m[2].toLocaleString('en-US'), pct: m[3], w: Math.round(m[2] / MX[0][2] * 100) + '%', c: CC[i] }));
+    const groups = [['Hepatobiliary Surgery', 8662], ['CPT Other Codes', 5799], ['Robotic GI Surgery', 1187], ['Bariatric Surgery', 47]].map((g, i) => ({ name: g[0], n: g[1].toLocaleString('en-US'), w: Math.max(1, g[1] / 156.95) + '%', c: CC[i] }));
+    const specs = [['Surgery', 7242], ['Student in an Organized Health Care Education/Training Program', 1806], ['Internal Medicine', 457], ['Surgical Critical Care', 432], ['Colon & Rectal Surgery', 298], ['Surgical Technologist', 279]].map(s => ({ name: s[0], n: s[1].toLocaleString('en-US'), w: Math.max(3, Math.round(s[1] / 72.42)) + '%' }));
+
+    const VY = [['2022', 11006, 10531, '$180.2M'], ['2023', 11455, 10939, '$191.4M'], ['2024', 12887, 12230, '$235.5M'], ['2025', 15420, 14346, '$286.6M'], ['2026*', 5359, 4904, '$116.6M']];
+    const volYears = VY.map((y, i) => ({ y: y[0], n: y[1].toLocaleString('en-US'), p: y[2].toLocaleString('en-US'), ch: y[3], h: Math.round(y[1] / 15420 * 82) + '%', c: i === 4 ? '#AFC0EE' : blue, rowBg: i === 3 ? '#F6F8FE' : '#fff' }));
+    const capacity = [['STAFFED BEDS', '5,630'], ['OPERATING ROOMS', '283'], ['SURGERIES A YEAR (EST.)', '268,308'], ['DISCHARGES', '264,506'], ['NET PATIENT REVENUE', '$13.6B'], ['HOSPITALS IN THE SYSTEM', '26'], ['OWNERSHIP', 'Voluntary Nonprofit'], ['TYPE', 'Health System']].map(c => ({ k: c[0], v: c[1], fs: c[1].length > 10 ? '15px' : '19px' }));
+    const QK = [1340, 1390, 1400, 1380, 1395, 1440, 1430, 1450], QL = [70, 75, 80, 72, 78, 95, 88, 98];
+    const quarters = QK.map((kk, i) => ({ label: 'Q' + (i % 4 + 1) + ' ' + (i < 4 ? '24' : '25'), kept: kk - 900, left: QL[i], gap: 1560 - kk - QL[i], op: i >= 6 ? .6 : 1, lfg: i === 7 ? blue : '#7A839A', lw: i === 7 ? 700 : 400 }));
+    const dests = [['Aultman Hospital', 'Canton, OH · Aultman Health Foundation', 332, '$7.9M', 21], ['Summa Health System', 'Akron, OH · Summa Health', 250, '$3.0M', 16], ['Ashtabula County Medical Center', 'Ashtabula, OH · Independent', 241, '$4.6M', 15], ['Tradition Surgery Center, LLC', 'Port St Lucie, FL · Compass Surgical Partners', 177, '$6.2M', 11], ['University Hospitals Medical Group Inc', 'Cleveland, OH · University Hospitals', 78, '$524K', 5], ['Mercy Health St. Vincent', 'Toledo, OH · Bon Secours Mercy Health', 64, '$1.1M', 4], ['MetroHealth Medical Center', 'Cleveland, OH · MetroHealth', 58, '$1.4M', 4], ['Southwest General Health Center', 'Middleburg Hts, OH · Independent', 51, '$880K', 3], ['St. Vincent Charity Medical Center', 'Cleveland, OH · Sisters of Charity', 47, '$712K', 3], ['Lake Health TriPoint Medical Center', 'Concord, OH · Lake Health', 40, '$655K', 3], ['Mercy Health Lorain Hospital', 'Lorain, OH · Bon Secours Mercy Health', 33, '$498K', 2], ['UH Geauga Medical Center', 'Chardon, OH · University Hospitals', 27, '$402K', 2], ['Firelands Regional Medical Center', 'Sandusky, OH · Independent', 22, '$310K', 1]].map((d, i) => ({ rank: i + 1, name: d[0], meta: d[1], n: String(d[2]), billed: d[3], pct: d[4] + '%' }));
+    const DRG = [['Gastrointestinal obstruction with CC', '389', '1,587', '6,382', '$70.5M', 25], ['Gastrointestinal obstruction without CC/MCC', '390', '886', '3,435', '$27.8M', 26], ['Gastrointestinal obstruction with MCC', '388', '683', '2,972', '$40.6M', 23], ['Laparoscopic cholecystectomy without C.D.E. with CC', '418', '173', '2,648', '$21.2M', 7], ['Disorders of the biliary tract with CC', '445', '514', '2,027', '$25.2M', 25], ['Laparoscopic cholecystectomy without C.D.E. without CC/MCC', '419', '157', '1,966', '$13.1M', 8], ['Laparoscopic cholecystectomy without C.D.E. with MCC', '417', '110', '1,590', '$21.9M', 7], ['Disorders of the biliary tract with MCC', '444', '467', '1,550', '$25.3M', 30], ['Major small and large bowel procedures with MCC', '329', '135', '1,353', '$43.6M', 10], ['Appendix procedures without CC/MCC', '399', '92', '1,262', '$5.1M', 7]];
+    const drgShown = DRG.map(d => ({ name: d[0], code: d[1], left: d[2], of: d[3], billed: d[4], pct: d[5] + '%', fw: 650, fg: '#0B1220', rowBg: 'transparent', pillBg: d[5] >= 25 ? '#FDEEE5' : '#F0F2F7', pillFg: d[5] >= 25 ? '#9A3B12' : '#3C4557' }));
+    const drgRows = drgShown;
+
+    const pay = isAcc ? {
+      sub: 'CMS Open Payments · 2025 · the 6,615 doctors based here', comp: '$207K', compSub: 'to 74 doctors', yours: '$107', yoursSub: 'Monarch',
+      robots: [{ co: 'Intuitive Surgical', sys: 'da Vinci, Ion', v: '$205K', w: '100%', c: '#8A93A5', fg: '#0B1220' }, { co: 'Distalmotion', sys: 'Dexter', v: '$1K', w: '1%', c: '#8A93A5', fg: '#0B1220' }, { co: 'Johnson & Johnson', sys: 'Monarch · yours', v: '$107', w: '1%', c: blue, fg: blue }],
+      hasWho: true, who: [['Samuel Szomstein', 'Intuitive', '$38K'], ['Kalman Bencsath', 'Intuitive', '$22K'], ['Federico Serrot', 'Intuitive', '$22K'], ['Pablo Giuseppucci', 'Distalmotion, Intuitive', '$19K'], ['Emanuele Lo Menzo', 'Intuitive', '$12K'], ['Matthew Kroh', 'Intuitive', '$11K'], ['Ricard Corcelles', 'Intuitive', '$9K'], ['Salvador Navarrete', 'Intuitive', '$8K'], ['Ali Aminian', 'Intuitive', '$7K'], ['Conrad Simpfendorfer', 'Intuitive', '$6K']].map(x => ({ name: x[0], co: x[1], v: x[2] })),
+      all: 'To 3,246 of 6,615 doctors. Largest: Stryker $3.0M · Enovis $1.1M · Zimmer Biomet $809K', allV: '$10.4M'
+    } : {
+      sub: 'CMS Open Payments to this HCP · 2025, the latest year', comp: '$22K', compSub: 'Intuitive Surgical', yours: '$0', yoursSub: 'none in 2025',
+      robots: [{ co: 'Intuitive Surgical', sys: 'da Vinci, Ion', v: '$22K', w: '100%', c: '#8A93A5', fg: '#0B1220' }, { co: 'Johnson & Johnson', sys: 'Monarch · yours', v: '$0', w: '0%', c: blue, fg: blue }],
+      hasWho: false, who: [],
+      all: '$196K across all years. Largest other: J&J $224 · BD $191 · Intra-Sana $71', allV: '$23K'
+    };
+    const shareLegend = [{ c: blue, k: 'Your volume · 42 codes', v: '5,444' }, { c: '#A9BBEE', k: 'Combined market in 100 mi', v: '23,320' }, { c: '#DCE3F2', k: 'Competing sites since 2022', v: '548' }];
+    const shareYears = [['2022', 29], ['2023', 31], ['2024', 28], ['2025', 23]].map((y, i) => ({ y: y[0], v: y[1] + '%', h: Math.round(y[1] * 1.3), op: i === 3 ? 1 : .55 }));
+    const radius = [['The Cleveland Clinic Foundation', 'Cleveland, OH', '11,184', '9.3%', 1], ['Aultman Hospital', 'Aultman Health Foundation · Canton, OH', '5,352', '4.4%'], ['Akron General Medical Center', 'Cleveland Clinic · Akron, OH', '4,698', '3.9%', 1], ['Oakwood Healthcare, Inc.', 'Independent · Dearborn, MI', '4,348', '3.6%'], ['Summa Health System', 'Summa Health · Akron, OH', '4,031', '3.3%'], ['University Hospitals Cleveland', 'University Hospitals · Cleveland, OH', '3,912', '3.2%'], ['MetroHealth Medical Center', 'MetroHealth · Cleveland, OH', '3,104', '2.6%'], ['Mercy Medical Center', 'Bon Secours Mercy · Canton, OH', '2,688', '2.2%'], ['Fairview Hospital', 'Cleveland Clinic · Cleveland, OH', '2,431', '2.0%', 1], ['Lake Health TriPoint', 'Lake Health · Concord, OH', '1,954', '1.6%']].map(r => ({ name: r[0], meta: r[1], n: r[2], pct: r[3], fg: r[4] ? blue : '#0B1220', bg: r[4] ? '#F3F6FE' : 'transparent', tag: r[4] ? 'inline' : 'none' }));
+    const toHcp = this.nav('hcp');
+    const hcpLists = [
+      { title: 'HCPs here', sub: 'top 4 by cases here since 2022', bl: '0', rows: [['FS', 'Federico Serrot', 'Surgery · 864 patients · $14.8M billed', 1850], ['AC', 'Asadulla Chaudhary', 'Medical trainee · 517 patients', 1079], ['CK', 'Cathleen Khandelwal', 'Surgery · 598 patients · $6.7M billed', 851], ['MB', 'Marita Bauman', 'Surgery · 465 patients · $10.0M billed', 691], ['MK', 'Matthew Kroh', 'Surgery · 402 patients · $8.1M billed', 588], ['RC', 'Ricard Corcelles', 'Surgery · 356 patients · $6.9M billed', 512], ['AA', 'Ali Aminian', 'Bariatric Surgery · 301 patients · $7.4M billed', 447], ['SN', 'Salvador Navarrete', 'Surgery · 288 patients · $5.2M billed', 403]].map(h => ({ ini: h[0], name: h[1], sub: h[2], n: h[3].toLocaleString('en-US'), w: Math.round(h[3] / 18.5) + '%', go: toHcp, avBg: '#DCE3F5', avFg: '#22409F' })) },
+      { title: 'Who refers here', sub: 'all years on file · patients referred', bl: '1px solid #EEF1F6', rows: [['FS', 'Federico Serrot', 'Surgery · 280 patients', 313], ['MB', 'Marita Bauman', 'Surgery · 217 patients', 240], ['JW', 'Justin Wasdin', 'Physician Assistant · 228 patients', 238], ['CK', 'Cathleen Khandelwal', 'Surgery · 214 patients', 215], ['MK', 'Matthew Kroh', 'Surgery · 171 patients', 188], ['EN', 'Erin Nolan', 'Nurse Practitioner · 160 patients', 172], ['AA', 'Ali Aminian', 'Bariatric Surgery · 139 patients', 151], ['TR', 'Tomas Ruiz', 'Gastroenterology · 120 patients', 133]].map(h => ({ ini: h[0], name: h[1], sub: h[2], n: String(h[3]), w: Math.round(h[3] / 3.13) + '%', go: toHcp, avBg: '#E6F2EF', avFg: '#0F766E' })) }
+    ];
+    const rr = (rows, max) => rows.map(r => ({ name: r[0], sub: r[1], v: r[2] + ' · ' + r[3] + (r[3] === 1 ? ' doctor' : ' doctors'), w: Math.round(r[2] / max * 100) + '%' }));
+    const ref = isAcc ? {
+      title: 'Referrals in and out', sub: 'patient referrals in these codes · 2025',
+      stats: [{ k: 'IN FROM OUTSIDE', v: '313', sub: '11% of 2,807 received · 319 in 2024', fg: '#0B1220', bl: '0' }, { k: 'SENT OUTSIDE', v: '46', sub: '2% of 2,540 its doctors sent', fg: orange, bl: '1px solid #E3E7EF' }, { k: 'INSIDE CLEVELAND CLINIC', v: '2,494', sub: 'both doctors at Cleveland Clinic', fg: '#0B1220', bl: '1px solid #E3E7EF' }],
+      cols: [
+        { title: 'SENDS THEM PATIENTS', unit: 'REFERRALS · DOCTORS', c: blue, foot: '137 organizations in total', rows: rr([['Ashtabula County Medical Center', 'Ashtabula, OH', 22, 8], ['Summa Health System', 'Akron, OH', 10, 7], ['City of Wooster', 'Wooster, OH', 7, 5], ['Firelands Regional Medical Center', 'Sandusky, OH', 7, 4], ['Trinity Hospital Twin City', 'Dennison, OH', 7, 5], ['Community Health Care Inc.', 'Canal Fulton, OH', 6, 3], ['Mercy Health St. Vincent', 'Toledo, OH', 5, 3], ['Lake Health TriPoint', 'Concord, OH', 5, 2], ['Southwest General', 'Middleburg Hts, OH', 4, 3], ['Wayne Healthcare', 'Greenville, OH', 4, 2], ['Knox Community Hospital', 'Mount Vernon, OH', 4, 2], ['Mercy Health Lorain', 'Lorain, OH', 3, 2]], 22) },
+        { title: 'THEIR PATIENTS WENT TO', unit: 'REFERRALS · DOCTORS', c: orange, foot: '27 organizations in total', rows: rr([['Acute Care Surgeons LLC', 'Westerville, OH', 4, 1], ['Aultman Hospital Main Campus', 'Canton, OH', 4, 4], ['Mount Carmel St. Anns', 'Westerville, OH', 4, 1], ['Mountainview Hospital', 'Las Vegas, NV', 3, 1], ['OSU Surgery, LLC', 'Columbus, OH', 3, 3], ['The Surgical Hospital at Southwoods', 'Youngstown, OH', 3, 1], ['Summa Health Akron Campus', 'Akron, OH', 2, 2], ['MetroHealth Medical Center', 'Cleveland, OH', 2, 1], ['Mercy Medical Center', 'Canton, OH', 2, 1], ['UH Ahuja Medical Center', 'Beachwood, OH', 2, 2], ['OhioHealth Riverside', 'Columbus, OH', 1, 1], ['ProMedica Toledo Hospital', 'Toledo, OH', 1, 1]], 4) }
+      ]
+    } : {
+      title: 'Referral network', sub: 'who sends them work and where they send it · in these codes · 2025',
+      stats: [{ k: 'REFERRED IN', v: '85', sub: 'from 50 providers', fg: '#0B1220', bl: '0' }, { k: 'REFERRED OUT', v: '6', sub: 'to 4 providers', fg: orange, bl: '1px solid #E3E7EF' }, { k: 'TOP SENDING SPECIALTY', v: 'Family', sub: '27% of inbound', fg: '#0B1220', bl: '1px solid #E3E7EF' }],
+      cols: [
+        { title: 'WHO SENDS THEM WORK', unit: 'SHARE OF INBOUND', c: blue, foot: 'Largest groups: Martin North Hospital · Cleveland Clinic Weston · Pinnacle Home Care', rows: [['Family Medicine', 'specialty', '27%', 100], ['Internal Medicine', 'specialty', '14%', 52], ['Emergency Medicine', 'specialty', '12%', 44]].map(r => ({ name: r[0], sub: r[1], v: r[2], w: r[3] + '%' })) },
+        { title: 'WHERE THEY SEND WORK', unit: 'REFERRALS', c: orange, foot: 'Counted per code: a referral with two codes counts under each.', rows: [{ name: 'Martin North Hospital', sub: 'Stuart, FL · physician group', v: '6 · 100%', w: '100%' }] }
+      ]
+    };
+    const SC = ['#1E3A8A', '#0F766E', '#A16207', '#94A3B8', '#475569'];
+    const sites = [['HOPD', 4632, '42%'], ['ASC', 83, '1%'], ['Inpatient', 6107, '56%'], ['Office', 0, '0%'], ['Other professional', 173, '2%']].map((s, i) => ({ name: s[0], n: s[1].toLocaleString('en-US'), pct: s[2], w: s[2], c: SC[i] }));
+    const econ = [['HOPD', '$1,398', '$1,065', '4,632'], ['ASC', '$1,556', '$1,082', '83'], ['Inpatient', '$1,825', '$1,291', '6,107'], ['Other professional', '$1,244', '$932', '173'], ['Billed by the facility', '$11,194', '$7,821', '6,447']].map((e, i) => ({ s: e[0], a: e[1], p: e[2], n: e[3], bt: i === 4 ? '1px dashed #D7DEEC' : '1px solid #F2F4F8', bg: i === 4 ? '#FAFBFD' : '#fff' }));
+    const finPayers = [['Medicare', '$1.9B net', '14%', '#9A3412'], ['Medicaid', '$923.1M net', '6.8%', '#166534'], ['Private and other', '—', '80%', '#94A3B8']].map(p => ({ name: p[0], v: p[1], pct: p[2], w: p[2], c: p[3] }));
+    const CH = [['Commercial', '18,450', '62%', '#1E3A5F'], ['Medicare', '5,268', '18%', '#9A3412'], ['Medicaid', '4,551', '15%', '#166534'], ['Other', '972', '3%', '#94A3B8']];
+    const channels = CH.map(c => {
+      const open = st.openCh === c[0];
+      const detail = c[0] === 'Commercial' ? [{ title: 'SUB-CHANNELS', rows: [['Commercial', '17,662', '96%'], ['Medicare / Supplemental (Part B)', '346', '2%'], ['Cash or Self-Pay', '246', '1%'], ['Health Insurance Marketplace', '196', '1%']] }, { title: 'TOP PAYERS', rows: [['Elevance Health', '3,646', '20%'], ['CVS Health', '3,245', '18%'], ['UnitedHealth Group', '2,450', '13%'], ['Cigna Group', '2,107', '11%'], ['Medical Mutual of Ohio', '2,072', '11%']] }] : [{ title: 'DETAIL', rows: [['Not broken out in this pull', '—', '0%']] }];
+      return { name: c[0], n: c[1], pct: c[2], c: c[3], open, chev: open ? '▾' : '▸', bg: open ? '#F7F8FB' : 'transparent', toggle: () => this.setState({ openCh: open ? null : c[0] }), groups: detail.map(g => ({ title: g.title, rows: g.rows.map(r => ({ name: r[0], n: r[1], pct: r[2] })) })) };
+    });
+
+    const primary = [{ icon: 'ID', k: 'NPI', v: '1386906550', span: 'auto' }, { icon: '◎', k: 'Practice location', v: 'Stuart, FL', span: 'auto' }, { icon: 'SP', k: 'Specialty', v: 'Surgery · General Surgery', span: '1 / -1' }, { icon: '✉', k: 'Work email', v: 'federico.serrot@stdavids.com', span: '1 / -1' }, { icon: '☏', k: 'Practice line', v: '+1 772-219-4026', span: 'auto' }, { icon: '☏', k: 'Second line', v: '404.778.3712', span: 'auto' }];
+    const hospFacts = [['WHERE', 'Stuart, FL'], ['TYPE', 'Physician group'], ['HEALTH SYSTEM', 'Cleveland Clinic'], ['AFFILIATED', '2026']].map(h => ({ k: h[0], v: h[1] }));
+    const opSites = [['Cleveland Clinic Martin North Hospital', '34,305', '83%', blue], ["Emory Saint Joseph's Hospital", '5,739', '14%', '#0F766E'], ['Emory University Hospital', '1,407', '3%', '#A16207']].map(s => ({ name: s[0], n: s[1], pct: s[2], c: s[3] }));
+    const WD = [['Mon', .78], ['Tue', .9], ['Wed', .67], ['Thu', .7], ['Fri', 1], ['Sat', .06], ['Sun', .06]];
+    const weekdays = WD.map(d => ({ d: d[0], h: Math.round(d[1] * 100) + '%', c: d[1] === 1 ? blue : '#B7C6EE', lfg: d[1] === 1 ? blue : '#7A839A', lw: d[1] === 1 ? 700 : 400 }));
+
+    return {
+      railTotal: RAIL.length, railPg: this.pager('rail', railAll, 10),
+      destPg: this.pager('dest', dests, 5), drgPg: this.pager('drg', drgRows, 5), whoPg: this.pager('who', pay.who, 5), radPg: this.pager('rad', radius, 5),
+      viewingLabel: v === 'none' ? 'No view selected' : 'Viewing as ' + LBL[v] + ' ', backDisp: v === 'none' ? 'none' : 'inline', clearView: () => this.setState({ view: 'none' }), navLabelDisp: w >= 1180 ? 'inline' : 'none', greetDisp: w >= 1100 ? 'block' : 'none', navLinks, viewTabs, crumbs, head, kpis, brief, isAccountPage: isAcc,
+      pageCols: isAcc && w >= 1180 ? '272px minmax(0,1fr)' : 'minmax(0,1fr)', showRail: isAcc && w >= 1180,
+      rows: isAcc ? ACC_ROWS[v] : HCP_ROWS[v],
+      mixSub: isAcc ? 'top codes by claims · 2025' : '503 claims in your codes, by code · 2025',
+      mix, groups, specs, volYears, capacity, quarters, dests, drgRows,
+      
+      pay, shareLegend, shareYears, hcpLists: hcpLists.map((hl, i) => Object.assign({}, hl, { pg: this.pager('hl' + i, hl.rows, 4) })), ref: Object.assign({}, ref, { cols: ref.cols.map((c, i) => Object.assign({}, c, { pg: this.pager('ref' + (isAcc ? 'a' : 'h') + i, c.rows, 6) })) }), sites, econ, finPayers, channels,
+      primary, hospFacts, opSites, weekdays
+    };
+  }
+}
+</script>
+</body>
+</html>
