@@ -1,11 +1,14 @@
 # AppNexus — Field Pro mobile concept
 
-Private working repo for the Field Pro field-sales mobile concept.
+Public working repo for the Field Pro field-sales mobile concept.
 Continued from Codex exploration work in this same folder.
 
 ## What's here
 
-- `mockup/index.html` — standalone clickable concept (My book / Search / Activity / Reports, HCO → HCP → note flow). All data illustrative, notes in-memory only.
+- `mockup/field-pro-app.html` — consolidated concept (Today / Targets / Activity / Insights, all 18 HCP + 19 HCO sections named, SSE report + sync-state simulations). All data illustrative, in-memory only.
+- `mockup/index.html` — earlier standalone concept (My book / Search / Activity / Reports, HCO → HCP → note flow).
+- `docs/hcp-hco-field-inventory.md` — 18 HCP tabs + HCO sections from source vs Field Pro limited view.
+- `docs/leakage-capture-plan.md` — SSE report lifecycle, quick-note vs transcript stores, three CRM paths.
 - `docs/product-plan.md` — scope, staged plan, prototype boundary.
 - `docs/app-flow.md` — Choose account → Prepare → Meet → Log visit flow.
 - `docs/design-review.md` — verified Field Pro / HCP / HCO fields, hierarchy rules.
