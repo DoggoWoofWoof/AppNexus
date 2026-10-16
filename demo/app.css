@@ -182,3 +182,13 @@
 #field-pro-responsive .day-alternative{padding:18px 0;border-bottom:1px solid var(--day-line)}
 #field-pro-responsive .day-alternative .day-reason{margin-top:6px}
 #field-pro-responsive .day-material{display:grid;gap:3px;padding:12px 0}
+
+#field-pro-responsive .day-capture-context {margin:16px 0;border-bottom:1px solid var(--day-line);padding-bottom:12px;}
+#field-pro-responsive .day-capture-context summary {min-height:44px;padding:10px 0;font-weight:700;overflow-wrap:anywhere;}
+#field-pro-responsive .day-capture-context .day-check {align-items:flex-start;min-height:44px;margin:8px 0;}
+#field-pro-responsive .day-outcomes {display:flex;gap:8px;flex-wrap:wrap;margin:10px 0;}
+#field-pro-responsive .day-outcomes button {flex:1 1 150px;}
+#field-pro-responsive audio {display:block;width:100%;max-width:100%;min-width:0;margin:8px 0;}
+#field-pro-responsive .day-document {white-space:pre-wrap;overflow-wrap:anywhere;font:inherit;margin:12px 0;}
+#field-pro-responsive .day-history-preview {white-space:pre-wrap;overflow-wrap:anywhere;margin:8px 0;}
+#field-pro-responsive .day-material {min-width:0;}

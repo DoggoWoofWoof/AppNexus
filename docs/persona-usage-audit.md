@@ -1,5 +1,7 @@
 # Sales-rep personas and usage audit
 
+> Follow-up: the findings below describe the pre-fix baseline. See [the ten-persona rerun](persona-regression-results.md) for the implemented mock-demo fixes, observed outcomes and remaining production gates.
+
 17 October 2026 · Baseline: demo commit `5de664d`; Insights source `53c2540fba8aaa104f8c79a2a1c2f8c3c414b8db`.
 
 The major recording/transcript capabilities are mapped. The complete mobile recording lifecycle is **not implemented or fully specified**. The demo has interactive text notes and follow-ups, but Record/Upload and the transcript-library destination remain previews. Existing upstream code is a foundation, not proof of a working mobile integration.

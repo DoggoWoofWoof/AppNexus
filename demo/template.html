@@ -25,6 +25,8 @@
   </header>
   <details class="demo-guide">
     <summary>Try the demo</summary>
+    <label>Mock service scenario <select id="demo-scenario"><option value="normal">Normal</option><option value="offline">Offline</option><option value="microphone-denied">Microphone denied</option><option value="storage-full">Device storage full</option><option value="transcription-fails">Transcription failure</option><option value="report-fails">Report failure</option><option value="booking-declined">Booking declined</option><option value="no-candidates">No suitable alternatives</option></select></label>
+    <button type="button" id="demo-booking-cancel">Mock cancellation of accepted request</button>
     <ol>
       <li>The sample day has appointments at 10:00 and 14:00. Open <strong>Appointment changed?</strong> and choose <strong>Doctor cancelled</strong>.</li>
       <li>Inspect an alternative, use the slot for a visit or call, or leave it open. The other appointment stays fixed.</li>
@@ -33,7 +35,7 @@
       <li>Review or edit the conversation in Activity and complete the linked follow-up.</li>
       <li>Log a visit and follow-up, then explore the short HCP brief, full profile sections and Insights tools.</li>
     </ol>
-    <p>Plans and notes stay in this page's memory and disappear on refresh. No production API, CRM, report, routing or backup service is connected. Map geography is real; people, assignments and activity are illustrative.</p>
+    <p>Plans, notes and received audio chunks are stored on this browser and survive refresh. Sample recordings are tones; their transcripts are fixtures. Transcription, reports, office responses, availability and driving times are mocked. No production API, CRM or cloud backup is connected. Map geography is real; people and activity are illustrative.</p>
     <p><a href="https://github.com/DoggoWoofWoof/AppNexus/blob/main/docs/plan-status-and-endpoint-audit.md">Plan and endpoint status</a> · <a href="https://github.com/DoggoWoofWoof/AppNexus/blob/main/docs/surface-area-audit.md">Feature and screen audit</a> · <a href="../mockup/field-pro-responsive.html">Exported conversation preview</a></p>
   </details>
   <main class="demo-product" aria-label="Field Pro interactive concept">

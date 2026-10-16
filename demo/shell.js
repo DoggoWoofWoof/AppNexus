@@ -3,7 +3,7 @@
   const key = 'appnexus.demo.preferences.v1';
   let preferences = {view:'Phone',theme:'system'};
   try { preferences = {...preferences,...JSON.parse(localStorage.getItem(key)||'{}')}; } catch {}
-  // Only display settings are retained; notes and plans deliberately stay in memory.
+  // Display preferences are separate from workspace records in IndexedDB.
   window.openai = {widgetState:null,setWidgetState:async()=>{}};
   function save() { try { localStorage.setItem(key,JSON.stringify(preferences)); } catch {} }
   function apply() {
@@ -26,6 +26,8 @@
       apply();save();
     });
     document.getElementById('demo-theme').addEventListener('change',e=>{preferences.theme=e.target.value;apply();save()});
-    document.getElementById('demo-reset').addEventListener('click',()=>{preferences={view:'Phone',theme:preferences.theme};save();location.reload()});
+    document.getElementById('demo-reset').addEventListener('click',()=>{if(confirm('Clear the active sample workspace, including notes and recordings on this browser?'))window.dispatchEvent(new CustomEvent('field-pro:reset'))});
+    document.getElementById('demo-scenario').addEventListener('change',e=>window.dispatchEvent(new CustomEvent('field-pro:scenario',{detail:{scenario:e.target.value}})));
+    document.getElementById('demo-booking-cancel').addEventListener('click',()=>window.dispatchEvent(new CustomEvent('field-pro:booking-cancel')));
   });
 })();

@@ -1,9 +1,9 @@
 {
-  "version": 1,
+  "version": 2,
   "date": "2026-10-17",
   "baselineDemoCommit": "5de664d",
   "insightsSourceCommit": "53c2540fba8aaa104f8c79a2a1c2f8c3c414b8db",
-  "verification": "Read-only source and prototype walkthrough; no deployed API, microphone or recording test",
+  "verification": "Ten scripted browser persona walkthroughs; 19 automated model/IndexedDB/recording tests. Synthetic audio only; no real microphone or deployed API.",
   "productionMobileIntegration": "Not implemented",
   "personaEvidence": "Five fictional behavioral hypotheses; not measured user research",
   "report": "persona-usage-audit.md",
@@ -18,27 +18,420 @@
     "targetLists": "reference/repos/docnexus-ai-insights/server/routes/targetLists.js"
   },
   "personas": [
-    {"id":"P1","name":"Arjun","behavior":"Minimum-effort relationship rep","jobs":["Accurate quick outcome","Optional short voice memo"],"criticalGaps":["G01","G02","G03","G05"]},
-    {"id":"P2","name":"Meera","behavior":"Interrupted/offline field rep","jobs":["Capture despite connectivity loss","Recover after interruption or process death"],"criticalGaps":["G01","G02","G04"]},
-    {"id":"P3","name":"Kabir","behavior":"New territory rep","jobs":["Identify the right HCP and site","Prepare and capture without re-entering context"],"criticalGaps":["G02","G05","G06"]},
-    {"id":"P4","name":"Riya","behavior":"Cancellation-heavy planner","jobs":["Recover an opened slot","Preserve other fixed commitments"],"criticalGaps":["G09"]},
-    {"id":"P5","name":"Dev","behavior":"Evidence-led specialist","jobs":["Prepare supported meeting evidence","Review a multi-HCP conversation and its original source"],"criticalGaps":["G03","G06","G07","G08","G10"]}
+    {
+      "id": "P1",
+      "name": "Arjun",
+      "behavior": "Minimum-effort relationship rep",
+      "jobs": [
+        "Accurate quick outcome",
+        "Optional short voice memo"
+      ],
+      "criticalGaps": [
+        "G01",
+        "G02",
+        "G03",
+        "G05"
+      ]
+    },
+    {
+      "id": "P2",
+      "name": "Meera",
+      "behavior": "Interrupted/offline field rep",
+      "jobs": [
+        "Capture despite connectivity loss",
+        "Recover after interruption or process death"
+      ],
+      "criticalGaps": [
+        "G01",
+        "G02",
+        "G04"
+      ]
+    },
+    {
+      "id": "P3",
+      "name": "Kabir",
+      "behavior": "New territory rep",
+      "jobs": [
+        "Identify the right HCP and site",
+        "Prepare and capture without re-entering context"
+      ],
+      "criticalGaps": [
+        "G02",
+        "G05",
+        "G06"
+      ]
+    },
+    {
+      "id": "P4",
+      "name": "Riya",
+      "behavior": "Cancellation-heavy planner",
+      "jobs": [
+        "Recover an opened slot",
+        "Preserve other fixed commitments"
+      ],
+      "criticalGaps": [
+        "G09"
+      ]
+    },
+    {
+      "id": "P5",
+      "name": "Dev",
+      "behavior": "Evidence-led specialist",
+      "jobs": [
+        "Prepare supported meeting evidence",
+        "Review a multi-HCP conversation and its original source"
+      ],
+      "criticalGaps": [
+        "G03",
+        "G06",
+        "G07",
+        "G08",
+        "G10"
+      ]
+    },
+    {
+      "id": "P6",
+      "name": "Sana",
+      "behavior": "Bilingual/noisy environment",
+      "jobs": [
+        "Typed fallback",
+        "Search corrected and original words"
+      ]
+    },
+    {
+      "id": "P7",
+      "name": "Oliver",
+      "behavior": "Uncertain booking responses",
+      "jobs": [
+        "Decline/re-request",
+        "Ignore duplicate or stale events"
+      ]
+    },
+    {
+      "id": "P8",
+      "name": "Nikhil",
+      "behavior": "Multitasking across visits",
+      "jobs": [
+        "Separate drafts",
+        "Undo/edit precise outcome"
+      ]
+    },
+    {
+      "id": "P9",
+      "name": "Asha",
+      "behavior": "Small phone and large text",
+      "jobs": [
+        "Use 320 px at 200% text"
+      ]
+    },
+    {
+      "id": "P10",
+      "name": "Elena",
+      "behavior": "Shared-device scope and cleanup",
+      "jobs": [
+        "Isolated rep workspaces",
+        "Trash/restore/scoped deletion"
+      ]
+    }
   ],
   "capabilities": [
-    {"id":"C01","name":"Typed notes and insights","features":["IN01","FP09","HP09"],"screens":["S17"],"source":["capture"],"prototype":"Interactive text; memory only","gaps":["G02","G03","G05"]},
-    {"id":"C02","name":"Audio recording","features":["IN01"],"screens":["S17"],"source":["capture"],"prototype":"Recording preview only","gaps":["G01","G04","G07"]},
-    {"id":"C03","name":"Durable audio draft recovery","features":["IN02"],"screens":["S17","S20"],"source":["drafts","capture"],"prototype":"Not durable; no audio captured","gaps":["G01","G02","G04"]},
-    {"id":"C04","name":"Typed draft autosave","features":["IN02"],"screens":["S17","S20"],"source":["drafts","capture"],"prototype":"In-page resume only","gaps":["G01","G02"]},
-    {"id":"C05","name":"Upload and remote file storage","features":["IN01","IN02"],"screens":["S17","S20"],"source":["upload","model"],"prototype":"File upload preview only","gaps":["G01","G02","G05"]},
-    {"id":"C06","name":"Transcription, insight processing and retries","features":["IN02"],"screens":["S18","S25"],"source":["upload","transcripts","model"],"prototype":"Generic processing preview","gaps":["G05","G06"]},
-    {"id":"C07","name":"Transcript library, search and retrieval","features":["IN03"],"screens":["S16","S18"],"source":["transcripts"],"prototype":"Library destination preview only","gaps":["G06"]},
-    {"id":"C08","name":"Audio playback, seek and download","features":["IN03"],"screens":["S18"],"source":["transcripts","detail"],"prototype":"Not implemented","gaps":["G06"]},
-    {"id":"C09","name":"Original and edited transcript","features":["IN03"],"screens":["S18"],"source":["transcripts","model","detail"],"prototype":"Text-note review only","gaps":["G03","G06"]},
-    {"id":"C10","name":"Summary, insights, attendees and tags","features":["IN03","IN04"],"screens":["S18"],"source":["transcripts","model","detail"],"prototype":"Not implemented as rich conversation review","gaps":["G03","G05","G07"]},
-    {"id":"C11","name":"Optional speaker/timestamp tagged segments","features":["IN03"],"screens":["S18"],"source":["model","transcripts"],"prototype":"Not implemented","gaps":["G03","G07"],"limit":"Optional gated schema is not proof of reliable diarization or synchronized playback"},
-    {"id":"C12","name":"Accepted follow-ups linked to conversation","features":["IN07","IN11"],"screens":["S18","S19"],"source":["transcripts","tasks","targetLists"],"prototype":"Interactive local follow-up; no AI extraction","gaps":["G02","G03"]},
-    {"id":"C13","name":"Company/team scope and personal-note visibility","features":["IN12","AD03"],"screens":["S18","S37"],"source":["transcripts"],"prototype":"No auth or permission enforcement","gaps":["G10"]},
-    {"id":"C14","name":"Deletion and retention of audio/text/derived copies","features":["IN03","IN12"],"screens":["S18","S37"],"source":["transcripts"],"prototype":"Not implemented","gaps":["G10"],"limit":"Reviewed delete handler removes the database record; end-to-end storage cleanup and policy are not established"}
+    {
+      "id": "C01",
+      "name": "Typed notes and insights",
+      "features": [
+        "IN01",
+        "FP09",
+        "HP09"
+      ],
+      "screens": [
+        "S17"
+      ],
+      "source": [
+        "capture"
+      ],
+      "prototype": "Durable local notes; explicit outcomes",
+      "gaps": [
+        "G02",
+        "G03",
+        "G05"
+      ],
+      "baselinePrototype": "Interactive text; memory only"
+    },
+    {
+      "id": "C02",
+      "name": "Audio recording",
+      "features": [
+        "IN01"
+      ],
+      "screens": [
+        "S17"
+      ],
+      "source": [
+        "capture"
+      ],
+      "prototype": "Synthetic tone and optional browser MediaRecorder; real microphone not tested",
+      "gaps": [
+        "G01",
+        "G04",
+        "G07"
+      ],
+      "baselinePrototype": "Recording preview only"
+    },
+    {
+      "id": "C03",
+      "name": "Durable audio draft recovery",
+      "features": [
+        "IN02"
+      ],
+      "screens": [
+        "S17",
+        "S20"
+      ],
+      "source": [
+        "drafts",
+        "capture"
+      ],
+      "prototype": "Received chunks persist before submit; interruption/reload recovery and quota retry tested",
+      "gaps": [
+        "G01",
+        "G02",
+        "G04"
+      ],
+      "baselinePrototype": "Not durable; no audio captured"
+    },
+    {
+      "id": "C04",
+      "name": "Typed draft autosave",
+      "features": [
+        "IN02"
+      ],
+      "screens": [
+        "S17",
+        "S20"
+      ],
+      "source": [
+        "drafts",
+        "capture"
+      ],
+      "prototype": "Durable exact-visit drafts; multiple drafts preserved",
+      "gaps": [
+        "G01",
+        "G02"
+      ],
+      "baselinePrototype": "In-page resume only"
+    },
+    {
+      "id": "C05",
+      "name": "Upload and remote file storage",
+      "features": [
+        "IN01",
+        "IN02"
+      ],
+      "screens": [
+        "S17",
+        "S20"
+      ],
+      "source": [
+        "upload",
+        "model"
+      ],
+      "prototype": "Local file source storage; remote upload acknowledged only by mock",
+      "gaps": [
+        "G01",
+        "G02",
+        "G05"
+      ],
+      "baselinePrototype": "File upload preview only"
+    },
+    {
+      "id": "C06",
+      "name": "Transcription, insight processing and retries",
+      "features": [
+        "IN02"
+      ],
+      "screens": [
+        "S18",
+        "S25"
+      ],
+      "source": [
+        "upload",
+        "transcripts",
+        "model"
+      ],
+      "prototype": "Background mock jobs, failure and retry",
+      "gaps": [
+        "G05",
+        "G06"
+      ],
+      "baselinePrototype": "Generic processing preview"
+    },
+    {
+      "id": "C07",
+      "name": "Transcript library, search and retrieval",
+      "features": [
+        "IN03"
+      ],
+      "screens": [
+        "S16",
+        "S18"
+      ],
+      "source": [
+        "transcripts"
+      ],
+      "prototype": "Searchable Activity by person/date/content with audio/trash filters",
+      "gaps": [
+        "G06"
+      ],
+      "baselinePrototype": "Library destination preview only"
+    },
+    {
+      "id": "C08",
+      "name": "Audio playback, seek and download",
+      "features": [
+        "IN03"
+      ],
+      "screens": [
+        "S18"
+      ],
+      "source": [
+        "transcripts",
+        "detail"
+      ],
+      "prototype": "Local native audio control and source download; no signed remote links",
+      "gaps": [
+        "G06"
+      ],
+      "baselinePrototype": "Not implemented"
+    },
+    {
+      "id": "C09",
+      "name": "Original and edited transcript",
+      "features": [
+        "IN03"
+      ],
+      "screens": [
+        "S18"
+      ],
+      "source": [
+        "transcripts",
+        "model",
+        "detail"
+      ],
+      "prototype": "Original retained; correction and unfinished correction stored separately",
+      "gaps": [
+        "G03",
+        "G06"
+      ],
+      "baselinePrototype": "Text-note review only"
+    },
+    {
+      "id": "C10",
+      "name": "Summary, insights, attendees and tags",
+      "features": [
+        "IN03",
+        "IN04"
+      ],
+      "screens": [
+        "S18"
+      ],
+      "source": [
+        "transcripts",
+        "model",
+        "detail"
+      ],
+      "prototype": "One group conversation, mock summary and reviewed next-step suggestions; advanced tags deferred",
+      "gaps": [
+        "G03",
+        "G05",
+        "G07"
+      ],
+      "baselinePrototype": "Not implemented as rich conversation review"
+    },
+    {
+      "id": "C11",
+      "name": "Optional speaker/timestamp tagged segments",
+      "features": [
+        "IN03"
+      ],
+      "screens": [
+        "S18"
+      ],
+      "source": [
+        "model",
+        "transcripts"
+      ],
+      "prototype": "Deferred; no speaker/diarization accuracy claim",
+      "gaps": [
+        "G03",
+        "G07"
+      ],
+      "limit": "Optional gated schema is not proof of reliable diarization or synchronized playback",
+      "baselinePrototype": "Not implemented"
+    },
+    {
+      "id": "C12",
+      "name": "Accepted follow-ups linked to conversation",
+      "features": [
+        "IN07",
+        "IN11"
+      ],
+      "screens": [
+        "S18",
+        "S19"
+      ],
+      "source": [
+        "transcripts",
+        "tasks",
+        "targetLists"
+      ],
+      "prototype": "Durable local accepted tasks with due dates and idempotent identity",
+      "gaps": [
+        "G02",
+        "G03"
+      ],
+      "baselinePrototype": "Interactive local follow-up; no AI extraction"
+    },
+    {
+      "id": "C13",
+      "name": "Company/team scope and personal-note visibility",
+      "features": [
+        "IN12",
+        "AD03"
+      ],
+      "screens": [
+        "S18",
+        "S37"
+      ],
+      "source": [
+        "transcripts"
+      ],
+      "prototype": "Local sample company/rep isolation only; no authentication",
+      "gaps": [
+        "G10"
+      ],
+      "baselinePrototype": "No auth or permission enforcement"
+    },
+    {
+      "id": "C14",
+      "name": "Deletion and retention of audio/text/derived copies",
+      "features": [
+        "IN03",
+        "IN12"
+      ],
+      "screens": [
+        "S18",
+        "S37"
+      ],
+      "source": [
+        "transcripts"
+      ],
+      "prototype": "Local scoped Trash/Restore and atomic media/task cleanup; explicit manual retention; no server policy",
+      "gaps": [
+        "G10"
+      ],
+      "limit": "Reviewed delete handler removes the database record; end-to-end storage cleanup and policy are not established",
+      "baselinePrototype": "Not implemented"
+    }
   ],
   "lifecycleStatesToSpecifyAndTest": [
     "capture_intent_voice_memo_or_meeting",
@@ -65,16 +458,86 @@
     "deleted_or_access_revoked"
   ],
   "gaps": [
-    {"id":"G01","priority":"P0","name":"Durable capture before submit and interruption recovery"},
-    {"id":"G02","priority":"P0","name":"Exact visit/conversation/draft identity and idempotent adapters"},
-    {"id":"G03","priority":"P0","name":"Explicit outcome and distinct original/corrected/generated evidence"},
-    {"id":"G04","priority":"P0","name":"Native microphone, policy, permission and lifecycle states"},
-    {"id":"G05","priority":"P1","name":"Short entry and asynchronous processing"},
-    {"id":"G06","priority":"P1","name":"Usable transcript library and detail"},
-    {"id":"G07","priority":"P1","name":"Multi-HCP, language, noise, duration and codec validation"},
-    {"id":"G08","priority":"P1","name":"Meeting evidence generated or attached with honest offline status"},
-    {"id":"G09","priority":"P1","name":"Availability and road-feasible replacement"},
-    {"id":"G10","priority":"Before release","name":"Ownership, retention, deletion and tenant boundaries"}
+    {
+      "id": "G01",
+      "priority": "P0",
+      "name": "Durable capture before submit and interruption recovery",
+      "demoDisposition": "Addressed within mock/local scope; see persona-regression-results.md",
+      "productionComplete": false
+    },
+    {
+      "id": "G02",
+      "priority": "P0",
+      "name": "Exact visit/conversation/draft identity and idempotent adapters",
+      "demoDisposition": "Addressed within mock/local scope; see persona-regression-results.md",
+      "productionComplete": false
+    },
+    {
+      "id": "G03",
+      "priority": "P0",
+      "name": "Explicit outcome and distinct original/corrected/generated evidence",
+      "demoDisposition": "Addressed within mock/local scope; see persona-regression-results.md",
+      "productionComplete": false
+    },
+    {
+      "id": "G04",
+      "priority": "P0",
+      "name": "Native microphone, policy, permission and lifecycle states",
+      "demoDisposition": "Addressed within mock/local scope; see persona-regression-results.md",
+      "productionComplete": false
+    },
+    {
+      "id": "G05",
+      "priority": "P1",
+      "name": "Short entry and asynchronous processing",
+      "demoDisposition": "Addressed within mock/local scope; see persona-regression-results.md",
+      "productionComplete": false
+    },
+    {
+      "id": "G06",
+      "priority": "P1",
+      "name": "Usable transcript library and detail",
+      "demoDisposition": "Addressed within mock/local scope; see persona-regression-results.md",
+      "productionComplete": false
+    },
+    {
+      "id": "G07",
+      "priority": "P1",
+      "name": "Multi-HCP, language, noise, duration and codec validation",
+      "demoDisposition": "Addressed within mock/local scope; see persona-regression-results.md",
+      "productionComplete": false
+    },
+    {
+      "id": "G08",
+      "priority": "P1",
+      "name": "Meeting evidence generated or attached with honest offline status",
+      "demoDisposition": "Addressed within mock/local scope; see persona-regression-results.md",
+      "productionComplete": false
+    },
+    {
+      "id": "G09",
+      "priority": "P1",
+      "name": "Availability and road-feasible replacement",
+      "demoDisposition": "Addressed within mock/local scope; see persona-regression-results.md",
+      "productionComplete": false
+    },
+    {
+      "id": "G10",
+      "priority": "Before release",
+      "name": "Ownership, retention, deletion and tenant boundaries",
+      "demoDisposition": "Addressed within mock/local scope; see persona-regression-results.md",
+      "productionComplete": false
+    }
   ],
-  "countsAreNotImplementationCompletion": true
+  "countsAreNotImplementationCompletion": true,
+  "results": "persona-regression-results.md",
+  "mockServices": [
+    "transcription",
+    "summaries",
+    "report generation",
+    "booking office responses",
+    "road travel matrix",
+    "availability"
+  ],
+  "localPersistence": "IndexedDB on /demo/; explicitly non-durable memory in an opaque-origin embedded preview"
 }
