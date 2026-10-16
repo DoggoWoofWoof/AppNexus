@@ -2,15 +2,15 @@
 
 [Open the interactive demo](https://doggowoofwoof.github.io/AppNexus/)
 
-A sales-rep mobile concept organized around **Today → discover → inspect → plan → visit → capture → follow up**. Accounts and assignments are configured by our side. Routing comes after target selection.
+A sales-rep mobile concept focused on **plan → recover a cancelled slot → prepare → visit → follow up**. Today is the starting point, with discovery, full profiles and analysis available when needed. Accounts and assignments are configured by our side. Routing comes after target selection.
 
 The demo includes Today / Targets / Activity / Insights, a mixed fixed/flexible day, searchable account/person lists, real static maps, profile briefs, all 18 HCP and 19 HCO section names, draft resume, note editing, follow-ups and visible save/CRM limitations. Wider windows use a map/detail layout; the large-text view demonstrates 200% text.
 
 ## Try it
 
-1. Open **Plan my day**, select sample people and review the agenda.
-2. Edit a visit's type, time, duration and confirmation; overlapping times block saving.
-3. Open a profile to prepare or use the map to select a facility and add a visit.
+1. Start with the sample 10:00 / 14:00 appointments. Choose **Appointment changed? → Doctor cancelled**.
+2. Inspect nearby candidates, use the slot for a tentative visit or call, undo the cancellation, or leave the slot open. Other appointments keep their times.
+3. Open **Prepare** for a compact brief, notes, follow-ups and a report/insight checklist. **Manage appointment** saves a personal plan or an explicitly unsent request draft; overlaps block saving.
 4. Log an outcome, discussion note and follow-up. Activity → Capture asks for the person first. Leave and resume an unfinished note from Activity.
 5. Review/edit the same interaction and complete the linked follow-up.
 6. Explore the named profile sections and Insights tools. Detailed analysis datasets remain previews.

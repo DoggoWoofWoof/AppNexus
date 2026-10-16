@@ -4,7 +4,7 @@ Responsive update: `responsive-design-contract.md` assigns shared layout rules t
 
 16 October 2026 · Proposed information architecture before the next mockup. This audits the 58 feature families in `repository-feature-map.md`, the accepted mixed fixed/flexible day and the comparable-app research. It does not claim that all source fields or backend contracts have been verified.
 
-Map update: `map-experience.md` records the optional Today map card, shared Targets List / Map view and the requirement to use road routing for production travel times. The latest concept, `field-pro-maps.html`, includes real static geography and interactive sample pins. It supersedes the Map placeholder in `field-pro-today.html`; live map/routing services remain unconnected.
+Map update: `map-experience.md` records the optional Today map card, shared Targets List / Map view and the requirement to use road routing for production travel times. The current `field-pro-responsive.html` and published `demo/` incorporate real static geography and interactive sample pins; live map/routing services remain unconnected.
 
 ## Recommendation
 

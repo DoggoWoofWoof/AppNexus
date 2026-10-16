@@ -22,7 +22,7 @@ Use a real routing provider for production travel distances, duration, feasibili
 
 ## Current interactive concept
 
-`field-pro-maps.html` replaces the earlier Map placeholder with a static, inspectable geographic preview. The two entries are Today map card and Map workspace. It keeps all existing daily-flow interactions.
+The maintained `mockup/source/field-pro-responsive.html`, published through `demo/`, incorporates the static geographic preview and daily-flow interactions. Its two entries are the optional Today map card and Targets Map view. The earlier map-only conversation concept is superseded.
 
 The concept includes List / Map, account/person modes, shared search, Assigned / My day / Opportunities / Nearby filters, selectable site pins, profile opening, Add to day and the optional Today card. Nearby is explicitly a five-kilometer straight-line filter around the selected public facility. Opportunity reasons and assignments are illustrative, without fabricated commercial scores. Live routing, map tiles/panning, traffic, GPS and remote persistence are not connected.
 

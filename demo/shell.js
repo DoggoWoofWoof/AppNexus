@@ -19,7 +19,12 @@
   }
   document.addEventListener('DOMContentLoaded',()=>{
     apply();
-    document.getElementById('demo-view').addEventListener('change',e=>{preferences.view=e.target.value;apply();save()});
+    document.getElementById('demo-view').addEventListener('change',e=>{
+      const previousView=preferences.view;
+      preferences.view=e.target.value;
+      window.dispatchEvent(new CustomEvent('field-pro:preview-layout',{detail:{from:previousView,to:preferences.view}}));
+      apply();save();
+    });
     document.getElementById('demo-theme').addEventListener('change',e=>{preferences.theme=e.target.value;apply();save()});
     document.getElementById('demo-reset').addEventListener('click',()=>{preferences={view:'Phone',theme:preferences.theme};save();location.reload()});
   });

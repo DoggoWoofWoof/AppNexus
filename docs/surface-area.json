@@ -50,8 +50,13 @@
         "IN02"
       ],
       "variants": "unplanned, planned, active, wrap-up; selected day",
-      "prototype": "interactive",
-      "responsiveRule": "Adaptive agenda rows, stacked controls, date/time fields and contextual map"
+      "prototype": "interactive sample appointments; cancellation gaps; unchanged remaining commitments",
+      "responsiveRule": "Adaptive agenda rows, stacked controls, date/time fields and contextual map",
+      "workflowStates": [
+        "next visit",
+        "multiple cancellation gaps",
+        "unplanned day"
+      ]
     },
     {
       "id": "S04",
@@ -62,8 +67,15 @@
         "FP09"
       ],
       "variants": "mixed fixed/flexible agenda, calls, buffers, conflicts",
-      "prototype": "interactive",
-      "responsiveRule": "Adaptive agenda rows, stacked controls, date/time fields and contextual map"
+      "prototype": "interactive mixed agenda and appointment form; unsent request draft",
+      "responsiveRule": "Adaptive agenda rows, stacked controls, date/time fields and contextual map",
+      "workflowStates": [
+        "planned time",
+        "manual confirmation",
+        "request draft not sent",
+        "overlap error",
+        "cancel and recover"
+      ]
     },
     {
       "id": "S05",
@@ -87,8 +99,13 @@
         "SR02"
       ],
       "variants": "assigned/discover; HCO/HCP; search/filter/selection",
-      "prototype": "interactive sample records",
-      "responsiveRule": "Shared list/map filters, wrapping rows and wide map/detail panes"
+      "prototype": "interactive sample records; discovery, capture picker and gap-recovery candidates",
+      "responsiveRule": "Shared list/map filters, wrapping rows and wide map/detail panes",
+      "workflowStates": [
+        "assigned/discover",
+        "capture person selection",
+        "tentative alternatives"
+      ]
     },
     {
       "id": "S07",
@@ -155,8 +172,13 @@
         "HO07"
       ],
       "variants": "organization/hospital/health system; role-aware summary",
-      "prototype": "interactive brief",
-      "responsiveRule": "Adaptive brief actions and section index; content-specific renderer reflow"
+      "prototype": "compact account brief, meeting prep and material checklist; detailed datasets remain previews",
+      "responsiveRule": "Adaptive brief actions and section index; content-specific renderer reflow",
+      "workflowStates": [
+        "brief",
+        "prep",
+        "material selection"
+      ]
     },
     {
       "id": "S12",
@@ -169,8 +191,13 @@
         "HP10"
       ],
       "variants": "US/international and persona visibility",
-      "prototype": "interactive brief",
-      "responsiveRule": "Adaptive brief actions and section index; content-specific renderer reflow"
+      "prototype": "compact HCP brief, meeting prep and material checklist; detailed datasets remain previews",
+      "responsiveRule": "Adaptive brief actions and section index; content-specific renderer reflow",
+      "workflowStates": [
+        "brief",
+        "prep",
+        "material selection"
+      ]
     },
     {
       "id": "S13",
@@ -670,5 +697,6 @@
     "Media"
   ],
   "responsiveContract": "responsive-design-contract.md",
-  "latestPrototype": "field-pro-responsive.html"
+  "latestPrototype": "field-pro-responsive.html",
+  "workflowPriority": "Plan, recover a cancellation, prepare, visit and follow up"
 }

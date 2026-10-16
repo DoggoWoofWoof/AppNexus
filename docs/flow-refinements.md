@@ -1,6 +1,6 @@
 # Flow refinements — planner-first, cancel recovery, glanceable brief
 
-16 October 2026 · Rep pain drives this: doctors are busy, cancellations happen,
+17 October 2026 · Rep pain drives this: doctors are busy, cancellations happen,
 and the rep needs the next-best move fast. Simplicity over coverage — no new
 destinations, no redundant info. Builds on `sales-rep-daily-flow.md` and
 `comparable-apps-review.md` (CG01 feasibility, CG03 recovery); those were
@@ -60,16 +60,20 @@ Availability checking and double-booking prevention need the calendar
 contract first; until then the planner warns on overlaps and lets the rep
 resolve.
 
-## Demo deltas (for the next concept pass)
+## Current prototype pass
 
-- Today: cancelled item → alternatives sheet (replace / call / leave gap).
+- Today: the next appointment appears once; later visits form a compact agenda. Cancellation opens alternatives (tentative visit / call / leave gap / undo). Several unresolved cancellations remain visible.
 - HCP overview: five-question brief layout; move research/payment aggregates
   below the fold into the section index.
 - Agenda items: planned/requested/confirmed chips; overlap warning blocks save.
-- Prep entry: follow-ups + latest report/insight links + offline marker.
+- Prep entry: meeting goal, previous conversation, open follow-ups and a report/insight checklist. Selected material is explicitly not generated; no fake report or offline-ready marker appears.
 - No new bottom tabs; booking lives inside the agenda item.
 
-## Open decisions (ask Teresha before building)
+The prototype starts with two sample appointments so the cancellation flow is immediately testable. Candidates use fictional people at public facility locations. The cancelled person and already planned people are excluded; due follow-ups and straight-line proximity sort up to three candidates. They are **not verified feasible or available**. Replacing one keeps its original slot, creates an unconfirmed plan item and preserves other appointments.
+
+The appointment form supports a personal planned time, manual confirmation and an explicitly unsent request draft. Overlap and day-boundary validation block invalid saves. Calendar sending, acceptance tracking, provider cancellation events, real road feasibility and generated report attachments remain integration work. See [the proposed contract](day-plan-contract.md).
+
+## Integration decisions still open
 
 1. Calendar provider + direction (read busy-ness, write holds, both?).
 2. Source of truth for contact/visit recency per customer.
