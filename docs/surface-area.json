@@ -698,5 +698,7 @@
   ],
   "responsiveContract": "responsive-design-contract.md",
   "latestPrototype": "field-pro-responsive.html",
-  "workflowPriority": "Plan, recover a cancellation, prepare, visit and follow up"
+  "workflowPriority": "Plan, recover a cancellation, prepare, visit and follow up",
+  "captureCoverageAudit": "capture-transcript-coverage.json",
+  "personaUsageAudit": "persona-usage-audit.md"
 }

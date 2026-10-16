@@ -37,6 +37,8 @@ The full design inventory is **58 feature families, 39 screen families and 12 re
 ## Planning and integration documents
 
 - [Plan, prototype and endpoint status](docs/plan-status-and-endpoint-audit.md)
+- [Five rep personas and usage/friction audit](docs/persona-usage-audit.md)
+- [Recording and transcript coverage register](docs/capture-transcript-coverage.json)
 - [Proposed durable daily-plan contract and delivery gates](docs/day-plan-contract.md)
 - [Surface-area audit](docs/surface-area-audit.md) and [machine-readable inventory](docs/surface-area.json)
 - [Responsive layout contract and verification](docs/responsive-design-contract.md)
