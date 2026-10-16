@@ -1,29 +1,63 @@
-# AppNexus — Field Pro mobile concept
+# AppNexus · Field Pro
 
-Public working repo for the Field Pro field-sales mobile concept.
-Continued from Codex exploration work in this same folder.
+[Open the interactive demo](https://doggowoofwoof.github.io/AppNexus/)
 
-## What's here
+A sales-rep mobile concept organized around **Today → discover → inspect → plan → visit → capture → follow up**. Accounts and assignments are configured by our side. Routing comes after target selection.
 
-- `mockup/field-pro-app.html` — consolidated concept (Today / Targets / Activity / Insights, all 18 HCP + 19 HCO sections named, SSE report + sync-state simulations). All data illustrative, in-memory only.
-- `mockup/index.html` — earlier standalone concept (My book / Search / Activity / Reports, HCO → HCP → note flow).
-- `docs/hcp-hco-field-inventory.md` — 18 HCP tabs + HCO sections from source vs Field Pro limited view.
-- `docs/leakage-capture-plan.md` — SSE report lifecycle, quick-note vs transcript stores, three CRM paths.
-- `docs/product-plan.md` — scope, staged plan, prototype boundary.
-- `docs/app-flow.md` — Choose account → Prepare → Meet → Log visit flow.
-- `docs/design-review.md` — verified Field Pro / HCP / HCO fields, hierarchy rules.
-- `docs/repository-feature-map.md` — 58 feature families mapped to source (4 upstream repos, inspected read-only).
-- `docs/surface-area-audit.md` + `docs/surface-area.json` — current IA: Today / Targets / Activity / Insights; 39 screen families, 12 sheets.
-- `docs/sales-rep-daily-flow.md`, `docs/comparable-apps-review.md`, `docs/map-experience.md`, `docs/responsive-design-contract.md`, `docs/plan-status-and-endpoint-audit.md` — daily flow, comparables, maps, responsive rules, endpoint audit.
+The demo includes Today / Targets / Activity / Insights, a mixed fixed/flexible day, searchable account/person lists, real static maps, profile briefs, all 18 HCP and 19 HCO section names, draft resume, note editing, follow-ups and visible save/CRM limitations. Wider windows use a map/detail layout; the large-text view demonstrates 200% text.
 
-## View it
+## Try it
 
-Open `mockup/index.html` in a browser, or use GitHub Pages (see repo Settings → Pages → Deploy from branch → `main` → `/ (root)`; root `index.html` redirects to `mockup/`).
+1. Open **Plan my day**, select sample people and review the agenda.
+2. Edit a visit's type, time, duration and confirmation; overlapping times block saving.
+3. Open a profile to prepare or use the map to select a facility and add a visit.
+4. Log an outcome, discussion note and follow-up. Leave and resume an unfinished note from Activity.
+5. Review/edit the same interaction and complete the linked follow-up.
+6. Explore the named profile sections and Insights tools. Detailed analysis datasets remain previews.
 
-## What is NOT wired
+Use the demo toolbar for **Phone**, **Wide screen**, **Large text**, and light/dark appearance. Reset clears the current sample session.
 
-No production API, auth, CRM push, report generation, routing, or persistence is connected. Latest conversation prototypes (`field-pro-today.html`, `field-pro-maps.html`, `field-pro-responsive.html`) referenced in docs are not in this folder — only the earlier standalone mockup plus `flow-behavior.js`, `flow-styles.css`, `responsive-*.js` fragments survived.
+## Run locally
 
-## Source exclusion
+```sh
+python scripts/build-demo.py
+python -m http.server 8000
+```
 
-`reference/repos/` (full upstream clones) is git-ignored and never pushed. Endpoint evidence lives in docs; see `repository-feature-map.md` for revisions inspected.
+Open `http://localhost:8000/demo/`. No backend credentials or package installation is required. The demo loads version-pinned D3 and Lucide scripts from public CDNs, so map projection and icons require network access on first load.
+
+## Current status
+
+This is an **interactive prototype**, not a deployed production mobile client. No production API, auth, CRM push, report generation, road routing or cloud backup is connected. Notes/plans remain in page memory and disappear on refresh. Only demo appearance/view preferences are retained locally. Map geography and facility locations are real public references; people, assignments and activity are illustrative.
+
+Existing service contracts were inspected, including Field Backend server source. That establishes source evidence, not deployed/customer-specific availability. The full timed agenda, joined daily recommendations and backup/restore work remain integration gaps. Field Pro CRM push is disabled in the reviewed implementation; Insights has a separate company gate.
+
+The full design inventory is **58 feature families, 39 screen families and 12 reusable sheets/dialogs**. These are scope counts, not completed implementation counts. Browser verification recorded 209 rendered-screen/state layout checks; emulator/physical-device verification remains future production work.
+
+## Planning and integration documents
+
+- [Plan, prototype and endpoint status](docs/plan-status-and-endpoint-audit.md)
+- [Surface-area audit](docs/surface-area-audit.md) and [machine-readable inventory](docs/surface-area.json)
+- [Responsive layout contract and verification](docs/responsive-design-contract.md)
+- [Daily sales-rep flow](docs/sales-rep-daily-flow.md)
+- [Map experience and routing requirement](docs/map-experience.md)
+- [Repository feature map](docs/repository-feature-map.md)
+- [HCP/HCO field inventory](docs/hcp-hco-field-inventory.md)
+- [Leakage and capture integration notes](docs/leakage-capture-plan.md)
+- [Comparable apps](docs/comparable-apps-review.md)
+- [Product plan](docs/product-plan.md)
+
+## Source layout
+
+- `mockup/source/field-pro-responsive.html`: maintained conversation fragment with product markup, styles, behavior and embedded public map data.
+- `scripts/build-demo.py`: extracts that source into the static demo.
+- `demo/`: GitHub Pages entry point, generated app files and standalone preview controls.
+- `mockup/field-pro-responsive.html`: exported conversation preview.
+- `mockup/field-pro-app.html` and `mockup/index.html`: preserved earlier concepts.
+- `docs/`: decisions, audits, endpoint evidence and implementation scope.
+
+Private upstream checkouts and Field Backend source snapshots are git-ignored. They are reference material, not part of the published demo.
+
+## Map attribution
+
+Streets/parks: [© OpenStreetMap contributors](https://www.openstreetmap.org/copyright). Land boundaries: [NYC Open Data](https://data.cityofnewyork.us/d/gthc-hcne). Facility locations: [New York Health Facility General Information](https://health.data.ny.gov/Health/Health-Facility-General-Information/vn5v-hh5r). Attribution also appears in the maps.

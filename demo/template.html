@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#2447c4">
+  <meta name="description" content="Interactive Field Pro concept: discover targets, plan a day, prepare, capture a visit and follow up.">
+  <title>Field Pro · AppNexus demo</title>
+  <link rel="stylesheet" href="app.css">
+  <link rel="stylesheet" href="shell.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+  <script defer src="https://unpkg.com/lucide@1.17.0/dist/umd/lucide.js"></script>
+  <script defer src="shell.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <header class="demo-bar">
+    <a class="demo-title" href="../">AppNexus <span>Field Pro</span></a>
+    <span class="demo-badge">Interactive concept · Sample data</span>
+    <div class="demo-controls">
+      <label>View<select id="demo-view" aria-label="View"><option value="Phone">Phone</option><option value="Wide screen">Wide screen</option><option value="Large text">Large text · 200%</option></select></label>
+      <label>Appearance<select id="demo-theme" aria-label="Appearance"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select></label>
+      <button type="button" id="demo-reset">Reset demo</button>
+    </div>
+  </header>
+  <details class="demo-guide">
+    <summary>Try the demo</summary>
+    <ol>
+      <li>Open <strong>Plan my day</strong>, inspect or select sample people, then review the day.</li>
+      <li>Edit a visit: leave it flexible or choose a planned time. Confirmation is an explicit choice.</li>
+      <li>Open the map from Today or switch between Map and List in Targets.</li>
+      <li>Prepare from a profile, then log a visit, enter a note and add a follow-up.</li>
+      <li>Review or edit the conversation in Activity and complete the linked follow-up.</li>
+      <li>Explore the profile section index and the named tools in Insights.</li>
+    </ol>
+    <p>Plans and notes stay in this page's memory and disappear on refresh. No production API, CRM, report, routing or backup service is connected. Map geography is real; people, assignments and activity are illustrative.</p>
+    <p><a href="https://github.com/DoggoWoofWoof/AppNexus/blob/main/docs/plan-status-and-endpoint-audit.md">Plan and endpoint status</a> · <a href="https://github.com/DoggoWoofWoof/AppNexus/blob/main/docs/surface-area-audit.md">Feature and screen audit</a> · <a href="../mockup/field-pro-app.html">Earlier consolidated demo</a></p>
+  </details>
+  <main class="demo-product" aria-label="Field Pro interactive concept">
+    <!-- PRODUCT_MARKUP -->
+  </main>
+  <!-- MAP_DATA -->
+  <noscript>This demo needs JavaScript. The source and planning documents are available in the GitHub repository.</noscript>
+</body>
+</html>

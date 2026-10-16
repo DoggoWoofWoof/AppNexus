@@ -1,5 +1,7 @@
 # Field Pro: the sales rep's daily workspace
 
+16 October update: Field Backend server source is now inspected. See `plan-status-and-endpoint-audit.md` for concrete endpoint evidence and the distinction between the interactive prototype and a production implementation. The full durable mixed agenda and backup/restore contracts remain unestablished in the reviewed sources.
+
 15 October 2026 · Product-flow discussion. The user's latest direction is that Field Pro is the landing experience, account/target setup happens on our side, and the app helps reps decide, plan, prepare, visit and follow up. The pasted colleague conversation provides context; it is not authority to change production, contact people or schedule meetings.
 
 This builds on the 58 feature families in `repository-feature-map.md`. Those capabilities remain in the coverage register. This document changes the proposed front door and connects the products into a daily workflow; it does not remove advanced features or certify backend readiness.

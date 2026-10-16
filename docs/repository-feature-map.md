@@ -1,5 +1,7 @@
 # Field Pro app: repository feature map and flow discussion
 
+16 October update: `plan-status-and-endpoint-audit.md` now includes direct Field Backend server-source inspection and records the remaining planner/recovery gaps. `responsive-design-contract.md` and the latest responsive concept supersede earlier layout proposals. The original four-repository inventory below is retained as source-review history.
+
 Latest product direction: `sales-rep-daily-flow.md` makes Today inside Field Pro the proposed landing experience for sales reps, with setup performed on our side. The 58 feature families below remain in the coverage register; navigation is still under discussion.
 
 15 October 2026. Source review of the four supplied repositories, accessed with the user's existing terminal GitHub login. This is a feature-family inventory and navigation proposal, not a claim of complete field parity or tested production behavior. The current mockup is provisional; no new screens are being designed in this discussion pass.

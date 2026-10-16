@@ -1,5 +1,7 @@
 # Field Pro app: surface-area audit
 
+Responsive update: `responsive-design-contract.md` assigns shared layout rules to all 39 families. The current concept is `field-pro-responsive.html`, with Phone, Wide screen and Large text views. The endpoint/progress distinction is recorded in `plan-status-and-endpoint-audit.md`.
+
 16 October 2026 · Proposed information architecture before the next mockup. This audits the 58 feature families in `repository-feature-map.md`, the accepted mixed fixed/flexible day and the comparable-app research. It does not claim that all source fields or backend contracts have been verified.
 
 Map update: `map-experience.md` records the optional Today map card, shared Targets List / Map view and the requirement to use road routing for production travel times. The latest concept, `field-pro-maps.html`, includes real static geography and interactive sample pins. It supersedes the Map placeholder in `field-pro-today.html`; live map/routing services remain unconnected.
