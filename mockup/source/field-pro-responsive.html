@@ -220,7 +220,7 @@
   if(d.follow.trim()&&!/^\d{4}-\d{2}-\d{2}$/.test(d.due))throw new Error('Choose a due date for the follow-up.');
   let n=state.notes.find(x=>x.id===(d.editingNote||d.id));
   const fresh=!n;
-  if(!n){n={id:d.id,source:d.source,target:d.attendees[0],attendees:[...d.attendees],visitId:d.visitId,day:d.day,createdAt:Date.now(),originalText:d.note,originalAudioIds:[...(d.audioIds||[])],originalFileIds:[...(d.fileIds||[])],language:d.language};state.notes.unshift(n)}
+  if(!n){n={id:d.id,source:d.source,target:d.attendees[0],attendees:[...d.attendees],visitId:d.visitId,day:d.day,meetingDate:d.meetingDate||(d.day==='tomorrow'?'2026-10-18':'2026-10-17'),createdAt:Date.now(),originalText:d.note,originalAudioIds:[...(d.audioIds||[])],originalFileIds:[...(d.fileIds||[])],language:d.language};state.notes.unshift(n)}
   Object.assign(n,{text:d.note,target:d.attendees[0],attendees:[...d.attendees],outcome,updatedAt:Date.now(),status:n.status||'device',captureIntent:d.intent});
   if(!fresh){n.correctedTranscript=d.note;n.summaryStale=!!n.summary;n.originalAudioIds=[...new Set([...(n.originalAudioIds||[]),...(d.audioIds||[])])];n.originalFileIds=[...new Set([...(n.originalFileIds||[]),...(d.fileIds||[])])]}
   if(fresh&&(d.note.trim()||d.mediaIds.length)){
@@ -246,7 +246,7 @@
   s.accepted=true;return task;
  }
  function search(state,query='',kind='all'){
-  const q=query.trim().toLocaleLowerCase();return state.notes.filter(n=>(kind==='trash'?!!n.deletedAt:!n.deletedAt)&&(kind!=='audio'||n.originalAudioIds?.length)&&(kind!=='attention'||n.processing==='failed'||n.suggestions?.some(s=>!s.accepted&&!s.dismissed))).filter(n=>[n.text,n.originalText,n.correctedTranscript,n.summary,...(n.attendees||[]),n.day,n.meetingDate].join(' ').toLocaleLowerCase().includes(q));
+  const q=query.trim().toLocaleLowerCase();return state.notes.filter(n=>(kind==='trash'?!!n.deletedAt:!n.deletedAt)&&(kind!=='audio'||n.originalAudioIds?.length)&&(kind!=='attention'||n.processing==='failed'||n.suggestions?.some(s=>!s.accepted&&!s.dismissed))).filter(n=>[n.text,n.originalText,n.correctedTranscript,n.summary,...(n.attendees||[]),n.day,n.meetingDate||(n.day==='tomorrow'?'2026-10-18':'2026-10-17')].join(' ').toLocaleLowerCase().includes(q));
  }
  function mockTick(state,now=Date.now()){
   if(state.scenario==='offline')return false;

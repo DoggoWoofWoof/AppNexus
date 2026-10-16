@@ -2008,7 +2008,7 @@ html&gt;body{padding:0}&lt;/style&gt;
   if(d.follow.trim()&amp;&amp;!/^\d{4}-\d{2}-\d{2}$/.test(d.due))throw new Error(&#x27;Choose a due date for the follow-up.&#x27;);
   let n=state.notes.find(x=&gt;x.id===(d.editingNote||d.id));
   const fresh=!n;
-  if(!n){n={id:d.id,source:d.source,target:d.attendees[0],attendees:[...d.attendees],visitId:d.visitId,day:d.day,createdAt:Date.now(),originalText:d.note,originalAudioIds:[...(d.audioIds||[])],originalFileIds:[...(d.fileIds||[])],language:d.language};state.notes.unshift(n)}
+  if(!n){n={id:d.id,source:d.source,target:d.attendees[0],attendees:[...d.attendees],visitId:d.visitId,day:d.day,meetingDate:d.meetingDate||(d.day===&#x27;tomorrow&#x27;?&#x27;2026-10-18&#x27;:&#x27;2026-10-17&#x27;),createdAt:Date.now(),originalText:d.note,originalAudioIds:[...(d.audioIds||[])],originalFileIds:[...(d.fileIds||[])],language:d.language};state.notes.unshift(n)}
   Object.assign(n,{text:d.note,target:d.attendees[0],attendees:[...d.attendees],outcome,updatedAt:Date.now(),status:n.status||&#x27;device&#x27;,captureIntent:d.intent});
   if(!fresh){n.correctedTranscript=d.note;n.summaryStale=!!n.summary;n.originalAudioIds=[...new Set([...(n.originalAudioIds||[]),...(d.audioIds||[])])];n.originalFileIds=[...new Set([...(n.originalFileIds||[]),...(d.fileIds||[])])]}
   if(fresh&amp;&amp;(d.note.trim()||d.mediaIds.length)){
@@ -2034,7 +2034,7 @@ html&gt;body{padding:0}&lt;/style&gt;
   s.accepted=true;return task;
  }
  function search(state,query=&#x27;&#x27;,kind=&#x27;all&#x27;){
-  const q=query.trim().toLocaleLowerCase();return state.notes.filter(n=&gt;(kind===&#x27;trash&#x27;?!!n.deletedAt:!n.deletedAt)&amp;&amp;(kind!==&#x27;audio&#x27;||n.originalAudioIds?.length)&amp;&amp;(kind!==&#x27;attention&#x27;||n.processing===&#x27;failed&#x27;||n.suggestions?.some(s=&gt;!s.accepted&amp;&amp;!s.dismissed))).filter(n=&gt;[n.text,n.originalText,n.correctedTranscript,n.summary,...(n.attendees||[]),n.day,n.meetingDate].join(&#x27; &#x27;).toLocaleLowerCase().includes(q));
+  const q=query.trim().toLocaleLowerCase();return state.notes.filter(n=&gt;(kind===&#x27;trash&#x27;?!!n.deletedAt:!n.deletedAt)&amp;&amp;(kind!==&#x27;audio&#x27;||n.originalAudioIds?.length)&amp;&amp;(kind!==&#x27;attention&#x27;||n.processing===&#x27;failed&#x27;||n.suggestions?.some(s=&gt;!s.accepted&amp;&amp;!s.dismissed))).filter(n=&gt;[n.text,n.originalText,n.correctedTranscript,n.summary,...(n.attendees||[]),n.day,n.meetingDate||(n.day===&#x27;tomorrow&#x27;?&#x27;2026-10-18&#x27;:&#x27;2026-10-17&#x27;)].join(&#x27; &#x27;).toLocaleLowerCase().includes(q));
  }
  function mockTick(state,now=Date.now()){
   if(state.scenario===&#x27;offline&#x27;)return false;
