@@ -44,6 +44,10 @@ textarea{width:100%;min-height:90px;border:1px solid var(--line);border-radius:1
 .back{background:none;border:0;color:var(--blue);padding:6px 0}
 .notice{background:#fff8e1;border:1px solid #e8d48b;border-radius:10px;padding:10px 12px;margin-top:10px;font-size:13px}
 .ok{background:#eefbef;border-color:#bfe3c6}
+.map{width:100%;height:auto;border:1px solid var(--line);border-radius:10px;background:#e9eef7;display:block}
+.pin{cursor:pointer}.pin circle{stroke:#fff;stroke-width:2}
+.pin text{fill:#fff;font-size:10px;font-weight:800;text-anchor:middle}
+.pinlabel{font-size:10px;fill:var(--ink)}
 </style>
 </head>
 <body>
@@ -71,7 +75,7 @@ const ORGS=[
 const PEOPLE=[
  {id:"bhatt",kind:"hcp",name:"Deepak Bhatt, MD",sub:"Interventional cardiology · Mount Sinai Hospital",npi:"1962515551",reason:"Linked to Mount Sinai · Follow-up due",org:"mount",pubs:"212 publications",trials:"38 trials"},
  {id:"chen",kind:"hcp",name:"Lisa Chen, MD",sub:"General cardiology · Riverside Clinic",npi:"1000000002",reason:"Assigned target",org:"riverside",pubs:"41 publications",trials:"6 trials"}];
-let tab="today",kind="hco",query="",day=[],notes=[],noteSeq=0,report={stage:"idle",pct:0},profile=null,profileFrom="targets";
+let tab="today",kind="hco",query="",day=[],notes=[],noteSeq=0,report={stage:"idle",pct:0},profile=null,profileFrom="targets",mapSel="mount",mapCard=true;
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 function all(){return [...ORGS,...PEOPLE]}
@@ -90,14 +94,36 @@ function render(){
 function today(){
  const items=day.map((d,i)=>{const x=find(d.target);return `<div class="card"><span class="pill">${d.fixed?"Confirmed appointment":"Flexible visit"}</span> <span class="pill">${esc(d.type)}</span><h3>${esc(x.name)}</h3><p class="muted small">${esc(x.sub)}${d.time?" · "+esc(d.time):" · Anytime today"}</p><div class="row"><button class="secondary" data-brief="${x.id}">Prepare</button><button class="secondary" data-cancel="${i}">Cancel</button></div></div>`}).join("");
  const sugg=all().filter(x=>!day.some(d=>d.target===x.id)).map(x=>`<div class="card"><h3>${esc(x.name)}</h3><p class="muted small">${esc(x.sub)}</p><p class="small">${esc(x.reason)} — shown only because sample data says so.</p><div class="row"><button class="secondary" data-add="${x.id}">Add to day</button><button class="secondary" data-brief="${x.id}">Open brief</button></div></div>`).join("");
- return `<div class="grid cols"><div><div class="eyebrow">${day.length?"Planned day":"No plan yet"}</div><h2>${day.length?day.length+" stop(s) · fixed items never move silently":"Start with one visit"}</h2><div class="list">${items||'<div class="card muted">Nothing planned. Add a visit below — no meeting time is invented.</div>'}</div>${day.length?'<div class="notice">Route review: stops grouped by site. Travel times need a real routing provider (Google Routes or OSRM/Valhalla) — not computed here.</div>':""}</div><div><div class="eyebrow">Suggested</div><div class="list">${sugg}</div></div></div>`;
+ return `<div class="grid cols"><div>${todayMap()}<div class="eyebrow">${day.length?"Planned day":"No plan yet"}</div><h2>${day.length?day.length+" stop(s) · fixed items never move silently":"Start with one visit"}</h2><div class="list">${items||'<div class="card muted">Nothing planned. Add a visit below — no meeting time is invented.</div>'}</div>${day.length?'<div class="notice">Route review: stops grouped by site. Travel times need a real routing provider (Google Routes or OSRM/Valhalla) — not computed here.</div>':""}</div><div><div class="eyebrow">Suggested</div><div class="list">${sugg}</div></div></div>`;
 }
 function targets(){
  const k=kind;
  const list=filtered(k).map(card).join("")||'<div class="card muted">No matches in sample book.</div>';
  return `<div class="grid cols"><div><div class="tabs" role="tablist"><button data-k="hco" aria-selected="${k==="hco"}">Accounts · ${ORGS.length}</button><button data-k="hcp" aria-selected="${k==="hcp"}">People · ${PEOPLE.length}</button><button data-k="map" aria-selected="${k==="map"}">Map (static)</button></div><input class="search" data-q placeholder="Search sample ${k==="hcp"?"people":"accounts"}" value="${esc(query)}" aria-label="Search"><div class="list">${k==="map"?mapPane():list}</div></div><div><div class="card"><div class="eyebrow">Discovery scope</div><p class="small muted">Assigned book shown. Searching here never assigns anything — adding to a list is a separate, permission-gated action.</p></div></div></div>`;
 }
-function mapPane(){return `<div class="card"><h3>Static site preview</h3><p class="small muted">Real public facility geography; assignments fictional. Nearby = straight-line only, never drive time.</p>${ORGS.map(o=>`<div class="row" style="margin:6px 0"><span class="pill">📍 ${esc(o.name)}</span><button class="secondary" data-open="${o.id}">Brief</button><button class="secondary" data-add="${o.id}">Add to day</button></div>`).join("")}</div>`}
+function pinXY(id){return id==="mount"?[205,62]:[0,0]}
+function mapSVG(sel,mini){
+ const onMap=ORGS.filter(o=>o.id==="mount"),offMap=ORGS.filter(o=>o.id!=="mount");
+ const pins=onMap.map((o,i)=>{const [x,y]=pinXY(o.id);const on=sel===o.id;
+  return `<g class="pin" data-mapsel="${o.id}"><circle cx="${x}" cy="${y}" r="${mini?8:10}" fill="${on?"#2447c4":"#8a93a8"}"/><text x="${x}" y="${y+(mini?3:4)}">${i+1}</text></g><text class="pinlabel" x="${x+13}" y="${y+4}">${esc(o.name)}</text>`}).join("");
+ return `<svg class="map" viewBox="0 0 300 ${mini?150:210}" role="img" aria-label="Schematic map of sample New York site">
+  <rect x="0" y="0" width="300" height="300" fill="#e9eef7"/>
+  <rect x="0" y="0" width="120" height="300" fill="#cfddf2"/>
+  <rect x="252" y="0" width="48" height="300" fill="#cfddf2"/>
+  <polygon points="150,5 215,5 232,60 222,120 200,175 178,205 168,205 158,120 148,60" fill="#f4f6fa" stroke="#b9c4d8"/>
+  <rect x="186" y="66" width="16" height="34" fill="#cfe3c2"/>
+  <line x1="150" y1="60" x2="232" y2="60" stroke="#d7deec"/><line x1="158" y1="120" x2="222" y2="120" stroke="#d7deec"/><line x1="168" y1="160" x2="208" y2="160" stroke="#d7deec"/>
+  <text class="pinlabel" x="8" y="200">Schematic — not real geography</text>${pins}</svg>`;
+}
+function mapPane(){
+ const sel=find(mapSel)||ORGS[0];
+ return `<div class="card"><h3>Map · New York territory (static)</h3>${mapSVG(sel.id)}<p class="small muted">1 site on this map · 2 outside map area (Orlando FL, Canton OH). Nearby is straight-line only — never drive time. Production uses a real map SDK + road routing.</p><div class="card" style="margin-top:8px"><span class="pill">Selected site</span><h3>${esc(sel.name)}</h3><p class="muted small">${esc(sel.sub)} · ${esc(sel.reason)}</p><div class="row"><button class="secondary" data-open="${sel.id}">Open brief</button><button class="secondary" data-add="${sel.id}">Add to day</button></div></div>${ORGS.filter(o=>o.id!=="mount").map(o=>`<div class="row" style="margin:6px 0"><span class="pill">${esc(o.name)} · outside map area</span><button class="secondary" data-open="${o.id}">Brief</button><button class="secondary" data-add="${o.id}">Add to day</button></div>`).join("")}</div>`}
+function todayMap(){
+ if(!mapCard)return `<button class="secondary" data-showmap>Show map preview</button>`;
+ const planned=day.map(d=>find(d.target)).filter(x=>x&&x.kind==="hco");
+ const label=planned.length?planned.length+" planned site(s)":"1 assigned NY site · 2 outside map area";
+ return `<div class="card" style="margin-bottom:10px"><div class="row"><div><h3 style="margin:0">Your day, on the map</h3><p class="muted small" style="margin:2px 0">${label} · Manhattan (schematic)</p></div><button class="secondary" data-hidemap style="margin-left:auto">Hide</button></div>${mapSVG(mapSel,true)}<div class="row" style="margin-top:8px"><button class="secondary" data-goto-map>Open map</button></div></div>`;
+}
 function prof(){
  const x=find(profile.id);if(!x)return "";
  const isH=x.kind==="hco";
@@ -120,6 +146,10 @@ function bind(v){
  v.querySelectorAll("[data-k]").forEach(b=>b.onclick=()=>{kind=b.dataset.k;render()});
  const q=v.querySelector("[data-q]");if(q)q.oninput=()=>{query=q.value;const l=v.querySelector(".list");};
  if(q)q.oninput=()=>{query=q.value;render();const n=v.querySelector("[data-q]");n.focus();n.setSelectionRange(n.value.length,n.value.length)};
+ v.querySelectorAll("[data-mapsel]").forEach(b=>b.onclick=()=>{mapSel=b.dataset.mapsel;render()});
+ v.querySelectorAll("[data-goto-map]").forEach(b=>b.onclick=()=>{profile=null;tab="targets";kind="map";render()});
+ v.querySelectorAll("[data-showmap]").forEach(b=>b.onclick=()=>{mapCard=true;render()});
+ v.querySelectorAll("[data-hidemap]").forEach(b=>b.onclick=()=>{mapCard=false;render()});
  v.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>{profileFrom=tab;tab="targets";profile={id:b.dataset.open};render()});
  v.querySelectorAll("[data-back]").forEach(b=>b.onclick=()=>{profile=null;tab=profileFrom;render()});
  v.querySelectorAll("[data-brief]").forEach(b=>b.onclick=()=>{profileFrom="today";tab="targets";profile={id:b.dataset.brief};render()});
