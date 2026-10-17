@@ -1,0 +1,173 @@
+{
+  "date": "2026-10-18",
+  "checks": [
+    {
+      "label": "Today with active and logged visits",
+      "heading": "Today",
+      "overflow": [],
+      "width": 320
+    },
+    {
+      "label": "Shared Targets planner entry",
+      "heading": "Add targets",
+      "overflow": [],
+      "width": 320
+    },
+    {
+      "label": "Daily planner",
+      "heading": "Your day, in order",
+      "overflow": [],
+      "width": 320
+    },
+    {
+      "label": "Audio visit record",
+      "heading": "Dr. Maya Patel",
+      "overflow": [],
+      "width": 320
+    },
+    {
+      "label": "Transcript editing",
+      "heading": "Dr. Maya Patel",
+      "overflow": [],
+      "width": 320
+    },
+    {
+      "label": "Grouped record options and transcript",
+      "heading": "Dr. Maya Patel",
+      "overflow": [],
+      "width": 320
+    },
+    {
+      "label": "Text-only record",
+      "heading": "Dr. Alex Morgan",
+      "overflow": [],
+      "width": 320
+    },
+    {
+      "label": "Preserved original note",
+      "heading": "Dr. Alex Morgan",
+      "overflow": [],
+      "width": 320
+    },
+    {
+      "label": "Today with active and logged visits",
+      "heading": "Today",
+      "overflow": [],
+      "width": 840
+    },
+    {
+      "label": "Shared Targets planner entry",
+      "heading": "Add targets",
+      "overflow": [],
+      "width": 840
+    },
+    {
+      "label": "Daily planner",
+      "heading": "Your day, in order",
+      "overflow": [],
+      "width": 840
+    },
+    {
+      "label": "Audio visit record",
+      "heading": "Dr. Maya Patel",
+      "overflow": [],
+      "width": 840
+    },
+    {
+      "label": "Transcript editing",
+      "heading": "Dr. Maya Patel",
+      "overflow": [],
+      "width": 840
+    },
+    {
+      "label": "Grouped record options and transcript",
+      "heading": "Dr. Maya Patel",
+      "overflow": [],
+      "width": 840
+    },
+    {
+      "label": "Text-only record",
+      "heading": "Dr. Alex Morgan",
+      "overflow": [],
+      "width": 840
+    },
+    {
+      "label": "Preserved original note",
+      "heading": "Dr. Alex Morgan",
+      "overflow": [],
+      "width": 840
+    },
+    {
+      "label": "Today with active and logged visits",
+      "heading": "Today",
+      "overflow": [],
+      "width": 390
+    },
+    {
+      "label": "Shared Targets planner entry",
+      "heading": "Add targets",
+      "overflow": [],
+      "width": 390
+    },
+    {
+      "label": "Daily planner",
+      "heading": "Your day, in order",
+      "overflow": [],
+      "width": 390
+    },
+    {
+      "label": "Audio visit record",
+      "heading": "Dr. Maya Patel",
+      "overflow": [],
+      "width": 390
+    },
+    {
+      "label": "Transcript editing",
+      "heading": "Dr. Maya Patel",
+      "overflow": [],
+      "width": 390
+    },
+    {
+      "label": "Grouped record options and transcript",
+      "heading": "Dr. Maya Patel",
+      "overflow": [],
+      "width": 390
+    },
+    {
+      "label": "Text-only record",
+      "heading": "Dr. Alex Morgan",
+      "overflow": [],
+      "width": 390
+    },
+    {
+      "label": "Preserved original note",
+      "heading": "Dr. Alex Morgan",
+      "overflow": [],
+      "width": 390
+    },
+    {
+      "addTargetsVisible": true,
+      "label": "Today with only cancelled appointments",
+      "overflow": [],
+      "suggestedTargets": true,
+      "viewPlanVisible": true,
+      "width": 320
+    },
+    {
+      "addTargetsVisible": true,
+      "label": "Today with only cancelled appointments",
+      "overflow": [],
+      "suggestedTargets": true,
+      "viewPlanVisible": true,
+      "width": 840
+    },
+    {
+      "addTargetsVisible": true,
+      "label": "Today with only cancelled appointments",
+      "overflow": [],
+      "suggestedTargets": true,
+      "viewPlanVisible": true,
+      "width": 390
+    }
+  ]
+}

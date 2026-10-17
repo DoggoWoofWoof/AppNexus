@@ -157,3 +157,43 @@
 #field-pro-responsive .day-activity-empty>.day-secondary{margin-top:16px;}
 @container fp-device (min-width:700px){#field-pro-responsive .day-main:not([data-large-text]) .day-activity-content:has(.day-activity-todo){grid-template-columns:minmax(240px,.8fr) minmax(0,1.2fr);align-items:start;}}
 @container fp-device (max-width:340px){#field-pro-responsive .day-activity-heading>.day-primary{flex-basis:100%;}}
+#field-pro-responsive .day-planner-entry{margin:24px 0;}
+#field-pro-responsive .day-planner-entry>.day-actions{margin:12px 0;}
+#field-pro-responsive .day-planner-entry>.day-actions>*{flex:1 1 130px;}
+#field-pro-responsive .day-planner-suggestions{margin:24px 0;}
+#field-pro-responsive .day-planner-suggestions>.day-caption{margin-top:5px;}
+/* Visit detail has one edit action and three related content groups. */
+#field-pro-responsive .day-record-heading{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;margin:14px 0 18px;}
+#field-pro-responsive .day-record-heading>div{flex:1 1 190px;min-width:0;}
+#field-pro-responsive .day-record-heading h1{font-size:calc(25px * var(--day-text-scale));}
+#field-pro-responsive .day-record-identity{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:22px;font-size:calc(13px * var(--day-text-scale));color:var(--day-muted);}
+#field-pro-responsive .day-record-sections{display:grid;gap:16px;}
+#field-pro-responsive .day-record-section{padding:16px;border:1px solid var(--day-line);border-radius:14px;background:var(--day-panel);min-width:0;}
+#field-pro-responsive .day-record-section>.day-row{flex-wrap:wrap;}
+#field-pro-responsive .day-record-copy{font-size:calc(14px * var(--day-text-scale));line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere;margin-top:12px;}
+#field-pro-responsive .day-record-status{margin-top:14px;padding-top:14px;border-top:1px solid var(--day-line);color:var(--day-warn);font-size:calc(13px * var(--day-text-scale));}
+#field-pro-responsive .day-record-status>.day-secondary{margin-top:10px;}
+#field-pro-responsive .day-record-processing{margin-top:12px;}
+#field-pro-responsive .day-record-section>.day-todo-row:first-of-type{margin-top:12px;}
+#field-pro-responsive .day-record-disclosure{border-bottom:0;padding:0;margin-top:12px;}
+#field-pro-responsive .day-record-disclosure>summary{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:44px;color:var(--day-blue);font-size:calc(13px * var(--day-text-scale));font-weight:500;}
+#field-pro-responsive .day-record-disclosure>summary::after{content:'+';font-size:calc(20px * var(--day-text-scale));}
+#field-pro-responsive .day-record-disclosure[open]>summary::after{content:'−';}
+#field-pro-responsive .day-record-disclosure>.day-secondary{margin-top:12px;}
+#field-pro-responsive .day-record-disclosure>.day-actions{margin-top:12px;}
+#field-pro-responsive .day-record-suggestions{border-top:1px solid var(--day-line);padding-top:10px;}
+#field-pro-responsive .day-record-suggestion{margin-top:14px;}
+#field-pro-responsive .day-record-suggestion input{max-width:100%;}
+#field-pro-responsive .day-record-suggestion>.day-actions{margin-top:12px;}
+#field-pro-responsive .day-record-original{border-bottom:0;margin-top:12px;}
+#field-pro-responsive .day-record-original>summary{font-size:calc(12px * var(--day-text-scale));font-weight:400;color:var(--day-muted);}
+#field-pro-responsive .day-record-audio{margin-top:14px;}
+#field-pro-responsive .day-record-audio h3{display:flex;align-items:center;gap:8px;font-weight:500;}
+#field-pro-responsive .day-record-audio audio{display:block;width:100%;max-width:100%;min-width:0;margin-top:10px;height:44px;}
+#field-pro-responsive .day-record-options{margin-top:24px;}
+#field-pro-responsive .day-record-options>summary{font-size:calc(12px * var(--day-text-scale));color:var(--day-muted);font-weight:400;}
+#field-pro-responsive .day-record-options>.day-secondary{display:flex;justify-content:flex-start;width:100%;margin-top:10px;}
+#field-pro-responsive .day-record-options>[data-trash-note],#field-pro-responsive .day-record-options>[data-erase-note]{color:var(--day-danger);}
+#field-pro-responsive .day-record-source-note{margin:0;}
+#field-pro-responsive .day-record-source-note>summary{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:calc(15px * var(--day-text-scale));min-height:44px;}
+@container fp-device (min-width:700px){#field-pro-responsive .day-main:not([data-large-text]) .day-record-sections{grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;}#field-pro-responsive .day-main:not([data-large-text]) .day-record-sources{grid-column:1/-1;}}
