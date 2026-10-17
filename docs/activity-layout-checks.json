@@ -1,0 +1,119 @@
+{
+  "date": "2026-10-18",
+  "checks": [
+    {
+      "label": "Populated journal and queue",
+      "heading": "Activity",
+      "overflow": [],
+      "width": 320
+    },
+    {
+      "label": "Expanded queue",
+      "heading": "Activity",
+      "overflow": [],
+      "width": 320
+    },
+    {
+      "label": "Empty search",
+      "heading": "Activity",
+      "overflow": [],
+      "width": 320
+    },
+    {
+      "label": "Secondary deleted records",
+      "heading": "Deleted records",
+      "overflow": [],
+      "width": 320
+    },
+    {
+      "label": "Linked visit record",
+      "heading": "Dr. Maya Patel",
+      "overflow": [],
+      "width": 320
+    },
+    {
+      "label": "Populated journal and queue",
+      "heading": "Activity",
+      "overflow": [],
+      "width": 840
+    },
+    {
+      "label": "Expanded queue",
+      "heading": "Activity",
+      "overflow": [],
+      "width": 840
+    },
+    {
+      "label": "Empty search",
+      "heading": "Activity",
+      "overflow": [],
+      "width": 840
+    },
+    {
+      "label": "Secondary deleted records",
+      "heading": "Deleted records",
+      "overflow": [],
+      "width": 840
+    },
+    {
+      "label": "Linked visit record",
+      "heading": "Dr. Maya Patel",
+      "overflow": [],
+      "width": 840
+    },
+    {
+      "label": "Populated journal and queue",
+      "heading": "Activity",
+      "overflow": [],
+      "width": 390
+    },
+    {
+      "label": "Expanded queue",
+      "heading": "Activity",
+      "overflow": [],
+      "width": 390
+    },
+    {
+      "label": "Empty search",
+      "heading": "Activity",
+      "overflow": [],
+      "width": 390
+    },
+    {
+      "label": "Secondary deleted records",
+      "heading": "Deleted records",
+      "overflow": [],
+      "width": 390
+    },
+    {
+      "label": "Linked visit record",
+      "heading": "Dr. Maya Patel",
+      "overflow": [],
+      "width": 390
+    }
+  ],
+  "additionalChecks": [
+    {
+      "label": "No recorded visits",
+      "width": 320,
+      "emptyStateVisible": true,
+      "horizontalOverflow": false
+    },
+    {
+      "label": "No recorded visits",
+      "width": 390,
+      "emptyStateVisible": true,
+      "horizontalOverflow": false
+    },
+    {
+      "label": "No recorded visits",
+      "width": 840,
+      "emptyStateVisible": true,
+      "horizontalOverflow": false
+    }
+  ],
+  "emptySearchCheck": {
+    "width": 390,
+    "visibleSearchFields": 0
+  }
+}

@@ -38,6 +38,8 @@ The full design inventory is **58 feature families, 39 screen families and 12 re
 
 ## Planning and integration documents
 
+- [Activity refinement: To do, discussion previews and completion](docs/activity-refinement.md)
+
 - [Shared Targets flow and visit-ledger refinement](docs/unified-targets-and-records.md)
 - [Button placement and cancellation recovery](docs/action-placement.md)
 - [Visual simplification, shorter paths and contrast verification](docs/visual-simplification.md)

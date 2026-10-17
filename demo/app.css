@@ -303,5 +303,54 @@
 #field-pro-responsive .day-cancel-record>summary>.day-muted{display:block;margin-top:4px;}
 #field-pro-responsive .day-cancel-record>.day-caption{margin-top:12px;}
 #field-pro-responsive .day-listrow>[data-replace]{flex:0 0 auto;white-space:nowrap;padding:8px 10px;}
+/* Activity: a compact work queue followed by a dated visit journal. */
+#field-pro-responsive .day-activity-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:24px;}
+#field-pro-responsive .day-activity-heading>div{flex:1 1 140px;min-width:0;}
+#field-pro-responsive .day-activity-heading h1{margin-top:0;}
+#field-pro-responsive .day-activity-heading>.day-primary{flex:0 1 auto;}
+#field-pro-responsive .day-activity-content{display:grid;gap:26px;min-width:0;}
+#field-pro-responsive .day-activity-content>section{min-width:0;}
+#field-pro-responsive .day-activity-todo{padding:14px 14px 0;border:1px solid var(--day-line);border-radius:14px;background:var(--day-panel);}
+#field-pro-responsive .day-activity-todo> .day-row{padding-bottom:8px;}
+#field-pro-responsive .day-todo-count{font-size:calc(12px * var(--day-text-scale));background:var(--day-neutral-bg);border-radius:20px;padding:2px 8px;}
+#field-pro-responsive .day-todo-row{display:flex;align-items:center;gap:8px;border-top:1px solid var(--day-line);}
+#field-pro-responsive .day-todo-row>.day-icon{color:var(--day-blue);width:44px;}
+#field-pro-responsive .day-todo-icon{width:44px;flex:0 0 44px;display:flex;justify-content:center;color:var(--day-blue);}
+#field-pro-responsive .day-todo-body{display:flex;align-items:center;gap:10px;text-align:left;flex:1;min-width:0;padding:14px 0;}
+#field-pro-responsive .day-todo-body>span{flex:1;min-width:0;}
+#field-pro-responsive .day-todo-body .day-muted{display:block;margin-top:4px;}
+#field-pro-responsive .day-todo-more{padding:0;border-bottom:0;}
+#field-pro-responsive .day-todo-more>summary{color:var(--day-blue);font-size:calc(13px * var(--day-text-scale));font-weight:500;min-height:44px;}
+#field-pro-responsive .day-activity-search{margin:12px 0 0;}
+#field-pro-responsive .day-record-day{margin-top:20px;}
+#field-pro-responsive .day-record-day>h3{margin-bottom:9px;}
+#field-pro-responsive .day-history-group{background:var(--day-panel);border:1px solid var(--day-line);border-radius:14px;overflow:hidden;}
+#field-pro-responsive .day-history-event{display:flex;align-items:flex-start;gap:10px;width:100%;text-align:left;padding:16px 12px;}
+#field-pro-responsive .day-record-entry+.day-record-entry,#field-pro-responsive .day-history-cancelled+.day-record-entry,#field-pro-responsive .day-history-group>:not(:first-child).day-history-cancelled{border-top:1px solid var(--day-line);}
+#field-pro-responsive .day-event-icon{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;flex:0 0 30px;}
+#field-pro-responsive .day-event-content{display:block;flex:1;min-width:0;}
+#field-pro-responsive .day-event-content>.day-muted{display:block;margin-top:3px;}
+#field-pro-responsive .day-event-time{font-size:calc(11px * var(--day-text-scale));color:var(--day-muted);flex-shrink:0;}
+#field-pro-responsive .day-event-content>.day-row{align-items:flex-start;flex-wrap:wrap;gap:4px 10px;}
+#field-pro-responsive .day-event-content .day-name{font-size:calc(14px * var(--day-text-scale));}
+#field-pro-responsive .day-history-event>svg{width:15px;height:15px;margin-top:5px;color:var(--day-muted);}
+#field-pro-responsive .day-history-snippet{display:block;font-size:calc(13px * var(--day-text-scale));line-height:1.5;margin-top:9px;overflow-wrap:anywhere;}
+#field-pro-responsive .day-event-meta{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;margin-top:10px;}
+#field-pro-responsive .day-event-meta>span{display:inline-flex;align-items:center;gap:4px;font-size:calc(11px * var(--day-text-scale));color:var(--day-muted);}
+#field-pro-responsive .day-event-meta svg{width:13px;height:13px;}
+#field-pro-responsive .day-event-outcome{display:inline-block;margin-top:10px;color:var(--day-muted);font-size:calc(11px * var(--day-text-scale));font-weight:600;}
+#field-pro-responsive .day-event-meta .day-event-outcome{margin-top:0;}
+#field-pro-responsive .day-event-meta .day-outcome-success{color:var(--day-green);}
+#field-pro-responsive .day-event-meta .day-outcome-attention{color:var(--day-warn);}
+#field-pro-responsive .day-record-entry>.day-secondary{margin:0 12px 12px;}
+#field-pro-responsive .day-activity-options{margin-top:24px;}
+#field-pro-responsive .day-activity-options>summary{font-size:calc(12px * var(--day-text-scale));color:var(--day-muted);font-weight:400;}
+#field-pro-responsive .day-activity-notice{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px;}
+#field-pro-responsive .day-activity-empty{padding:28px 18px;border:1px dashed var(--day-line);border-radius:14px;text-align:center;margin-top:18px;}
+#field-pro-responsive .day-activity-empty>svg{color:var(--day-muted);width:28px;height:28px;margin-bottom:10px;}
+#field-pro-responsive .day-activity-empty h3{font-size:calc(15px * var(--day-text-scale));margin-bottom:6px;}
+#field-pro-responsive .day-activity-empty>.day-secondary{margin-top:16px;}
+@container fp-device (min-width:700px){#field-pro-responsive .day-main:not([data-large-text]) .day-activity-content:has(.day-activity-todo){grid-template-columns:minmax(240px,.8fr) minmax(0,1.2fr);align-items:start;}}
+@container fp-device (max-width:340px){#field-pro-responsive .day-activity-heading>.day-primary{flex-basis:100%;}}
 
 /* END_EXPERIENCE_CSS */
