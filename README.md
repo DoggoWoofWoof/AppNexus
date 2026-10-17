@@ -11,10 +11,10 @@ The demo includes Today / Targets / Activity / Insights, a mixed fixed/flexible 
 ## Try it
 
 1. Start with the sample 10:00 / 14:00 appointments. Choose **Cancel or reschedule → Doctor cancelled**.
-2. Inspect nearby candidates, use the slot for a tentative visit or call, undo the cancellation, or leave the slot open. Other appointments keep their times.
+2. Targets opens with replacement context. Use the shared search, distance filters and List/Map view, then choose Replace, undo the cancellation, or leave the time open. Other appointments keep their times.
 3. Open **Prepare visit** for the combined HCP/preparation brief, notes, follow-ups and viewable demo briefs with offline copies. **Edit time** saves a personal plan or sends a mock request with acceptance/decline states; overlaps block saving.
 4. Log an outcome, discussion note and follow-up. Activity → Capture asks for the person first. Leave and resume an unfinished note from Activity.
-5. Review/edit the same interaction and complete the linked follow-up.
+5. Activity groups visit records and cancellations by date. Open a record for its notes, audio/transcript and linked follow-ups. Deleted records and device storage are under Record options.
 6. Explore the named profile sections and Insights tools. Detailed analysis datasets remain previews.
 
 Open **Preview settings** for Phone, Wide screen, Large text, and light/dark appearance. Switching views retains the current plan, conversation draft and navigation. Reset clears only the active sample workspace, including its local media, after confirmation.
@@ -38,6 +38,7 @@ The full design inventory is **58 feature families, 39 screen families and 12 re
 
 ## Planning and integration documents
 
+- [Shared Targets flow and visit-ledger refinement](docs/unified-targets-and-records.md)
 - [Button placement and cancellation recovery](docs/action-placement.md)
 - [Visual simplification, shorter paths and contrast verification](docs/visual-simplification.md)
 
@@ -60,7 +61,7 @@ The full design inventory is **58 feature families, 39 screen families and 12 re
 ## Source layout
 
 - `mockup/source/field-pro-responsive.html`: maintained conversation fragment with product markup, styles, behavior and embedded public map data.
-- `app/experience-ui.js` and `app/experience.css`: shared visual hierarchy, brief/prep composition and direct task paths.
+- `app/targets-ui.js`, `app/experience-ui.js` and `app/experience.css`: shared discovery, visual hierarchy, brief/prep composition and direct task paths.
 - `app/`: maintained capture model, IndexedDB store, recording session, capture UI and mocked booking/prep/recovery UI.
 - `tests/personas.test.cjs`: persona-based model/storage/recording regressions (`npm ci && npm test`).
 - `scripts/build-demo.py`: bundles the app modules and extracts the fragment into the static demo.

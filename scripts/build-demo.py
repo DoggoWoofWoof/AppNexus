@@ -15,7 +15,7 @@ def bundle(marker, files):
 
 bundle('CAPTURE_RUNTIME',['app/capture-model.js','app/device-store.js','app/recording-session.js'])
 bundle('CAPTURE_UI',['app/capture-ui.js'])
-bundle('FLOWS_UI',['app/flows-ui.js','app/experience-ui.js'])
+bundle('FLOWS_UI',['app/flows-ui.js','app/targets-ui.js','app/experience-ui.js'])
 css=(ROOT/'app/experience.css').read_text(encoding='utf-8')
 css_pattern=r'/\* BEGIN_EXPERIENCE_CSS \*/[\s\S]*?/\* END_EXPERIENCE_CSS \*/'
 if not re.search(css_pattern,source):

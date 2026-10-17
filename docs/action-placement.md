@@ -1,6 +1,6 @@
 # Actions and cancellation recovery
 
-Implemented 18 October 2026. [Review the actual screens](../demo/screens.html) or [open the interactive demo](https://doggowoofwoof.github.io/AppNexus/demo/).
+Historical action-placement pass, 18 October 2026. The [shared Targets and visit-ledger refinement](unified-targets-and-records.md) supersedes the recovery surface, map button and Activity controls described below. [Review the actual screens](../demo/screens.html) or [open the interactive demo](https://doggowoofwoof.github.io/AppNexus/demo/).
 
 Frequent actions have visible button boundaries. Preparation and capture are separate sections, and the four main tabs stay available throughout.
 

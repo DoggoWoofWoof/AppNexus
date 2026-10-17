@@ -1,0 +1,76 @@
+{
+  "date": "2026-10-18",
+  "method": "Read-only DOM bounding-box checks against the visible device container. SVG map path descendants are excluded; the SVG viewport is checked. This is a summary of the browser checks, not a raw geometry export.",
+  "layouts": [
+    {
+      "width": 320,
+      "view": "Large text 200%",
+      "screenStates": [
+        "Today map card",
+        "Meeting brief",
+        "Appointment with meeting type",
+        "Capture",
+        "Visit ledger and unfinished work",
+        "Visit record and source audio",
+        "Secondary deleted records",
+        "Shared Targets list",
+        "Shared Targets map",
+        "Shared distance filters",
+        "Targets replacement list",
+        "Targets replacement map",
+        "Replacement HCP brief",
+        "Replacement shares distance filters"
+      ],
+      "horizontalOverflow": false
+    },
+    {
+      "width": 390,
+      "view": "Phone",
+      "screenStates": [
+        "Today map card",
+        "Meeting brief",
+        "Appointment with meeting type",
+        "Capture",
+        "Visit ledger and unfinished work",
+        "Visit record and source audio",
+        "Secondary deleted records",
+        "Shared Targets list",
+        "Shared Targets map",
+        "Shared distance filters",
+        "Targets replacement list",
+        "Targets replacement map",
+        "Replacement HCP brief",
+        "Replacement shares distance filters"
+      ],
+      "horizontalOverflow": false
+    },
+    {
+      "width": 840,
+      "view": "Wide screen",
+      "screenStates": [
+        "Today map card",
+        "Meeting brief",
+        "Appointment with meeting type",
+        "Capture",
+        "Visit ledger and unfinished work",
+        "Visit record and source audio",
+        "Secondary deleted records",
+        "Shared Targets list",
+        "Shared Targets map",
+        "Shared distance filters",
+        "Targets replacement list",
+        "Targets replacement map",
+        "Replacement HCP brief",
+        "Replacement shares distance filters"
+      ],
+      "horizontalOverflow": false
+    }
+  ],
+  "finalButtonCheck": {
+    "width": 320,
+    "view": "Large text 200%",
+    "label": "Replace",
+    "whiteSpace": "nowrap",
+    "bothReplacementButtonsFit": true
+  }
+}
