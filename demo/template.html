@@ -16,22 +16,22 @@
 <body>
   <header class="demo-bar">
     <a class="demo-title" href="../">AppNexus <span>Field Pro</span></a>
-    <span class="demo-badge">Interactive concept · Sample data</span>
-    <div class="demo-controls">
+    <span class="demo-badge">Sample workspace</span>
+    <details class="demo-tools"><summary>Preview settings</summary><div class="demo-controls">
       <label>View<select id="demo-view" aria-label="View"><option value="Phone">Phone</option><option value="Wide screen">Wide screen</option><option value="Large text">Large text · 200%</option></select></label>
       <label>Appearance<select id="demo-theme" aria-label="Appearance"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select></label>
       <button type="button" id="demo-reset">Reset demo</button>
-    </div>
+    </div></details>
   </header>
   <details class="demo-guide">
     <summary>Try the demo</summary>
     <label>Mock service scenario <select id="demo-scenario"><option value="normal">Normal</option><option value="offline">Offline</option><option value="microphone-denied">Microphone denied</option><option value="storage-full">Device storage full</option><option value="transcription-fails">Transcription failure</option><option value="report-fails">Report failure</option><option value="booking-declined">Booking declined</option><option value="no-candidates">No suitable alternatives</option></select></label>
     <button type="button" id="demo-booking-cancel">Mock cancellation of accepted request</button>
     <ol>
-      <li>The sample day has appointments at 10:00 and 14:00. Open <strong>Appointment changed?</strong> and choose <strong>Doctor cancelled</strong>.</li>
+      <li>The sample day has appointments at 10:00 and 14:00. Open <strong>Manage visit</strong> and choose <strong>Doctor cancelled</strong>.</li>
       <li>Inspect an alternative, use the slot for a visit or call, or leave it open. The other appointment stays fixed.</li>
       <li>Open the map from Today or switch between Map and List in Targets.</li>
-      <li>Open <strong>Prepare</strong>, add a report/insight to the prep checklist, or manage the appointment. A request draft is explicitly unsent.</li>
+      <li>Open <strong>Prepare visit</strong>, add a report/insight inline, or manage the appointment. Request a mock office response directly, or keep an unsent draft.</li>
       <li>Review or edit the conversation in Activity and complete the linked follow-up.</li>
       <li>Log a visit and follow-up, then explore the short HCP brief, full profile sections and Insights tools.</li>
     </ol>

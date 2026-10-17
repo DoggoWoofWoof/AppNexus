@@ -1,0 +1,330 @@
+{
+  "date": "2026-10-18",
+  "method": "Scripted browser walkthroughs, DOM geometry checks and computed color samples; not human usability research or full accessibility certification",
+  "layouts": [
+    {
+      "label": "Today",
+      "heading": "Today",
+      "overflow": [],
+      "variant": "readable",
+      "width": 320
+    },
+    {
+      "label": "HCP and prep",
+      "heading": "Dr. Jordan Lee",
+      "overflow": [],
+      "variant": "readable",
+      "width": 320
+    },
+    {
+      "label": "Booking",
+      "heading": "Dr. Jordan Lee",
+      "overflow": [],
+      "variant": "readable",
+      "width": 320
+    },
+    {
+      "label": "Visit menu",
+      "heading": "Today",
+      "overflow": [],
+      "variant": "readable",
+      "width": 320
+    },
+    {
+      "label": "Recovery",
+      "heading": "Find an alternative",
+      "overflow": [],
+      "variant": "readable",
+      "width": 320
+    },
+    {
+      "label": "Capture",
+      "heading": "Log visit",
+      "overflow": [],
+      "variant": "readable",
+      "width": 320
+    },
+    {
+      "label": "Activity",
+      "heading": "Activity",
+      "overflow": [],
+      "variant": "readable",
+      "width": 320
+    },
+    {
+      "label": "Conversation",
+      "heading": "Dr. Alex Morgan",
+      "overflow": [],
+      "variant": "readable",
+      "width": 320
+    },
+    {
+      "label": "Insights",
+      "heading": "Insights",
+      "overflow": [],
+      "variant": "readable",
+      "width": 320
+    },
+    {
+      "label": "Specialist tools",
+      "heading": "Insights",
+      "overflow": [],
+      "variant": "readable",
+      "width": 320
+    },
+    {
+      "label": "Targets",
+      "heading": "Targets",
+      "overflow": [],
+      "variant": "readable",
+      "width": 320
+    },
+    {
+      "label": "Map",
+      "heading": "Targets",
+      "overflow": [],
+      "variant": "readable",
+      "width": 320
+    },
+    {
+      "label": "Today",
+      "heading": "Today",
+      "overflow": [],
+      "variant": "agenda",
+      "width": 390
+    },
+    {
+      "label": "HCP and prep",
+      "heading": "Dr. Jordan Lee",
+      "overflow": [],
+      "variant": "agenda",
+      "width": 390
+    },
+    {
+      "label": "Booking",
+      "heading": "Dr. Jordan Lee",
+      "overflow": [],
+      "variant": "agenda",
+      "width": 390
+    },
+    {
+      "label": "Visit menu",
+      "heading": "Today",
+      "overflow": [],
+      "variant": "agenda",
+      "width": 390
+    },
+    {
+      "label": "Recovery",
+      "heading": "Find an alternative",
+      "overflow": [],
+      "variant": "agenda",
+      "width": 390
+    },
+    {
+      "label": "Capture",
+      "heading": "Log visit",
+      "overflow": [],
+      "variant": "agenda",
+      "width": 390
+    },
+    {
+      "label": "Activity",
+      "heading": "Activity",
+      "overflow": [],
+      "variant": "agenda",
+      "width": 390
+    },
+    {
+      "label": "Conversation",
+      "heading": "Dr. Alex Morgan",
+      "overflow": [],
+      "variant": "agenda",
+      "width": 390
+    },
+    {
+      "label": "Insights",
+      "heading": "Insights",
+      "overflow": [],
+      "variant": "agenda",
+      "width": 390
+    },
+    {
+      "label": "Specialist tools",
+      "heading": "Insights",
+      "overflow": [],
+      "variant": "agenda",
+      "width": 390
+    },
+    {
+      "label": "Targets",
+      "heading": "Targets",
+      "overflow": [],
+      "variant": "agenda",
+      "width": 390
+    },
+    {
+      "label": "Map",
+      "heading": "Targets",
+      "overflow": [],
+      "variant": "agenda",
+      "width": 390
+    },
+    {
+      "label": "Today",
+      "heading": "Today",
+      "overflow": [],
+      "variant": "focus",
+      "width": 840
+    },
+    {
+      "label": "HCP and prep",
+      "heading": "Dr. Jordan Lee",
+      "overflow": [],
+      "variant": "focus",
+      "width": 840
+    },
+    {
+      "label": "Booking",
+      "heading": "Dr. Jordan Lee",
+      "overflow": [],
+      "variant": "focus",
+      "width": 840
+    },
+    {
+      "label": "Visit menu",
+      "heading": "Today",
+      "overflow": [],
+      "variant": "focus",
+      "width": 840
+    },
+    {
+      "label": "Recovery",
+      "heading": "Find an alternative",
+      "overflow": [],
+      "variant": "focus",
+      "width": 840
+    },
+    {
+      "label": "Capture",
+      "heading": "Log visit",
+      "overflow": [],
+      "variant": "focus",
+      "width": 840
+    },
+    {
+      "label": "Activity",
+      "heading": "Activity",
+      "overflow": [],
+      "variant": "focus",
+      "width": 840
+    },
+    {
+      "label": "Conversation",
+      "heading": "Dr. Alex Morgan",
+      "overflow": [],
+      "variant": "focus",
+      "width": 840
+    },
+    {
+      "label": "Insights",
+      "heading": "Insights",
+      "overflow": [],
+      "variant": "focus",
+      "width": 840
+    },
+    {
+      "label": "Specialist tools",
+      "heading": "Insights",
+      "overflow": [],
+      "variant": "focus",
+      "width": 840
+    },
+    {
+      "label": "Targets",
+      "heading": "Targets",
+      "overflow": [],
+      "variant": "focus",
+      "width": 840
+    },
+    {
+      "label": "Map",
+      "heading": "Targets",
+      "overflow": [],
+      "variant": "focus",
+      "width": 840
+    }
+  ],
+  "contrast": [
+    {
+      "theme": "dark",
+      "values": [
+        {
+          "bg": "rgb(12, 19, 34)",
+          "fg": "rgb(245, 247, 252)",
+          "ratio": 17.31,
+          "role": "body"
+        },
+        {
+          "bg": "rgb(27, 41, 63)",
+          "fg": "rgb(189, 203, 224)",
+          "ratio": 8.9,
+          "role": "supporting text"
+        },
+        {
+          "bg": "rgb(166, 196, 255)",
+          "fg": "rgb(16, 36, 71)",
+          "ratio": 8.76,
+          "role": "main action"
+        },
+        {
+          "bg": "rgb(23, 61, 47)",
+          "fg": "rgb(178, 235, 201)",
+          "ratio": 8.95,
+          "role": "confirmed"
+        },
+        {
+          "bg": "rgb(166, 196, 255)",
+          "fg": "rgb(16, 36, 71)",
+          "ratio": 8.76,
+          "role": "navigation active"
+        }
+      ]
+    },
+    {
+      "theme": "light",
+      "values": [
+        {
+          "bg": "rgb(241, 243, 247)",
+          "fg": "rgb(22, 33, 52)",
+          "ratio": 14.53,
+          "role": "body"
+        },
+        {
+          "bg": "rgb(255, 255, 255)",
+          "fg": "rgb(78, 94, 116)",
+          "ratio": 6.61,
+          "role": "supporting text"
+        },
+        {
+          "bg": "rgb(36, 71, 196)",
+          "fg": "rgb(255, 255, 255)",
+          "ratio": 7.57,
+          "role": "main action"
+        },
+        {
+          "bg": "rgb(227, 243, 233)",
+          "fg": "rgb(21, 91, 56)",
+          "ratio": 7.06,
+          "role": "confirmed"
+        },
+        {
+          "bg": "rgb(36, 71, 196)",
+          "fg": "rgb(255, 255, 255)",
+          "ratio": 7.57,
+          "role": "navigation active"
+        }
+      ]
+    }
+  ]
+}

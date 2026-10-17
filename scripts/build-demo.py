@@ -15,7 +15,12 @@ def bundle(marker, files):
 
 bundle('CAPTURE_RUNTIME',['app/capture-model.js','app/device-store.js','app/recording-session.js'])
 bundle('CAPTURE_UI',['app/capture-ui.js'])
-bundle('FLOWS_UI',['app/flows-ui.js'])
+bundle('FLOWS_UI',['app/flows-ui.js','app/experience-ui.js'])
+css=(ROOT/'app/experience.css').read_text(encoding='utf-8')
+css_pattern=r'/\* BEGIN_EXPERIENCE_CSS \*/[\s\S]*?/\* END_EXPERIENCE_CSS \*/'
+if not re.search(css_pattern,source):
+    source=source.replace('</style>','/* BEGIN_EXPERIENCE_CSS */\n/* END_EXPERIENCE_CSS */\n</style>',1)
+source=re.sub(css_pattern,lambda _: '/* BEGIN_EXPERIENCE_CSS */\n'+css+'\n/* END_EXPERIENCE_CSS */',source)
 (ROOT/'mockup/source/field-pro-responsive.html').write_text(source,encoding='utf-8')
 styles=re.findall(r'<style>([\s\S]*?)</style>',source)
 scripts=list(re.finditer(r'<script([^>]*)>([\s\S]*?)</script>',source))
