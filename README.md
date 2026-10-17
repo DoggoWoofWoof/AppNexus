@@ -6,11 +6,13 @@ A sales-rep mobile concept focused on **plan → recover a cancelled slot → pr
 
 The demo includes Today / Targets / Activity / Insights, a mixed fixed/flexible day, searchable account/person lists, real static maps, profile briefs, all 18 HCP and 19 HCO section names, durable drafts and audio chunks, searchable conversations, original/corrected transcripts, reviewed follow-ups and visible mock-service limits. Wider windows use a map/detail layout; the large-text view demonstrates 200% text.
 
+[Review the screens and button placement](https://doggowoofwoof.github.io/AppNexus/demo/screens.html)
+
 ## Try it
 
-1. Start with the sample 10:00 / 14:00 appointments. Choose **Manage visit → Doctor cancelled**.
+1. Start with the sample 10:00 / 14:00 appointments. Choose **Cancel or reschedule → Doctor cancelled**.
 2. Inspect nearby candidates, use the slot for a tentative visit or call, undo the cancellation, or leave the slot open. Other appointments keep their times.
-3. Open **Prepare visit** for the combined HCP/preparation brief, notes, follow-ups and viewable demo briefs with offline copies. **Manage appointment** saves a personal plan or sends a mock request with acceptance/decline states; overlaps block saving.
+3. Open **Prepare visit** for the combined HCP/preparation brief, notes, follow-ups and viewable demo briefs with offline copies. **Edit time** saves a personal plan or sends a mock request with acceptance/decline states; overlaps block saving.
 4. Log an outcome, discussion note and follow-up. Activity → Capture asks for the person first. Leave and resume an unfinished note from Activity.
 5. Review/edit the same interaction and complete the linked follow-up.
 6. Explore the named profile sections and Insights tools. Detailed analysis datasets remain previews.
@@ -36,6 +38,7 @@ The full design inventory is **58 feature families, 39 screen families and 12 re
 
 ## Planning and integration documents
 
+- [Button placement and cancellation recovery](docs/action-placement.md)
 - [Visual simplification, shorter paths and contrast verification](docs/visual-simplification.md)
 
 - [Plan, prototype and endpoint status](docs/plan-status-and-endpoint-audit.md)
