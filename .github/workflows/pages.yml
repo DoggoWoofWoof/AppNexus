@@ -1,0 +1,75 @@
+# Publishes two previews to GitHub Pages on every push to main or dev:
+#   /           main: the prototype (demo/) and the app's web build (app/)
+#   /dev/       dev: the same, for work in progress
+name: Pages
+on:
+  push:
+    branches: [main, dev]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          path: src/main
+      - name: Check whether dev exists
+        id: dev
+        run: |
+          if git ls-remote --exit-code --heads "https://github.com/${{ github.repository }}" dev > /dev/null; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v4
+        if: steps.dev.outputs.exists == 'true'
+        with:
+          ref: dev
+          path: src/dev
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: src/*/mobile/package-lock.json
+      - name: Build the site
+        env:
+          BASE: /${{ github.event.repository.name }}
+        run: |
+          # build <branch> <folder under the site>
+          build() {
+            local src="src/$1" out="site$2"
+            mkdir -p "$out"
+            rsync -a --exclude .git --exclude .github --exclude mobile "$src/" "$out/"
+            (
+              cd "$src/mobile"
+              npm ci --no-audit --no-fund
+              jq --arg base "$BASE$2/app" '.expo.experiments.baseUrl = $base' app.json > app.tmp && mv app.tmp app.json
+              npx expo export -p web --output-dir "$GITHUB_WORKSPACE/$out/app"
+            )
+          }
+          build main ""
+          if [ -d src/dev ]; then build dev /dev; fi
+          # The app is a single page: a reload on one of its screens lands here, so go back to that app's start.
+          cat > site/404.html <<HTML
+          <!doctype html><meta charset="utf-8"><title>Field Pro</title>
+          <script>var m = location.pathname.match(/^(.*?\/app\/)/); location.replace(m ? m[1] : '$BASE/');</script>
+          HTML
+          touch site/.nojekyll
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
