@@ -1,0 +1,123 @@
+/* The page around the prototype: preview controls and the device frame.
+   None of this ships in the app. */
+
+html,
+body { margin: 0; }
+
+body {
+  min-height: 100dvh;
+  background: var(--page);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.preview {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 8px 20px;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+}
+.preview *,
+.stage { box-sizing: border-box; }
+
+.preview-title { display: flex; align-items: baseline; gap: 10px; margin: 0; min-height: 34px; line-height: 34px; }
+.preview-title strong { font-family: var(--font-serif); font-size: 18px; font-weight: 600; }
+.preview-title span { color: var(--muted); font-size: 13px; }
+
+.preview details { flex: 1 1 520px; min-width: 0; }
+.preview summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  min-height: 34px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+}
+.preview summary::-webkit-details-marker { display: none; }
+.preview summary::before { content: "▸"; color: var(--muted); }
+.preview details[open] summary::before { content: "▾"; }
+.preview summary:hover { background: var(--surface-2); }
+.preview-summary { color: var(--muted); font-weight: 400; font-size: 13px; }
+.preview details[open] .preview-summary { display: none; }
+
+.preview-groups { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; padding: 8px 0 4px 10px; }
+.preview-group { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+.preview-label {
+  margin-right: 4px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.preview button {
+  min-height: 32px;
+  padding: 4px 11px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.preview button:hover { border-color: var(--accent); }
+.preview button[aria-pressed="true"] { background: var(--accent-strong); border-color: var(--accent-strong); color: var(--on-accent); }
+.preview .preview-reset { border-color: transparent; background: none; color: var(--danger); }
+.preview .preview-reset:hover { background: var(--danger-soft); }
+.preview :focus-visible { outline: 2.5px solid var(--focus); outline-offset: 2px; }
+
+.stage {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 20px 16px 28px;
+}
+
+.device {
+  position: relative;
+  width: 390px;
+  height: min(844px, calc(100dvh - 120px));
+  min-height: 560px;
+  overflow: hidden;
+  border: 10px solid #0B1220;
+  border-radius: 44px;
+  background: var(--bg);
+  box-shadow: 0 30px 60px -20px rgb(11 18 32 / 0.45), 0 0 0 1px rgb(255 255 255 / 0.06);
+}
+.device[data-view="wide"] {
+  width: min(1280px, 100%);
+  height: calc(100dvh - 120px);
+  min-height: 600px;
+  border: 1px solid var(--line-strong);
+  border-radius: 16px;
+  box-shadow: var(--shadow-lg);
+}
+
+/* On a real phone the frame is the screen. */
+@media (max-width: 520px) {
+  .preview { padding: 6px 12px; gap: 4px 12px; }
+  .preview-title span { display: none; }
+  .stage { padding: 0; }
+  .device,
+  .device[data-view="wide"] {
+    width: 100%;
+    height: 100dvh;
+    min-height: 0;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+}
+
+.noscript { padding: 24px; text-align: center; }

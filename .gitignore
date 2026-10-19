@@ -1,19 +1,11 @@
-# Private upstream clones — never publish these
-reference/repos/
-reference/field-backend-source/
-reference/field-pro/uploads/
-reference/field-pro/screenshots/
-
-# Nested git metadata from reference clones
-**/.git/
+# Local-only reference material: private upstream clones, internal design
+# exports and backend notes. Never publish these.
+reference/
 
 # OS / editor noise
 .DS_Store
 Thumbs.db
 .vscode/
+.claude/
 *.log
-
-# Python cache
-__pycache__/
-*.pyc
 node_modules/

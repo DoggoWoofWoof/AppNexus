@@ -1,0 +1,89 @@
+/* Design tokens: Ottava palette, type and spacing.
+   Colours switch with the colour scheme through light-dark(); the preview's
+   theme control pins the scheme with [data-theme] on <html>. */
+
+:root {
+  color-scheme: light dark;
+
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-serif: "Source Serif 4", "Source Serif Pro", Georgia, "Times New Roman", serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+
+  /* Surfaces and text */
+  --page: light-dark(#E8ECF4, #05080F);
+  --bg: light-dark(#F4F6FA, #0B1220);
+  --surface: light-dark(#FFFFFF, #131C2E);
+  --surface-2: light-dark(#F8F9FC, #18223A);
+  --line: light-dark(#E1E6F0, #26324A);
+  --line-strong: light-dark(#CBD3E1, #34425F);
+  --track: light-dark(#E8ECF3, #222D45);
+  --ink: light-dark(#0B1220, #EEF2FA);
+  --muted: light-dark(#5B6478, #9AA6BD);
+
+  /* Accent (DocNexus blue) */
+  --accent: light-dark(#2447C4, #8FA9FF);
+  --accent-strong: light-dark(#2447C4, #4A6CF0);
+  --accent-hover: light-dark(#1B3494, #5C7BF5);
+  --accent-soft: light-dark(#EDF1FB, #18244A);
+  --accent-line: light-dark(#C9D4F4, #2D3F78);
+  --on-accent: #FFFFFF;
+
+  /* Signal colours */
+  --orange: light-dark(#DD6134, #F08A5D);
+  --orange-text: light-dark(#B4541F, #F5A27D);
+  --orange-soft: light-dark(#FDF1E6, #33211A);
+  --success: light-dark(#1F7A4D, #4CC38A);
+  --success-strong: light-dark(#1F7A4D, #2E9E68);
+  --success-soft: light-dark(#E6F4EC, #13301F);
+  --warn: light-dark(#8A5A00, #E9B44C);
+  --warn-soft: light-dark(#FDF5E1, #30260F);
+  --danger: light-dark(#B8322E, #FF8A80);
+  --danger-strong: light-dark(#C2332F, #D9534F);
+  --danger-soft: light-dark(#FBEAEA, #3A1A1C);
+
+  /* Map */
+  --map-water: light-dark(#DCE6F5, #0E1829);
+  --map-land: light-dark(#F7F8FB, #172238);
+  --map-park: light-dark(#DCEFD8, #183022);
+  --map-road: light-dark(#E2E6EE, #263350);
+  --map-road-major: light-dark(#CBD3E1, #34446A);
+
+  /* Shape and depth */
+  --radius-sm: 8px;
+  --radius: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 22px;
+  --shadow-sm: 0 1px 2px light-dark(rgb(11 18 32 / 0.06), rgb(0 0 0 / 0.4));
+  --shadow: 0 1px 2px light-dark(rgb(11 18 32 / 0.05), rgb(0 0 0 / 0.35)), 0 4px 14px light-dark(rgb(11 18 32 / 0.06), rgb(0 0 0 / 0.35));
+  --shadow-lg: 0 2px 6px light-dark(rgb(11 18 32 / 0.08), rgb(0 0 0 / 0.4)), 0 16px 40px light-dark(rgb(11 18 32 / 0.16), rgb(0 0 0 / 0.55));
+  --focus: light-dark(#2447C4, #A9BDFF);
+  --scrim: light-dark(rgb(11 18 32 / 0.42), rgb(0 0 0 / 0.6));
+}
+
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"] { color-scheme: dark; }
+
+/* Type scale. --ts is the preview's text size (1 = 100%, 2 = 200%).
+   Body text scales fully; headings and chrome scale a little less, as native
+   dynamic type does, so a 200% title still fits a phone. */
+.device {
+  --ts: 1;
+  --ts-h: calc(1 + (var(--ts) - 1) * 0.6);
+  --ts-ui: calc(1 + (var(--ts) - 1) * 0.4);
+
+  --fs-2xs: calc(11px * var(--ts));
+  --fs-xs: calc(12.5px * var(--ts));
+  --fs-sm: calc(13.5px * var(--ts));
+  --fs-md: calc(15px * var(--ts));
+  --fs-lg: calc(17px * var(--ts));
+  --fs-xl: calc(20px * var(--ts-h));
+  --fs-2xl: calc(24px * var(--ts-h));
+  --fs-3xl: calc(28px * var(--ts-h));
+  --fs-num: calc(32px * var(--ts-h));
+
+  --av: calc(40px * var(--ts-ui));
+  --tap: 44px;
+
+  /* Container-query em breakpoints read this size, so larger text reflows to narrower layouts. */
+  font-size: var(--fs-md);
+}

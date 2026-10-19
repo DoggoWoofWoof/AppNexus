@@ -1,4 +1,4 @@
-name: Check static demo
+name: Check demo
 on: [push, pull_request]
 permissions:
   contents: read
@@ -7,10 +7,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-node@v4
         with:
-          python-version: '3.12'
-      - run: python scripts/build-demo.py
-      - run: python scripts/check-demo.py
-      - run: node --check demo/app.js && node --check demo/shell.js
-      - run: git diff --exit-code -- demo/index.html demo/app.css demo/app.js
+          node-version: '22'
+      - name: Syntax check every module
+        run: for f in $(find demo/js -name '*.js'); do node --check "$f" || exit 1; done
+      - name: Tests
+        run: npm test

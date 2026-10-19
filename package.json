@@ -1,10 +1,13 @@
 {
   "name": "appnexus-field-pro-demo",
   "private": true,
+  "type": "module",
+  "description": "Clickable Field Pro prototype: static HTML, CSS and ES modules with no build step.",
   "scripts": {
-    "test": "node --test tests/*.test.cjs"
+    "start": "python -m http.server 8000",
+    "test": "node --test tests/*.test.js"
   },
-  "devDependencies": {
-    "fake-indexeddb": "6.2.6"
+  "engines": {
+    "node": ">=22"
   }
 }

@@ -1,80 +1,106 @@
 # AppNexus · Field Pro
 
-[Open the interactive demo](https://doggowoofwoof.github.io/AppNexus/)
+[Open the clickable prototype](https://doggowoofwoof.github.io/AppNexus/)
 
-A sales-rep mobile concept focused on **plan → recover a cancelled slot → prepare → visit → follow up**. Today is the starting point, with discovery, full profiles and analysis available when needed. Accounts and assignments are configured by our side. Routing comes after target selection.
+Field Pro is the DocNexus app for medical device sales reps in the field. The website is where a rep or manager does deep analysis at a desk. The app is for the day itself:
 
-The demo includes Today / Targets / Activity / Insights, a mixed fixed/flexible day, searchable account/person lists, real static maps, profile briefs, all 18 HCP and 19 HCO section names, durable drafts and audio chunks, searchable conversations, original/corrected transcripts, reviewed follow-ups and visible mock-service limits. Wider windows use a map/detail layout; the large-text view demonstrates 200% text.
+- **Plan** who to see, from a ranked list of people and accounts worth visiting.
+- **Prepare** for each visit in under a minute, using the profile and the "why now" signal.
+- **Ask** questions about the territory by typing or speaking, and get a ranked answer with one next step.
+- **Log** what happened and set the follow-up before walking into the next building.
 
-[Review the screens and button placement](https://doggowoofwoof.github.io/AppNexus/demo/screens.html)
+This repository holds a clickable prototype of that app. It runs in the browser on sample data, so the flows can be reviewed before the React Native build starts.
 
-## Try it
+## What to try
 
-1. Start with the sample 10:00 / 14:00 appointments. Choose **Cancel or reschedule → Doctor cancelled**.
-2. Targets opens with replacement context. Use the shared search, distance filters and List/Map view, then choose Replace, undo the cancellation, or leave the time open. Other appointments keep their times.
-3. Open **Prepare visit** for the combined HCP/preparation brief, notes, follow-ups and viewable demo briefs with offline copies. **Edit time** saves a personal plan or sends a mock request with acceptance/decline states; overlaps block saving.
-4. Log an outcome, discussion note and follow-up. Activity → Capture asks for the person first. Leave and resume an unfinished note from Activity.
-5. Activity groups visit records and cancellations by date. Open a record for its notes, audio/transcript and linked follow-ups. Deleted records and device storage are under Record options.
-6. Explore the named profile sections and Insights tools. Detailed analysis datasets remain previews.
+1. **Today.** See the day's plan with fixed-time and flexible visits, the next stop, the route map, follow-ups due and suggested people to see.
+2. **Targets.** Search people and accounts, filter by signal (leakage risk, rising volume, follow-up due, not seen in 30 days), and switch between list and map. Select several targets, then **Review plan** to set times, reorder and save them as one plan. Back keeps your search, filters and tab.
+3. **Profiles.**
+   - **HCP:** identity, specialty, contact, practice locations, volumes with trends, referrals, notes and visits.
+   - **HCO:** organization type, parent system and child facilities, key people and executives, volumes, leakage with top destinations, notes and visits.
+   - Both have **Add note** and **New follow-up**.
+4. **Ask** (centre tab).
+   - Try "What has declined?" or "Which accounts are leaking the most?".
+   - Then try "Brief me on Dr. Maya Patel", followed by "Where does she refer?".
+   - Tap the mic to speak, or turn on **Hands-free** for a spoken back-and-forth.
+5. **Activity.**
+   - **To do:** follow-ups by due date, plus unfinished notes to resume.
+   - **Journal:** every logged visit and note, searchable.
+6. **Insights.** A territory view of where patients leave the system, and which HCPs are rising or declining.
 
-Open **Preview settings** for Phone, Wide screen, Large text, and light/dark appearance. Switching views retains the current plan, conversation draft and navigation. Reset clears only the active sample workspace, including its local media, after confirmation.
+### Preview settings
 
-## Run locally
+The bar above the device frame switches:
 
-```sh
-python scripts/build-demo.py
+- **View:** Phone or Wide screen (tablet and desktop layout).
+- **Text:** 100% or 200%, for checking large-text layouts.
+- **Theme:** System, Light or Dark.
+- **Network:** Normal, Slow network, Offline or Server errors, to see the loading, offline and error states.
+- **Reset sample data.**
+
+Everything you change is saved in this browser only.
+
+## Run it locally
+
+No install or build step is needed. Serve the folder and open `http://localhost:8000/demo/`:
+
+```bash
 python -m http.server 8000
 ```
 
-Open `http://localhost:8000/demo/`. No backend credentials or package installation is required. The demo loads version-pinned D3 and Lucide scripts from public CDNs, so map projection and icons require network access on first load.
+## Test
 
-## Current status
+The tests need Node 22 or later and have no dependencies.
 
-This is an **interactive prototype**, not a deployed production mobile client. No production API, auth, CRM push or cloud backup is connected. Plans, notes, drafts and received recording chunks persist in IndexedDB on this browser. Transcription, reports, office responses, availability and driving times are mocked and replaceable. The embedded exported preview uses explicitly labelled temporary memory because its sandbox has an opaque origin. Map geography and facility locations are real public references; people, assignments and activity are illustrative.
+They cover:
 
-Existing service contracts were inspected, including Field Backend server source. That establishes source evidence, not deployed/customer-specific availability. The full timed agenda, joined daily recommendations and backup/restore work remain integration gaps. Field Pro CRM push is disabled in the reviewed implementation; Insights has a separate company gate.
+- planning rules;
+- search and filters;
+- storage and navigation;
+- the mock API;
+- every Ask starter question;
+- rendering every screen, profile tab and sheet.
 
-The full design inventory is **58 feature families, 39 screen families and 12 reusable sheets/dialogs**. These are scope counts, not completed implementation counts. The earlier pass recorded 209 rendered-screen/state layout checks. This pass adds ten persona walkthroughs, 19 automated regressions and 26 distinct responsive screen/size checks. See the results and limits below; emulator/physical-device verification remains future production work.
+The render tests also check that every button is wired to a real action, or is disabled with a reason.
 
-## Planning and integration documents
+```bash
+npm test
+```
 
-- [Visit-record grouping and persistent Today planning](docs/record-and-planner-refinement.md)
+GitHub Actions runs the same checks on every push.
 
-- [Activity refinement: To do, discussion previews and completion](docs/activity-refinement.md)
+## How it is built
 
-- [Shared Targets flow and visit-ledger refinement](docs/unified-targets-and-records.md)
-- [Button placement and cancellation recovery](docs/action-placement.md)
-- [Visual simplification, shorter paths and contrast verification](docs/visual-simplification.md)
+The prototype is plain HTML, CSS and JavaScript modules with no framework and no build step, so anyone can open it and read it.
 
-- [Plan, prototype and endpoint status](docs/plan-status-and-endpoint-audit.md)
-- [Ten-persona rerun and regression results](docs/persona-regression-results.md)
-- [Five rep personas and usage/friction audit](docs/persona-usage-audit.md)
-- [Recording and transcript coverage register](docs/capture-transcript-coverage.json)
-- [Proposed durable daily-plan contract and delivery gates](docs/day-plan-contract.md)
-- [Surface-area audit](docs/surface-area-audit.md) and [machine-readable inventory](docs/surface-area.json)
-- [Responsive layout contract and verification](docs/responsive-design-contract.md)
-- [Daily sales-rep flow](docs/sales-rep-daily-flow.md)
-- [Flow refinements: cancel recovery, glanceable brief, booking](docs/flow-refinements.md)
-- [Map experience and routing requirement](docs/map-experience.md)
-- [Repository feature map](docs/repository-feature-map.md)
-- [HCP/HCO field inventory](docs/hcp-hco-field-inventory.md)
-- [Leakage and capture integration notes](docs/leakage-capture-plan.md)
-- [Comparable apps](docs/comparable-apps-review.md)
-- [Product plan](docs/product-plan.md)
+```
+demo/
+  index.html        preview settings and the device frame
+  css/              tokens (colour, type, spacing) → app shell → screens → preview frame
+  js/main.js        entry point and preview settings
+  js/app.js         shell: navigation stacks, loading states, sheets, toasts, focus
+  js/actions.js     every user action by name (buttons use data-action)
+  js/screens/       Today, Targets, Ask, Activity, Insights, HCP, HCO, plan review
+  js/sheets.js      log visit, follow-up, filters, visit options, contact, account
+  js/ask.js         the Ask answer engine (sample data)
+  js/voice.js       speech to text, read aloud, hands-free loop
+  js/data/          sample people and accounts, seeded relative to today
+  data/             Manhattan map outline for the route and target maps
+tests/              node --test suites
+docs/               product scope, Ask and voice, integration plan
+```
 
-## Source layout
+The production app will be **React Native (Expo)**. The screens, actions and data shapes here are meant to carry straight across; see [docs/integration.md](docs/integration.md).
 
-- `mockup/source/field-pro-responsive.html`: maintained conversation fragment with product markup, styles, behavior and embedded public map data.
-- `app/targets-ui.js`, `app/experience-ui.js` and `app/experience.css`: shared discovery, visual hierarchy, brief/prep composition and direct task paths.
-- `app/`: maintained capture model, IndexedDB store, recording session, capture UI and mocked booking/prep/recovery UI.
-- `tests/personas.test.cjs`: persona-based model/storage/recording regressions (`npm ci && npm test`).
-- `scripts/build-demo.py`: bundles the app modules and extracts the fragment into the static demo.
-- `demo/`: GitHub Pages entry point, generated app files and standalone preview controls.
-- `mockup/field-pro-responsive.html`: exported conversation preview (single-file).
-- `docs/`: decisions, audits, endpoint evidence and implementation scope.
+## Status and data
 
-Private upstream checkouts and Field Backend source snapshots are git-ignored. They are reference material, not part of the published demo.
+- **This is a prototype.** It has no login and no live DocNexus data. CRM sync and PDF reports are not connected; the app labels them "Coming later".
+- **The answers are scripted.** Ask works things out from the sample figures on the device; in production it will call the DocNexus Ask service.
+- **The people are fictional.** Facility names and map locations are public references; all volumes, referrals and activity are made up.
+- **Keep internal material out of this repository; it is public.** That includes customer exports, design files that contain real physician names, and backend notes. They live in the git-ignored `reference/` folder.
 
-## Map attribution
+## More
 
-Streets/parks: [© OpenStreetMap contributors](https://www.openstreetmap.org/copyright). Land boundaries: [NYC Open Data](https://data.cityofnewyork.us/d/gthc-hcne). Facility locations: [New York Health Facility General Information](https://health.data.ny.gov/Health/Health-Facility-General-Information/vn5v-hh5r). Attribution also appears in the maps.
+- [Product scope: users, flows, and the website vs the app](docs/product.md)
+- [Ask and voice: what is built and the path to a live voice mode](docs/ask-and-voice.md)
+- [Integration plan: React Native, data services and design system](docs/integration.md)
