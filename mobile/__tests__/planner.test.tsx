@@ -11,7 +11,7 @@ import { addDays, fromIso, isoDate, startOfDay } from '@/lib/format';
 import { DEFAULT_FILTERS } from '@/lib/search';
 import { useWorkspace, WorkspaceProvider } from '@/lib/store';
 import type { Entity, Workspace } from '@/lib/types';
-import { bookingError, bookVisit, buildContext, cancelVisit, fillSlot, findItem, freshWorkspace, noteError } from '@/lib/workspace';
+import { addAllToPlan, bookingError, bookVisit, buildContext, cancelVisit, fillSlot, findItem, freshWorkspace, noteError, restoreVisit } from '@/lib/workspace';
 
 const today = startOfDay(new Date(2026, 9, 19));
 const todayIso = isoDate(today);
@@ -43,6 +43,21 @@ describe('cancel → fill from Targets', () => {
     expect(added).toMatchObject({ time: '10:00', mode: 'timed', booking: 'requested', via: bookingRoute(pick).label });
     expect(next.replacement).toBeNull();
     expect(findItem(next, todayIso, 'v-jordan')?.time).toBe('14:00');
+  });
+
+  test('a visit whose time has already come cancels without offering its slot', () => {
+    const at = (h: number, m: number) => new Date(2026, 9, 19, h, m);
+    const late = cancelVisit(freshWorkspace(today), todayIso, 'v-maya', 'Other', todayIso, at(10, 0));
+    expect(findItem(late, todayIso, 'v-maya')?.status).toBe('cancelled');
+    expect(late.replacement).toBeNull();
+    expect(cancelVisit(freshWorkspace(today), todayIso, 'v-maya', 'Other', todayIso, at(9, 59)).replacement?.time).toBe('10:00');
+  });
+
+  test('putting a cancelled visit back stops offering its slot', () => {
+    const ws = restoreVisit(cancelMaya(), todayIso, 'v-maya');
+    expect(findItem(ws, todayIso, 'v-maya')).toMatchObject({ status: 'planned', time: '10:00' });
+    expect(findItem(ws, todayIso, 'v-maya')?.cancelReason).toBeUndefined();
+    expect(ws.replacement).toBeNull();
   });
 
   test('a flexible visit cancels without freeing a slot', () => {
@@ -93,6 +108,20 @@ describe('booking', () => {
   });
 });
 
+describe('Pick 5 for me', () => {
+  test('adds the people most worth seeing to an empty day once each, nearest first after the start', () => {
+    const tomorrow = isoDate(addDays(today, 1));
+    const ws = freshWorkspace(today);
+    const ids = buildContext(ws, today).suggestions(tomorrow, 5).map((s) => s.entity.id);
+    const next = addAllToPlan(ws, tomorrow, [...ids, ids[0], 'nobody']);
+    const plan = next.plans[tomorrow];
+    expect(plan.map((i) => i.targetId).sort()).toEqual([...ids].sort());
+    expect(plan.every((i) => i.status === 'planned' && i.mode === 'flexible')).toBe(true);
+    expect(next.pristine).toBe(false);
+    expect(addAllToPlan(ws, tomorrow, ['nobody'])).toBe(ws);
+  });
+});
+
 describe('logging a planned visit', () => {
   test('needs an outcome; nothing is assumed', () => {
     const draft = { targetId: 'maya', type: 'In-person visit' as const, outcome: '', date: todayIso, note: '' };
@@ -103,7 +132,12 @@ describe('logging a planned visit', () => {
 
 describe('store', () => {
   async function renderStore() {
-    const wrapper = ({ children }: { children: ReactNode }) => <WorkspaceProvider today={today}>{children}</WorkspaceProvider>;
+    // Eight in the morning, before any of the day's visits.
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <WorkspaceProvider today={today} now={() => new Date(2026, 9, 19, 8, 0)}>
+        {children}
+      </WorkspaceProvider>
+    );
     const { result } = await renderHook(() => useWorkspace(), { wrapper });
     return result;
   }

@@ -5,10 +5,10 @@
 import { bookingRoute, clashesWith, siteOnDay, suggestSlots, type Slot } from './booking';
 import { allEntities, getEntity, getOrg, lastInteraction, priorityOf, signalsFor, siteFor } from './data';
 import { REP, seedWorkspace } from './data/seed';
-import { addDays, daysBetween, formatDate, fromIso, haversineKm, isoDate, uid } from './format';
-import { activeItems, routeOrder } from './plan';
+import { addDays, daysBetween, formatDate, fromIso, haversineKm, isoDate, toMinutes, uid } from './format';
+import { activeItems, addTargets, routeOrder, suggestOrder } from './plan';
 import { searchTargets, type Filters, type SearchContext } from './search';
-import type { Entity, FollowUp, Interaction, PlanItem, Signal, VisitType, Workspace } from './types';
+import type { Entity, FollowUp, Interaction, PlanItem, SavedReport, Signal, VisitType, Workspace } from './types';
 
 /** Same version as the prototype's saved workspace, so the shapes stay in step. */
 export const WORKSPACE_VERSION = 2;
@@ -22,6 +22,7 @@ export function freshWorkspace(today: Date): Workspace {
     ...seedWorkspace(today),
     selection: { day: isoDate(today), ids: [] },
     replacement: null,
+    saved: [],
   };
 }
 
@@ -143,6 +144,8 @@ export interface NoteDraft {
   /** The day it happened: today or earlier. */
   date: string;
   note: string;
+  /** Doctors who were there too, for a meeting at an account. */
+  attendees?: string[];
   /** People met who are not in the book, such as an account's executives. */
   contacts?: string[];
   /** A follow-up to create with the note. */
@@ -190,7 +193,7 @@ export function noteRecords(d: NoteDraft, now = Date.now()): { interaction: Inte
   const interaction: Interaction = {
     id: uid('i'),
     targetId: d.targetId,
-    attendees: isHcp ? [d.targetId] : [],
+    attendees: isHcp ? [d.targetId] : (d.attendees ?? []),
     contacts: d.contacts ?? [],
     date: d.date,
     type: d.type,
@@ -209,6 +212,13 @@ export function noteRecords(d: NoteDraft, now = Date.now()): { interaction: Inte
 export function followUpRecord(d: FollowUpDraft): FollowUp {
   return { id: uid('f'), targetId: d.targetId, text: d.text.trim(), due: d.due, done: false, local: true };
 }
+
+/** Ticks a follow-up off. */
+export const completeFollowUp = (ws: Workspace, id: string, todayIso: string): Workspace => ({
+  ...ws,
+  pristine: false,
+  followUps: ws.followUps.map((f) => (f.id === id ? { ...f, done: true, doneOn: todayIso } : f)),
+});
 
 /** Adds records to the workspace. It is no longer the untouched sample, so it won't be re-seeded. */
 export function withRecords(ws: Workspace, add: { interactions?: Interaction[]; followUps?: FollowUp[] }): Workspace {
@@ -235,15 +245,36 @@ const withItem = (ws: Workspace, day: string, id: string, change: (item: PlanIte
 export const findItem = (ws: Workspace, day: string, id: string): PlanItem | null =>
   (ws.plans[day] ?? []).find((i) => i.id === id) ?? null;
 
-export const CANCEL_REASONS = ['HCP unavailable', 'Rescheduled by office', 'Running late', 'Other'];
+/** Adds someone to a day's plan at no fixed time, unless they're already in it. */
+export function addToPlan(ws: Workspace, day: string, targetId: string): Workspace {
+  const target = getEntity(targetId);
+  if (!target) return ws;
+  const site = siteOnDay(target, fromIso(day).getDay()) ?? siteFor(target).id;
+  return changed(ws, { plans: { ...ws.plans, [day]: addTargets(ws.plans[day] ?? [], [target], () => ({ id: site })) } });
+}
 
-/** Cancels a visit. A timed visit today or later frees its slot, which is then offered to someone nearby. */
-export function cancelVisit(ws: Workspace, day: string, id: string, reason: string, todayIso: string): Workspace {
+/** Adds several people to a day at no fixed time, then puts the day's untimed stops nearest first. */
+export function addAllToPlan(ws: Workspace, day: string, targetIds: string[]): Workspace {
+  const targets = [...new Set(targetIds)].map(getEntity).filter((t): t is Entity => !!t);
+  if (!targets.length) return ws;
+  const weekday = fromIso(day).getDay();
+  const byId = new Map(targets.map((t) => [t.id, t]));
+  const items = addTargets(ws.plans[day] ?? [], targets, (t) => ({ id: siteOnDay(byId.get(t.id)!, weekday) ?? siteFor(byId.get(t.id)!).id }));
+  const coordsOf = (i: PlanItem) => (getOrg(i.siteId) ?? siteFor(getEntity(i.targetId)!)).coords;
+  return changed(ws, { plans: { ...ws.plans, [day]: suggestOrder(items, coordsOf, REP.start.coords) } });
+}
+
+/**
+ * Cancels a visit. A timed visit that hasn't started yet frees its slot, which is
+ * then offered to someone nearby; a time that has already gone can't be filled.
+ */
+export function cancelVisit(ws: Workspace, day: string, id: string, reason: string, todayIso: string, now?: Date): Workspace {
   const item = findItem(ws, day, id);
   const target = item && getEntity(item.targetId);
   if (!item || !target) return ws;
   const next = withItem(ws, day, id, (i) => ({ ...i, status: 'cancelled', cancelReason: reason }));
   if (item.mode !== 'timed' || !item.time || day < todayIso) return next;
+  if (now && fromIso(day).getTime() + toMinutes(item.time) * 60_000 <= now.getTime()) return next;
   return {
     ...next,
     selection: { ...next.selection, day },
@@ -332,6 +363,12 @@ export function bookVisit(ws: Workspace, d: BookingDraft): Workspace {
 /** The office has agreed to the time. */
 export const confirmBooking = (ws: Workspace, day: string, id: string): Workspace =>
   withItem(ws, day, id, (i) => ({ ...i, booking: 'confirmed' }));
+
+// ---- Saved reports --------------------------------------------------------
+
+export const saveReport = (ws: Workspace, report: SavedReport): Workspace => changed(ws, { saved: [report, ...ws.saved] });
+
+export const removeSaved = (ws: Workspace, id: string): Workspace => changed(ws, { saved: ws.saved.filter((r) => r.id !== id) });
 
 /** A logged visit is done. */
 export const visitDone = (ws: Workspace, day: string, id: string): Workspace =>

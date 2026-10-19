@@ -1,154 +1,240 @@
-// Today: what's next, the day's plan, follow-ups due and who to see.
-// Tapping a stop opens its options: prepare, confirm, log, reschedule or cancel.
+// Today: the day, a map of the stops and one row per visit, each saying why
+// they're worth seeing. Tap a row for that person's page (log it, or say you can't
+// make it); a visit whose time has gone and isn't logged gets its own Log button.
+// "Add a visit" opens Targets, where + puts someone in the plan.
 
 import { router } from 'expo-router';
-import { CalendarPlus, ChevronRight } from 'lucide-react-native';
+import { ChevronRight, CircleCheck, Plus, Sparkles, X } from 'lucide-react-native';
 import { Pressable, View } from 'react-native';
 
-import { EntityRow, Tag } from '@/components/entity';
-import { PageHeader, PlaceholderNote, Screen, Section } from '@/components/screen';
+import { Avatar, useProfileHref } from '@/components/entity';
+import { useLogSheet } from '@/components/log-sheet';
+import { MenuButton } from '@/components/menu';
+import { Screen } from '@/components/screen';
+import { StopMap, type MapPin } from '@/components/stop-map';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
-import { useVisitSheets } from '@/components/visit-sheets';
-import { getEntity, getOrg } from '@/lib/data';
+import { getEntity, getOrg, shortName } from '@/lib/data';
 import { REP } from '@/lib/data/seed';
-import { formatDate, greeting, plural } from '@/lib/format';
-import { endTime } from '@/lib/plan';
+import { formatDate, plural, toMinutes } from '@/lib/format';
+import { isOnSite } from '@/lib/plan';
 import { useWorkspace } from '@/lib/store';
 import type { PlanItem } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
+/** Minutes since midnight, to tell which of today's visits have already happened. */
+const minutesNow = (now = new Date()): number => now.getHours() * 60 + now.getMinutes();
+
 export default function Today() {
   const ctx = useWorkspace();
-  const { openVisit, sheets } = useVisitSheets();
-  // The day is shared with Targets, so filling a free slot comes back to that day.
-  const day = ctx.planDays().some((d) => d.iso === ctx.ws.selection.day) ? ctx.ws.selection.day : ctx.todayIso;
-  const isToday = day === ctx.todayIso;
+  const profileHref = useProfileHref();
+  const { openLog, sheet } = useLogSheet();
+  const [today, tomorrow] = ctx.planDays();
+  // The day is shared with Targets, so + there adds to the day shown here.
+  const day = ctx.ws.selection.day === tomorrow.iso ? tomorrow.iso : today.iso;
+  const isToday = day === today.iso;
   const plan = ctx.dayPlan(day);
   const active = plan.filter((i) => i.status !== 'cancelled');
-  const remaining = active.filter((i) => i.status === 'planned');
-  const due = ctx.openFollowUps().filter((f) => f.overdueBy >= 0);
-  const overdue = due.filter((f) => f.overdueBy > 0).length;
+  // A timed visit that has ended and is still only planned hasn't been logged.
+  const now = minutesNow();
+  const unlogged = (i: PlanItem): boolean => isToday && i.status === 'planned' && i.mode === 'timed' && !!i.time && toMinutes(i.time) + i.duration <= now;
+  const next = isToday ? active.find((i) => i.status === 'planned' && !unlogged(i)) : undefined;
   const free = ctx.ws.replacement?.day === day ? ctx.ws.replacement : null;
-  const summary = [
-    active.length ? `${plural(active.length, 'stop')} planned` : 'Nothing planned yet',
-    remaining.length !== active.length ? `${active.length - remaining.length} done` : '',
-    isToday && due.length ? `${plural(due.length, 'follow-up')} due${overdue ? ` (${overdue} overdue)` : ''}` : '',
-  ]
-    .filter(Boolean)
-    .join(' · ');
+  const due = isToday ? ctx.openFollowUps().filter((f) => f.overdueBy >= 0).length : 0;
+  const open = (targetId: string) => {
+    const who = getEntity(targetId);
+    if (who) router.push(profileHref(who));
+  };
+  const log = (item: PlanItem) => {
+    const who = getEntity(item.targetId);
+    if (who) openLog(who, { day, id: item.id, type: item.type });
+  };
+  const pickFive = () => ctx.addAllToPlan(ctx.suggestions(day, 5).map((s) => s.entity.id), day);
+
+  // Stops that need travel, numbered in route order.
+  const onSite = active.filter(isOnSite);
+  const pins: MapPin[] = onSite.flatMap((item, i) => {
+    const site = getOrg(item.siteId);
+    const who = getEntity(item.targetId);
+    if (!site || !who) return [];
+    return [
+      {
+        id: item.targetId,
+        coords: site.coords,
+        label: String(i + 1),
+        tone: item.status === 'done' ? 'done' : item === next ? 'next' : 'planned',
+        title: `${i + 1}. ${who.name}${item.time ? ` at ${item.time}` : ''}`,
+      },
+    ];
+  });
 
   return (
     <Screen inset>
-      <PageHeader
-        kicker={formatDate(ctx.today, { weekday: 'long', day: 'numeric', month: 'long' })}
-        title={`${greeting()}, ${REP.firstName}`}
-        sub={`${summary}.`}
-      />
-
-      <View className="flex-row gap-2" accessibilityRole="tablist">
-        {ctx.planDays().map((d) => (
-          <Button
-            key={d.iso}
-            size="sm"
-            variant={d.iso === day ? 'default' : 'outline'}
-            onPress={() => ctx.selectDay(d.iso)}
-            accessibilityRole="tab"
-            accessibilityState={{ selected: d.iso === day }}
-          >
-            <Text>{d.label}</Text>
-          </Button>
-        ))}
+      <View className="flex-row items-center gap-2">
+        <MenuButton />
+        <Text variant="h1" className="flex-1">
+          {formatDate(day, { weekday: 'long' })}
+        </Text>
+        <Button
+          size="sm"
+          variant="ghost"
+          onPress={() => ctx.selectDay(isToday ? tomorrow.iso : today.iso)}
+          accessibilityLabel={isToday ? 'Show tomorrow' : 'Back to today'}
+        >
+          <Text className="text-brand">{isToday ? 'Tomorrow' : 'Today'}</Text>
+        </Button>
       </View>
 
+      {due ? (
+        <Pressable
+          onPress={() => router.navigate('/activity')}
+          accessibilityRole="link"
+          accessibilityHint="Opens Activity"
+          className="min-h-12 flex-row items-center gap-2 rounded-xl bg-warn-soft px-4 py-2 active:opacity-80"
+        >
+          <Text className="flex-1 text-base font-semibold">{`${plural(due, 'follow-up')} due`}</Text>
+          <Text className="text-base text-brand">See them</Text>
+          <Icon as={ChevronRight} size={16} className="text-brand" />
+        </Pressable>
+      ) : null}
+
       {free ? (
-        <View className="gap-3 rounded-lg border border-primary bg-accent p-4" accessibilityRole="summary">
-          <View className="flex-row items-start gap-2">
-            <Icon as={CalendarPlus} size={18} className="mt-0.5 text-brand" />
-            <Text className="flex-1 text-accent-foreground">
-              <Text className="font-semibold text-accent-foreground">{`${free.time} is free`}</Text>
-              {` after ${free.name} cancelled. Find someone near ${getOrg(free.siteId)?.name}?`}
-            </Text>
-          </View>
-          <View className="flex-row flex-wrap gap-2">
-            <Button size="sm" onPress={() => router.navigate('/targets')}>
-              <Text>Find nearby</Text>
-            </Button>
-            <Button size="sm" variant="ghost" onPress={ctx.clearReplacement}>
-              <Text>Leave it free</Text>
-            </Button>
-          </View>
+        <View className="flex-row items-center gap-3 rounded-xl bg-brand-soft py-2 pl-4 pr-1">
+          <Text className="flex-1 text-base">
+            <Text className="text-base font-semibold">{`${free.time} is free.`}</Text>
+            {` ${free.name.replace(/^Dr\. \S+ /, 'Dr. ')} can’t make it.`}
+          </Text>
+          <Button size="sm" className="rounded-lg" onPress={() => router.navigate('/targets')}>
+            <Text>Find someone</Text>
+          </Button>
+          <Button size="icon" variant="ghost" onPress={ctx.clearReplacement} accessibilityLabel="Leave it free">
+            <Icon as={X} size={18} className="text-muted-foreground" />
+          </Button>
         </View>
       ) : null}
 
-      <Section title={isToday ? 'Your plan' : 'Tomorrow’s plan'} sub={plan.length ? 'Tap a stop for options' : undefined}>
-        {plan.length ? (
-          plan.map((item) => <PlanRow key={item.id} item={item} onPress={() => openVisit(day, item.id)} />)
-        ) : (
-          <Text className="text-muted-foreground">No visits planned. Suggestions below are a good start.</Text>
-        )}
-      </Section>
-
-      {isToday && due.length ? (
-        <Section title="Follow-ups due" sub={overdue ? `${overdue} overdue` : undefined}>
-          {due.map((f) => {
-            const who = getEntity(f.targetId);
-            return (
-              <View key={f.id} className="gap-0.5 border-b border-border pb-2 last:border-b-0">
-                <Text>{f.text}</Text>
-                <Text className={cn('text-sm', f.overdueBy > 0 ? 'text-warn' : 'text-muted-foreground')}>
-                  {who?.name} · {f.overdueBy > 0 ? `${plural(f.overdueBy, 'day')} overdue` : 'Due today'}
-                </Text>
-              </View>
-            );
-          })}
-        </Section>
+      {pins.length ? (
+        <StopMap
+          pins={pins}
+          start={{ coords: REP.start.coords, label: REP.start.label }}
+          route
+          onPinPress={open}
+          label={`Map of ${isToday ? 'today’s' : 'tomorrow’s'} stops`}
+          height={190}
+        />
       ) : null}
 
-      <Section title="Who to see" sub="Top of your Targets list: follow-ups, leakage and volume">
-        {ctx.suggestions(day, 3).map(({ entity, signals }) => (
-          <EntityRow key={entity.id} entity={entity} signals={signals} />
-        ))}
-      </Section>
+      {plan.length ? (
+        <View className="gap-2">
+          {plan.map((item) => (
+            <StopRow
+              key={item.id}
+              item={item}
+              next={item === next}
+              unlogged={unlogged(item)}
+              number={onSite.indexOf(item) + 1}
+              onPress={() => open(item.targetId)}
+              onLog={() => log(item)}
+            />
+          ))}
+        </View>
+      ) : (
+        <View className="items-center gap-3 py-8">
+          <View className="items-center gap-1">
+            <Text className="text-lg font-semibold">Nothing planned yet</Text>
+            <Text className="text-center text-muted-foreground">Pick who to see, or let the app pick the five most worth seeing.</Text>
+          </View>
+          <Button variant="outline" className="rounded-xl" onPress={pickFive}>
+            <Icon as={Sparkles} size={18} className="text-brand" />
+            <Text className="text-brand">Pick 5 for me</Text>
+          </Button>
+        </View>
+      )}
 
-      <PlaceholderNote>Still to come here: the route map and editing the plan.</PlaceholderNote>
-      {sheets}
+      <Button
+        size="lg"
+        variant={plan.length ? 'outline' : 'default'}
+        className="rounded-xl"
+        onPress={() => router.navigate('/targets')}
+      >
+        <Icon as={Plus} size={20} className={plan.length ? undefined : 'text-primary-foreground'} />
+        <Text className="text-lg">{plan.length ? 'Add a visit' : 'Choose who to see'}</Text>
+      </Button>
+      {sheet}
     </Screen>
   );
 }
 
-function PlanRow({ item, onPress }: { item: PlanItem; onPress: () => void }) {
+function StopRow({
+  item,
+  next,
+  unlogged,
+  number,
+  onPress,
+  onLog,
+}: {
+  item: PlanItem;
+  next: boolean;
+  unlogged: boolean;
+  number: number;
+  onPress: () => void;
+  onLog: () => void;
+}) {
+  const ctx = useWorkspace();
   const who = getEntity(item.targetId);
   if (!who) return null;
   const cancelled = item.status === 'cancelled';
-  const timed = item.mode === 'timed' && item.time;
+  const done = item.status === 'done';
+  const when = item.mode === 'timed' && item.time ? item.time : 'Any time';
+  const unconfirmed = !done && !cancelled && !unlogged && item.booking === 'requested';
+  const status = done ? 'Done' : cancelled ? 'Cancelled' : unlogged ? 'Not logged yet' : next ? 'Next' : '';
+  const how = isOnSite(item) ? '' : item.type;
+  const sub = [when, how, status, unconfirmed && 'Not confirmed yet'].filter(Boolean).join(' · ');
+  // Why they're worth seeing: the visit's own goal, or what makes them a priority.
+  const why = done || cancelled ? '' : item.goal || ctx.signals(who)[0]?.label || '';
+
+  // The row opens their page; Log sits beside it rather than inside, as a button can't hold another.
   return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={`${timed ? item.time : 'Any time'}, ${who.name}${cancelled ? ', cancelled' : ''}`}
-      accessibilityHint="Opens options for this visit"
-      className="flex-row items-center gap-3 rounded-md py-1.5 active:bg-accent"
+    <View
+      className={cn(
+        'min-h-16 flex-row items-center gap-2 rounded-xl bg-card pr-3',
+        next ? 'border-2 border-primary' : 'border border-border',
+        cancelled && 'opacity-60',
+      )}
     >
-      <View className="w-14">
-        <Text className={cn('font-mono text-xs', cancelled && 'text-muted-foreground line-through')}>{timed ? item.time : 'Any time'}</Text>
-        {timed ? <Text className="font-mono text-2xs text-muted-foreground">to {endTime(item)}</Text> : null}
-      </View>
-      <View className="flex-1 gap-1">
-        <Text className={cn('font-semibold', cancelled && 'text-muted-foreground line-through')}>{who.name}</Text>
-        <Text className="text-sm text-muted-foreground">
-          {item.type} · {getOrg(item.siteId)?.name}
-        </Text>
-        {item.status === 'done' ? (
-          <Tag label="Done" tone="success" />
-        ) : cancelled ? (
-          <Tag label="Cancelled" />
-        ) : item.booking === 'requested' ? (
-          <Tag label="Requested" tone="warn" />
-        ) : null}
-      </View>
-      <Icon as={ChevronRight} size={18} className="text-muted-foreground" />
-    </Pressable>
+      <Pressable
+        onPress={onPress}
+        accessibilityRole="button"
+        accessibilityLabel={[who.name, sub, why].filter(Boolean).join(', ')}
+        className="flex-1 flex-row items-center gap-3 rounded-xl py-3 pl-3 active:bg-accent"
+      >
+        <View>
+          <Avatar entity={who} />
+          {number > 0 && !done ? (
+            <View className={cn('absolute -bottom-1 -right-1 h-5 min-w-5 items-center justify-center rounded-full border-2 border-card px-0.5', next ? 'bg-primary' : 'bg-foreground')}>
+              <Text className="text-2xs font-semibold text-background" maxFontSizeMultiplier={1.2}>
+                {number}
+              </Text>
+            </View>
+          ) : null}
+        </View>
+        <View className="flex-1 gap-0.5">
+          <Text className={cn('text-base font-semibold', cancelled && 'line-through')}>{shortName(who)}</Text>
+          <Text className={cn('text-sm', next ? 'font-medium text-brand' : unlogged || unconfirmed ? 'font-medium text-warn' : 'text-muted-foreground')}>{sub}</Text>
+          {why ? (
+            <Text className="text-sm text-muted-foreground" numberOfLines={1}>
+              {why}
+            </Text>
+          ) : null}
+        </View>
+      </Pressable>
+      {done ? <Icon as={CircleCheck} size={22} className="text-success" /> : null}
+      {unlogged ? (
+        <Button size="sm" className="rounded-lg" onPress={onLog} accessibilityLabel={`Log the visit with ${who.name}`}>
+          <Text>Log</Text>
+        </Button>
+      ) : null}
+    </View>
   );
 }

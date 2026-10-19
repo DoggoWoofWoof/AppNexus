@@ -57,14 +57,31 @@ export function Avatar({ entity, size = 'md' }: { entity: { name: string; kind?:
 }
 
 /**
- * Links to a profile inside the tab that is showing it, e.g. /targets/hcp/maya,
- * so it opens on that tab's stack and Back returns to where the rep was.
+ * Links to someone's page inside the tab that is showing it, e.g. /targets/target/maya,
+ * so it opens on that tab's stack and Back returns to where the rep was. The page
+ * is short: why see them, what to do and Ask. With a `section` the link goes to
+ * all their details instead, at that tab ('details' for the first).
  */
 export function useProfileHref() {
   const tab = useTab();
-  return (entity: Pick<Entity, 'id' | 'kind'>): Href => ({
-    pathname: `/${tab}/${entity.kind}/[id]`,
-    params: { id: entity.id },
+  return (entity: Pick<Entity, 'id' | 'kind'>, section?: string): Href =>
+    section === undefined
+      ? { pathname: `/${tab}/target/[id]`, params: { id: entity.id } }
+      : { pathname: `/${tab}/${entity.kind}/[id]`, params: section === 'details' ? { id: entity.id } : { id: entity.id, section } };
+}
+
+/** A visit prep or saved report, opened in the tab that's showing it so Back returns there. */
+export function useDocHref() {
+  const tab = useTab();
+  return (id: string): Href => (tab === 'saved' ? { pathname: '/saved/[id]', params: { id } } : { pathname: `/${tab}/doc/[id]`, params: { id } });
+}
+
+/** Ask about someone, opened from their page; `listen` starts the mic straight away. */
+export function useChatHref() {
+  const tab = useTab();
+  return (entity: Pick<Entity, 'id'>, listen = false): Href => ({
+    pathname: `/${tab}/chat/[id]`,
+    params: listen ? { id: entity.id, listen: '1' } : { id: entity.id },
   });
 }
 

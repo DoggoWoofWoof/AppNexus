@@ -148,6 +148,26 @@ export type SignalId = 'followup' | 'leakage' | 'rising' | 'unseen';
 export type Tone = 'warn' | 'orange' | 'accent' | 'neutral';
 export interface Signal { id: SignalId; label: string; tone: Tone }
 
+/**
+ * An answer from Ask the rep chose to keep, such as where an account's patients
+ * go. It is a snapshot: the figures are as they were when it was saved. Visit
+ * prep isn't stored; it is rebuilt from the data and the rep's questions.
+ */
+export interface SavedReport {
+  id: string;
+  title: string;
+  /** The person or account it is about, if any. */
+  about: string | null;
+  question: string;
+  savedOn: string;
+  createdAt: number;
+  summary: string;
+  rows: { title: string; sub?: string; figure: string; id?: string }[];
+  /** True when rows are labelled facts rather than a ranked list. */
+  facts?: boolean;
+  scope: string[];
+}
+
 export interface Workspace {
   version: number;
   seededOn: string;
@@ -158,4 +178,6 @@ export interface Workspace {
   plans: Record<string, PlanItem[]>;
   selection: { day: string; ids: string[] };
   replacement: Replacement | null;
+  /** Reports kept from Ask, newest first. */
+  saved: SavedReport[];
 }

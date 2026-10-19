@@ -1,5 +1,5 @@
 // The tab bar icon from the prototype (demo/css/app.css): a soft pill behind the
-// selected tab, Ask always filled as the main shortcut, and a count on Activity.
+// selected tab, Ask as a big round button in the middle, and an optional count.
 
 import type { LucideIcon } from 'lucide-react-native';
 import { Text, View } from 'react-native';
@@ -22,9 +22,17 @@ export function TabIcon({
   filled?: boolean;
   badge?: number;
 }) {
+  // Ask is a round button raised out of the bar, as the one big thing to press.
+  if (filled) {
+    return (
+      <View className={cn('-mt-5 h-14 w-14 items-center justify-center rounded-full border-4 border-card shadow-md shadow-black/20', focused ? 'bg-primary-hover' : 'bg-primary')}>
+        <Glyph color="white" size={26} />
+      </View>
+    );
+  }
   return (
-    <View className={cn('rounded-full px-3.5 py-[3px]', filled ? (focused ? 'bg-primary-hover' : 'bg-primary') : focused && 'bg-brand-soft')}>
-      <Glyph color={filled ? 'white' : color} size={22} />
+    <View className={cn('rounded-full px-3.5 py-[3px]', focused && 'bg-brand-soft')}>
+      <Glyph color={color} size={22} />
       {badge ? (
         // The count is in the tab's accessibility label, so the badge itself is hidden.
         <View

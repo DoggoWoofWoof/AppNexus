@@ -92,6 +92,10 @@ export function siteFor(entity: Entity, siteId?: string): Org {
 
 export const distanceFromStart = (entity: Entity, siteId?: string): number => haversineKm(REP.start.coords, siteFor(entity, siteId).coords);
 
+/** "Dr. Lee" for Dr. Jordan Lee; accounts keep their full name. */
+export const shortName = (entity: Pick<Entity, 'kind' | 'name'>): string =>
+  entity.kind === 'hcp' ? entity.name.replace(/^Dr\. \S+ /, 'Dr. ') : entity.name;
+
 export const subtitle = (entity: Entity): string =>
   entity.kind === 'hcp' ? `${entity.specialty} · ${primaryOrg(entity).name}` : `${entity.typeDetail} · ${entity.city.replace(/ \d{5}$/, '')}`;
 

@@ -3,7 +3,7 @@
 // sample data, not AI. Ported from demo/js/brief.js.
 
 import { destination, getEntity, openFollowUps, procedureTotal, procedureYoy, proceduresOf, siteFor } from './data';
-import { daysBetween, formatDate, formatNumber, fromIso, plural, relativeDay, relativeDayLower, sum, yoy } from './format';
+import { daysBetween, firstSentence, formatDate, formatNumber, fromIso, plural, relativeDay, relativeDayLower, sum, yoy } from './format';
 import { endTime, isOnSite } from './plan';
 import type { Entity, FollowUp, PlanItem } from './types';
 import type { Context } from './workspace';
@@ -34,8 +34,6 @@ export interface Brief {
   /** Open follow-ups, soonest due first. */
   followUps: FollowUp[];
 }
-
-const firstSentence = (text: string): string => (text.match(/^.*?[.!?](\s|$)/)?.[0] ?? text).trim();
 
 /** "due today", "due in 3 days" or "overdue by 2 days". */
 function dueText(f: FollowUp, today: Date): string {

@@ -23,6 +23,10 @@ const TYPE_ICONS: Record<string, LucideIcon> = {
 
 const OUTCOME_TONES: Record<string, TagTone> = { Met: 'success', Attempted: 'warn' };
 
+/** The outcome in the log sheet's words, so a visit where they weren't in doesn't read as one that happened. */
+const outcomeLabel = (i: Interaction): string =>
+  i.outcome === 'Attempted' ? (i.type === 'In-person visit' || i.type === 'Meeting' ? 'Not in' : 'No answer') : i.outcome;
+
 export function FollowUpRow({ followUp: f, showTarget = false }: { followUp: FollowUp; showTarget?: boolean }) {
   const ctx = useWorkspace();
   const diff = daysBetween(ctx.today, fromIso(f.due));
@@ -45,15 +49,20 @@ export function FollowUpRow({ followUp: f, showTarget = false }: { followUp: Fol
   );
 }
 
-/** One logged visit, call or meeting. `about` is the profile showing it, so notes filed elsewhere say where. */
-export function InteractionItem({ interaction: i, about }: { interaction: Interaction; about: string }) {
-  const target = i.targetId !== about ? getEntity(i.targetId) : null;
+/** Who else was there: doctors from the book, then other contacts by name. */
+export function metWith(i: Interaction): string[] {
   const people = i.attendees
     .filter((id) => id !== i.targetId)
     .map(getHcp)
     .filter((h): h is Hcp => h != null)
     .map((h) => h.name);
-  const met = [...people, ...(i.contacts ?? [])];
+  return [...people, ...(i.contacts ?? [])];
+}
+
+/** One logged visit, call or meeting. `about` is the profile showing it, so notes filed elsewhere say where. */
+export function InteractionItem({ interaction: i, about }: { interaction: Interaction; about: string }) {
+  const target = i.targetId !== about ? getEntity(i.targetId) : null;
+  const met = metWith(i);
   return (
     <View className="flex-row gap-3">
       <View className="h-9 w-9 items-center justify-center rounded-full bg-brand-soft" aria-hidden>
@@ -65,7 +74,7 @@ export function InteractionItem({ interaction: i, about }: { interaction: Intera
           {formatDate(i.date, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })} · {i.author}
         </Text>
         <View className="flex-row flex-wrap gap-1">
-          <Tag label={i.outcome} tone={OUTCOME_TONES[i.outcome] ?? 'neutral'} />
+          <Tag label={outcomeLabel(i)} tone={OUTCOME_TONES[i.outcome] ?? 'neutral'} />
           {i.local ? <Tag label="Not synced" /> : null}
         </View>
         {i.note ? <Text selectable>{i.note}</Text> : <Text className="text-muted-foreground">No note written.</Text>}

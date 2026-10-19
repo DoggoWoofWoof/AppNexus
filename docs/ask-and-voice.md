@@ -79,6 +79,9 @@ The app side is the same either way: tools, cards and confirmations.
 | Live mode audio | WebRTC (OpenAI) or a WebSocket with raw mic audio (Gemini). Both need a development build, not Expo Go. |
 | Answer cards | One `AnswerCard` component, used by typed, push-to-talk and Live answers alike |
 | Hands-free on the road | Car-friendly prompts, short spoken answers and large stop targets. Later: CarPlay and Android Auto. |
+| Keeping answers | Save on an answer, or saying "save that", keeps it as a report in the menu's Saved list. Visit prep for each person is rebuilt from the data and the questions asked about them. |
+
+Today the app reads aloud on every platform. It only listens in the browser, through Web Speech, so on a phone the mic buttons stay hidden until native recognition is added.
 
 ## Open questions
 

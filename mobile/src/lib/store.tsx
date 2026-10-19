@@ -4,14 +4,17 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 
 import { getEntity } from './data';
-import { formatDate, isoDate, startOfDay } from './format';
-import type { Workspace } from './types';
+import { formatDate, isoDate, plural, startOfDay } from './format';
+import type { SavedReport, Workspace } from './types';
 import {
+  addAllToPlan,
+  addToPlan,
   bookingError,
   bookVisit,
   buildContext,
   cancelVisit,
   clearReplacement,
+  completeFollowUp,
   confirmBooking,
   fillSlot,
   findItem,
@@ -20,7 +23,9 @@ import {
   freshWorkspace,
   noteError,
   noteRecords,
+  removeSaved,
   restoreVisit,
+  saveReport,
   visitDone,
   withRecords,
   type BookingDraft,
@@ -43,6 +48,7 @@ type Store = Context & {
   addNote: (draft: NoteDraft) => DraftError | null;
   /** Saves a follow-up. Returns what's wrong instead when it can't be saved. */
   addFollowUp: (draft: FollowUpDraft) => DraftError | null;
+  completeFollowUp: (id: string) => void;
   /** The day Today shows, and that Targets marks people as planned on. */
   selectDay: (day: string) => void;
   /** Cancels a visit. Returns true when a timed slot was freed, for the screen to show Targets. */
@@ -54,6 +60,13 @@ type Store = Context & {
   /** Books or reschedules a visit. Returns what's wrong instead when it can't be saved. */
   book: (draft: BookingDraft) => string | null;
   confirmBooking: (day: string, id: string) => void;
+  /** Adds someone to a day's plan (the selected day by default) at no fixed time. */
+  addToPlan: (targetId: string, day?: string) => void;
+  /** Adds several people to a day, nearest first. */
+  addAllToPlan: (targetIds: string[], day: string) => void;
+  /** Keeps an answer from Ask in the menu's Saved list. */
+  saveReport: (report: SavedReport) => void;
+  removeSaved: (id: string) => void;
   notice: Notice | null;
   dismissNotice: () => void;
   undo: () => void;
@@ -61,7 +74,10 @@ type Store = Context & {
 
 const StoreContext = createContext<Store | null>(null);
 
-export function WorkspaceProvider({ children, today: initialDay }: { children: ReactNode; today?: Date }) {
+const systemClock = () => new Date();
+
+/** `now` is the clock, so tests can say what time it is. */
+export function WorkspaceProvider({ children, today: initialDay, now = systemClock }: { children: ReactNode; today?: Date; now?: () => Date }) {
   const [today] = useState(() => initialDay ?? startOfDay());
   const [ws, setWs] = useState(() => freshWorkspace(today));
   const [notice, setNotice] = useState<Notice | null>(null);
@@ -92,6 +108,7 @@ export function WorkspaceProvider({ children, today: initialDay }: { children: R
           const next = withRecords(w, { interactions: [interaction], followUps: followUp ? [followUp] : [] });
           return draft.visit ? visitDone(next, draft.visit.day, draft.visit.id) : next;
         });
+        setNotice({ id: Date.now(), message: draft.visit ? 'Visit logged' : 'Note saved', canUndo: false });
         return null;
       },
       addFollowUp: (draft: FollowUpDraft) => {
@@ -101,9 +118,10 @@ export function WorkspaceProvider({ children, today: initialDay }: { children: R
         setWs((w) => withRecords(w, { followUps: [followUp] }));
         return null;
       },
+      completeFollowUp: (id: string) => apply(completeFollowUp(current.current, id, todayIso), 'Follow-up done'),
       selectDay: (day: string) => setWs((w) => ({ ...w, selection: { ...w.selection, day } })),
       cancelVisit: (day: string, id: string, reason: string) => {
-        const next = cancelVisit(current.current, day, id, reason, todayIso);
+        const next = cancelVisit(current.current, day, id, reason, todayIso, now());
         const freed = next.replacement?.itemId === id;
         apply(next, freed ? `Visit cancelled · ${next.replacement?.time} is free` : 'Visit cancelled');
         return freed;
@@ -126,6 +144,18 @@ export function WorkspaceProvider({ children, today: initialDay }: { children: R
         if (!findItem(current.current, day, id)) return;
         apply(confirmBooking(current.current, day, id), 'Visit confirmed');
       },
+      addToPlan: (targetId: string, day = current.current.selection.day) => {
+        const who = getEntity(targetId);
+        if (!who) return;
+        apply(addToPlan(current.current, day, targetId), `${who.name} added ${onDay(day)}`);
+      },
+      addAllToPlan: (targetIds: string[], day: string) => {
+        const next = addAllToPlan(current.current, day, targetIds);
+        const added = (next.plans[day]?.length ?? 0) - (current.current.plans[day]?.length ?? 0);
+        if (added) apply(next, `${plural(added, 'person', 'people')} added ${onDay(day)}`);
+      },
+      saveReport: (report: SavedReport) => apply(saveReport(current.current, report), 'Saved. Find it in the menu.'),
+      removeSaved: (id: string) => apply(removeSaved(current.current, id), 'Removed from Saved'),
       dismissNotice: () => setNotice(null),
       undo: () => {
         if (!before.current) return;
@@ -135,7 +165,7 @@ export function WorkspaceProvider({ children, today: initialDay }: { children: R
         setNotice(null);
       },
     };
-  }, [today]);
+  }, [today, now]);
 
   const store = useMemo<Store>(
     () => ({ ...buildContext(ws, today), setWorkspace: setWs, notice, ...actions }),

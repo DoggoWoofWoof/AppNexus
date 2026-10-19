@@ -105,3 +105,16 @@ export const initials = (name: string): string =>
 export const uid = (prefix = 'id'): string => `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
 
 export const plural = (n: number, one: string, many = `${one}s`): string => `${n} ${n === 1 ? one : many}`;
+
+/** Abbreviations whose full stop doesn't end a sentence, as in "Dr. Lee" or "mix vs. peers". */
+const ABBREVIATION = /\b(?:Dr|Mr|Mrs|Ms|St|vs|e\.g|i\.e)\.$/;
+
+/** The first sentence of a text. */
+export function firstSentence(text: string): string {
+  const end = /[.!?](?=\s|$)/g;
+  for (let m = end.exec(text); m; m = end.exec(text)) {
+    const upTo = text.slice(0, m.index + 1);
+    if (!ABBREVIATION.test(upTo)) return upTo.trim();
+  }
+  return text.trim();
+}

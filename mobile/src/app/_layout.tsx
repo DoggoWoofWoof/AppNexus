@@ -6,7 +6,7 @@ import { PortalHost } from '@rn-primitives/portal';
 import { ThemeProvider } from 'expo-router';
 import { Tabs } from 'expo-router/js-tabs';
 import { StatusBar } from 'expo-status-bar';
-import { ChartColumn, House, ListChecks, Sparkles, Target, type LucideIcon } from 'lucide-react-native';
+import { House, Mic, Target, type LucideIcon } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import { useEffect } from 'react';
 import { Platform, useWindowDimensions } from 'react-native';
@@ -14,19 +14,20 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { NoticeBar } from '@/components/notice-bar';
 import { TAB_ICON_WIDTH, TabIcon } from '@/components/tab-icon';
-import { useWorkspace, WorkspaceProvider } from '@/lib/store';
+import { ChatProvider } from '@/lib/chat';
+import { WorkspaceProvider } from '@/lib/store';
 import { NAV_THEME, THEME } from '@/lib/theme';
 
-// The five tabs, in the prototype's order and with its icons (demo/js/nav.js).
-// Each one is a folder with its own stack, so Back stays inside the tab. Ask sits
-// in the middle with a filled icon, as the app's main shortcut.
+// Three tabs: the day, Ask in the middle as the main button, and who to see.
+// Each one is a folder with its own stack, so Back stays inside the tab. Saved,
+// Activity and Insights open from the menu (components/menu.tsx); they're tabs
+// too, so they keep their own history, but they aren't in the bar.
 const TABS: { name: string; title: string; icon: LucideIcon }[] = [
   { name: 'today', title: 'Today', icon: House },
+  { name: 'ask', title: 'Ask', icon: Mic },
   { name: 'targets', title: 'Targets', icon: Target },
-  { name: 'ask', title: 'Ask', icon: Sparkles },
-  { name: 'activity', title: 'Activity', icon: ListChecks },
-  { name: 'insights', title: 'Insights', icon: ChartColumn },
 ];
+const MENU_TABS = ['activity', 'insights', 'saved'];
 
 const LABEL = { fontSize: 11.5, lineHeight: 14, fontWeight: '600' } as const;
 
@@ -60,10 +61,12 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={NAV_THEME[scheme]}>
       <WorkspaceProvider>
-        <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
-        <AppTabs scheme={scheme} />
-        <Notices />
-        <PortalHost />
+        <ChatProvider>
+          <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
+          <AppTabs scheme={scheme} />
+          <Notices />
+          <PortalHost />
+        </ChatProvider>
       </WorkspaceProvider>
     </ThemeProvider>
   );
@@ -75,10 +78,7 @@ function Notices() {
 }
 
 function AppTabs({ scheme }: { scheme: 'light' | 'dark' }) {
-  const ctx = useWorkspace();
   const tabBarHeight = useTabBarHeight();
-  // Activity shows how many follow-ups are due today or overdue.
-  const due = ctx.openFollowUps().filter((f) => f.overdueBy >= 0).length;
 
   return (
     <Tabs
@@ -91,22 +91,21 @@ function AppTabs({ scheme }: { scheme: 'light' | 'dark' }) {
         tabBarIconStyle: { width: TAB_ICON_WIDTH },
       }}
     >
-      {TABS.map((tab) => {
-        const badge = tab.name === 'activity' && due ? due : undefined;
-        return (
-          <Tabs.Screen
-            key={tab.name}
-            name={tab.name}
-            options={{
-              title: tab.title,
-              tabBarAccessibilityLabel: badge ? `${tab.title}, ${badge} due` : undefined,
-              tabBarIcon: ({ color, focused }) => (
-                <TabIcon icon={tab.icon} color={String(color)} focused={focused} filled={tab.name === 'ask'} badge={badge} />
-              ),
-            }}
-          />
-        );
-      })}
+      {TABS.map((tab) => (
+        <Tabs.Screen
+          key={tab.name}
+          name={tab.name}
+          options={{
+            title: tab.title,
+            tabBarIcon: ({ color, focused }) => <TabIcon icon={tab.icon} color={String(color)} focused={focused} filled={tab.name === 'ask'} />,
+          }}
+        />
+      ))}
+      {/* Not `href: null`: the router now sends a hidden tab back to Today, so these
+          stay ordinary tabs and only their buttons are left out of the bar. */}
+      {MENU_TABS.map((name) => (
+        <Tabs.Screen key={name} name={name} options={{ tabBarButton: () => null, tabBarItemStyle: { display: 'none' } }} />
+      ))}
       {/* "/" only redirects to Today; keep it out of the tab bar. */}
       <Tabs.Screen name="index" options={{ href: null }} />
     </Tabs>

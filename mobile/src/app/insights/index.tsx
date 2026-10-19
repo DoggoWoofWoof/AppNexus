@@ -3,7 +3,8 @@
 import { View } from 'react-native';
 
 import { EntityRow } from '@/components/entity';
-import { PageHeader, PlaceholderNote, Screen, Section } from '@/components/screen';
+import { TabHeader } from '@/components/menu';
+import { Screen, Section } from '@/components/screen';
 import { Text } from '@/components/ui/text';
 import { allHcps, allOrgs, destination, getOrg, procedureTotal, procedureYoy } from '@/lib/data';
 import { REP } from '@/lib/data/seed';
@@ -26,7 +27,7 @@ export default function Insights() {
 
   return (
     <Screen inset>
-      <PageHeader kicker={`Territory · ${REP.team}`} title="Insights" sub="Sample claims signals for your book over the last 12 months." />
+      <TabHeader title="Insights" sub={`${REP.team} · last 12 months`} />
 
       <View className="flex-row flex-wrap gap-3">
         <Kpi
@@ -76,7 +77,6 @@ export default function Insights() {
         ))}
       </Section>
 
-      <PlaceholderNote>Scaffold: charts, sparklines and the Ask shortcuts come next.</PlaceholderNote>
     </Screen>
   );
 }

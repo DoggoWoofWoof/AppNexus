@@ -7,7 +7,8 @@ import { createContext, useContext } from 'react';
 
 import { THEME } from '@/lib/theme';
 
-export const TABS = ['today', 'targets', 'ask', 'activity', 'insights'] as const;
+/** The three tabs in the bar, then the screens the menu opens, which keep a stack of their own too. */
+export const TABS = ['today', 'ask', 'targets', 'activity', 'insights', 'saved'] as const;
 export type Tab = (typeof TABS)[number];
 
 const TabContext = createContext<Tab>('today');

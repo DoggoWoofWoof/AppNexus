@@ -8,7 +8,7 @@ import type { ReactNode } from 'react';
 import { addDays, isoDate, startOfDay } from '@/lib/format';
 import { DEFAULT_FILTERS } from '@/lib/search';
 import { useWorkspace, WorkspaceProvider } from '@/lib/store';
-import { followUpError, noteError, type FollowUpDraft, type NoteDraft } from '@/lib/workspace';
+import { followUpError, noteError, noteRecords, type FollowUpDraft, type NoteDraft } from '@/lib/workspace';
 
 const today = startOfDay(new Date(2026, 9, 19));
 const todayIso = isoDate(today);
@@ -117,6 +117,28 @@ describe('addNote', () => {
     });
     expect(error).toMatchObject({ field: 'followText' });
     expect(store.current.ws).toBe(ws);
+  });
+});
+
+describe('a meeting at an account', () => {
+  test('keeps the doctors who were there, so it shows on their pages too, and the other people met', () => {
+    const { interaction } = noteRecords(note({ targetId: 'msw', type: 'Meeting', attendees: ['maya'], contacts: ['Dana Ortiz'] }));
+    expect(interaction).toMatchObject({ targetId: 'msw', attendees: ['maya'], contacts: ['Dana Ortiz'] });
+    expect(noteRecords(note({ attendees: ['alex'] })).interaction.attendees).toEqual(['maya']);
+  });
+});
+
+describe('completeFollowUp', () => {
+  test('ticks it off for today, and Undo puts it back', async () => {
+    const store = await renderStore();
+    const open = () => store.current.openFollowUps().map((f) => f.id);
+    expect(open()).toContain('f-alex-1');
+    await act(() => store.current.completeFollowUp('f-alex-1'));
+    expect(open()).not.toContain('f-alex-1');
+    expect(store.current.ws.followUps.find((f) => f.id === 'f-alex-1')).toMatchObject({ done: true, doneOn: todayIso });
+    expect(store.current.notice).toMatchObject({ message: 'Follow-up done', canUndo: true });
+    await act(() => store.current.undo());
+    expect(open()).toContain('f-alex-1');
   });
 });
 

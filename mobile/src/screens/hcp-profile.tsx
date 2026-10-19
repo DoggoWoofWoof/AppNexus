@@ -38,16 +38,20 @@ import { useWorkspace } from '@/lib/store';
 import type { Hcp, Referral } from '@/lib/types';
 
 type Tab = 'overview' | 'volumes' | 'network' | 'activity';
+const TABS: Tab[] = ['overview', 'volumes', 'network', 'activity'];
+
+/** The tab a link from Ask asks for; an HCP's leakage is in their referrals. */
+const tabFor = (section?: string): Tab => (section === 'leakage' ? 'network' : (TABS.find((t) => t === section) ?? 'overview'));
 
 export default function HcpProfile() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, section } = useLocalSearchParams<{ id: string; section?: string }>();
   const hcp = getHcp(id);
-  return hcp ? <Profile hcp={hcp} /> : <NotFound />;
+  return hcp ? <Profile hcp={hcp} section={section} /> : <NotFound />;
 }
 
-function Profile({ hcp }: { hcp: Hcp }) {
+function Profile({ hcp, section }: { hcp: Hcp; section?: string }) {
   const ctx = useWorkspace();
-  const { tab, setTab, showTab, scrollRef, onTabsLayout } = useProfileTab<Tab>('overview');
+  const { tab, setTab, showTab, scrollRef, onTabsLayout } = useProfileTab<Tab>(tabFor(section));
   const [volumeMode, setVolumeMode] = useState<VolumeMode>('procedures');
   // After saving, show the Activity tab so the new note or follow-up is in view.
   const { openNote, openFollowUp, sheets } = useNoteSheets(hcp, () => showTab('activity'));

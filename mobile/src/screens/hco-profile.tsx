@@ -42,17 +42,21 @@ import type { Org } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
 type Tab = 'overview' | 'volumes' | 'network' | 'activity';
+const TABS: Tab[] = ['overview', 'volumes', 'network', 'activity'];
+
+/** The tab a link from Ask asks for; an account's leakage is a view of its volumes. */
+const tabFor = (section?: string): Tab => (section === 'leakage' ? 'volumes' : (TABS.find((t) => t === section) ?? 'overview'));
 
 export default function HcoProfile() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, section } = useLocalSearchParams<{ id: string; section?: string }>();
   const org = getOrg(id);
-  return org ? <Profile org={org} /> : <NotFound />;
+  return org ? <Profile org={org} section={section} /> : <NotFound />;
 }
 
-function Profile({ org }: { org: Org }) {
+function Profile({ org, section }: { org: Org; section?: string }) {
   const ctx = useWorkspace();
-  const { tab, setTab, showTab, scrollRef, onTabsLayout } = useProfileTab<Tab>('overview');
-  const [volumeMode, setVolumeMode] = useState<VolumeMode>('procedures');
+  const { tab, setTab, showTab, scrollRef, onTabsLayout } = useProfileTab<Tab>(tabFor(section));
+  const [volumeMode, setVolumeMode] = useState<VolumeMode>(section === 'leakage' && org.leakage ? 'leakage' : 'procedures');
   // After saving, show the Activity tab so the new note or follow-up is in view.
   const { openNote, openFollowUp, sheets } = useNoteSheets(org, () => showTab('activity'));
   const visits = useVisitSheets();
