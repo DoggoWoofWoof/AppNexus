@@ -1,6 +1,6 @@
 # Integration plan
 
-The prototype is intentionally plain web code, so it can be reviewed in a browser by anyone. The production app is **React Native with Expo**. This page maps one to the other.
+The prototype is intentionally plain web code, so it can be reviewed in a browser by anyone. The production app is **React Native with Expo**, in [mobile/](../mobile/README.md). This page maps one to the other.
 
 ## App stack
 
@@ -54,7 +54,7 @@ Lorick's tool suggestions, and where each fits:
 
 ## Suggested build order
 
-1. **Shell.** Expo app with the five tabs, theme tokens, large-text support and sign-in.
+1. **Shell.** Expo app with the five tabs, theme tokens, large-text support and sign-in. Everything but sign-in is in [mobile/](../mobile/README.md), with each tab and profile showing the sample data.
 2. **Book and profiles.** Targets search, then HCP and HCO profiles on live data, with loading, empty, offline and error states.
 3. **Planning.** Multi-select, plan review and a saved day plan. This depends on the day-plan contract above.
 4. **Activity.** Log visit, notes and follow-ups, kept offline and synced when back online.

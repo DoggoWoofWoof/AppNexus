@@ -9,7 +9,7 @@ Field Pro is the DocNexus app for medical device sales reps in the field. The we
 - **Ask** questions about the territory by typing or speaking, and get a ranked answer with one next step.
 - **Log** what happened and set the follow-up before walking into the next building.
 
-This repository holds a clickable prototype of that app. It runs in the browser on sample data, so the flows can be reviewed before the React Native build starts.
+This repository holds a clickable prototype of that app. It runs in the browser on sample data, so the flows can be reviewed in full. The React Native (Expo) app has started in [mobile/](mobile/README.md), on the same sample data.
 
 ## What to try
 
@@ -67,7 +67,7 @@ The render tests also check that every button is wired to a real action, or is d
 npm test
 ```
 
-GitHub Actions runs the same checks on every push.
+GitHub Actions runs the same checks on every push, plus the mobile app's typecheck, lint and tests.
 
 ## How it is built
 
@@ -87,10 +87,11 @@ demo/
   js/data/          sample people and accounts, seeded relative to today
   data/             Manhattan map outline for the route and target maps
 tests/              node --test suites
+mobile/             the React Native (Expo) app; see mobile/README.md
 docs/               product scope, Ask and voice, integration plan
 ```
 
-The production app will be **React Native (Expo)**. The screens, actions and data shapes here are meant to carry straight across; see [docs/integration.md](docs/integration.md).
+The production app is **React Native (Expo)**, in [mobile/](mobile/README.md). The screens, actions and data shapes here are meant to carry straight across; see [docs/integration.md](docs/integration.md).
 
 ## Status and data
 
