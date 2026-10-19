@@ -1,19 +1,23 @@
-// Holds the rep's workspace for the whole app. In memory for now: the sample is
-// seeded fresh on each launch. On-device storage and sync come with the real services.
+// Holds the rep's workspace for the whole app. In the app it is kept on the phone
+// (lib/persist.ts) and loaded on launch; sync comes with the real services.
 
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { AppState } from 'react-native';
 
 import { getEntity } from './data';
 import { formatDate, isoDate, plural, startOfDay } from './format';
-import type { SavedReport, Workspace } from './types';
+import { DRAFTS_KEY, laterWriter, loadKept, WORKSPACE_KEY, type DeviceStorage, type Kept, type LogDraft } from './persist';
+import { withPrefs } from './prefs';
+import type { Prefs, SavedReport, Workspace } from './types';
 import {
   addAllToPlan,
+  addPeople,
   addToPlan,
   bookingError,
   bookVisit,
   buildContext,
   cancelVisit,
-  clearReplacement,
+  chooseSlot,
   completeFollowUp,
   confirmBooking,
   fillSlot,
@@ -21,12 +25,17 @@ import {
   followUpError,
   followUpRecord,
   freshWorkspace,
+  leaveFree,
+  moveVisit,
   noteError,
   noteRecords,
   removeSaved,
+  removeVisit,
   restoreVisit,
   saveReport,
+  setVisitTime,
   visitDone,
+  visitTimeError,
   withRecords,
   type BookingDraft,
   type Context,
@@ -54,9 +63,18 @@ type Store = Context & {
   /** Cancels a visit. Returns true when a timed slot was freed, for the screen to show Targets. */
   cancelVisit: (day: string, id: string, reason: string) => boolean;
   restoreVisit: (day: string, id: string) => void;
-  /** Puts someone in the free slot as a requested visit. */
-  fillSlot: (targetId: string) => void;
-  clearReplacement: () => void;
+  /** Chooses which free slot Targets fills. */
+  chooseSlot: (slotId: string) => void;
+  /** Puts someone in a free slot as a requested visit, if they can usually be seen then. */
+  fillSlot: (slotId: string, targetId: string) => void;
+  /** Stops offering a free slot. */
+  leaveFree: (slotId: string) => void;
+  /** Moves a flexible stop one place earlier or later. */
+  moveStop: (day: string, id: string, direction: -1 | 1) => void;
+  /** Gives a flexible stop a time. Returns what's wrong instead when it can't go then. */
+  setStopTime: (day: string, id: string, time: string) => string | null;
+  /** Takes a stop out of the day's plan. */
+  removeStop: (day: string, id: string) => void;
   /** Books or reschedules a visit. Returns what's wrong instead when it can't be saved. */
   book: (draft: BookingDraft) => string | null;
   confirmBooking: (day: string, id: string) => void;
@@ -64,9 +82,17 @@ type Store = Context & {
   addToPlan: (targetId: string, day?: string) => void;
   /** Adds several people to a day, nearest first. */
   addAllToPlan: (targetIds: string[], day: string) => void;
+  /** Adds the people picked on Targets after the day's other stops, with one Undo. */
+  addPeople: (targetIds: string[], day: string) => void;
   /** Keeps an answer from Ask in the menu's Saved list. */
   saveReport: (report: SavedReport) => void;
   removeSaved: (id: string) => void;
+  /** Changes the rep's own choices on the You page. Quietly, and Undo leaves them as they are. */
+  setPrefs: (patch: Partial<Prefs>) => void;
+  /** A note started in the log sheet and closed before it was saved. */
+  draftFor: (key: string) => LogDraft | null;
+  /** Keeps a half-written note, or with null lets it go. */
+  keepDraft: (key: string, draft: LogDraft | null) => void;
   notice: Notice | null;
   dismissNotice: () => void;
   undo: () => void;
@@ -76,11 +102,74 @@ const StoreContext = createContext<Store | null>(null);
 
 const systemClock = () => new Date();
 
-/** `now` is the clock, so tests can say what time it is. */
-export function WorkspaceProvider({ children, today: initialDay, now = systemClock }: { children: ReactNode; today?: Date; now?: () => Date }) {
+// Long enough after the last change that typing doesn't write on every key.
+const SAVE_DELAY_MS = 400;
+
+/** When the phone won't take a write, such as when its storage is full. */
+const saveFailed = (): Notice => ({ id: Date.now(), message: 'Couldn’t save on this phone. Closing the app will lose recent changes.', canUndo: false });
+
+type ProviderProps = {
+  children: ReactNode;
+  today?: Date;
+  /** The clock, so tests can say what time it is. */
+  now?: () => Date;
+  /** Where the workspace and note drafts are kept. Without it (most tests) it starts from the sample and keeps nothing. */
+  storage?: DeviceStorage | null;
+};
+
+export function WorkspaceProvider({ children, today: initialDay, now = systemClock, storage = null }: ProviderProps) {
   const [today] = useState(() => initialDay ?? startOfDay());
-  const [ws, setWs] = useState(() => freshWorkspace(today));
-  const [notice, setNotice] = useState<Notice | null>(null);
+  const [kept, setKept] = useState<Kept | null>(() => (storage ? null : { ws: freshWorkspace(today), drafts: {}, readable: true }));
+  useEffect(() => {
+    if (!storage) return;
+    let live = true;
+    loadKept(storage, today).then((k) => {
+      if (live) setKept(k);
+    });
+    return () => {
+      live = false;
+    };
+  }, [storage, today]);
+
+  // Nothing shows until it has loaded, so nothing done in the meantime is lost.
+  if (!kept) return null;
+  return (
+    <LoadedWorkspace kept={kept} today={today} now={now} storage={kept.readable ? storage : null}>
+      {children}
+    </LoadedWorkspace>
+  );
+}
+
+function LoadedWorkspace({ children, kept, today, now, storage }: { children: ReactNode; kept: Kept; today: Date; now: () => Date; storage: DeviceStorage | null }) {
+  const [ws, setWs] = useState(kept.ws);
+  const [notice, setNotice] = useState<Notice | null>(() =>
+    kept.readable ? null : { id: Date.now(), message: 'Couldn’t open what’s saved on this phone, so changes won’t be kept.', canUndo: false },
+  );
+  const drafts = useRef(kept.drafts);
+  // Writes to the phone, a moment after the last change.
+  const writers = useMemo(() => {
+    if (!storage) return null;
+    const failed = () => setNotice(saveFailed());
+    return { ws: laterWriter(storage, WORKSPACE_KEY, SAVE_DELAY_MS, failed), drafts: laterWriter(storage, DRAFTS_KEY, SAVE_DELAY_MS, failed) };
+  }, [storage]);
+  useEffect(() => {
+    writers?.ws.write(ws);
+  }, [writers, ws]);
+  // Straight away when the app goes to the background or closes, so the last change isn't lost.
+  useEffect(() => {
+    if (!writers) return;
+    const flush = () => {
+      writers.ws.flush();
+      writers.drafts.flush();
+    };
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state !== 'active') flush();
+    });
+    return () => {
+      sub.remove();
+      flush();
+    };
+  }, [writers]);
   // The workspace before the last undoable change, and the latest one for the actions to read.
   const before = useRef<Workspace | null>(null);
   const current = useRef(ws);
@@ -97,6 +186,11 @@ export function WorkspaceProvider({ children, today: initialDay, now = systemClo
       setWs(next);
       setNotice({ id: Date.now(), message, canUndo });
     };
+    // A change that needs no toast, such as which free slot Targets is filling.
+    const quietly = (next: Workspace) => {
+      current.current = next;
+      setWs(next);
+    };
     const onDay = (day: string) => (day === todayIso ? 'today' : `on ${formatDate(day)}`);
 
     return {
@@ -108,7 +202,9 @@ export function WorkspaceProvider({ children, today: initialDay, now = systemClo
           const next = withRecords(w, { interactions: [interaction], followUps: followUp ? [followUp] : [] });
           return draft.visit ? visitDone(next, draft.visit.day, draft.visit.id) : next;
         });
-        setNotice({ id: Date.now(), message: draft.visit ? 'Visit logged' : 'Note saved', canUndo: false });
+        // There's no server yet, so say where it is rather than just "saved".
+        const message = writers ? (draft.visit ? 'Visit logged · saved on this phone' : 'Note saved on this phone') : draft.visit ? 'Visit logged' : 'Note saved';
+        setNotice({ id: Date.now(), message, canUndo: false });
         return null;
       },
       addFollowUp: (draft: FollowUpDraft) => {
@@ -122,17 +218,37 @@ export function WorkspaceProvider({ children, today: initialDay, now = systemClo
       selectDay: (day: string) => setWs((w) => ({ ...w, selection: { ...w.selection, day } })),
       cancelVisit: (day: string, id: string, reason: string) => {
         const next = cancelVisit(current.current, day, id, reason, todayIso, now());
-        const freed = next.replacement?.itemId === id;
-        apply(next, freed ? `Visit cancelled · ${next.replacement?.time} is free` : 'Visit cancelled');
-        return freed;
+        const freed = next.freeSlots.find((s) => s.itemId === id);
+        apply(next, freed ? `Visit cancelled · ${freed.time} is free` : 'Visit cancelled');
+        return !!freed;
       },
       restoreVisit: (day: string, id: string) => apply(restoreVisit(current.current, day, id), 'Visit restored', false),
-      fillSlot: (targetId: string) => {
-        const r = current.current.replacement;
-        if (!r) return;
-        apply(fillSlot(current.current, targetId), `${getEntity(targetId)?.name} added at ${r.time} · not confirmed yet`);
+      chooseSlot: (slotId: string) => quietly(chooseSlot(current.current, slotId)),
+      fillSlot: (slotId: string, targetId: string) => {
+        const slot = current.current.freeSlots.find((s) => s.itemId === slotId);
+        const next = fillSlot(current.current, slotId, targetId);
+        if (!slot || next === current.current) return;
+        apply(next, `${getEntity(targetId)?.name} added at ${slot.time} · not confirmed yet`);
       },
-      clearReplacement: () => setWs((w) => clearReplacement(w)),
+      leaveFree: (slotId: string) => quietly(leaveFree(current.current, slotId)),
+      moveStop: (day: string, id: string, direction: -1 | 1) => {
+        // The arrows put a move back, so it needs no Undo; an older Undo would also lose the move.
+        before.current = null;
+        setNotice((n) => (n?.canUndo ? null : n));
+        quietly(moveVisit(current.current, day, id, direction));
+      },
+      setStopTime: (day: string, id: string, time: string) => {
+        const error = visitTimeError(current.current, day, id, time, now());
+        if (error) return error;
+        const who = getEntity(findItem(current.current, day, id)?.targetId ?? '');
+        apply(setVisitTime(current.current, day, id, time), `${who?.name ?? 'Visit'} at ${time} ${onDay(day)}`);
+        return null;
+      },
+      removeStop: (day: string, id: string) => {
+        const who = getEntity(findItem(current.current, day, id)?.targetId ?? '');
+        const next = removeVisit(current.current, day, id);
+        if (next !== current.current) apply(next, `${who?.name ?? 'Visit'} taken out of the plan`);
+      },
       book: (draft: BookingDraft) => {
         const error = bookingError(current.current, draft);
         if (error || !draft.slot) return error;
@@ -154,18 +270,34 @@ export function WorkspaceProvider({ children, today: initialDay, now = systemClo
         const added = (next.plans[day]?.length ?? 0) - (current.current.plans[day]?.length ?? 0);
         if (added) apply(next, `${plural(added, 'person', 'people')} added ${onDay(day)}`);
       },
+      addPeople: (targetIds: string[], day: string) => {
+        const next = addPeople(current.current, day, targetIds);
+        const added = (next.plans[day]?.length ?? 0) - (current.current.plans[day]?.length ?? 0);
+        const only = added === 1 ? getEntity(next.plans[day][next.plans[day].length - 1].targetId) : null;
+        if (added) apply(next, `${only ? only.name : plural(added, 'person', 'people')} added ${onDay(day)}`);
+      },
       saveReport: (report: SavedReport) => apply(saveReport(current.current, report), 'Saved. Find it in the menu.'),
       removeSaved: (id: string) => apply(removeSaved(current.current, id), 'Removed from Saved'),
+      setPrefs: (patch: Partial<Prefs>) => quietly(withPrefs(current.current, patch)),
+      // Drafts aren't part of the workspace, so typing doesn't redraw every screen.
+      draftFor: (key: string) => drafts.current[key] ?? null,
+      keepDraft: (key: string, draft: LogDraft | null) => {
+        const { [key]: _old, ...rest } = drafts.current;
+        drafts.current = draft ? { ...rest, [key]: draft } : rest;
+        writers?.drafts.write(drafts.current);
+      },
       dismissNotice: () => setNotice(null),
       undo: () => {
         if (!before.current) return;
-        current.current = before.current;
-        setWs(before.current);
+        // Undo takes back the last change to the plan or notes, not a choice made on the You page since.
+        const back = { ...before.current, prefs: current.current.prefs };
+        current.current = back;
+        setWs(back);
         before.current = null;
         setNotice(null);
       },
     };
-  }, [today, now]);
+  }, [today, now, writers]);
 
   const store = useMemo<Store>(
     () => ({ ...buildContext(ws, today), setWorkspace: setWs, notice, ...actions }),

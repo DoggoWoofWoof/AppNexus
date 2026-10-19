@@ -7,12 +7,12 @@
 // HCP's profile: every question is then about them unless it names someone else.
 
 import { buildBrief, visitWhen } from './brief';
-import { allHcps, allOrgs, destination, getEntity, getOrg, hcpsAt, primaryOrg, procedureTotal, procedureYoy, proceduresOf, siteFor } from './data';
-import { REP } from './data/seed';
+import { accountsByPatientsLost, allHcps, allOrgs, destination, getEntity, getOrg, hcpsAt, patientsLost, primaryOrg, procedureTotal, procedureYoy, proceduresOf, referredOut, shortName, siteFor, topReferrersOut } from './data';
+import { DATA_PERIOD } from './data/seed';
 import { addSeries } from './data/series';
 import { addDays, formatDate, formatKm, formatNumber, formatPct, haversineKm, isoDate, plural, relativeDay, relativeDayLower, sum } from './format';
 import { DEFAULT_FILTERS } from './search';
-import type { Entity, Hcp, Org, Signal } from './types';
+import type { Entity, PlanItem, Signal } from './types';
 import type { Context } from './workspace';
 
 export type Intent =
@@ -36,6 +36,7 @@ export type Intent =
   | 'points'
   | 'brief'
   | 'saved'
+  | 'week'
   | 'search';
 
 /** Where a row or the next step leads: a profile (at a section) or another tab. */
@@ -60,7 +61,10 @@ export interface Answer {
   about: string | null;
   /** Who the question was about, named or followed on from: what a saved copy is titled after. */
   subject: string | null;
-  /** What the answer covers, e.g. "Last 12 months · Sample data". */
+  /**
+   * What the answer covers, e.g. "Procedures · Sample data, Oct 2025 to Sep 2026".
+   * Every answer from the data ends with SAMPLE, or DATA_PERIOD when it gives figures.
+   */
   scope: string[];
   /** One sentence that answers the question. */
   summary: string;
@@ -72,6 +76,8 @@ export interface Answer {
   /** Questions to ask next. */
   next: string[];
   unknown?: boolean;
+  /** What a saved copy is called, when the kind of question isn't enough (the week it covers). */
+  title?: string;
 }
 
 export interface AskOptions {
@@ -88,6 +94,7 @@ export const STARTERS = [
   { title: 'Plan the day', questions: ['Who should I see today?', 'What’s on my plan today?', 'Who is near Mount Sinai West?'] },
   { title: 'Before a visit', questions: ['Brief me on Dr. Maya Patel', 'Where does Dr. Alex Morgan refer patients?', 'Top doctors at Mount Sinai Hospital'] },
   { title: 'Your territory', questions: ['Which accounts are growing the most?', 'What has declined?', 'Where am I losing the most volume?', 'What follow-ups are overdue?'] },
+  { title: 'End of the week', questions: ['Summarise my week'] },
 ];
 
 /** The starter questions, with today's next visit filled in where it helps. */
@@ -154,6 +161,7 @@ export function findEntity(question: string): Entity | null {
 // Most specific first: "who refers to her" is inbound, not referrals.
 const INTENTS: [Intent, RegExp][] = [
   ['saved', /\b(saved|my reports?|my prep( notes)?|prep notes|what (did|have) i (save|kept|keep))\b/],
+  ['week', /\b(my week|week(ly)? (summary|report|update|recap|review)|(summar\w*|recap|review|report on) (of )?(the|this|last) week|(this|last) week s (summary|report)|what (did|have) i (do|done|get done|achieve\w*)( [a-z]+)? (this|last) week|(report|update) for my (manager|boss))\b/],
   ['contact', /\b(best time|when (can|should|do) i (see|catch|reach|visit|meet)|how (do|can|should) i (book|reach|contact|get hold of)|phone|email|assistant|scheduler|contact details|book (a )?(time|visit|meeting))\b|\bwhen can i see\b/],
   ['history', /\b(last (time|visit|met|meeting|call|contact|note)|what did (we|i)|discuss\w*|talked about|history|past (visits|notes))\b|\bwhat happened\b/],
   ['followups', /\b(follow ?-?ups?|overdue|owe|to ?-?dos?|tasks?|promised?)\b/],
@@ -198,15 +206,18 @@ const PEOPLE_WORDS = /\b(hcps?|doctors?|surgeons?|physicians?|people|cardiologis
 const listJoin = (items: string[]) => (items.length < 2 ? items.join('') : `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`);
 const PHRASES: Partial<Record<Signal['id'], (s: Signal) => string>> = {
   followup: (s) => (s.label.startsWith('Overdue') ? 'an overdue follow-up' : 'a follow-up due'),
-  leakage: () => 'leakage risk',
-  rising: () => 'rising volume',
+  leakage: () => 'patients going elsewhere',
+  rising: () => 'busier than last year',
   unseen: (s) => (s.label === 'No contact yet' ? 'no contact yet' : 'no visit in 30+ days'),
 };
-/** Signals as a phrase, e.g. "leakage risk and no visit in 30+ days". */
+/** Signals as a phrase, e.g. "patients going elsewhere and no visit in 30+ days". */
 const reasons = (signals: Signal[]) => listJoin(signals.map((s) => PHRASES[s.id]?.(s) ?? s.label.toLowerCase()));
 const possessive = (name: string) => `${name}’s`;
 
-const SAMPLE = 'Sample data';
+// Answers about the rep's own notes and plan say they're sample data; answers
+// with volumes, referrals or leakage give the dates those figures cover.
+export const SAMPLE = 'Sample data';
+const VS_LAST_YEAR = 'Compared with the year before';
 const last4 = (series: number[]) => sum(series.slice(-4));
 const prev4 = (series: number[]) => sum(series.slice(0, 4));
 const totals = (e: Entity) => {
@@ -216,7 +227,6 @@ const totals = (e: Entity) => {
   return { prev: prev4(s), cur: last4(s), growth: procedureYoy(e) ?? 0 };
 };
 const accounts = () => allOrgs().filter((o) => o.type !== 'Health system' && proceduresOf(o)?.length);
-const outOfSystem = (h: Hcp) => sum(h.referrals.outbound.filter((r) => r.ref).map((r) => r.count));
 const detailOf = (e: Entity) => (e.kind === 'hcp' ? e.specialty : e.typeDetail);
 const open = (id: string, section?: string): AskLink => ({ kind: 'profile', id, section });
 
@@ -233,7 +243,8 @@ export function answer(question: string, ctx: Context, { about = null, scoped = 
   const intent = detectIntent(question, about, scoped);
   const named = findEntity(question);
   const q = normalise(question);
-  const entity = named ?? (about && (scoped || refersBack(q)) ? getEntity(about) : null);
+  // The week is the rep's own, even when asked in a person's chat.
+  const entity = intent === 'week' ? null : (named ?? (about && (scoped || refersBack(q)) ? getEntity(about) : null));
   const { about: answerAbout, ...result } = BUILDERS[intent]({ question, q, entity, ctx, talkedAbout });
   return { intent, about: answerAbout !== undefined ? answerAbout : (entity?.id ?? null), subject: entity?.id ?? null, ...result };
 }
@@ -243,7 +254,7 @@ type Built = Omit<Answer, 'intent' | 'about' | 'subject'> & { about?: string | n
 const row = (e: Entity, figure: string, sub?: string, tone?: AnswerRow['tone']): AnswerRow => ({ id: e.id, title: e.name, sub, figure, tone });
 
 function empty(summary: string, about: string | null = null): Built {
-  return { scope: [SAMPLE], summary, rows: [], next: ['Which accounts are growing the most?', 'Who should I see today?'], about };
+  return { scope: [DATA_PERIOD], summary, rows: [], next: ['Which accounts are growing the most?', 'Who should I see today?'], about };
 }
 
 const BUILDERS: Record<Intent, (input: Input) => Built> = {
@@ -281,7 +292,7 @@ const BUILDERS: Record<Intent, (input: Input) => Built> = {
     if (!notes.length) return { ...empty(`No visits, calls or notes with ${entity.name} yet.`, entity.id), next: ['What should I bring up?', 'When can I see them?'] };
     const [last] = notes;
     return {
-      scope: ['Your notes and the team’s', 'Newest first'],
+      scope: ['Your notes and the team’s', 'Newest first', SAMPLE],
       summary: `Last contact was ${relativeDayLower(last.date, ctx.today)}: ${last.type.toLowerCase()}, ${last.outcome.toLowerCase()}.${last.note ? ` “${last.note}”` : ''}`,
       rows: notes.map((i) => ({ title: `${i.type} · ${i.outcome}`, sub: [i.author, i.note].filter(Boolean).join(' · '), figure: relativeDay(i.date, ctx.today) })),
       doThis: { text: 'See every note and follow-up.', label: 'Open activity', link: open(entity.id, 'activity') },
@@ -293,13 +304,13 @@ const BUILDERS: Record<Intent, (input: Input) => Built> = {
   followups({ entity, ctx }) {
     const open_ = ctx.openFollowUps().filter((f) => !entity || f.targetId === entity.id);
     if (!open_.length) {
-      return { scope: ['Your follow-ups'], summary: entity ? `Nothing open with ${entity.name}.` : 'You have no open follow-ups.', rows: [], next: entity ? ['What should I bring up?'] : ['Who should I see today?'], about: entity?.id ?? null };
+      return { scope: ['Your follow-ups', SAMPLE], summary: entity ? `Nothing open with ${entity.name}.` : 'You have no open follow-ups.', rows: [], next: entity ? ['What should I bring up?'] : ['Who should I see today?'], about: entity?.id ?? null };
     }
     const overdue = open_.filter((f) => f.overdueBy > 0);
     const first = open_[0];
     const who = getEntity(first.targetId);
     return {
-      scope: ['Your follow-ups', 'On this device'],
+      scope: ['Your follow-ups', SAMPLE],
       summary: `${entity ? `${plural(open_.length, 'open follow-up')} with ${entity.name}` : `You have ${plural(open_.length, 'open follow-up')}`}${overdue.length ? `, ${overdue.length} overdue` : ''}. Most urgent: “${first.text}”${entity ? '' : ` for ${who?.name}`}.`,
       rows: open_.map((f) => ({ id: entity ? undefined : f.targetId, title: f.text, sub: entity ? undefined : getEntity(f.targetId)?.name, figure: f.overdueBy > 0 ? `${plural(f.overdueBy, 'day')} late` : `Due ${relativeDayLower(f.due, ctx.today)}`, tone: f.overdueBy > 0 ? 'warn' : undefined })),
       doThis: { text: 'Tick them off in Activity as you go.', label: 'Open Activity', link: { kind: 'tab', tab: 'activity' } },
@@ -316,7 +327,7 @@ const BUILDERS: Record<Intent, (input: Input) => Built> = {
     const top = sorted[0];
     const topName = top.hcpId ? getEntity(top.hcpId)?.name : (top.label ?? 'Other');
     return {
-      scope: ['Referrals in', 'Last 12 months', SAMPLE],
+      scope: ['Referrals in', DATA_PERIOD],
       summary: `${entity.name} received ${sum(inbound.map((r) => r.count))} referrals. The most came from ${topName} (${top.count}).`,
       rows: sorted.map((r) => {
         const peer = r.hcpId ? getEntity(r.hcpId) : null;
@@ -330,15 +341,12 @@ const BUILDERS: Record<Intent, (input: Input) => Built> = {
   referrals({ entity, ctx }) {
     if (entity?.kind !== 'hcp') {
       if (entity?.kind === 'hco') return BUILDERS.leakage({ question: '', q: '', entity, ctx });
-      const ranked = allHcps()
-        .map((h) => ({ h, out: outOfSystem(h) }))
-        .filter((r) => r.out)
-        .sort((a, b) => b.out - a.out);
-      const top = ranked[0].h;
+      const ranked = topReferrersOut();
+      const top = ranked[0].hcp;
       return {
-        scope: ['Referrals out of the system', 'Last 12 months', SAMPLE],
-        summary: `${top.name} sends the most patients out of the system: ${ranked[0].out} in the last 12 months.`,
-        rows: ranked.slice(0, 5).map(({ h, out }) => row(h, String(out), `${h.specialty} · ${primaryOrg(h).name}`, 'warn')),
+        scope: ['Referrals out of the system', DATA_PERIOD],
+        summary: `${top.name} sends the most patients out of the system: ${ranked[0].count} in the last 12 months.`,
+        rows: ranked.slice(0, 5).map(({ hcp, count }) => row(hcp, String(count), `${hcp.specialty} · ${primaryOrg(hcp).name}`, 'warn')),
         doThis: { text: `A visit to ${top.name} could keep the most patients in the system.`, label: `Open ${top.name}`, link: open(top.id, 'network') },
         next: [`Brief me on ${top.name}`, 'Where am I losing the most volume?'],
         about: top.id,
@@ -351,7 +359,7 @@ const BUILDERS: Record<Intent, (input: Input) => Built> = {
     const leftCount = sum(leaving.map((r) => r.count));
     const topOut = leaving[0];
     return {
-      scope: ['Referrals out', 'Last 12 months', SAMPLE],
+      scope: ['Referrals out', DATA_PERIOD],
       summary: leftCount
         ? `${entity.name} referred ${total} patients on. ${leftCount} (${Math.round((leftCount / total) * 100)}%) went outside the system, ${leaving.length === 1 ? 'all' : `${topOut.count}`} to ${destination(topOut.ref!).name}.`
         : `${entity.name} referred ${total} patients on, all within the system.`,
@@ -359,9 +367,9 @@ const BUILDERS: Record<Intent, (input: Input) => Built> = {
         .sort((a, b) => b.count - a.count)
         .map((r) => {
           const peer = r.hcpId ? getEntity(r.hcpId) : null;
-          if (peer) return row(peer, String(r.count), `In system · ${r.reason}`);
+          if (peer) return row(peer, String(r.count), `Same health system · ${r.reason}`);
           return r.ref
-            ? { title: destination(r.ref).name, sub: `Out of system · ${r.reason}`, figure: String(r.count), tone: 'warn' as const }
+            ? { title: destination(r.ref).name, sub: `Outside the system · ${r.reason}`, figure: String(r.count), tone: 'warn' as const }
             : { title: r.label ?? 'Other', sub: r.reason, figure: String(r.count) };
         }),
       doThis: topOut ? { text: `Ask why ${topOut.reason} patients go to ${destination(topOut.ref!).name} instead of staying in the system.`, label: 'Open referrals', link: open(entity.id, 'network') } : null,
@@ -377,7 +385,7 @@ const BUILDERS: Record<Intent, (input: Input) => Built> = {
     const total = sum(rows.map((r) => last4(r.series)));
     const sorted = [...rows].sort((a, b) => last4(b.series) - last4(a.series));
     return {
-      scope: ['Procedures', 'Last 12 months', SAMPLE],
+      scope: ['Procedures', DATA_PERIOD],
       summary: `${sorted[0].family} is ${Math.round((last4(sorted[0].series) / total) * 100)}% of ${possessive(e.name)} ${formatNumber(total)} procedures in the last 12 months.`,
       rows: sorted.map((r) => ({ title: r.family, sub: `${r.code} · ${formatPct(((last4(r.series) - prev4(r.series)) / (prev4(r.series) || 1)) * 100)} on last year`, figure: formatNumber(last4(r.series)) })),
       doThis: { text: 'The quarter-by-quarter trend is on the profile.', label: 'Open volumes', link: open(e.id, 'volumes') },
@@ -389,15 +397,15 @@ const BUILDERS: Record<Intent, (input: Input) => Built> = {
   leakage({ entity, ctx }) {
     if (entity?.kind === 'hco') {
       const l = entity.leakage;
-      if (!l) return empty(`${entity.name} doesn’t report leakage. ${entity.leakageUnavailable ?? ''}`.trim(), entity.id);
+      if (!l) return empty(`${entity.name} doesn’t report where its patients go. ${entity.leakageUnavailable ?? ''}`.trim(), entity.id);
       const top = l.destinations[0];
       const destName = (d: (typeof l.destinations)[number]) => (d.orgId ? (getOrg(d.orgId)?.name ?? '') : destination(d.ref!).name);
       return {
-        scope: ['Patients who left', 'Last 12 months', SAMPLE],
-        summary: `${l.leftPct}% of ${formatNumber(l.patients)} patients at ${entity.name} left the system. The biggest destination is ${destName(top)}, with ${formatNumber(top.patients)}.`,
+        scope: ['Patients who left', DATA_PERIOD],
+        summary: `About ${formatNumber(patientsLost(l))} patients at ${entity.name} left the system, ${l.leftPct}% of ${formatNumber(l.patients)}. The biggest destination is ${destName(top)}, with ${formatNumber(top.patients)}.`,
         rows: l.destinations.map((d) => {
           const org = d.orgId ? getOrg(d.orgId) : null;
-          return org ? row(org, formatNumber(d.patients), 'In system') : { title: destination(d.ref!).name, sub: `${destination(d.ref!).note} · out of system`, figure: formatNumber(d.patients), tone: 'warn' as const };
+          return org ? row(org, formatNumber(d.patients), 'Same health system') : { title: destination(d.ref!).name, sub: `${destination(d.ref!).note} · outside the system`, figure: formatNumber(d.patients), tone: 'warn' as const };
         }),
         doThis: { text: `${l.byFamily[0].family} is the biggest gap: ${l.byFamily[0].leftPct}% of those patients leave.`, label: 'Open leakage', link: open(entity.id, 'leakage') },
         next: [`Top doctors at ${entity.name}`, 'Which accounts are growing the most?', 'Who should I see today?'],
@@ -405,21 +413,17 @@ const BUILDERS: Record<Intent, (input: Input) => Built> = {
       };
     }
     if (entity?.kind === 'hcp') return BUILDERS.referrals({ question: '', q: '', entity, ctx });
-    const ranked = allOrgs()
-      .filter((o): o is Org & { leakage: NonNullable<Org['leakage']> } => !!o.leakage && o.type !== 'Health system')
-      .sort((a, b) => b.leakage.leftPct - a.leakage.leftPct);
-    const top = ranked[0];
-    const lost = sum(ranked.map((o) => Math.round(o.leakage.patients * (o.leakage.leftPct / 100))));
-    const referrer = hcpsAt(top.id)
-      .map((h) => ({ h, out: outOfSystem(h) }))
-      .sort((a, b) => b.out - a.out)[0];
+    const ranked = accountsByPatientsLost();
+    const { org: top, leakage: topLeak } = ranked[0];
+    const lost = sum(ranked.map((r) => r.lost));
+    const referrer = topReferrersOut(top.id)[0];
     return {
-      scope: ['Patients who left the system', 'Last 12 months', SAMPLE],
-      summary: `${top.name} loses the most: ${top.leakage.leftPct}% of ${formatNumber(top.leakage.patients)} patients left. Across your accounts, about ${formatNumber(lost)} patients left the system.`,
-      rows: ranked.map((o) => row(o, `${o.leakage.leftPct}%`, `${formatNumber(o.leakage.patients)} patients · biggest gap ${o.leakage.byFamily[0].family}`, o.leakage.leftPct >= 20 ? 'warn' : undefined)),
-      doThis: referrer?.out
-        ? { text: `${referrer.h.name} sends ${referrer.out} patients a year out of the system from ${top.name}. Start there.`, label: `Open ${referrer.h.name}`, link: open(referrer.h.id, 'network') }
-        : { text: `${top.leakage.byFamily[0].family} is the biggest gap at ${top.name}.`, label: `Open ${top.name}`, link: open(top.id, 'leakage') },
+      scope: ['Patients who left the system', 'Most first', DATA_PERIOD],
+      summary: `${top.name} loses the most: ${formatNumber(ranked[0].lost)} patients, ${topLeak.leftPct}% of ${formatNumber(topLeak.patients)}. Across your accounts, about ${formatNumber(lost)} patients left the system.`,
+      rows: ranked.map(({ org, leakage: l, lost: n }) => row(org, formatNumber(n), `${l.leftPct}% of ${formatNumber(l.patients)} patients · worst for ${l.byFamily[0].family}`, l.leftPct >= 20 ? 'warn' : undefined)),
+      doThis: referrer
+        ? { text: `${referrer.hcp.name} works there and sends ${referrer.count} patients a year outside the system. Start there.`, label: `Open ${referrer.hcp.name}`, link: open(referrer.hcp.id, 'network') }
+        : { text: `At ${top.name}, ${topLeak.byFamily[0].family} patients leave the most.`, label: `Open ${top.name}`, link: open(top.id, 'leakage') },
       next: [`Where do patients at ${top.name} go?`, 'Which accounts are growing the most?', 'Who should I see today?'],
       about: top.id,
     };
@@ -438,7 +442,7 @@ const BUILDERS: Record<Intent, (input: Input) => Built> = {
     const pick = ranked.slice(0, 3).find((r) => ctx.signals(r.e).some((s) => s.id === 'leakage' || s.id === 'unseen')) ?? top;
     const pickSignals = ctx.signals(pick.e).filter((s) => s.id !== 'rising');
     return {
-      scope: ['Last 12 months vs the 12 before', entity?.kind === 'hco' ? `At ${entity.name}` : 'Your book', SAMPLE],
+      scope: [VS_LAST_YEAR, entity?.kind === 'hco' ? `At ${entity.name}` : 'Your book', DATA_PERIOD],
       summary: `${top.e.name} grew fastest: ${formatNumber(top.t.prev)} to ${formatNumber(top.t.cur)} procedures (${formatPct(top.t.growth)}).`,
       rows: ranked.slice(0, 5).map(({ e, t }) => row(e, formatPct(t.growth), `${detailOf(e)} · ${formatNumber(t.cur)} procedures`, t.growth >= 0 ? 'up' : 'down')),
       doThis: {
@@ -464,7 +468,7 @@ const BUILDERS: Record<Intent, (input: Input) => Built> = {
     if (!down.length) {
       const slow = ranked[0];
       return {
-        scope: ['Last 12 months vs the 12 before', SAMPLE],
+        scope: [VS_LAST_YEAR, DATA_PERIOD],
         summary: `Nothing declined. Slowest growth is ${slow.e.name} at ${formatPct(slow.t.growth)}.`,
         rows: ranked.slice(0, 5).map(({ e, t }) => row(e, formatPct(t.growth), `${formatNumber(t.cur)} procedures`, 'up')),
         next: ['Which accounts are growing the most?', 'Where am I losing the most volume?'],
@@ -475,7 +479,7 @@ const BUILDERS: Record<Intent, (input: Input) => Built> = {
       .map((r) => ({ r, g: last4(r.series) - prev4(r.series) }))
       .sort((a, b) => a.g - b.g)[0].r;
     return {
-      scope: ['Last 12 months vs the 12 before', entity?.kind === 'hco' ? `At ${entity.name}` : 'People and accounts', SAMPLE],
+      scope: [VS_LAST_YEAR, entity?.kind === 'hco' ? `At ${entity.name}` : 'People and accounts', DATA_PERIOD],
       summary: `${plural(down.length, 'target')} declined. The biggest drop is ${top.e.name}: ${formatNumber(top.t.prev)} to ${formatNumber(top.t.cur)} procedures (${formatPct(top.t.growth)}).`,
       rows: down.slice(0, 5).map(({ e, t }) => row(e, formatPct(t.growth), `${detailOf(e)} · ${formatNumber(t.cur)} procedures`, 'down')),
       doThis: { text: `Most of ${possessive(top.e.name)} drop is in ${family.family.toLowerCase()}. Ask where those cases are going now.`, label: `Open ${top.e.name}`, link: open(top.e.id, 'volumes') },
@@ -496,7 +500,7 @@ const BUILDERS: Record<Intent, (input: Input) => Built> = {
     const mover = families[0];
     const direction = t.growth >= 1 ? 'up' : t.growth <= -1 ? 'down' : 'flat';
     return {
-      scope: ['Last 12 months vs the 12 before', SAMPLE],
+      scope: [VS_LAST_YEAR, DATA_PERIOD],
       summary: `${entity.name} is ${direction} on last year: ${formatNumber(t.prev)} to ${formatNumber(t.cur)} procedures (${formatPct(t.growth)}). The biggest change is ${mover.r.family} (${formatPct(mover.pct)}).`,
       rows: families.map((f) => ({ title: f.r.family, sub: `${f.r.code} · ${formatNumber(f.cur)} in the last 12 months`, figure: formatPct(f.pct), tone: f.pct >= 0 ? ('up' as const) : ('down' as const) })),
       doThis: { text: 'See the quarter-by-quarter trend before the visit.', label: 'Open volumes', link: open(entity.id, 'volumes') },
@@ -510,7 +514,7 @@ const BUILDERS: Record<Intent, (input: Input) => Built> = {
     const rows = [...entity.affiliations].sort((a, b) => b.share - a.share);
     const first = getOrg(rows[0].orgId)!;
     return {
-      scope: ['Practice locations', 'Share of their procedures', SAMPLE],
+      scope: ['Practice locations', 'Share of their procedures', DATA_PERIOD],
       summary: `${entity.name} does most of their work at ${first.name} (${rows[0].share}%, ${rows[0].days}).`,
       rows: rows.flatMap((a) => {
         const site = getOrg(a.orgId);
@@ -539,8 +543,8 @@ const BUILDERS: Record<Intent, (input: Input) => Built> = {
 
   near({ entity, ctx }) {
     const place = entity ? siteFor(entity) : null;
-    const origin = place ? place.coords : REP.start.coords;
-    const label = place ? place.name : `${REP.start.label} (your sample start point)`;
+    const origin = place ? place.coords : ctx.start.coords;
+    const label = place ? place.name : `${ctx.start.place} (your sample start point)`;
     const near = [...allHcps(), ...allOrgs()]
       .filter((e) => (e.kind === 'hcp' || e.type !== 'Health system') && e.id !== place?.id && e.id !== entity?.id)
       .map((e) => ({ e, km: haversineKm(origin, siteFor(e).coords) }))
@@ -550,7 +554,7 @@ const BUILDERS: Record<Intent, (input: Input) => Built> = {
     const top = near[0];
     if (!top) return empty(`Everyone near ${label} is already in today’s plan.`, entity?.id ?? null);
     return {
-      scope: [`Near ${place ? place.name : REP.start.label}`, 'Straight-line distance', 'Not yet planned today'],
+      scope: [`Near ${place ? place.name : ctx.start.place}`, 'Straight-line distance', 'Not yet planned today', SAMPLE],
       summary: within.length
         ? `${plural(within.length, 'unplanned target')} within 2 km of ${label}. Closest: ${top.e.name}, ${formatKm(top.km)}.`
         : `Nothing unplanned within 2 km of ${label}. The closest is ${top.e.name} at ${siteFor(top.e).name}, ${formatKm(top.km)} away.`,
@@ -566,7 +570,7 @@ const BUILDERS: Record<Intent, (input: Input) => Built> = {
     if (!picks.length) return empty('Everyone suggested is already planned for today.');
     const top = picks[0];
     return {
-      scope: ['Today', 'Follow-ups, leakage, volume and last contact'],
+      scope: ['Today', 'Follow-ups, figures and last contact', DATA_PERIOD],
       summary: `Start with ${top.entity.name}: ${reasons(top.signals) || 'the highest volume in your book'}.`,
       rows: picks.map(({ entity: e, signals }) => row(e, '', signals.slice(0, 2).map((s) => s.label).join(' · ') || detailOf(e))),
       doThis: { text: `${top.entity.name} is the strongest case for a visit.`, label: `Open ${top.entity.name}`, link: open(top.entity.id) },
@@ -579,7 +583,7 @@ const BUILDERS: Record<Intent, (input: Input) => Built> = {
     if (!entity) return BUILDERS.plan({ question: '', q, entity, ctx });
     const next = ctx.nextVisit(entity.id);
     return {
-      scope: [entity.name, 'Your plan'],
+      scope: [entity.name, 'Your plan', SAMPLE],
       summary: next ? `Next visit: ${visitWhen(next, entity, ctx.today)}${next.item.booking === 'requested' ? ', still requested' : ''}.` : `${entity.name} isn’t in your plan yet.`,
       rows: [],
       doThis: next ? null : { text: 'Request a time that suits them.', label: 'Book a time', link: { kind: 'book', id: entity.id } },
@@ -595,7 +599,7 @@ const BUILDERS: Record<Intent, (input: Input) => Built> = {
     const name = day === ctx.todayIso ? 'today' : 'tomorrow';
     if (!items.length) {
       return {
-        scope: [formatDate(day)],
+        scope: [formatDate(day), SAMPLE],
         summary: `Nothing is planned for ${name} yet.`,
         rows: [],
         doThis: { text: 'Pick who to see from Targets.', label: 'Open Targets', link: { kind: 'tab', tab: 'targets' } },
@@ -605,7 +609,7 @@ const BUILDERS: Record<Intent, (input: Input) => Built> = {
     const first = items.find((i) => i.status === 'planned') ?? items[0];
     const firstWho = getEntity(first.targetId);
     return {
-      scope: [formatDate(day), plural(items.length, 'stop')],
+      scope: [formatDate(day), plural(items.length, 'stop'), SAMPLE],
       summary: `${plural(items.length, 'stop')} ${name}. ${first.status === 'planned' ? 'Next' : 'First'}: ${firstWho?.name}${first.mode === 'timed' ? ` at ${first.time}` : ''}.`,
       rows: items.flatMap((i) => {
         const t = getEntity(i.targetId);
@@ -622,7 +626,7 @@ const BUILDERS: Record<Intent, (input: Input) => Built> = {
     if (!list.length) return empty(`Nobody in your book practices at ${org.name}.`, org.id);
     const top = list[0];
     return {
-      scope: [`At ${org.name}`, 'Procedures, last 12 months', SAMPLE],
+      scope: [`At ${org.name}`, 'Procedures', DATA_PERIOD],
       summary: procedureTotal(top) ? `${top.name} leads at ${org.name} with ${formatNumber(procedureTotal(top))} procedures in the last 12 months.` : `${list.length} people in your book work at ${org.name}.`,
       rows: list.slice(0, 6).map((h) => row(h, procedureTotal(h) ? formatNumber(procedureTotal(h)) : 'Referrer', h.specialty)),
       next: [`Brief me on ${top.name}`, `Where do patients at ${org.name} go?`],
@@ -635,7 +639,7 @@ const BUILDERS: Record<Intent, (input: Input) => Built> = {
     if (!entity) return BUILDERS.suggest({ question: '', q: '', entity, ctx });
     const brief = buildBrief(entity, ctx);
     return {
-      scope: [brief.visit ? visitWhen(brief.visit, entity, ctx.today) : 'No visit planned', SAMPLE],
+      scope: [brief.visit ? visitWhen(brief.visit, entity, ctx.today) : 'No visit planned', DATA_PERIOD],
       summary: `${brief.goalSuggested ? 'Suggested goal' : 'Goal'}: ${brief.goal}`,
       rows: brief.points.map((p) => ({ title: p.text, figure: '' })),
       doThis: brief.visit ? null : { text: 'Book a time to raise it.', label: 'Book a time', link: { kind: 'book', id: entity.id } },
@@ -661,13 +665,13 @@ const BUILDERS: Record<Intent, (input: Input) => Built> = {
         ? { title: 'Procedures · 12 months', figure: formatNumber(t.cur), sub: `${formatPct(t.growth)} on last year`, tone: t.growth >= 0 ? 'up' : 'down' }
         : { title: 'Procedures', figure: '—', sub: 'Not in your code group' },
       entity.kind === 'hcp'
-        ? { title: 'Referrals out of system', figure: String(outOfSystem(entity)), sub: 'Patients, last 12 months', tone: entity.leakageRisk ? 'warn' : undefined }
-        : { title: 'Patients leaving', figure: entity.leakage ? `${entity.leakage.leftPct}%` : '—', sub: entity.leakage ? `of ${formatNumber(entity.leakage.patients)} patients` : 'Not reported', tone: (entity.leakage?.leftPct ?? 0) >= 20 ? 'warn' : undefined },
+        ? { title: 'Sent outside the system', figure: String(referredOut(entity)), sub: 'Patients, last 12 months', tone: entity.leakageRisk ? 'warn' : undefined }
+        : { title: 'Patients leaving', figure: entity.leakage ? formatNumber(patientsLost(entity.leakage)) : '—', sub: entity.leakage ? `${entity.leakage.leftPct}% of ${formatNumber(entity.leakage.patients)} patients` : 'Not reported', tone: (entity.leakage?.leftPct ?? 0) >= 20 ? 'warn' : undefined },
     ];
     if (next) facts.unshift({ title: 'Next visit', figure: next.item.mode === 'timed' && next.item.time ? next.item.time : 'Any time', sub: `${relativeDay(next.day, ctx.today)} · ${next.item.goal || next.item.type}` });
     const insight = entity.kind === 'hcp' ? entity.insight : (entity.leakage?.insight ?? entity.leakageUnavailable ?? `${entity.name}: ${entity.typeDetail}.`);
     return {
-      scope: [detailOf(entity), SAMPLE],
+      scope: [detailOf(entity), DATA_PERIOD],
       summary: insight,
       rows: facts,
       facts: true,
@@ -688,7 +692,7 @@ const BUILDERS: Record<Intent, (input: Input) => Built> = {
       .map((r) => ({ title: r.title, sub: `Saved ${relativeDayLower(r.savedOn, ctx.today)}`, figure: '' }));
     const total = preps.length + reports.length;
     return {
-      scope: ['Saved', 'On this device'],
+      scope: ['Saved', 'On this device', SAMPLE],
       summary: total
         ? `You have ${[preps.length ? plural(preps.length, 'visit prep') : '', reports.length ? plural(reports.length, 'saved report') : ''].filter(Boolean).join(' and ')}${entity ? ` about ${entity.name}` : ''}.`
         : 'Nothing saved yet. Ask about a doctor and their visit prep is kept for you; say “save that” after any answer to keep it as a report.',
@@ -699,6 +703,92 @@ const BUILDERS: Record<Intent, (input: Input) => Built> = {
     };
   },
 
+  /**
+   * The last seven days, today included, as the report a rep sends their manager:
+   * visits done against those planned, what didn't go to plan, notes, follow-ups,
+   * accounts covered and who to see next week.
+   */
+  week({ ctx }) {
+    const from = isoDate(addDays(ctx.today, -6));
+    const inWeek = (day: string) => day >= from && day <= ctx.todayIso;
+    const dayName = (day: string) => formatDate(day, inWeek(day) ? { weekday: 'short' } : { weekday: 'short', day: 'numeric', month: 'short' });
+    // Visits planned in the week, and any moved out of it.
+    const visits = Object.entries(ctx.ws.plans)
+      .flatMap(([day, items]) => items.map((item) => ({ day, item, who: getEntity(item.targetId) })))
+      .filter((v): v is { day: string; item: PlanItem; who: Entity } => !!v.who && (inWeek(v.day) || (!!v.item.movedFrom && inWeek(v.item.movedFrom.day))))
+      .sort((a, b) => a.day.localeCompare(b.day) || (a.item.time ?? '').localeCompare(b.item.time ?? ''));
+    const name = (v: { who: Entity }) => shortName(v.who);
+    const done = visits.filter((v) => v.item.status === 'done');
+    const laterToday = visits.filter((v) => v.item.status === 'planned' && v.day === ctx.todayIso).length;
+    const changes = [
+      ...visits.filter((v) => v.item.status === 'cancelled').map((v) => `${name(v)} cancelled (${dayName(v.day)})`),
+      ...visits.flatMap(({ day, item, who }) => {
+        if (!item.movedFrom || item.status === 'cancelled') return [];
+        return [item.movedFrom.day === day ? `${shortName(who)} moved to ${item.time} (${dayName(day)})` : `${shortName(who)} moved from ${dayName(item.movedFrom.day)} to ${dayName(day)}`];
+      }),
+      ...visits.filter((v) => v.item.status === 'planned' && v.day < ctx.todayIso && inWeek(v.day)).map((v) => `${name(v)} not seen (${dayName(v.day)})`),
+    ];
+    const notes = ctx.ws.interactions.filter((i) => !i.deleted && i.author === 'You' && inWeek(i.date));
+    const noted = [...new Set(notes.map((i) => i.targetId))].flatMap((id) => getEntity(id) ?? []);
+    // Accounts visited in person, and accounts the rep wrote a note about.
+    const covered = [
+      ...new Set([...done.filter((v) => v.item.type === 'In-person visit' || v.item.type === 'Meeting').map((v) => v.item.siteId), ...noted.filter((e) => e.kind === 'hco').map((e) => e.id)]),
+    ].flatMap((id) => getOrg(id) ?? []);
+    const followUps = ctx.openFollowUps();
+    const late = followUps.filter((f) => f.overdueBy > 0);
+    const owedBy = (f: (typeof followUps)[number]) => {
+      const who = getEntity(f.targetId);
+      return `“${f.text}”${who ? ` for ${shortName(who)}` : ''}`;
+    };
+    // Worth seeing next week: the app's own reasons, leaving out anyone seen this week or already planned.
+    const nextMonday = isoDate(addDays(ctx.today, (8 - ctx.today.getDay()) % 7 || 7));
+    const seen = new Set(done.map((v) => v.who.id));
+    const picks = ctx
+      .suggestions(nextMonday, 50)
+      .map((s) => ({ entity: s.entity, why: s.signals.filter((g) => g.id !== 'followup') }))
+      .filter((s) => s.why.length && !seen.has(s.entity.id) && !ctx.nextVisit(s.entity.id))
+      .slice(0, 3);
+    const top = picks[0];
+
+    const rows: AnswerRow[] = [{ title: 'Visits done', figure: `${done.length} of ${visits.length}`, sub: done.length ? listJoin(done.map((v) => `${name(v)} (${dayName(v.day)})`)) : 'None logged yet' }];
+    if (changes.length) rows.push({ title: 'Cancelled, moved or not seen', figure: String(changes.length), sub: changes.join(' · '), tone: 'warn' });
+    rows.push(
+      { title: 'Notes logged', figure: String(notes.length), sub: noted.length ? listJoin(noted.map(shortName)) : 'None yet' },
+      {
+        title: 'Follow-ups open',
+        figure: late.length ? `${followUps.length}, ${late.length} late` : String(followUps.length),
+        sub: late.length
+          ? late.slice(0, 2).map((f) => `${owedBy(f)}, ${plural(f.overdueBy, 'day')} late`).join(' · ')
+          : followUps.length ? `Next: ${owedBy(followUps[0])}, due ${relativeDayLower(followUps[0].due, ctx.today)}` : 'All done',
+        tone: late.length ? 'warn' : undefined,
+      },
+      { title: 'Accounts covered', figure: String(covered.length), sub: covered.length ? listJoin(covered.map((o) => o.name)) : 'None yet' },
+    );
+    // Grouped by their strongest reason: "Dr. Raman and Mount Sinai Morningside: patients going elsewhere".
+    const byReason = new Map<string, string[]>();
+    for (const p of picks) {
+      const why = reasons(p.why.slice(0, 1));
+      byReason.set(why, [...(byReason.get(why) ?? []), shortName(p.entity)]);
+    }
+    if (picks.length) rows.push({ title: 'See next week', figure: '', sub: [...byReason].map(([why, names]) => `${listJoin(names)}: ${why}`).join(' · ') });
+
+    const dayMonth = { day: 'numeric', month: 'short' } as const;
+    const range = `${formatDate(from, from.slice(0, 7) === ctx.todayIso.slice(0, 7) ? { day: 'numeric' } : dayMonth)} to ${formatDate(ctx.today, dayMonth)}`;
+    const lateText = late.length ? `, ${plural(late.length, 'follow-up')} late` : '';
+    return {
+      title: `Your week to ${formatDate(ctx.today, dayMonth)}`,
+      scope: [range, 'Your plan and notes', SAMPLE],
+      summary: visits.length
+        ? `Your week: ${done.length} of ${plural(visits.length, 'planned visit')} done${laterToday ? `, ${laterToday} more today` : ''}. ${plural(notes.length, 'note')} logged${lateText}.`
+        : `Your week: no visits planned. ${plural(notes.length, 'note')} logged${lateText}.`,
+      rows,
+      facts: true,
+      doThis: top ? { text: `Next week, start with ${shortName(top.entity)}: ${reasons(top.why.slice(0, 2))}.`, label: `Open ${shortName(top.entity)}`, link: open(top.entity.id) } : null,
+      next: [...new Set(['What follow-ups are overdue?', top ? `Brief me on ${top.entity.name}` : 'Who should I see today?', 'Who should I see today?'])],
+      about: null,
+    };
+  },
+
   search({ question, q, ctx }) {
     const words = q.replace(/\b(show|find|me|the|a|an|for|of|in|at|who|what|is|are|my|please)\b/g, ' ').replace(/\s+/g, ' ').trim();
     const rows = words
@@ -706,7 +796,7 @@ const BUILDERS: Record<Intent, (input: Input) => Built> = {
       : [];
     if (rows.length) {
       return {
-        scope: ['Search', 'Your book'],
+        scope: ['Search', 'Your book', SAMPLE],
         summary: `I couldn’t answer that as a question, but ${plural(rows.length, 'target matches', 'targets match')} “${question.trim()}”.`,
         rows: rows.slice(0, 6).map((r) => row(r.entity, '', r.entity.kind === 'hcp' ? `${r.entity.specialty} · ${siteFor(r.entity).name}` : r.entity.typeDetail)),
         next: STARTERS[2].questions.slice(0, 3),

@@ -14,6 +14,7 @@ import { Icon } from '@/components/ui/icon';
 import { TabsContent } from '@/components/ui/tabs';
 import { Text } from '@/components/ui/text';
 import { diagnosesOf, proceduresOf } from '@/lib/data';
+import { DATA_PERIOD, FIGURES_END } from '@/lib/data/seed';
 import { addSeries } from '@/lib/data/series';
 import { formatNumber, lastQuarters, plural, sum, yoy } from '@/lib/format';
 import { useWorkspace } from '@/lib/store';
@@ -67,9 +68,8 @@ export function VolumesPanel({
 }
 
 function Volumes({ entity, mode }: { entity: Entity; mode: Exclude<VolumeMode, 'leakage'> }) {
-  const ctx = useWorkspace();
   const rows: (ProcedureRow | DiagnosisRow)[] | null = mode === 'procedures' ? proceduresOf(entity) : diagnosesOf(entity);
-  const labels = lastQuarters(ctx.today);
+  const labels = lastQuarters(FIGURES_END);
   const noun = mode === 'procedures' ? 'Procedures' : 'Patients';
 
   if (!rows) return <Unavailable title="Procedure volumes unavailable" body={entity.proceduresUnavailable ?? 'No procedure data in your code group.'} />;
@@ -95,7 +95,7 @@ function Volumes({ entity, mode }: { entity: Entity; mode: Exclude<VolumeMode, '
           </View>
         </View>
         <QuarterBars values={total} labels={labels} caption={`${noun} per quarter`} />
-        <FinePrint>{`Illustrative sample figures, not claims data.${mode === 'diagnoses' ? ' Patients are counted per quarter.' : ''}`}</FinePrint>
+        <FinePrint>{`${DATA_PERIOD}. Illustrative figures, not claims data.${mode === 'diagnoses' ? ' Patients are counted per quarter.' : ''}`}</FinePrint>
       </Section>
 
       <Section title={mode === 'procedures' ? 'By procedure family' : 'By diagnosis'} sub="Tap a row for the quarterly trend">

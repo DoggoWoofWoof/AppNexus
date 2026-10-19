@@ -28,8 +28,8 @@ The rule they add up to: **logging a visit must stay useful when the rep does th
 | Find a past visit by person, date or words | Transcripts only | Notes, in Activity | Notes, in Activity | One search over notes and transcripts, in Activity. |
 | Play back audio | Yes | No | No | Later, inside the visit record. |
 | Delete | Yes | Yes, with Undo | Not yet | Undo toast. No Trash tab. How long audio is kept is a backend policy. |
-| Draft survives closing the app | Partly | Yes | Yes | Keep. |
-| Offline queue with "saved" and "sent" | No | No | No | Needed before recording ships. |
+| Draft survives closing the app | Partly | Yes | In Log visit | Keep. |
+| Offline queue with "saved" and "sent" | No | No | Saved on the phone, nothing sent yet | Needed before recording ships. |
 | Several attendees in one record | Yes | Sample data only | Who was there, at an account | Later: who said what, and follow-ups per person. |
 
 ## How records are kept
@@ -74,6 +74,13 @@ On 19 October 2026 ten fictional reps reviewed the Expo app in `mobile/`, lookin
 | Danielle | Ask, Call, Directions and Listen sit under the big buttons on every page. |
 | Kwame, Nadia | An account lists the people to meet, with a call button each. Logging a meeting there asks who was there, and "Last time" names them. |
 | Omar, Nadia | The note box says to keep patient details out. Copied prep and reports end with when they were made and "For internal use". |
+| Ben, Omar | The plan, notes, follow-ups and Saved are kept on the phone and loaded on launch. A note closed half-written in the log sheet comes back for that person and visit. Toasts say "saved on this phone", and notes say "On this phone · not sent yet". |
+| Nadia | Figures say which months they cover: "Sample data, Oct 2025 to Sep 2026" on Ask answers, prep, saved reports, copied text, someone's page, Volumes and Insights. Answers about notes and the plan say "Sample data". |
+| Kwame | Insights and Ask rank accounts by patients lost, with the share next to it. An account's page shows patients leaving as a number and lists who sends patients out. |
+| Tomás, Gloria | "Leakage risk" is now "Patients going elsewhere" and "Rising volume" is "Busier than last year". Where patients go says "Same health system" and "Outside the system". On someone's page each tag has a line saying what it means. |
+| Jess | One "Edit" on Today shows arrows to move an "Any time" stop between the fixed visits, "Set a time" (offering their usual times that day) and "Remove". The arrows move a stop back, and the other two have Undo. On Targets, "Select" picks several people and one button adds them all, with one toast and Undo. |
+| Leila | A free slot is offered only to people on site that day and usually seeing people then. Everyone else's row says when they are, e.g. "Usually Tue/Thu 07:30–08:30". Each cancel keeps its own slot, so a second one doesn't hide the first, and Targets lists the others as "Also free". |
+| Ravi | A reminder at 17:30 on the phone says how many of today's visits are still not logged, and a tap opens Today, which flags them. 15 minutes before each visit with a fixed time, a heads-up says who and when, with the goal or what was promised; a tap opens their page. The reminders follow the plan, and the app asks once before sending any. |
 
 Some findings were wrong when checked against the code: "+ Add" and Save already show a toast with Undo, "Can't make it" only opens Targets when a slot is freed, and the menu is on Today, Targets and Ask.
 
@@ -81,19 +88,12 @@ Some findings were wrong when checked against the code: "+ Add" and Save already
 
 **Before reps rely on it**
 
-- Keep the plan, logs and saved items on the phone between launches. They are in memory today, so a reload loses them even though the toast said they were saved (Ben, Omar).
-- An offline queue that shows "Saved on this phone" and then "Sent", per record.
-- Keep a half-written note when the sheet is closed by mistake (Ben).
+- Send what's on the phone when there's signal, and mark each record "Sent". Until there's a server, notes say "On this phone · not sent yet" (Ben, Omar).
 - Speech to text on the phone. Listening only works in a browser for now, so on a phone the rep types (Danielle).
-- A reminder at the end of the day for visits still not logged. Today already flags them.
 
 **Planning and trust, on the sample data**
 
-- Reorder stops, give an "Any time" stop a time, and take one out of the plan. Add several people at once from Targets (Jess).
-- Offer a free slot only to people who are usually there then, and keep more than one free slot at a time (Leila).
-- Say which data and dates every figure comes from, and when it was refreshed (Nadia).
-- Rank Insights by patients lost, not only by percentage, and show who sends patients out on an account (Kwame).
-- Plain words for tags such as "Leakage risk" (Tomás, Gloria).
+- Dates and plain words on the full profile behind "All details" too: its Network figures still say "12 mo", and it still uses "Leakage", "In system" and "Out of system" (Nadia, Tomás).
 
 **With the backend**
 
@@ -102,6 +102,8 @@ Some findings were wrong when checked against the code: "+ Add" and Save already
 - Statements and follow-ups tied to the right person when several were in the room.
 - A shareable leave-behind (PDF) from the prep card.
 - A retention and deletion policy covering audio, transcripts and generated text.
+- Say where each figure comes from and when it was last refreshed, from the real data source (Nadia).
+- Referrals split by site, so "Who sends patients out" counts only what a doctor sent from that account.
 
 ## Scenarios to test with real reps
 

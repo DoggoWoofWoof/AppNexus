@@ -23,6 +23,9 @@ const TYPE_ICONS: Record<string, LucideIcon> = {
 
 const OUTCOME_TONES: Record<string, TagTone> = { Met: 'success', Attempted: 'warn' };
 
+/** Written on this phone. There's no server yet, so it hasn't gone anywhere else. */
+const LOCAL_LABEL = 'On this phone · not sent yet';
+
 /** The outcome in the log sheet's words, so a visit where they weren't in doesn't read as one that happened. */
 const outcomeLabel = (i: Interaction): string =>
   i.outcome === 'Attempted' ? (i.type === 'In-person visit' || i.type === 'Meeting' ? 'Not in' : 'No answer') : i.outcome;
@@ -41,7 +44,7 @@ export function FollowUpRow({ followUp: f, showTarget = false }: { followUp: Fol
         <Text className={cn(f.done && 'text-muted-foreground line-through')}>{f.text}</Text>
         <View className="flex-row flex-wrap items-center gap-2">
           <Tag label={due} tone={tone} />
-          {f.local ? <Tag label="Not synced" /> : null}
+          {f.local ? <Tag label={LOCAL_LABEL} /> : null}
           {target ? <Text className="text-sm text-muted-foreground">{target.name}</Text> : null}
         </View>
       </View>
@@ -75,7 +78,7 @@ export function InteractionItem({ interaction: i, about }: { interaction: Intera
         </Text>
         <View className="flex-row flex-wrap gap-1">
           <Tag label={outcomeLabel(i)} tone={OUTCOME_TONES[i.outcome] ?? 'neutral'} />
-          {i.local ? <Tag label="Not synced" /> : null}
+          {i.local ? <Tag label={LOCAL_LABEL} /> : null}
         </View>
         {i.note ? <Text selectable>{i.note}</Text> : <Text className="text-muted-foreground">No note written.</Text>}
         {met.length ? <Text className="text-sm text-muted-foreground">With {met.join(', ')}</Text> : null}

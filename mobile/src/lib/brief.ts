@@ -2,7 +2,8 @@
 // profile and can be shared as text. Talking points are fixed rules over the
 // sample data, not AI. Ported from demo/js/brief.js.
 
-import { destination, getEntity, openFollowUps, procedureTotal, procedureYoy, proceduresOf, siteFor } from './data';
+import { destination, getEntity, openFollowUps, patientsLost, procedureTotal, procedureYoy, proceduresOf, referredOut, siteFor } from './data';
+import { DATA_PERIOD } from './data/seed';
 import { daysBetween, firstSentence, formatDate, formatNumber, fromIso, plural, relativeDay, relativeDayLower, sum, yoy } from './format';
 import { endTime, isOnSite } from './plan';
 import type { Entity, FollowUp, PlanItem } from './types';
@@ -62,19 +63,19 @@ export function briefFigures(entity: Entity, ctx: Context): Figure[] {
   let leak: Figure;
   if (entity.kind === 'hcp') {
     const out = entity.referrals.outbound;
-    const leaving = sum(out.filter((r) => r.ref).map((r) => r.count));
+    const leaving = referredOut(entity);
     leak = {
-      label: 'Referred out of system',
+      label: 'Sent outside the system',
       value: formatNumber(leaving),
-      sub: out.length ? `of ${formatNumber(sum(out.map((r) => r.count)))} referred out` : 'No referrals out',
+      sub: out.length ? `of ${formatNumber(sum(out.map((r) => r.count)))} they referred on` : 'No referrals out',
       tone: leaving ? 'orange' : undefined,
     };
   } else {
     leak = entity.leakage
       ? {
           label: 'Patients leaving',
-          value: `${entity.leakage.leftPct}%`,
-          sub: `of ${formatNumber(entity.leakage.patients)} patients`,
+          value: formatNumber(patientsLost(entity.leakage)),
+          sub: `${entity.leakage.leftPct}% of ${formatNumber(entity.leakage.patients)}`,
           tone: entity.leakage.leftPct >= 20 ? 'orange' : undefined,
         }
       : { label: 'Patients leaving', value: '—', sub: 'Not reported here' };
@@ -168,6 +169,6 @@ export function briefText(entity: Entity, brief: Brief, today: Date): string {
   lines.push('', `Goal: ${brief.goal}${brief.goalDue ? ` (follow-up ${brief.goalDue})` : ''}`, `Why now: ${brief.insight}`);
   if (brief.points.length) lines.push('', 'Talking points:', ...brief.points.map((p) => `- ${p.text}`));
   lines.push('', brief.figures.map((f) => `${f.label}: ${f.value}${f.delta != null ? ` (${f.delta >= 0 ? '+' : ''}${Math.round(f.delta)}% YoY)` : ''}`).join(' · '));
-  lines.push('', 'Sample data.');
+  lines.push('', `${DATA_PERIOD}.`);
   return lines.join('\n');
 }

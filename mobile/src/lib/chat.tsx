@@ -7,7 +7,7 @@
 
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 
-import { answer, type Answer } from './ask';
+import { answer, SAMPLE, type Answer } from './ask';
 import { getEntity } from './data';
 import { firstSentence, uid } from './format';
 import { reportFrom, type Asked } from './saved';
@@ -130,7 +130,7 @@ function savedReply(summary: string, id?: string): Answer {
     intent: 'saved',
     about: null,
     subject: null,
-    scope: ['Saved', 'On this device'],
+    scope: ['Saved', 'On this device', SAMPLE],
     summary,
     rows: [],
     doThis: id ? { text: 'Read it, listen to it or share it.', label: 'Open it', link: { kind: 'saved', id } } : null,

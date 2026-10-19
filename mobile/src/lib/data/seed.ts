@@ -1,18 +1,41 @@
 // The sample rep's starting workspace, expressed relative to "today" so the demo always looks current.
 
 import { addDays, isoDate } from '../format';
-import type { FollowUp, Interaction, LonLat, PlanItem } from '../types';
+import type { FollowUp, Interaction, PlanItem, StartPoint } from '../types';
+
+// The sample volumes, referrals and leakage are a fixed snapshot: the twelve
+// months to the end of September 2026, plus the twelve before for comparison.
+// Notes, follow-ups and the plan move with today instead. Every figure says so.
+export const DATA_PERIOD = 'Sample data, Oct 2025 to Sep 2026';
+/** The day after the figures end, so charts label the same quarters as DATA_PERIOD. */
+export const FIGURES_END = new Date(2026, 9, 1);
 
 export const REP = {
   name: 'Taylor Brooks',
   firstName: 'Taylor',
   team: 'Cardiovascular · Manhattan North',
-  // Planning distances are straight-line from this sample start point; no live location is used.
-  start: { label: 'Columbus Circle', coords: [-73.9819, 40.7681] as LonLat },
 };
+
+/**
+ * Sample places the day can start from, chosen on the You page (the office until
+ * then). Planning distances are straight-line from the chosen one; no live location is used.
+ */
+export const START_POINTS: StartPoint[] = [
+  { id: 'home', title: 'Home', place: 'West 96th Street', coords: [-73.9724, 40.7939] },
+  { id: 'office', title: 'Office', place: 'Columbus Circle', coords: [-73.9819, 40.7681] },
+];
 
 export function seedWorkspace(today: Date) {
   const day = (offset: number) => isoDate(addDays(today, offset));
+  // The nth working day before today, so the sample week always has visits behind it.
+  const workday = (n: number) => {
+    let d = today;
+    for (let i = 0; i < n; ) {
+      d = addDays(d, -1);
+      if (d.getDay() !== 0 && d.getDay() !== 6) i++;
+    }
+    return isoDate(d);
+  };
 
   const interactions: Interaction[] = [
     { id: 'i-maya-1', targetId: 'maya', attendees: ['maya'], date: day(-12), type: 'In-person visit', outcome: 'Met', author: 'You', note: 'Reviewed her last quarter of PCI cases. She wants procedure mix against peer centres before the next cath lab meeting. Prefers a printed one-pager.' },
@@ -25,6 +48,8 @@ export function seedWorkspace(today: Date) {
     { id: 'i-msh-1', targetId: 'msh', attendees: ['sam', 'okafor'], date: day(-20), type: 'Meeting', outcome: 'Met', author: 'You', note: 'Joined the structural heart team meeting. Volume planning for next year includes a second hybrid OR.' },
     { id: 'i-priya-1', targetId: 'priya', attendees: ['priya'], date: day(-95), type: 'In-person visit', outcome: 'Attempted', author: 'You', note: 'Clinic was running late. Left materials with the front desk.' },
     { id: 'i-kenji-1', targetId: 'kenji', attendees: ['kenji'], date: day(-33), type: 'Phone call', outcome: 'Met', author: 'You', note: 'Discussed heart failure referral patterns to EP and device follow-up.' },
+    { id: 'i-okafor-2', targetId: 'okafor', attendees: ['okafor'], date: workday(2), type: 'In-person visit', outcome: 'Met', author: 'You', note: 'Brought the TAVR sizing data Jamie promised. He wants the heart team to see it before they choose.' },
+    { id: 'i-msh-2', targetId: 'msh', attendees: [], date: workday(1), type: 'Meeting', outcome: 'Met', author: 'You', note: 'The second hybrid OR opens in spring. They asked for a training plan for the new team.' },
   ];
 
   const followUps: FollowUp[] = [
@@ -42,6 +67,16 @@ export function seedWorkspace(today: Date) {
       { id: 'v-jordan', targetId: 'jordan', siteId: 'msm', mode: 'timed', time: '14:00', duration: 30, type: 'In-person visit', goal: 'Confirm a date for the fellows lunch-and-learn.', status: 'planned', booking: 'requested', via: 'Email' },
       { id: 'v-alex', targetId: 'alex', siteId: 'msw', mode: 'flexible', time: null, duration: 15, type: 'Phone call', goal: 'Ask about ablation referrals leaving the system.', status: 'planned' },
     ],
+    // Earlier this week: one visit logged after it moved a day, one meeting logged,
+    // one cancelled and one never logged, for "Summarise my week".
+    [workday(1)]: [
+      { id: 'v-rossi-past', targetId: 'elena', siteId: 'msm', mode: 'timed', time: '09:00', duration: 30, type: 'In-person visit', goal: 'Introduce yourself and the vascular range.', status: 'cancelled', booking: 'confirmed', via: 'Office', cancelReason: 'Can’t make it' },
+      { id: 'v-msh-past', targetId: 'msh', siteId: 'msh', mode: 'timed', time: '11:00', duration: 45, type: 'Meeting', goal: 'Hear the volume plan for next year.', status: 'done', booking: 'confirmed', via: 'Office' },
+    ],
+    [workday(2)]: [
+      { id: 'v-okafor-past', targetId: 'okafor', siteId: 'msh', mode: 'timed', time: '15:30', duration: 30, type: 'In-person visit', goal: 'Bring the TAVR sizing data.', status: 'done', booking: 'confirmed', via: 'Anne Wu, executive assistant', movedFrom: { day: workday(3), time: '15:30' } },
+    ],
+    [workday(3)]: [{ id: 'v-raman-past', targetId: 'priya', siteId: 'harlem', mode: 'flexible', time: null, duration: 30, type: 'In-person visit', goal: 'Try again after the missed visit.', status: 'planned' }],
   };
 
   return { interactions, followUps, plans };

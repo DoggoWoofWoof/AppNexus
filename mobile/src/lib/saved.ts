@@ -3,9 +3,10 @@
 // the plan and the rep's questions, so it is never out of date. A report is a
 // snapshot of one answer, so it keeps the figures as they were when saved.
 
-import type { Answer, Intent } from './ask';
+import { SAMPLE, type Answer, type Intent } from './ask';
 import { buildBrief, visitWhen } from './brief';
 import { getEntity, shortName } from './data';
+import { DATA_PERIOD } from './data/seed';
 import { daysBetween, formatDate, fromIso, fromMinutes, isoDate, plural, relativeDayLower, uid } from './format';
 import type { Entity, SavedReport } from './types';
 import type { Context } from './workspace';
@@ -81,7 +82,7 @@ export function buildPrep(entity: Entity, ctx: Context, asked: Asked[] = []): Do
     when: brief.visit ? visitWhen(brief.visit, entity, ctx.today) : 'No visit planned yet',
     summary: `${brief.goalSuggested ? 'Suggested goal' : 'Goal'}: ${brief.goal}${brief.goalDue ? ` (${brief.goalDue})` : ''}`,
     sections,
-    scope: asked.length ? ['Sample data', `${plural(asked.length, 'question')} you asked`] : ['Sample data'],
+    scope: asked.length ? [DATA_PERIOD, `${plural(asked.length, 'question')} you asked`] : [DATA_PERIOD],
   };
 }
 
@@ -106,10 +107,10 @@ const TITLES: Partial<Record<Intent, string>> = {
   brief: 'Brief',
 };
 
-/** A name for a saved answer, such as "Where patients go · Mount Sinai West". */
+/** A name for a saved answer, such as "Where patients go · Mount Sinai West" or "Your week to 19 Oct". */
 export function reportTitle(question: string, a: Answer): string {
   const subject = a.subject ? getEntity(a.subject) : null;
-  const base = TITLES[a.intent] ?? question.replace(/[?.!\s]+$/, '');
+  const base = a.title ?? TITLES[a.intent] ?? question.replace(/[?.!\s]+$/, '');
   return subject ? `${base} · ${shortName(subject)}` : base;
 }
 
@@ -153,8 +154,9 @@ export function docSpeech(doc: Doc): string {
 
 /**
  * The item as plain text, for sharing in an email or a CRM note. It ends with
- * when it was made, since prep is rebuilt each time and figures move, and a
- * reminder that it's for internal use.
+ * what it's built from (with the months the figures cover), when it was made,
+ * since prep is rebuilt each time and figures move, and a reminder that it's
+ * for internal use.
  */
 export function docText(doc: Doc, now = new Date()): string {
   const out = [doc.title, doc.when, ''];
@@ -163,7 +165,7 @@ export function docText(doc: Doc, now = new Date()): string {
   for (const s of doc.sections) {
     out.push('', `${s.title}:`, ...s.lines.map((l) => `- ${l.label ? `${l.label}: ` : ''}${[l.text, l.figure ? `(${l.figure})` : ''].filter(Boolean).join(' ')}${l.sub ? ` — ${l.sub}` : ''}`));
   }
-  out.push('', [...doc.scope, 'Sample data'].filter((v, i, all) => all.indexOf(v) === i).join(' · '));
+  out.push('', (doc.scope.some((s) => s.startsWith(SAMPLE)) ? doc.scope : [...doc.scope, DATA_PERIOD]).join(' · '));
   const made = `${formatDate(now, { day: 'numeric', month: 'short', year: 'numeric' })}, ${fromMinutes(now.getHours() * 60 + now.getMinutes())}`;
   out.push(`From Field Pro, ${made}. For internal use: check it before it goes outside the company.`);
   return out.join('\n');

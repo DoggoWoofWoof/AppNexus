@@ -36,6 +36,7 @@ import { Text } from '@/components/ui/text';
 import { useVisitSheets } from '@/components/visit-sheets';
 import { buildBrief } from '@/lib/brief';
 import { childrenOf, descendantsOf, destination, getOrg, hcpsAt, parentOf, primaryAffiliation, procedureTotal, systemOf } from '@/lib/data';
+import { DATA_PERIOD } from '@/lib/data/seed';
 import { formatNumber, plural } from '@/lib/format';
 import { useWorkspace } from '@/lib/store';
 import type { Org } from '@/lib/types';
@@ -178,7 +179,7 @@ function Leakage({ org }: { org: Org }) {
 
   return (
     <>
-      <Section title="Leakage summary" sub={`${l.scope} · last 12 months · sample`}>
+      <Section title="Leakage summary" sub={`${l.scope} · ${DATA_PERIOD}`}>
         <Text>
           <Text className="font-serif text-num">{formatNumber(l.patients)}</Text>
           <Text className="text-muted-foreground"> patients</Text>

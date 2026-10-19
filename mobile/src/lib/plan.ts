@@ -15,13 +15,25 @@ export const activeItems = (items: PlanItem[] = []): PlanItem[] => items.filter(
 const startOf = (item: PlanItem): number => toMinutes(item.time ?? '00:00');
 
 /**
- * Route order: timed stops by start time, then flexible stops in the order
- * the rep arranged them.
+ * Route order: timed stops by start time. A flexible ("Any time") stop stays
+ * after the latest timed stop the rep put before it, or at the start of the
+ * day, so it can sit between fixed appointments. A plan already in route
+ * order comes back as it is.
  */
 export function routeOrder(items: PlanItem[] = []): PlanItem[] {
-  const timed = items.filter((i) => i.mode === 'timed').sort((a, b) => startOf(a) - startOf(b));
-  const flexible = items.filter((i) => i.mode !== 'timed');
-  return [...timed, ...flexible];
+  const lead: PlanItem[] = [];
+  const timed: PlanItem[] = [];
+  const after = new Map<string, PlanItem[]>();
+  let anchor: PlanItem | null = null;
+  for (const item of items) {
+    if (item.mode === 'timed') {
+      timed.push(item);
+      after.set(item.id, []);
+      if (!anchor || startOf(item) >= startOf(anchor)) anchor = item;
+    } else (anchor ? after.get(anchor.id)! : lead).push(item);
+  }
+  timed.sort((a, b) => startOf(a) - startOf(b));
+  return [...lead, ...timed.flatMap((t) => [t, ...after.get(t.id)!])];
 }
 
 /** Pairs of timed items whose time windows overlap, as [earlier, later]. */
@@ -62,14 +74,28 @@ export function addTargets(items: PlanItem[], targets: Target[], siteFor: (t: Ta
   return [...items, ...additions];
 }
 
-/** Moves a flexible item up or down within the flexible group. */
-export function moveFlexible(items: PlanItem[], id: string, direction: -1 | 1): PlanItem[] {
-  const flexible = items.filter((i) => i.mode !== 'timed');
-  const index = flexible.findIndex((i) => i.id === id);
-  const target = index + direction;
-  if (index < 0 || target < 0 || target >= flexible.length) return items;
-  [flexible[index], flexible[target]] = [flexible[target], flexible[index]];
-  return [...items.filter((i) => i.mode === 'timed'), ...flexible];
+/**
+ * Moves a flexible stop one place earlier or later in the route, past a timed
+ * stop if that's what is next to it. Timed stops stay put: their time sets
+ * their place. Cancelled visits go to the end, as the day shows them.
+ */
+export function moveStop(items: PlanItem[], id: string, direction: -1 | 1): PlanItem[] {
+  const route = routeOrder(activeItems(items));
+  const index = route.findIndex((i) => i.id === id);
+  const to = index + direction;
+  if (index < 0 || route[index].mode === 'timed' || to < 0 || to >= route.length) return items;
+  [route[index], route[to]] = [route[to], route[index]];
+  return [...route, ...items.filter((i) => i.status === 'cancelled')];
+}
+
+/**
+ * Gives a flexible stop a start time. It goes to the end of the list, where it
+ * can't pick up the flexible stops after it, and routeOrder puts it at its time.
+ */
+export function timeStop(items: PlanItem[], id: string, time: string): PlanItem[] {
+  const item = items.find((i) => i.id === id);
+  if (!item) return items;
+  return [...items.filter((i) => i.id !== id), { ...item, mode: 'timed', time }];
 }
 
 /**

@@ -131,10 +131,12 @@ export interface PlanItem {
   /** Who the time was booked through, such as a scheduler or "Email". */
   via?: string;
   cancelReason?: string;
+  /** When it was first planned for, if it has since been moved to another time. */
+  movedFrom?: { day: string; time: string | null };
 }
 
-/** A timed visit that was cancelled, while its slot is offered to someone nearby. */
-export interface Replacement {
+/** The time a cancelled visit left free, while it's offered to someone nearby. */
+export interface FreeSlot {
   day: string;
   time: string;
   duration: number;
@@ -176,8 +178,29 @@ export interface Workspace {
   followUps: FollowUp[];
   /** Plan items by ISO day. */
   plans: Record<string, PlanItem[]>;
-  selection: { day: string; ids: string[] };
-  replacement: Replacement | null;
+  /** The day Today and Targets show, and the free slot (by the cancelled visit's id) Targets is filling. */
+  selection: { day: string; ids: string[]; slot?: string };
+  /** Times freed by cancelled visits, soonest first, until each is filled or left free. */
+  freeSlots: FreeSlot[];
   /** Reports kept from Ask, newest first. */
   saved: SavedReport[];
+  /** The rep's own choices on the You page. */
+  prefs: Prefs;
+}
+
+/** A sample place the day starts from. */
+export interface StartPoint {
+  id: string;
+  title: string;
+  place: string;
+  coords: LonLat;
+}
+
+/** How the app looks: like the phone, or always light or dark. */
+export type Appearance = 'system' | 'light' | 'dark';
+
+export interface Prefs {
+  /** Which of the sample START_POINTS the day starts from. */
+  start: string;
+  appearance: Appearance;
 }

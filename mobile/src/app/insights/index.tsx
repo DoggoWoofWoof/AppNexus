@@ -1,4 +1,5 @@
-// Insights: a territory snapshot. Where patients leave and who is growing.
+// Insights: a territory snapshot. Where patients leave (most patients first,
+// not the highest share) and who is growing.
 
 import { View } from 'react-native';
 
@@ -6,8 +7,8 @@ import { EntityRow } from '@/components/entity';
 import { TabHeader } from '@/components/menu';
 import { Screen, Section } from '@/components/screen';
 import { Text } from '@/components/ui/text';
-import { allHcps, allOrgs, destination, getOrg, procedureTotal, procedureYoy } from '@/lib/data';
-import { REP } from '@/lib/data/seed';
+import { accountsByPatientsLost, allHcps, destination, getOrg, procedureTotal, procedureYoy } from '@/lib/data';
+import { DATA_PERIOD, REP } from '@/lib/data/seed';
 import { formatNumber, formatPct } from '@/lib/format';
 import type { Hcp } from '@/lib/types';
 import { cn } from '@/lib/utils';
@@ -15,9 +16,6 @@ import { cn } from '@/lib/utils';
 export default function Insights() {
   const system = getOrg('msh-system');
   const leakage = system?.leakage;
-  const leaking = allOrgs()
-    .filter((o) => o.leakage && o.id !== system?.id)
-    .sort((a, b) => (b.leakage?.leftPct ?? 0) - (a.leakage?.leftPct ?? 0));
   const rising = allHcps()
     .map((h) => ({ h, growth: procedureYoy(h) }))
     .filter((r): r is { h: Hcp; growth: number } => r.growth != null)
@@ -27,7 +25,7 @@ export default function Insights() {
 
   return (
     <Screen inset>
-      <TabHeader title="Insights" sub={`${REP.team} · last 12 months`} />
+      <TabHeader title="Insights" sub={`${REP.team} · ${DATA_PERIOD}`} />
 
       <View className="flex-row flex-wrap gap-3">
         <Kpi
@@ -38,13 +36,18 @@ export default function Insights() {
         <Kpi label="Patients leaving the system" value={leakage ? `${leakage.leftPct}%` : '–'} sub={leakage ? `of ${formatNumber(leakage.patients)} patients` : undefined} tone="text-signal-text" />
       </View>
 
-      <Section title="Where patients leave" sub="Share of cardiovascular patients who left the system">
-        {leaking.map((o) => (
+      <Section title="Where patients leave" sub="Patients who went outside the system, most first">
+        {accountsByPatientsLost().map(({ org, leakage: l, lost }) => (
           <EntityRow
-            key={o.id}
-            entity={o}
-            detail={`${formatNumber(o.leakage!.patients)} patients · biggest gap ${o.leakage!.byFamily[0]?.family ?? '–'}`}
-            trailing={<Text className="font-mono text-sm text-signal-text">{o.leakage!.leftPct}%</Text>}
+            key={org.id}
+            entity={org}
+            detail={`of ${formatNumber(l.patients)} patients · worst for ${l.byFamily[0]?.family ?? '–'}`}
+            trailing={
+              <View className="items-end">
+                <Text className="font-mono text-sm text-signal-text">{formatNumber(lost)}</Text>
+                <Text className="font-mono text-2xs text-muted-foreground">{`${l.leftPct}%`}</Text>
+              </View>
+            }
           />
         ))}
       </Section>

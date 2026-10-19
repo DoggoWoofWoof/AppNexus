@@ -40,7 +40,8 @@ export default function Ask() {
       empty={
         <View className="gap-3">
           <Text className="text-lg text-muted-foreground">Your day, your doctors, your numbers. Ask me.</Text>
-          <QuestionChips questions={startersFor(ctx).flatMap((g) => g.questions).slice(0, 4)} onPick={ask} />
+          {/* One question for each moment: today, before a visit, the territory and the end of the week. */}
+          <QuestionChips questions={startersFor(ctx).map((g) => g.questions[0])} onPick={ask} />
         </View>
       }
     />

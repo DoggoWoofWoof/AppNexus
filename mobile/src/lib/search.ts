@@ -4,8 +4,8 @@ import type { Entity, PlanItem, Signal, SignalId } from './types';
 
 export const SIGNAL_FILTERS: { id: SignalId; label: string }[] = [
   { id: 'followup', label: 'Follow-up due' },
-  { id: 'leakage', label: 'Leakage risk' },
-  { id: 'rising', label: 'Rising volume' },
+  { id: 'leakage', label: 'Patients going elsewhere' },
+  { id: 'rising', label: 'Busier than last year' },
   { id: 'unseen', label: 'Not seen 30+ days' },
 ];
 

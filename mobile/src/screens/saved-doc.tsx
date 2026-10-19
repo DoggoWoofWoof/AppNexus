@@ -56,8 +56,10 @@ export default function SavedDoc() {
         <ShareButton doc={doc} className="flex-1 rounded-xl" />
       </View>
 
-      <View className="rounded-xl bg-brand-soft p-4">
+      <View className="gap-2 rounded-xl bg-brand-soft p-4">
         <Text className="text-base font-semibold leading-6">{doc.summary}</Text>
+        {/* What it's built from and which months the figures cover, so they can be quoted. */}
+        <Text className="text-sm text-muted-foreground">{doc.scope.join(' · ')}</Text>
       </View>
 
       <DocSections doc={doc} onOpen={open} />
@@ -81,7 +83,7 @@ export default function SavedDoc() {
           <Text className="text-danger">Remove</Text>
         </Button>
       ) : null}
-      <FinePrint>{doc.kind === 'prep' ? 'Built from sample data and what you asked in Ask. It updates as you go.' : `${doc.scope.join(' · ')}. Figures as they were when you saved it.`}</FinePrint>
+      <FinePrint>{doc.kind === 'prep' ? 'Built from the data and what you asked in Ask. It updates as you go.' : 'Figures as they were when you saved it.'}</FinePrint>
     </ScrollView>
   );
 }

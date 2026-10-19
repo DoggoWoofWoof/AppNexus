@@ -5,6 +5,7 @@ import { describe, expect, test } from '@jest/globals';
 
 import { briefText, buildBrief, visitWhen } from '@/lib/brief';
 import { allEntities, getEntity, getOrg } from '@/lib/data';
+import { DATA_PERIOD } from '@/lib/data/seed';
 import { addDays, isoDate, startOfDay } from '@/lib/format';
 import type { Entity } from '@/lib/types';
 import { buildContext, freshWorkspace } from '@/lib/workspace';
@@ -37,7 +38,7 @@ describe('buildBrief', () => {
     expect(visitWhen(maya.visit!, entity('maya'), today)).toMatch(/^Today, .* · 10:00–10:30 · /);
     expect(maya.points[0]).toEqual({ kind: 'promise', text: 'You promised: Send procedure mix vs. peers report (due today).' });
     expect(maya.points.length).toBeLessThanOrEqual(3);
-    expect(maya.figures.map((f) => f.label)).toEqual(['Procedures · 12 mo', 'Referred out of system', 'Last contact']);
+    expect(maya.figures.map((f) => f.label)).toEqual(['Procedures · 12 mo', 'Sent outside the system', 'Last contact']);
   });
 
   test('a planned call says when, but not where', () => {
@@ -88,7 +89,7 @@ describe('buildBrief', () => {
       expect(brief.points.length).toBeLessThanOrEqual(3);
       const text = briefText(e, brief, today);
       expect(text).toMatch(/^Visit brief: /);
-      expect(text).toMatch(/Sample data\.$/);
+      expect(text.endsWith(`\n${DATA_PERIOD}.`)).toBe(true);
       expect(text).not.toMatch(/undefined|NaN|null/);
     }
   });

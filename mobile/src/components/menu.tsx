@@ -1,9 +1,9 @@
 // The menu behind the ☰ button on each main screen: the detail most reps only
-// need now and then (Saved, Activity, Insights), kept out of the tab bar so the
-// main screens stay down to one or two big buttons.
+// need now and then (Saved, Activity, Insights, You), kept out of the tab bar so
+// the main screens stay down to one or two big buttons.
 
 import { router, type Href } from 'expo-router';
-import { Bookmark, ChartColumn, ChevronRight, ListChecks, Menu as MenuIcon, type LucideIcon } from 'lucide-react-native';
+import { Bookmark, ChartColumn, ChevronRight, CircleUserRound, ListChecks, Menu as MenuIcon, type LucideIcon } from 'lucide-react-native';
 import { useState, type ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -70,6 +70,7 @@ function MenuSheet({ due, onClose }: { due: number; onClose: () => void }) {
       <MenuRow icon={Bookmark} title="Saved" sub={saved ? `${plural(saved, 'item')} · visit prep and reports` : 'Visit prep and reports'} onPress={() => go('/saved')} />
       <MenuRow icon={ListChecks} title="Activity" sub={due ? `${plural(due, 'follow-up')} due · your notes` : 'Your notes and follow-ups'} onPress={() => go('/activity')} alert={due > 0} />
       <MenuRow icon={ChartColumn} title="Insights" sub="Your territory at a glance" onPress={() => go('/insights')} />
+      <MenuRow icon={CircleUserRound} title="You" sub="Sample profile, start point, light or dark" onPress={() => go('/you')} />
       <Text className="mt-2 border-t border-border px-2 pt-4 text-xs text-muted-foreground">Sample data for a made-up territory. Nothing is sent anywhere yet.</Text>
     </DialogContent>
   );

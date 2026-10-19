@@ -1,14 +1,15 @@
 // The rep's workspace: plans, notes and follow-ups, and the questions screens
-// ask of it. For now it is the sample, seeded relative to today and held in
-// memory; on-device storage and sync come with the real services.
+// ask of it. For now it is the sample, seeded relative to today and kept on the
+// phone (lib/persist.ts); sync comes with the real services.
 
-import { bookingRoute, clashesWith, siteOnDay, suggestSlots, type Slot } from './booking';
+import { availability, bookingRoute, clashesWith, siteOnDay, suggestSlots, type Availability, type Slot } from './booking';
 import { allEntities, getEntity, getOrg, lastInteraction, priorityOf, signalsFor, siteFor } from './data';
-import { REP, seedWorkspace } from './data/seed';
+import { seedWorkspace } from './data/seed';
 import { addDays, daysBetween, formatDate, fromIso, haversineKm, isoDate, toMinutes, uid } from './format';
-import { activeItems, addTargets, routeOrder, suggestOrder } from './plan';
+import { activeItems, addTargets, moveStop, routeOrder, suggestOrder, timeStop } from './plan';
+import { DEFAULT_PREFS, startPoint } from './prefs';
 import { searchTargets, type Filters, type SearchContext } from './search';
-import type { Entity, FollowUp, Interaction, PlanItem, SavedReport, Signal, VisitType, Workspace } from './types';
+import type { Entity, FollowUp, FreeSlot, Interaction, PlanItem, SavedReport, Signal, VisitType, Workspace } from './types';
 
 /** Same version as the prototype's saved workspace, so the shapes stay in step. */
 export const WORKSPACE_VERSION = 2;
@@ -21,8 +22,9 @@ export function freshWorkspace(today: Date): Workspace {
     pristine: true,
     ...seedWorkspace(today),
     selection: { day: isoDate(today), ids: [] },
-    replacement: null,
+    freeSlots: [],
     saved: [],
+    prefs: DEFAULT_PREFS,
   };
 }
 
@@ -49,13 +51,17 @@ export function buildContext(ws: Workspace, today: Date) {
   const planItemFor = (id: string, day: string): PlanItem | null =>
     activeItems(ws.plans[day]).find((i) => i.targetId === id) ?? null;
 
-  // While a cancelled slot is being filled, distances are from that visit's site
-  // and the person who cancelled isn't offered back.
-  const origin = (ws.replacement && getOrg(ws.replacement.siteId)?.coords) || REP.start.coords;
-  const pool = ws.replacement ? entities.filter((e) => e.id !== ws.replacement?.targetId) : entities;
+  // While a free slot is being filled, distances are from that visit's site to
+  // where each person works that day, and the person who cancelled isn't offered back.
+  const filling = fillingSlot(ws);
+  const fillDay = filling ? fromIso(filling.day).getDay() : 0;
+  const start = startPoint(ws);
+  const origin = (filling && getOrg(filling.siteId)?.coords) || start.coords;
+  const where = (e: Entity) => (filling ? siteFor(e, siteOnDay(e, fillDay) ?? undefined) : siteFor(e));
+  const pool = filling ? entities.filter((e) => e.id !== filling.targetId) : entities;
   const searchContext: SearchContext = {
     signals,
-    distance: (e) => haversineKm(origin, siteFor(e).coords),
+    distance: (e) => haversineKm(origin, where(e).coords),
     planned: (e) => planItemFor(e.id, ws.selection.day),
     priority: (e) => priorityOf(e, ws, today),
     haystack,
@@ -71,6 +77,8 @@ export function buildContext(ws: Workspace, today: Date) {
     ws,
     today,
     todayIso,
+    /** Where the day starts, chosen on the You page: Today's map, distances, Pick 5 and Ask's "Who is near" start here. */
+    start,
     signals,
     planItemFor,
     planDays: () => [
@@ -98,6 +106,12 @@ export function buildContext(ws: Workspace, today: Date) {
     followUpsFor: (id: string): FollowUp[] =>
       ws.followUps.filter((f) => f.targetId === id).sort((a, b) => a.due.localeCompare(b.due)),
     search: (f: Filters) => searchTargets(pool, f, searchContext),
+    /** Times freed by cancelled visits on a day, soonest first. */
+    freeSlotsOn: (day: string): FreeSlot[] => ws.freeSlots.filter((s) => s.day === day),
+    /** The free slot Targets is filling, if any. */
+    filling,
+    /** Whether someone can be seen in the slot being filled, and where; null when nothing is being filled. */
+    fitsSlot: (e: Entity): Availability | null => (filling ? availability(e, filling.day, filling.time, filling.duration) : null),
     bookingDays,
     /**
      * Times to offer when booking someone, skipping days they're already planned
@@ -231,8 +245,10 @@ export function withRecords(ws: Workspace, add: { interactions?: Interaction[]; 
   };
 }
 
-// ---- The day plan: cancel, fill and book ------------------------------------
+// ---- The day plan: add, arrange, cancel, fill and book ----------------------
 // The rules match the prototype's visit and booking actions (demo/js/actions.js).
+
+const TIME_24 = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 const defaultDuration = (e: Pick<Entity, 'kind'>): number => (e.kind === 'hco' ? 45 : 30);
 const visitType = (e: Pick<Entity, 'kind'>): VisitType => (e.kind === 'hco' ? 'Meeting' : 'In-person visit');
@@ -245,23 +261,55 @@ const withItem = (ws: Workspace, day: string, id: string, change: (item: PlanIte
 export const findItem = (ws: Workspace, day: string, id: string): PlanItem | null =>
   (ws.plans[day] ?? []).find((i) => i.id === id) ?? null;
 
-/** Adds someone to a day's plan at no fixed time, unless they're already in it. */
-export function addToPlan(ws: Workspace, day: string, targetId: string): Workspace {
-  const target = getEntity(targetId);
-  if (!target) return ws;
-  const site = siteOnDay(target, fromIso(day).getDay()) ?? siteFor(target).id;
-  return changed(ws, { plans: { ...ws.plans, [day]: addTargets(ws.plans[day] ?? [], [target], () => ({ id: site })) } });
-}
+const withPlan = (ws: Workspace, day: string, change: (items: PlanItem[]) => PlanItem[]): Workspace =>
+  changed(ws, { plans: { ...ws.plans, [day]: change(ws.plans[day] ?? []) } });
 
-/** Adds several people to a day at no fixed time, then puts the day's untimed stops nearest first. */
-export function addAllToPlan(ws: Workspace, day: string, targetIds: string[]): Workspace {
+/**
+ * Adds people to a day's plan at no fixed time, after the stops already there,
+ * in the order given. Anyone already in that day's plan is left as they are.
+ */
+export function addPeople(ws: Workspace, day: string, targetIds: string[]): Workspace {
   const targets = [...new Set(targetIds)].map(getEntity).filter((t): t is Entity => !!t);
   if (!targets.length) return ws;
   const weekday = fromIso(day).getDay();
   const byId = new Map(targets.map((t) => [t.id, t]));
-  const items = addTargets(ws.plans[day] ?? [], targets, (t) => ({ id: siteOnDay(byId.get(t.id)!, weekday) ?? siteFor(byId.get(t.id)!).id }));
+  return withPlan(ws, day, (items) => addTargets(items, targets, (t) => ({ id: siteOnDay(byId.get(t.id)!, weekday) ?? siteFor(byId.get(t.id)!).id })));
+}
+
+/** Adds someone to a day's plan at no fixed time, unless they're already in it. */
+export const addToPlan = (ws: Workspace, day: string, targetId: string): Workspace => addPeople(ws, day, [targetId]);
+
+/** Adds several people to a day at no fixed time, then puts the day's untimed stops nearest first. */
+export function addAllToPlan(ws: Workspace, day: string, targetIds: string[]): Workspace {
+  const next = addPeople(ws, day, targetIds);
+  if (next === ws) return ws;
   const coordsOf = (i: PlanItem) => (getOrg(i.siteId) ?? siteFor(getEntity(i.targetId)!)).coords;
-  return changed(ws, { plans: { ...ws.plans, [day]: suggestOrder(items, coordsOf, REP.start.coords) } });
+  return withPlan(next, day, (items) => suggestOrder(items, coordsOf, startPoint(ws).coords));
+}
+
+/** Moves a flexible stop one place earlier or later in the day. */
+export const moveVisit = (ws: Workspace, day: string, id: string, direction: -1 | 1): Workspace =>
+  withPlan(ws, day, (items) => moveStop(items, id, direction));
+
+/** Why a flexible stop can't go at a time, or null when it can. A time that has already gone today can't be chosen. */
+export function visitTimeError(ws: Workspace, day: string, id: string, time: string, now?: Date): string | null {
+  const item = findItem(ws, day, id);
+  if (!item || item.status !== 'planned') return 'That visit is no longer planned.';
+  if (!TIME_24.test(time)) return 'Use a 24-hour time, such as 14:30.';
+  if (now && fromIso(day).getTime() + toMinutes(time) * 60_000 <= now.getTime()) return 'That time has gone. Choose a later one.';
+  const clash = clashesWith(ws.plans[day], time, item.duration, id)[0];
+  return clash ? `Clashes with ${getEntity(clash.targetId)?.name} at ${clash.time}.` : null;
+}
+
+/** Gives a flexible stop a start time; the day then puts it in time order. It's the rep's own time, so nothing is booked. */
+export const setVisitTime = (ws: Workspace, day: string, id: string, time: string): Workspace =>
+  withPlan(ws, day, (items) => timeStop(items, id, time));
+
+/** Takes a stop out of the day's plan. A logged visit stays, as the record of what happened. */
+export function removeVisit(ws: Workspace, day: string, id: string): Workspace {
+  const item = findItem(ws, day, id);
+  if (!item || item.status === 'done') return ws;
+  return withPlan(ws, day, (items) => items.filter((i) => i.id !== id));
 }
 
 /**
@@ -275,41 +323,61 @@ export function cancelVisit(ws: Workspace, day: string, id: string, reason: stri
   const next = withItem(ws, day, id, (i) => ({ ...i, status: 'cancelled', cancelReason: reason }));
   if (item.mode !== 'timed' || !item.time || day < todayIso) return next;
   if (now && fromIso(day).getTime() + toMinutes(item.time) * 60_000 <= now.getTime()) return next;
+  const slot: FreeSlot = { day, time: item.time, duration: item.duration, siteId: siteFor(target, item.siteId).id, name: target.name, targetId: target.id, itemId: id };
   return {
     ...next,
-    selection: { ...next.selection, day },
-    replacement: { day, time: item.time, duration: item.duration, siteId: siteFor(target, item.siteId).id, name: target.name, targetId: target.id, itemId: id },
+    // Targets fills the newest free slot first; the others wait in the list.
+    selection: { ...next.selection, day, slot: id },
+    freeSlots: [...next.freeSlots.filter((s) => s.itemId !== id), slot].sort((a, b) => a.day.localeCompare(b.day) || a.time.localeCompare(b.time)),
   };
 }
 
 /** Puts a cancelled visit back, and stops offering its slot to anyone else. */
 export function restoreVisit(ws: Workspace, day: string, id: string): Workspace {
   const next = withItem(ws, day, id, ({ cancelReason: _reason, ...i }) => ({ ...i, status: 'planned' }));
-  return ws.replacement?.itemId === id ? { ...next, replacement: null } : next;
+  return leaveFree(next, id);
 }
 
-/** Leaves the free slot free. */
-export const clearReplacement = (ws: Workspace): Workspace => ({ ...ws, replacement: null });
+/** Leaves a free slot free, so it's no longer offered. Slots are known by the cancelled visit's id. */
+export const leaveFree = (ws: Workspace, slotId: string): Workspace => ({ ...ws, freeSlots: ws.freeSlots.filter((s) => s.itemId !== slotId) });
 
-/** Puts someone in the free slot as a requested visit, booked through their usual route. */
-export function fillSlot(ws: Workspace, targetId: string): Workspace {
-  const r = ws.replacement;
+/** The free slot Targets fills: the one chosen on the day shown, or that day's first. */
+export function fillingSlot(ws: Workspace): FreeSlot | null {
+  const onDay = ws.freeSlots.filter((s) => s.day === ws.selection.day);
+  return onDay.find((s) => s.itemId === ws.selection.slot) ?? onDay[0] ?? null;
+}
+
+/** Chooses which free slot Targets fills, and shows its day. */
+export function chooseSlot(ws: Workspace, slotId: string): Workspace {
+  const slot = ws.freeSlots.find((s) => s.itemId === slotId);
+  return slot ? { ...ws, selection: { ...ws.selection, day: slot.day, slot: slotId } } : ws;
+}
+
+/**
+ * Puts someone in a free slot as a requested visit, booked through their usual
+ * route. Only someone usually on site and seeing people then, and not already
+ * in that day's plan, can go in it.
+ */
+export function fillSlot(ws: Workspace, slotId: string, targetId: string): Workspace {
+  const slot = ws.freeSlots.find((s) => s.itemId === slotId);
   const entity = getEntity(targetId);
-  if (!r || !entity) return ws;
+  if (!slot || !entity || activeItems(ws.plans[slot.day]).some((i) => i.targetId === targetId)) return ws;
+  const fit = availability(entity, slot.day, slot.time, slot.duration);
+  if (!fit.ok) return ws;
   const item: PlanItem = {
     id: uid('v'),
     targetId,
-    siteId: siteOnDay(entity, fromIso(r.day).getDay()) ?? siteFor(entity).id,
+    siteId: fit.siteId,
     mode: 'timed',
-    time: r.time,
-    duration: r.duration,
+    time: slot.time,
+    duration: slot.duration,
     type: visitType(entity),
     goal: '',
     status: 'planned',
     booking: 'requested',
     via: bookingRoute(entity).label,
   };
-  return changed(ws, { plans: { ...ws.plans, [r.day]: [...(ws.plans[r.day] ?? []), item] }, replacement: null });
+  return changed(withPlan(ws, slot.day, (items) => [...items, item]), { freeSlots: ws.freeSlots.filter((s) => s !== slot) });
 }
 
 /** What the Book a time form collects. */
@@ -327,7 +395,7 @@ export function bookingError(ws: Workspace, d: BookingDraft): string | null {
   const target = getEntity(d.targetId);
   if (!target) return 'Choose who to book.';
   if (!d.slot) return 'Choose a time.';
-  if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(d.slot.time)) return 'Use a 24-hour time, such as 14:30.';
+  if (!TIME_24.test(d.slot.time)) return 'Use a 24-hour time, such as 14:30.';
   const from = d.from ? findItem(ws, d.from.day, d.from.id) : null;
   if (activeItems(ws.plans[d.slot.day]).some((i) => i.targetId === target.id && i.id !== from?.id)) {
     return `${target.name} is already in your plan on ${formatDate(d.slot.day)}.`;
@@ -353,6 +421,8 @@ export function bookVisit(ws: Workspace, d: BookingDraft): Workspace {
     status: 'planned',
     booking: d.confirmed ? 'confirmed' : 'requested',
     via: bookingRoute(target).label,
+    // The week's summary says it moved; a visit moved twice keeps where it started.
+    ...(d.from && from?.status === 'planned' ? { movedFrom: from.movedFrom ?? { day: d.from.day, time: from.time } } : {}),
   };
   const plans = { ...ws.plans };
   if (d.from && from?.status === 'planned') plans[d.from.day] = plans[d.from.day].filter((i) => i.id !== from.id);

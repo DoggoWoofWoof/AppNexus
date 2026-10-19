@@ -8,7 +8,7 @@ import { createContext, useContext } from 'react';
 import { THEME } from '@/lib/theme';
 
 /** The three tabs in the bar, then the screens the menu opens, which keep a stack of their own too. */
-export const TABS = ['today', 'ask', 'targets', 'activity', 'insights', 'saved'] as const;
+export const TABS = ['today', 'ask', 'targets', 'activity', 'insights', 'saved', 'you'] as const;
 export type Tab = (typeof TABS)[number];
 
 const TabContext = createContext<Tab>('today');
@@ -19,6 +19,9 @@ export const useTab = () => useContext(TabContext);
 // The tab's own screen sits under anything opened from it, even after a deep link
 // straight to a profile, so Back always has somewhere to go.
 export const unstable_settings = { anchor: 'index' };
+
+/** On an iPad, screens keep to a column this wide in the middle rather than stretching across. */
+const MAX_WIDTH = 720;
 
 export default function TabStack() {
   // This layout is the tab navigator's screen, so its route is the tab itself.
@@ -35,7 +38,7 @@ export default function TabStack() {
           headerTintColor: theme.primary,
           headerTitleStyle: { fontFamily: 'SourceSerif4_600SemiBold', color: theme.foreground },
           headerBackButtonDisplayMode: 'minimal',
-          contentStyle: { backgroundColor: theme.background },
+          contentStyle: { backgroundColor: theme.background, width: '100%', maxWidth: MAX_WIDTH, alignSelf: 'center' },
         }}
       >
         {/* Tab roots draw their own large header; the title names the Back button. */}

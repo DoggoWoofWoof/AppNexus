@@ -8,6 +8,7 @@ import type { ReactNode } from 'react';
 import { answer } from '@/lib/ask';
 import { ChatProvider, TERRITORY, useChat } from '@/lib/chat';
 import { getEntity } from '@/lib/data';
+import { DATA_PERIOD } from '@/lib/data/seed';
 import { firstSentence, isoDate, startOfDay } from '@/lib/format';
 import { buildPrep, docText, prepId, prepTarget, reportDoc, reportFrom } from '@/lib/saved';
 import { useWorkspace, WorkspaceProvider } from '@/lib/store';
@@ -29,7 +30,7 @@ describe('visit prep', () => {
     expect(doc.summary).toMatch(/^Goal: Bring the procedure mix vs\. peers report/);
     expect(doc.when).toMatch(/^Today, .* · 10:00–10:30 · /);
     expect(doc.sections.map((s) => s.title)).toEqual(expect.arrayContaining(['Why now', 'Talking points']));
-    expect(doc.scope).toEqual(['Sample data']);
+    expect(doc.scope).toEqual([DATA_PERIOD]);
   });
 
   test('adds what the rep asked, newest first', () => {
@@ -39,7 +40,7 @@ describe('visit prep', () => {
     ]);
     const asked = doc.sections.find((s) => s.title === 'From your questions');
     expect(asked?.lines.map((l) => l.label)).toEqual(['You asked: When is she free?', 'You asked: Where does she refer?']);
-    expect(doc.scope).toEqual(['Sample data', '2 questions you asked']);
+    expect(doc.scope).toEqual([DATA_PERIOD, '2 questions you asked']);
   });
 
   test('someone with nothing planned gets a suggested goal', () => {

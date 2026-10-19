@@ -18,7 +18,7 @@ import { Text } from '@/components/ui/text';
 import { useVisitSheets } from '@/components/visit-sheets';
 import { clashesWith } from '@/lib/booking';
 import { buildBrief } from '@/lib/brief';
-import { getEntity, shortName, siteFor } from '@/lib/data';
+import { getEntity, shortName, signalMeaning, siteFor } from '@/lib/data';
 import { firstSentence, relativeDay } from '@/lib/format';
 import { prepId } from '@/lib/saved';
 import { useWorkspace } from '@/lib/store';
@@ -76,10 +76,14 @@ function Page({ entity }: { entity: Entity }) {
           <Text className="text-sm text-muted-foreground">{where}</Text>
         </View>
       </View>
+      {/* Each tag with what it means in plain words, since this is where a rep first meets them. */}
       {signals.length ? (
-        <View className="-mt-1 flex-row flex-wrap gap-1.5">
+        <View className="-mt-1 gap-2">
           {signals.map((s) => (
-            <SignalTag key={s.id} signal={s} />
+            <View key={s.id} className="flex-row items-start gap-2">
+              <SignalTag signal={s} />
+              <Text className="flex-1 text-sm text-muted-foreground">{signalMeaning(s, entity)}</Text>
+            </View>
           ))}
         </View>
       ) : null}

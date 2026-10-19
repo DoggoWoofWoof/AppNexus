@@ -14,6 +14,7 @@ import { Icon } from '@/components/ui/icon';
 import { Textarea } from '@/components/ui/textarea';
 import { Text } from '@/components/ui/text';
 import { descendantsOf, hcpsAt, shortName } from '@/lib/data';
+import { draftKey } from '@/lib/persist';
 import { useWorkspace } from '@/lib/store';
 import type { Entity, VisitType } from '@/lib/types';
 import { cn } from '@/lib/utils';
@@ -59,10 +60,14 @@ function LogForm({ target, visit, seen, onDone }: { target: Entity; visit?: Visi
         { value: 'Met', label: 'Talked' },
         { value: 'Attempted', label: 'No answer' },
       ];
+  // A note closed before it was saved comes back, for this person and visit.
+  const key = draftKey(target.id, visit);
+  const [kept] = useState(() => ctx.draftFor(key));
   // Nothing is chosen for them, so a visit that didn't happen isn't logged as met.
   // A note after they've been seen today is about a meeting that happened.
-  const [outcome, setOutcome] = useState(seen ? 'Met' : '');
-  const [note, setNote] = useState('');
+  const start = seen ? 'Met' : '';
+  const [outcome, setOutcome] = useState(seen ? start : (kept?.outcome ?? start));
+  const [note, setNote] = useState(kept?.note ?? '');
   // Who was in the room at an account: its busiest doctors and its executives.
   const people =
     target.kind === 'hco'
@@ -76,12 +81,19 @@ function LogForm({ target, visit, seen, onDone }: { target: Entity; visit?: Visi
             .map((e) => ({ key: e.name, label: e.name, doctor: false })),
         ]
       : [];
-  const [there, setThere] = useState<string[]>([]);
+  const [there, setThere] = useState<string[]>(kept?.there ?? []);
   const [listening, setListening] = useState(false);
   const [voiceError, setVoiceError] = useState<string | null>(null);
   const [error, setError] = useState<DraftError | null>(null);
   const session = useRef<Listening | null>(null);
   useEffect(() => () => session.current?.cancel(), []);
+
+  // Every change is kept on the phone until Save, so closing the sheet by mistake loses nothing.
+  const { keepDraft } = ctx;
+  useEffect(() => {
+    const blank = !note.trim() && !there.length && outcome === start;
+    keepDraft(key, blank ? null : { targetId: target.id, visit: visit && { day: visit.day, id: visit.id }, outcome, note, there });
+  }, [keepDraft, key, target.id, visit, start, outcome, note, there]);
 
   const dictate = () => {
     if (listening) {
@@ -129,12 +141,14 @@ function LogForm({ target, visit, seen, onDone }: { target: Entity; visit?: Visi
       AccessibilityInfo.announceForAccessibility(problem.message);
       return;
     }
+    keepDraft(key, null);
     onDone();
   };
 
   return (
     <>
       <SheetBody>
+        {kept ? <Text className="text-sm text-muted-foreground">Not saved yet. This is where you left off.</Text> : null}
         {seen ? null : (
           <View className="flex-row gap-2" accessibilityRole="radiogroup" accessibilityLabel={inPerson ? 'Did you see them?' : 'Did you get through?'}>
             {choices.map((c) => {

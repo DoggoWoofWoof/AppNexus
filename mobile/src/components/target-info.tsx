@@ -1,6 +1,6 @@
 // What a person's or account's page shows under its two big buttons: the
 // headline figures, what to talk about, last time, their volumes, where patients
-// go, who they work with and how to reach them. Short cards, each one tap from
+// go (and, at an account, who sends them out), who they work with and how to reach them. Short cards, each one tap from
 // the full detail ("All" opens that part of the profile).
 
 import { router } from 'expo-router';
@@ -16,7 +16,8 @@ import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import type { Brief, Figure } from '@/lib/brief';
-import { descendantsOf, destination, getEntity, getOrg, hcpsAt, proceduresOf, procedureTotal, shortName } from '@/lib/data';
+import { descendantsOf, destination, getEntity, getOrg, hcpsAt, proceduresOf, procedureTotal, shortName, topReferrersOut } from '@/lib/data';
+import { DATA_PERIOD } from '@/lib/data/seed';
 import { daysBetween, formatNumber, fromIso, plural, relativeDayLower, sum, yoy } from '@/lib/format';
 import { useWorkspace } from '@/lib/store';
 import type { Entity, Hcp, Org } from '@/lib/types';
@@ -123,7 +124,10 @@ export function TargetInfo({ entity, brief }: { entity: Entity; brief: Brief }) 
 
   return (
     <View className="gap-5">
-      <Glance figures={brief.figures} onPress={(i) => details(['volumes', leakSection, 'activity'][i])()} />
+      <View className="gap-1.5">
+        <Glance figures={brief.figures} onPress={(i) => details(['volumes', leakSection, 'activity'][i])()} />
+        <Text className="text-xs text-muted-foreground">{DATA_PERIOD}</Text>
+      </View>
 
       {points.length ? (
         <Block title="Talk about">
@@ -205,7 +209,7 @@ function HcpBlocks({ hcp, more }: { hcp: Hcp; more: (section: string) => () => v
                 label={
                   <Text className={cn('text-base', leaves && 'font-semibold text-signal-text')}>
                     {name}
-                    {leaves ? ' · leaves system' : ''}
+                    {leaves ? ' · outside the system' : ''}
                   </Text>
                 }
                 sub={r.reason}
@@ -249,6 +253,8 @@ function OrgBlocks({ org, more }: { org: Org; more: (section: string) => () => v
   const execs = [org, ...descendantsOf(org.id)].flatMap((o) => o.executives).slice(0, 3);
   const destinations = (l?.destinations ?? []).slice(0, 3);
   const maxDest = Math.max(...destinations.map((d) => d.patients), 1);
+  // The doctors here whose referrals go outside the system: who to talk to about keeping patients.
+  const sendersOut = topReferrersOut(org.id).slice(0, 3);
 
   return (
     <>
@@ -257,7 +263,7 @@ function OrgBlocks({ org, more }: { org: Org; more: (section: string) => () => v
           <StackBar
             parts={[
               ...(l.keptPct ? [{ label: org.type === 'Health system' ? 'Kept' : 'Kept here', pct: l.keptPct, className: 'bg-primary' }] : []),
-              { label: 'In system', pct: l.inSystemPct, className: 'bg-brand-line' },
+              { label: 'Same system', pct: l.inSystemPct, className: 'bg-brand-line' },
               { label: 'Left', pct: l.leftPct, className: 'bg-signal' },
             ]}
             label={`Kept ${l.keptPct}%, moved within the system ${l.inSystemPct}%, left ${l.leftPct}%`}
@@ -269,13 +275,22 @@ function OrgBlocks({ org, more }: { org: Org; more: (section: string) => () => v
               <BarRow
                 key={`${name}-${i}`}
                 label={<Text className={cn('text-base', !inSystem && 'font-semibold text-signal-text')}>{name}</Text>}
-                sub={inSystem ? 'In system' : 'Out of system'}
+                sub={inSystem ? 'Same health system' : 'Outside the system'}
                 value={d.patients}
                 max={maxDest}
                 tone={inSystem ? 'success' : 'orange'}
               />
             );
           })}
+        </Block>
+      ) : null}
+
+      {sendersOut.length ? (
+        <Block title="Who sends patients out">
+          {sendersOut.map(({ hcp, count, mostTo }) => (
+            <PersonRow key={hcp.id} entity={hcp} sub={`Mostly to ${mostTo}`} figure={formatNumber(count)} />
+          ))}
+          <Text className="text-xs text-muted-foreground">Patients each doctor sent outside the system, from all the places they work.</Text>
         </Block>
       ) : null}
 

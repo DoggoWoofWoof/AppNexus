@@ -1,10 +1,9 @@
 // Lookups and derived facts over the sample HCPs and HCOs.
 
-import { daysBetween, fromIso, haversineKm, sum, yoy } from '../format';
-import type { DiagnosisRow, Entity, FollowUp, Hcp, Interaction, Org, ProcedureRow, Signal, SignalId, Workspace } from '../types';
+import { daysBetween, fromIso, sum, yoy } from '../format';
+import type { DiagnosisRow, Entity, FollowUp, Hcp, Interaction, Leakage, Org, ProcedureRow, Signal, SignalId, Workspace } from '../types';
 import { HCPS } from './hcps';
 import { DESTINATIONS, ORGS } from './orgs';
-import { REP } from './seed';
 import { addSeries } from './series';
 
 const hcpById = new Map<string, Hcp>(HCPS.map((h) => [h.id, { ...h, kind: 'hcp' }]));
@@ -83,14 +82,43 @@ export function procedureYoy(entity: Entity): number | null {
   return rows?.length ? yoy(addSeries(rows.map((r) => r.series))) : null;
 }
 
+/** Patients an HCP referred to centres outside the system over the 12 months. */
+export const referredOut = (hcp: Hcp): number => sum(hcp.referrals.outbound.filter((r) => r.ref).map((r) => r.count));
+
+/** Patients who left an account for centres outside the system: its share leaving times its patients. */
+export const patientsLost = (leakage: Leakage): number => Math.round((leakage.patients * leakage.leftPct) / 100);
+
+/**
+ * Accounts that report where their patients go, the most patients lost first.
+ * By count, not share: a big account losing 17% can lose more than a small one losing 36%.
+ */
+export function accountsByPatientsLost(): { org: Org; leakage: Leakage; lost: number }[] {
+  return allOrgs()
+    .flatMap((org) => (org.leakage && org.type !== 'Health system' ? [{ org, leakage: org.leakage, lost: patientsLost(org.leakage) }] : []))
+    .sort((a, b) => b.lost - a.lost);
+}
+
+/**
+ * The doctors who send the most patients outside the system, most first, and
+ * where most of them go. With an org, only doctors who work there or below it.
+ * Referrals aren't split by site, so each count covers all of a doctor's sites.
+ */
+export function topReferrersOut(orgId?: string): { hcp: Hcp; count: number; mostTo: string }[] {
+  return (orgId ? hcpsAt(orgId) : allHcps())
+    .map((hcp) => {
+      const top = hcp.referrals.outbound.filter((r) => r.ref).sort((a, b) => b.count - a.count)[0];
+      return { hcp, count: referredOut(hcp), mostTo: top?.ref ? DESTINATIONS[top.ref].name : '' };
+    })
+    .filter((r) => r.count > 0)
+    .sort((a, b) => b.count - a.count);
+}
+
 /** Where a visit to this entity physically happens. */
 export function siteFor(entity: Entity, siteId?: string): Org {
   if (entity.kind === 'hco') return entity;
   const chosen = siteId && entity.affiliations.some((a) => a.orgId === siteId) ? siteId : primaryAffiliation(entity).orgId;
   return org(chosen);
 }
-
-export const distanceFromStart = (entity: Entity, siteId?: string): number => haversineKm(REP.start.coords, siteFor(entity, siteId).coords);
 
 /** "Dr. Lee" for Dr. Jordan Lee; accounts keep their full name. */
 export const shortName = (entity: Pick<Entity, 'kind' | 'name'>): string =>
@@ -122,13 +150,31 @@ export function signalsFor(entity: Entity, workspace: Activity, today: Date): Si
     out.push({ id: 'followup', label: overdue ? 'Overdue follow-up' : 'Follow-up due', tone: 'warn' });
   }
   const leaking = entity.kind === 'hcp' ? entity.leakageRisk : (entity.leakage?.leftPct ?? 0) >= 20;
-  if (leaking) out.push({ id: 'leakage', label: 'Leakage risk', tone: 'orange' });
+  if (leaking) out.push({ id: 'leakage', label: 'Patients going elsewhere', tone: 'orange' });
   const growth = procedureYoy(entity);
-  if (growth != null && growth >= 10) out.push({ id: 'rising', label: 'Rising volume', tone: 'accent' });
+  if (growth != null && growth >= 10) out.push({ id: 'rising', label: 'Busier than last year', tone: 'accent' });
   const last = lastInteraction(entity.id, workspace);
   const since = last ? daysBetween(fromIso(last.date), today) : Infinity;
   if (since > 30) out.push({ id: 'unseen', label: last ? 'Not seen in 30+ days' : 'No contact yet', tone: 'neutral' });
   return out;
+}
+
+/** What a signal means, in one plain sentence, for a rep who doesn't know the terms yet. */
+export function signalMeaning(signal: Signal, entity: Entity): string {
+  switch (signal.id) {
+    case 'followup':
+      return signal.label.startsWith('Overdue') ? 'Something you promised them is late.' : 'Something you promised them is due today.';
+    case 'leakage': {
+      const system = systemOf(entity.kind === 'hcp' ? primaryOrg(entity) : entity).name;
+      return entity.kind === 'hcp' || !entity.leakage
+        ? `They send some patients to centres outside ${system}.`
+        : `${entity.leakage.leftPct}% of patients here go to centres outside ${system}.`;
+    }
+    case 'rising':
+      return `${Math.round(procedureYoy(entity) ?? 0)}% more procedures than the year before.`;
+    case 'unseen':
+      return signal.label === 'No contact yet' ? 'No visit, call or note with them yet.' : 'No visit, call or note in over a month.';
+  }
 }
 
 const WEIGHTS: Record<SignalId, number> = { followup: 40, leakage: 30, rising: 20, unseen: 12 };
