@@ -1,7 +1,7 @@
 // Page scaffolding shared by every screen: a scrolling page, its header and titled sections.
 
-import type { ReactNode } from 'react';
-import { ScrollView, View } from 'react-native';
+import type { ReactNode, Ref } from 'react';
+import { ScrollView, View, type ScrollViewInstance } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Text } from '@/components/ui/text';
@@ -11,10 +11,11 @@ import { cn } from '@/lib/utils';
  * A scrolling page. Tab roots hide the navigation header, so they pass `inset`
  * to keep clear of the status bar; pushed screens sit under a header already.
  */
-export function Screen({ children, inset = false }: { children: ReactNode; inset?: boolean }) {
+export function Screen({ children, inset = false, scrollRef }: { children: ReactNode; inset?: boolean; scrollRef?: Ref<ScrollViewInstance> }) {
   const { top } = useSafeAreaInsets();
   return (
     <ScrollView
+      ref={scrollRef}
       className="flex-1 bg-background"
       contentContainerClassName="gap-5 px-4 pb-10"
       contentContainerStyle={{ paddingTop: (inset ? top : 0) + 16 }}
@@ -35,12 +36,28 @@ export function PageHeader({ kicker, title, sub }: { kicker?: string; title: str
   );
 }
 
-export function Section({ title, sub, children, className }: { title: string; sub?: string; children: ReactNode; className?: string }) {
+export function Section({
+  title,
+  sub,
+  action,
+  children,
+  className,
+}: {
+  title: string;
+  sub?: string;
+  /** A button beside the title; it wraps underneath when the text is large. */
+  action?: ReactNode;
+  children: ReactNode;
+  className?: string;
+}) {
   return (
     <View className={cn('gap-3 rounded-lg border border-border bg-card p-4', className)}>
-      <View className="gap-0.5">
-        <Text variant="h4">{title}</Text>
-        {sub ? <Text className="text-sm text-muted-foreground">{sub}</Text> : null}
+      <View className="flex-row flex-wrap items-center justify-between gap-x-3 gap-y-2">
+        <View className="min-w-[60%] flex-1 gap-0.5">
+          <Text variant="h4">{title}</Text>
+          {sub ? <Text className="text-sm text-muted-foreground">{sub}</Text> : null}
+        </View>
+        {action}
       </View>
       {children}
     </View>

@@ -2,6 +2,8 @@
 // prototype's data (demo/js/data) and are what the DocNexus services will return.
 
 export type LonLat = [lon: number, lat: number];
+/** Weekdays as text ("Mon–Fri", "Tue, Thu") with a start and end time. */
+export interface TimeWindow { days: string; from: string; to: string }
 /** Eight quarters of volume, oldest first. */
 export type Series = number[];
 
@@ -22,7 +24,14 @@ export interface HcpData {
   languages: string[];
   education: [label: string, value: string][];
   boards: string[];
-  contact: { phone: string; email: string; preferred: string | null; assistant: string | null };
+  contact: {
+    phone: string;
+    email: string;
+    preferred: string | null;
+    assistant: string | null;
+    /** The times they prefer to be seen, such as Tue, Thu 07:30–08:30. Office hours when there are none. */
+    windows?: TimeWindow[];
+  };
   affiliations: Affiliation[];
   procedures: ProcedureRow[] | null;
   proceduresUnavailable?: string;
@@ -89,6 +98,8 @@ export interface Interaction {
   note: string;
   deleted?: boolean;
   local?: boolean;
+  /** When a note was written on this device, to order notes logged on the same day. */
+  createdAt?: number;
 }
 
 export interface FollowUp {
@@ -115,6 +126,22 @@ export interface PlanItem {
   goal: string;
   status: 'planned' | 'done' | 'cancelled';
   isNew?: boolean;
+  /** A booked time stays requested until the office agrees to it. */
+  booking?: 'requested' | 'confirmed';
+  /** Who the time was booked through, such as a scheduler or "Email". */
+  via?: string;
+  cancelReason?: string;
+}
+
+/** A timed visit that was cancelled, while its slot is offered to someone nearby. */
+export interface Replacement {
+  day: string;
+  time: string;
+  duration: number;
+  siteId: string;
+  name: string;
+  targetId: string;
+  itemId: string;
 }
 
 export type SignalId = 'followup' | 'leakage' | 'rising' | 'unseen';
@@ -130,4 +157,5 @@ export interface Workspace {
   /** Plan items by ISO day. */
   plans: Record<string, PlanItem[]>;
   selection: { day: string; ids: string[] };
+  replacement: Replacement | null;
 }

@@ -8,6 +8,7 @@ import { getEntity } from '@/lib/data';
 import { formatDate, plural, relativeDay } from '@/lib/format';
 import { useWorkspace } from '@/lib/store';
 import { cn } from '@/lib/utils';
+import { newestFirst } from '@/lib/workspace';
 
 export default function Activity() {
   const ctx = useWorkspace();
@@ -19,7 +20,7 @@ export default function Activity() {
   ].filter((g) => g.items.length);
   const journal = ctx.ws.interactions
     .filter((i) => !i.deleted)
-    .sort((a, b) => b.date.localeCompare(a.date))
+    .sort(newestFirst)
     .slice(0, 6);
 
   return (

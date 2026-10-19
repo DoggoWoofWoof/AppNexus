@@ -1,0 +1,70 @@
+import { TextClassContext } from '@/components/ui/text';
+import { cn } from '@/lib/utils';
+import * as TabsPrimitive from '@rn-primitives/tabs';
+import { Platform } from 'react-native';
+
+function Tabs({
+  className,
+  ...props
+}: React.ComponentProps<typeof TabsPrimitive.Root>) {
+  return <TabsPrimitive.Root className={cn('flex flex-col gap-2', className)} {...props} />;
+}
+
+function TabsList({
+  className,
+  ...props
+}: React.ComponentProps<typeof TabsPrimitive.List>) {
+  return (
+    <TabsPrimitive.List
+      className={cn(
+        // The prototype's segmented control (demo/css/app.css): a track with the selected
+        // segment raised. Full width and wrapping, so labels can grow with the system text size.
+        'bg-track flex w-full flex-row flex-wrap items-center justify-center gap-0.5 rounded-lg p-[3px]',
+        className
+      )}
+      {...props}
+    />
+  );
+}
+
+function TabsTrigger({
+  className,
+  ...props
+}: React.ComponentProps<typeof TabsPrimitive.Trigger>) {
+  const { value } = TabsPrimitive.useRootContext();
+  return (
+    <TextClassContext.Provider
+      value={cn(
+        'text-muted-foreground text-sm font-semibold',
+        value === props.value && 'text-foreground'
+      )}>
+      <TabsPrimitive.Trigger
+        className={cn(
+          // 38pt inside the list's 3pt padding keeps a 44pt touch area.
+          'flex min-h-[38px] grow flex-row items-center justify-center gap-1.5 rounded-md border border-transparent px-2 py-1 shadow-none shadow-black/5',
+          Platform.select({
+            web: 'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring inline-flex cursor-default whitespace-nowrap transition-[color,box-shadow] focus-visible:outline-1 focus-visible:ring-[3px] disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0',
+          }),
+          props.disabled && 'opacity-50',
+          props.value === value && 'bg-card border-border shadow-sm',
+          className
+        )}
+        {...props}
+      />
+    </TextClassContext.Provider>
+  );
+}
+
+function TabsContent({
+  className,
+  ...props
+}: React.ComponentProps<typeof TabsPrimitive.Content>) {
+  return (
+    <TabsPrimitive.Content
+      className={cn(Platform.select({ web: 'flex-1 outline-none' }), className)}
+      {...props}
+    />
+  );
+}
+
+export { Tabs, TabsContent, TabsList, TabsTrigger };

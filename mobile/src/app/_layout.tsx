@@ -12,11 +12,14 @@ import { useEffect } from 'react';
 import { Platform, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { WorkspaceProvider } from '@/lib/store';
+import { NoticeBar } from '@/components/notice-bar';
+import { TAB_ICON_WIDTH, TabIcon } from '@/components/tab-icon';
+import { useWorkspace, WorkspaceProvider } from '@/lib/store';
 import { NAV_THEME, THEME } from '@/lib/theme';
 
 // The five tabs, in the prototype's order and with its icons (demo/js/nav.js).
-// Each one is a folder with its own stack, so Back stays inside the tab.
+// Each one is a folder with its own stack, so Back stays inside the tab. Ask sits
+// in the middle with a filled icon, as the app's main shortcut.
 const TABS: { name: string; title: string; icon: LucideIcon }[] = [
   { name: 'today', title: 'Today', icon: House },
   { name: 'targets', title: 'Targets', icon: Target },
@@ -25,7 +28,7 @@ const TABS: { name: string; title: string; icon: LucideIcon }[] = [
   { name: 'insights', title: 'Insights', icon: ChartColumn },
 ];
 
-const LABEL = { fontSize: 11, lineHeight: 14 };
+const LABEL = { fontSize: 11.5, lineHeight: 14, fontWeight: '600' } as const;
 
 /**
  * The stock bar is a fixed 49pt, sized for 10pt labels that never scale. iOS shows
@@ -44,7 +47,6 @@ export default function RootLayout() {
   const { colorScheme } = useColorScheme();
   const scheme = colorScheme === 'dark' ? 'dark' : 'light';
   const [fontsLoaded, fontError] = useFonts({ SourceSerif4_600SemiBold, IBMPlexMono_500Medium });
-  const tabBarHeight = useTabBarHeight();
 
   // On native NativeWind applies the dark theme for us; on web the tokens in
   // global.css need the `dark` class on the page to follow the system setting.
@@ -59,30 +61,54 @@ export default function RootLayout() {
     <ThemeProvider value={NAV_THEME[scheme]}>
       <WorkspaceProvider>
         <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
-        <Tabs
-          screenOptions={{
-            headerShown: false,
-            tabBarActiveTintColor: THEME[scheme].primary,
-            tabBarInactiveTintColor: THEME[scheme].mutedForeground,
-            tabBarLabelStyle: LABEL,
-            tabBarStyle: { height: tabBarHeight },
-          }}
-        >
-          {TABS.map((tab) => (
-            <Tabs.Screen
-              key={tab.name}
-              name={tab.name}
-              options={{
-                title: tab.title,
-                tabBarIcon: ({ color, size }) => <tab.icon color={color} size={size} />,
-              }}
-            />
-          ))}
-          {/* "/" only redirects to Today; keep it out of the tab bar. */}
-          <Tabs.Screen name="index" options={{ href: null }} />
-        </Tabs>
+        <AppTabs scheme={scheme} />
+        <Notices />
         <PortalHost />
       </WorkspaceProvider>
     </ThemeProvider>
+  );
+}
+
+function Notices() {
+  const tabBarHeight = useTabBarHeight();
+  return <NoticeBar bottom={tabBarHeight + 8} />;
+}
+
+function AppTabs({ scheme }: { scheme: 'light' | 'dark' }) {
+  const ctx = useWorkspace();
+  const tabBarHeight = useTabBarHeight();
+  // Activity shows how many follow-ups are due today or overdue.
+  const due = ctx.openFollowUps().filter((f) => f.overdueBy >= 0).length;
+
+  return (
+    <Tabs
+      screenOptions={{
+        headerShown: false,
+        tabBarActiveTintColor: THEME[scheme].primary,
+        tabBarInactiveTintColor: THEME[scheme].mutedForeground,
+        tabBarLabelStyle: LABEL,
+        tabBarStyle: { height: tabBarHeight },
+        tabBarIconStyle: { width: TAB_ICON_WIDTH },
+      }}
+    >
+      {TABS.map((tab) => {
+        const badge = tab.name === 'activity' && due ? due : undefined;
+        return (
+          <Tabs.Screen
+            key={tab.name}
+            name={tab.name}
+            options={{
+              title: tab.title,
+              tabBarAccessibilityLabel: badge ? `${tab.title}, ${badge} due` : undefined,
+              tabBarIcon: ({ color, focused }) => (
+                <TabIcon icon={tab.icon} color={String(color)} focused={focused} filled={tab.name === 'ask'} badge={badge} />
+              ),
+            }}
+          />
+        );
+      })}
+      {/* "/" only redirects to Today; keep it out of the tab bar. */}
+      <Tabs.Screen name="index" options={{ href: null }} />
+    </Tabs>
   );
 }

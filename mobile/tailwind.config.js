@@ -15,7 +15,7 @@ module.exports = {
         ring: hsl('ring'),
         background: hsl('background'),
         foreground: hsl('foreground'),
-        primary: { DEFAULT: hsl('primary'), foreground: hsl('primary-foreground') },
+        primary: { DEFAULT: hsl('primary'), foreground: hsl('primary-foreground'), hover: hsl('primary-hover') },
         secondary: { DEFAULT: hsl('secondary'), foreground: hsl('secondary-foreground') },
         destructive: { DEFAULT: hsl('destructive'), foreground: hsl('destructive-foreground') },
         muted: { DEFAULT: hsl('muted'), foreground: hsl('muted-foreground') },

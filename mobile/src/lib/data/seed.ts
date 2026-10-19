@@ -38,8 +38,8 @@ export function seedWorkspace(today: Date) {
   const today0 = day(0);
   const plans: Record<string, PlanItem[]> = {
     [today0]: [
-      { id: 'v-maya', targetId: 'maya', siteId: 'msw', mode: 'timed', time: '10:00', duration: 30, type: 'In-person visit', goal: 'Bring the procedure mix vs. peers report.', status: 'planned' },
-      { id: 'v-jordan', targetId: 'jordan', siteId: 'msm', mode: 'timed', time: '14:00', duration: 30, type: 'In-person visit', goal: 'Confirm a date for the fellows lunch-and-learn.', status: 'planned' },
+      { id: 'v-maya', targetId: 'maya', siteId: 'msw', mode: 'timed', time: '10:00', duration: 30, type: 'In-person visit', goal: 'Bring the procedure mix vs. peers report.', status: 'planned', booking: 'confirmed', via: 'Rosa Diaz, scheduler' },
+      { id: 'v-jordan', targetId: 'jordan', siteId: 'msm', mode: 'timed', time: '14:00', duration: 30, type: 'In-person visit', goal: 'Confirm a date for the fellows lunch-and-learn.', status: 'planned', booking: 'requested', via: 'Email' },
       { id: 'v-alex', targetId: 'alex', siteId: 'msw', mode: 'flexible', time: null, duration: 15, type: 'Phone call', goal: 'Ask about ablation referrals leaving the system.', status: 'planned' },
     ],
   };

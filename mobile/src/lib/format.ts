@@ -40,6 +40,12 @@ export function relativeDay(iso: string, today: Date): string {
   return formatDate(iso, { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
+/** relativeDay mid-sentence: "due today", "due in 3 days", but "due 26 Oct 2026". */
+export function relativeDayLower(iso: string, today: Date): string {
+  const day = relativeDay(iso, today);
+  return /\d{4}$/.test(day) ? day : day.toLowerCase();
+}
+
 export function greeting(now = new Date()): string {
   const h = now.getHours();
   if (h < 12) return 'Good morning';
