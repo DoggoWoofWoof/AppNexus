@@ -62,6 +62,7 @@ export function render(ctx) {
       </button></li>`)}</ul>
       <p class="fineprint">${icon('info')} Illustrative sample figures. Referring physicians without procedures in your code group are not listed.</p>
     `)}
+    ${yourWeek(ctx)}
     ${card(html`
       ${sectionHead('Ask about your territory', { sub: 'Answers with the ranked figures behind them', actions: button({ label: 'Open Ask', icon: 'sparkles', action: 'tab', data: { tab: 'ask' }, size: 'sm', variant: 'ghost' }) })}
       <ul class="chip-list">${ASK_NEXT.map((q) => html`<li><button type="button" class="chip chip-ask" data-action="askSuggestion" data-q="${q}">${q}</button></li>`)}</ul>
@@ -75,4 +76,17 @@ export function render(ctx) {
       ${tag('Sample data', 'neutral')}
     `)}
   `;
+}
+
+/** The rep's own coverage, so the territory numbers sit next to what they've done about them. */
+function yourWeek(ctx) {
+  const s = ctx.weekStats();
+  return card(html`
+    ${sectionHead('Your coverage', { sub: 'Activity on this device and in the sample history' })}
+    ${kpis([
+      { label: 'Logged · last 7 days', value: String(s.logged), sub: 'Visits, calls and notes' },
+      { label: 'People seen · 30 days', value: `${s.seen}/${s.people}` },
+      { label: 'Open follow-ups', value: String(s.open), tone: s.overdue ? 'orange' : '', sub: s.overdue ? `${s.overdue} overdue` : 'None overdue' },
+    ])}
+  `);
 }

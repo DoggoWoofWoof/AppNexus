@@ -1,6 +1,7 @@
 // Bottom sheets (dialogs on wide screens). Each returns { title, content }.
 // Form fields write straight to state as the rep types, so nothing is lost on Back.
 
+import { bookingRoute } from './booking.js';
 import { allHcps, allOrgs, getEntity, getOrg, siteFor } from './data/index.js';
 import { REP } from './data/seed.js';
 import { addDays, formatDate, html, isoDate, plural } from './format.js';
@@ -30,7 +31,8 @@ export function noteDraft(sheet, ctx) {
   return {
     targetId: sheet.target || '',
     type: item?.type || (target?.kind === 'hco' ? 'Meeting' : 'In-person visit'),
-    outcome: 'Met',
+    // Never assumed: an empty save must not record a meeting that didn't happen.
+    outcome: '',
     date: sheet.day && sheet.day <= ctx.todayIso ? sheet.day : ctx.todayIso,
     note: '',
     contacts: sheet.contact ? [sheet.contact] : [],
@@ -70,17 +72,24 @@ function note(sheet, ctx) {
     content: html`<form class="sheet-form" data-submit="saveNote" novalidate>
       <div class="sheet-body">
         ${target && (sheet.target || sheet.edit) ? who(target, item ? `${item.mode === 'timed' ? `${item.time}–${endTime(item)}` : 'Flexible'} · ${siteFor(target, item.siteId).name}` : '') : targetPicker(sheet, d.targetId, { action: 'noteTarget', id: 'note-target' })}
-        ${item ? html`<p class="sheet-hint">${icon('circle-check')}Saving marks this visit as done in ${ctx.dayName(sheet.day).toLowerCase()}’s plan.</p>` : ''}
+        ${item ? html`<p class="sheet-hint">${icon('circle-check')}Saving marks this visit as done in ${ctx.dayWord(sheet.day)}’s plan.</p>` : ''}
+        <fieldset class="field field-wide"><legend>What happened?</legend>
+          <div class="radio-row">${OUTCOMES.map((o, n) => html`<label class="radio"><input type="radio" name="outcome" value="${o}" data-change="noteField" data-field="outcome" ${o === d.outcome ? 'checked' : ''}${n === 0 ? invalid(sheet, 'outcome') : ''}><span>${o}</span></label>`)}</div>
+          ${err(sheet, 'outcome')}
+        </fieldset>
         <div class="field-grid">
           <label class="field"><span>Activity</span><select id="note-type" data-change="noteField" data-field="type" name="type">${VISIT_TYPES.map((t) => html`<option ${t === d.type ? 'selected' : ''}>${t}</option>`)}</select></label>
-          <label class="field"><span>Outcome</span><select id="note-outcome" data-change="noteField" data-field="outcome" name="outcome">${OUTCOMES.map((o) => html`<option ${o === d.outcome ? 'selected' : ''}>${o}</option>`)}</select></label>
           <label class="field"><span>Date</span><input type="date" id="note-date" data-change="noteField" data-field="date" name="date" value="${d.date}" max="${ctx.todayIso}"${invalid(sheet, 'date')}>${err(sheet, 'date')}</label>
         </div>
         ${d.contacts?.length ? html`<p class="caption">With ${d.contacts.join(', ')}</p>` : ''}
-        <label class="field field-wide"><span>Note</span>
-          <textarea id="note-text" rows="6" maxlength="2000" ${field('note')} placeholder="What was discussed, what they asked for, what happens next">${d.note}</textarea>
-          <span class="field-hint">${icon('save')}Kept as a draft on this device while you type.</span>
-        </label>
+        <div class="field field-wide">
+          <div class="field-label-row">
+            <label for="note-text">Note</label>
+            ${button({ label: sheet.dictating ? 'Stop' : 'Speak', icon: sheet.dictating ? 'mic-off' : 'mic', action: 'noteDictate', size: 'sm', variant: sheet.dictating ? 'primary' : 'ghost', pressed: !!sheet.dictating })}
+          </div>
+          <textarea id="note-text" rows="6" maxlength="2000" ${field('note')} placeholder="What was discussed, what they asked for, what happens next. Or tap Speak.">${d.note}</textarea>
+          <span class="field-hint" aria-live="polite">${sheet.dictating ? html`${icon('audio-lines')}Listening. Tap Stop when you’re done.` : html`${icon('save')}Kept as a draft on this device${d.spoken ? ' · spoken note' : ''}.`}</span>
+        </div>
         ${sheet.edit ? '' : html`
           <label class="check-field"><input type="checkbox" id="note-follow" data-change="noteField" data-field="followOn" name="followOn" ${d.followOn ? 'checked' : ''}><span>Create a follow-up</span></label>
           ${d.followOn ? html`<div class="field-grid follow-fields">
@@ -175,7 +184,7 @@ function filters(sheet, ctx) {
         ? html`<label class="field field-wide"><span>Specialty</span><select id="filter-specialty" data-change="filterField" data-field="specialty"><option value="">All specialties</option>${specialties.map((s) => html`<option ${s === f.specialty ? 'selected' : ''}>${s}</option>`)}</select></label>`
         : html`<label class="field field-wide"><span>Organization type</span><select id="filter-type" data-change="filterField" data-field="orgType"><option value="">All types</option>${types.map((t) => html`<option ${t === f.orgType ? 'selected' : ''}>${t}</option>`)}</select></label>`}
       ${radios('Distance', DISTANCES.map((d) => ({ ...d, field: 'distance' })), f.distance)}
-      ${radios(`In ${ctx.dayName(ctx.ws.selection.day).toLowerCase()}’s plan`, [{ id: 'any', label: 'Either' }, { id: 'unplanned', label: 'Not planned' }, { id: 'planned', label: 'Planned' }].map((o) => ({ ...o, field: 'planned' })), f.planned)}
+      ${radios(`In ${ctx.dayWord(ctx.ws.selection.day)}’s plan`, [{ id: 'any', label: 'Either' }, { id: 'unplanned', label: 'Not planned' }, { id: 'planned', label: 'Planned' }].map((o) => ({ ...o, field: 'planned' })), f.planned)}
       ${radios('Sort by', SORTS.map((s) => ({ ...s, field: 'sort' })), f.sort)}
       <p class="caption">${icon('info')} Distances are straight-line from ${REP.start.label}.</p>
     </div>
@@ -189,40 +198,113 @@ function filters(sheet, ctx) {
 
 // ---- Options for a planned visit ------------------------------------------
 
+/** "Today", "Tomorrow" or "Wed 21 Oct". */
+export const shortDay = (iso, ctx) => (iso === ctx.todayIso || iso === ctx.tomorrowIso ? ctx.dayName(iso) : formatDate(iso));
+/** "today", "tomorrow" or "on Wed 21 Oct", to follow a verb. */
+export const onDay = (iso, ctx) => (iso === ctx.todayIso || iso === ctx.tomorrowIso ? ctx.dayWord(iso) : `on ${formatDate(iso)}`);
+
+const option = (label, iconName, action, data = {}, hint = '', variant = '') => html`<li><button type="button" class="option${variant ? ` option-${variant}` : ''}" data-action="${action}"${dataAttrs(data)}>${icon(iconName)}<span class="entity-main"><span class="row-title">${label}</span>${hint ? html`<span class="caption">${hint}</span>` : ''}</span></button></li>`;
+
 function visitOptions(sheet, ctx) {
   const item = (ctx.ws.plans[sheet.day] || []).find((i) => i.id === sheet.item);
   if (!item) return { title: 'Visit', content: html`<div class="sheet-body"><p>This visit is no longer in the plan.</p></div>` };
   const target = getEntity(item.targetId);
   const site = siteFor(target, item.siteId);
-  const isToday = sheet.day === ctx.todayIso;
-  const option = (label, iconName, action, data = {}, hint = '', variant = '') => html`<li><button type="button" class="option${variant ? ` option-${variant}` : ''}" data-action="${action}"${dataAttrs(data)}>${icon(iconName)}<span class="entity-main"><span class="row-title">${label}</span>${hint ? html`<span class="caption">${hint}</span>` : ''}</span></button></li>`;
   const ids = { item: item.id, day: sheet.day };
   const when = item.mode === 'timed' ? `${item.time}–${endTime(item)}` : 'Flexible time';
+  const free = ctx.ws.replacement?.itemId === item.id;
 
   return {
     title: target.name,
     content: html`<div class="sheet-body">
-      ${who(target, `${item.type} · ${when} · ${site.name}`)}
+      ${who(target, `${shortDay(sheet.day, ctx)} · ${when} · ${site.name}`)}
       ${item.goal ? html`<p class="next-goal">${icon('target')}<span>${item.goal}</span></p>` : ''}
       ${item.status === 'cancelled' ? html`<p class="sheet-hint">${icon('circle-x')}Cancelled${item.cancelReason ? ` · ${item.cancelReason}` : ''}.</p>` : ''}
+      ${item.booking === 'requested' && item.status === 'planned' ? html`<p class="sheet-hint">${icon('clock')}Requested${item.via ? ` through ${item.via}` : ''}. Not confirmed yet.</p>` : ''}
       <ul class="option-list">
-        ${option(target.kind === 'hcp' ? 'Open profile' : 'Open account', 'file-text', 'openProfile', { id: target.id }, 'Prepare with notes, volumes and referrals')}
         ${item.status === 'planned' ? html`
+          ${option('Prepare', 'file-text', 'openProfile', { id: target.id }, 'Goal, talking points and follow-ups')}
+          ${item.booking === 'requested' ? option('Mark confirmed', 'calendar-check', 'confirmBooking', ids, 'They’ve agreed to the time') : ''}
           ${option('Log visit', 'notebook-pen', 'logVisit', ids, 'Write a note and mark it done')}
-          ${option('Change time or order', 'clock', 'reviewPlan', { day: sheet.day }, 'Opens the plan for review')}
-          ${isToday ? option('Move to tomorrow', 'calendar-arrow-up', 'moveTomorrow', ids, 'Keeps the time if tomorrow is free') : ''}
-          ${option('Cancel visit', 'calendar-x', 'cancelVisit', ids, item.mode === 'timed' ? 'You can fill the free slot with someone nearby' : '', 'danger')}
+          ${option('Reschedule', 'calendar-clock', 'bookVisit', { target: target.id, from: item.id, fromDay: sheet.day }, 'Pick another time that suits them')}
+          ${option('Edit plan', 'pencil', 'reviewPlan', { day: sheet.day }, 'Change times, order or goals')}
+          ${option('Cancel visit', 'calendar-x', 'cancelVisit', ids, item.mode === 'timed' ? 'Then fill the slot with someone nearby' : '', 'danger')}
         ` : ''}
         ${item.status === 'done' ? option('Mark as not done', 'rotate-ccw', 'reopenVisit', ids, 'The note you logged is kept') : ''}
+        ${free ? option(`Fill ${item.time}`, 'calendar-plus', 'findReplacement', {}, 'Nearest unplanned people, in Targets') : ''}
         ${item.status === 'cancelled' ? option('Restore visit', 'rotate-ccw', 'restoreVisit', ids, item.mode === 'timed' ? `Back at ${item.time}` : '') : ''}
       </ul>
     </div>`,
   };
 }
 
-// ---- Confirm --------------------------------------------------------------
+// ---- Cancel a visit (the slot is then filled from Targets) -----------------
 
 export const CANCEL_REASONS = ['HCP unavailable', 'Rescheduled by office', 'Running late', 'Other'];
+
+function cancel(sheet, ctx) {
+  const item = (ctx.ws.plans[sheet.day] || []).find((i) => i.id === sheet.item);
+  if (!item) return { title: 'Cancel visit', content: html`<div class="sheet-body"><p>This visit is no longer in the plan.</p></div>` };
+  const target = getEntity(item.targetId);
+  return {
+    title: 'Cancel visit',
+    content: html`<div class="sheet-body">
+      ${who(target, `${shortDay(sheet.day, ctx)}${item.mode === 'timed' ? ` · ${item.time}` : ''}`)}
+      <p class="sheet-lead">Why was it cancelled?</p>
+      <ul class="option-list">${CANCEL_REASONS.map((reason) => option(reason, 'calendar-x', 'confirmCancelVisit', { item: item.id, day: sheet.day, reason }))}</ul>
+      <p class="caption">You can restore it later.${item.mode === 'timed' ? ` Then Targets shows who’s nearest, so you can fill ${item.time}.` : ''}</p>
+    </div>
+    <footer class="sheet-foot"><span class="spacer"></span>${button({ label: 'Keep visit', action: 'closeSheet', variant: 'ghost' })}</footer>`,
+  };
+}
+
+// ---- Book a visit -----------------------------------------------------------
+
+function book(sheet, ctx) {
+  const target = getEntity(sheet.target);
+  const from = sheet.from ? (ctx.ws.plans[sheet.fromDay] || []).find((i) => i.id === sheet.from) : null;
+  const slots = ctx.slotsFor(target, from?.id);
+  const pick = sheet.pick ?? (slots.length ? '0' : 'other');
+  const route = bookingRoute(target);
+  const best = target.kind === 'hcp' ? target.contact.preferred || 'Not recorded · using office hours' : 'Office hours, Mon–Fri';
+  const days = ctx.planDays();
+  const day = sheet.day || days[0].iso;
+  const chosen = pick === 'other' ? (sheet.time ? { day, time: sheet.time } : null) : slots[Number(pick)];
+  const label = chosen ? `${shortDay(chosen.day, ctx)} ${chosen.time}` : '';
+  const radio = (value, title, sub) => html`<label class="slot"><input type="radio" name="pick" value="${value}" data-change="bookField" data-field="pick" ${pick === value ? 'checked' : ''}><span class="entity-main"><span class="row-title">${title}</span>${sub ? html`<span class="caption">${sub}</span>` : ''}</span></label>`;
+
+  return {
+    title: from ? `Reschedule ${target.name}` : `Book ${target.name}`,
+    content: html`<form class="sheet-form" data-submit="saveBooking" novalidate>
+      <div class="sheet-body">
+        ${who(target, from ? `Was ${shortDay(sheet.fromDay, ctx)}${from.mode === 'timed' ? ` ${from.time}` : ''}` : '')}
+        ${details([
+          ['Best time', best],
+          ['Book through', route.label === 'Email' ? route.value : `${route.label} · ${route.value}`, copyButton(route.value, route.kind)],
+        ])}
+        <fieldset class="field field-wide"><legend>When</legend>
+          <div class="slot-list">
+            ${slots.map((slot, i) => radio(String(i), `${shortDay(slot.day, ctx)} · ${slot.time}`, getOrg(slot.siteId).name))}
+            ${radio('other', 'Another time', slots.length ? '' : 'No times in their usual hours in the next five working days')}
+          </div>
+        </fieldset>
+        ${pick === 'other' ? html`<div class="field-grid">
+          <label class="field"><span>Day</span><select id="book-day" name="day" data-change="bookField" data-field="day">${days.map((d) => html`<option value="${d.iso}" ${d.iso === day ? 'selected' : ''}>${shortDay(d.iso, ctx)}</option>`)}</select></label>
+          <label class="field"><span>Start</span><input type="time" id="book-time" name="time" data-change="bookField" data-field="time" value="${sheet.time || ''}" step="300"${invalid(sheet, 'time')}>${err(sheet, 'time')}</label>
+        </div>` : err(sheet, 'time')}
+        <label class="check-field"><input type="checkbox" id="book-confirmed" name="confirmed" data-change="bookField" data-field="confirmed" ${sheet.confirmed ? 'checked' : ''}><span>They’ve already agreed to this time</span></label>
+        <p class="caption">${icon('info')} ${sheet.confirmed ? 'It goes in your plan as confirmed.' : 'It goes in your plan as requested until you mark it confirmed.'} Calendar and CRM sync are coming later.</p>
+      </div>
+      <footer class="sheet-foot">
+        <span class="spacer"></span>
+        ${button({ label: 'Cancel', action: 'closeSheet', variant: 'ghost' })}
+        ${button({ label: `${sheet.confirmed ? 'Book' : 'Request'}${label ? ` ${label}` : ''}`, icon: 'calendar-check', type: 'submit', variant: 'primary' })}
+      </footer>
+    </form>`,
+  };
+}
+
+// ---- Confirm --------------------------------------------------------------
 
 function confirm(sheet) {
   return {
@@ -230,7 +312,6 @@ function confirm(sheet) {
     content: html`<form class="sheet-form" data-submit="${sheet.run}"${dataAttrs(sheet.data)} novalidate>
       <div class="sheet-body">
         <p>${sheet.body}</p>
-        ${sheet.reasons ? html`<fieldset class="field field-wide"><legend>Reason <span class="muted">(optional)</span></legend><div class="radio-col">${sheet.reasons.map((r, i) => html`<label class="radio"><input type="radio" name="reason" value="${r}" ${i === 0 ? 'checked' : ''}><span>${r}</span></label>`)}</div></fieldset>` : ''}
       </div>
       <footer class="sheet-foot">
         <span class="spacer"></span>
@@ -265,5 +346,5 @@ function account(sheet, ctx) {
   };
 }
 
-const SHEETS = { note, followup, contact, filters, visitOptions, confirm, account };
+const SHEETS = { note, followup, contact, filters, visitOptions, cancel, book, confirm, account };
 export const SHEET_TYPES = Object.keys(SHEETS);

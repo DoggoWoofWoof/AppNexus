@@ -105,8 +105,14 @@ test('every sheet renders and is wired up', () => {
     { type: 'followup' },
     { type: 'contact', org: 'msw', exec: 'nguyen' },
     { type: 'filters' },
+    { type: 'note', target: 'maya', dictating: true, error: { field: 'outcome', message: 'Choose what happened.' } },
     { type: 'visitOptions', item: item.id, day },
-    { type: 'confirm', title: 'Cancel visit?', body: 'It stays in the plan as cancelled.', confirmLabel: 'Cancel visit', run: 'cancelVisit', reasons: ['Other'], danger: true },
+    { type: 'visitOptions', item: 'v-jordan', day },
+    { type: 'cancel', item: item.id, day },
+    { type: 'book', target: 'maya' },
+    { type: 'book', target: 'msw' },
+    { type: 'book', target: 'maya', from: item.id, fromDay: day, pick: 'other', time: '16:00' },
+    { type: 'confirm', title: 'Reset the demo?', body: 'Your notes and plans on this device are cleared.', confirmLabel: 'Reset', run: 'resetDemo', danger: true },
     { type: 'account' },
   ];
   assert.deepEqual([...new Set(sheets.map((s) => s.type))].sort(), [...SHEET_TYPES].sort(), 'every sheet type is covered');

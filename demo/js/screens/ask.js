@@ -174,14 +174,3 @@ function composer(ctx) {
     </form>
   </div>`;
 }
-
-/** A compact Ask bar for other screens; submitting opens the Ask tab. */
-export function askBar({ id, placeholder = 'Ask anything about your book' }) {
-  return html`<form class="ask-bar" data-submit="askSubmit" role="search" aria-label="Ask Field Pro">
-    ${icon('sparkles')}
-    <label for="${id}" class="sr-only">Ask Field Pro</label>
-    <input id="${id}" name="q" type="text" placeholder="${placeholder}" autocomplete="off" enterkeyhint="send">
-    <button type="button" class="btn btn-ghost btn-icon" data-action="askVoice" aria-label="Ask by voice">${icon('mic')}</button>
-    <button type="submit" class="btn btn-primary btn-icon" aria-label="Ask">${icon('arrow-up')}</button>
-  </form>`;
-}

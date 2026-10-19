@@ -3,21 +3,21 @@
 // Return 'quiet' to skip the re-render (used while typing in a field).
 
 import { answer, spoken } from './ask.js';
+import { bookingRoute, clashesWith, siteOnDay } from './booking.js';
 import { getEntity, siteFor } from './data/index.js';
 import { REP } from './data/seed.js';
-import { addDays, fromMinutes, isoDate, plural, toMinutes, uid } from './format.js';
+import { addDays, fromIso, fromMinutes, isoDate, plural, toMinutes, uid } from './format.js';
 import { activeItems, addTargets, conflicts, moveFlexible, suggestOrder } from './plan.js';
 import { DEFAULT_FILTERS } from './search.js';
-import { CANCEL_REASONS, followDraft, noteDraft, noteKey } from './sheets.js';
-import { listen, simulate, speak, stopSpeaking } from './voice.js';
+import { followDraft, noteDraft, noteKey, onDay } from './sheets.js';
+import { canListen, listen, simulate, speak, stopSpeaking } from './voice.js';
 
 const clone = (value) => (value === undefined ? undefined : JSON.parse(JSON.stringify(value)));
 const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
 export function createActions(app) {
   const ws = () => app.ws;
-  const tomorrow = () => isoDate(addDays(app.today, 1));
-  const dayName = (iso) => app.ctx().dayName(iso);
+  const dayWord = (iso) => app.ctx().dayWord(iso);
   const findItem = (day, id) => (ws().plans[day] || []).find((i) => i.id === id);
 
   /** Applies a change to a saved visit and to the same visit in an open plan draft. */
@@ -62,6 +62,34 @@ export function createActions(app) {
 
   const draftItem = (id) => ws().planDraft?.items.find((i) => i.id === id);
 
+  /** Adds a visit to a day's saved plan, and to the open draft for that day. */
+  function addItem(day, item) {
+    const w = ws();
+    w.plans[day] = [...(w.plans[day] || []), item];
+    if (w.planDraft?.day === day) w.planDraft.items.push(clone(item));
+  }
+
+  /** Targets, showing people not planned that day, nearest to the cancelled visit first. */
+  function showReplacements() {
+    const w = ws();
+    if (!w.replacement) return;
+    w.selection.day = w.replacement.day;
+    w.targets = { ...w.targets, kind: 'hcp', sort: 'distance', planned: 'unplanned', view: 'list' };
+    app.switchTab('targets', { root: true });
+  }
+
+  /** Targets back to its usual filters once a free slot is filled or left. */
+  function resetReplacementFilters() {
+    const t = ws().targets;
+    if (t.planned === 'unplanned' && t.sort === 'distance') ws().targets = { ...t, planned: 'any', sort: 'relevance' };
+  }
+
+  function removeItem(day, id) {
+    const w = ws();
+    w.plans[day] = (w.plans[day] || []).filter((i) => i.id !== id);
+    if (w.planDraft?.day === day) w.planDraft.items = w.planDraft.items.filter((i) => i.id !== id);
+  }
+
   // ---- Ask Field Pro: conversation and voice ---------------------------------
   // The conversation lives on the Ask tab's root entry, so it survives
   // opening a profile from an answer and coming Back.
@@ -70,6 +98,7 @@ export function createActions(app) {
   const turns = () => (askEntry().ui.turns ||= []);
   const asking = new Set();
   let voiceSession = null;
+  let dictation = null;
   let sample = 0;
 
   function openAsk() {
@@ -251,7 +280,7 @@ export function createActions(app) {
         added = true;
       }
       const count = w.selection.ids.length + (draft?.day === day ? draft.items.filter((i) => i.isNew).length : 0);
-      app.announce(`${entity.name} ${added ? 'selected for' : 'removed from'} ${dayName(day).toLowerCase()}’s plan. ${plural(count, 'target')} selected.`);
+      app.announce(`${entity.name} ${added ? 'selected for' : 'removed from'} ${dayWord(day)}’s plan. ${plural(count, 'target')} selected.`);
     },
     clearSelection: () => withUndo('Selection cleared', ['selection'], () => { ws().selection.ids = []; }),
     reviewPlan: ({ day } = {}) => {
@@ -278,7 +307,7 @@ export function createActions(app) {
       if (!draft || draft.day === day) return;
       const editedExisting = JSON.stringify(draft.items.filter((i) => !i.isNew)) !== JSON.stringify(ws().plans[draft.day] || []);
       const change = () => { ensureDraft(day); };
-      if (editedExisting) withUndo(`Unsaved edits to ${dayName(draft.day).toLowerCase()}’s visits were set aside`, ['planDraft', 'selection'], change);
+      if (editedExisting) withUndo(`Unsaved edits to ${dayWord(draft.day)}’s visits were set aside`, ['planDraft', 'selection'], change);
       else change();
     },
     planField: ({ item, field, value }) => {
@@ -345,14 +374,14 @@ export function createActions(app) {
       app.prefetchPlan(draft.day);
       const stops = activeItems(w.plans[draft.day]).length;
       app.finishPlan(draft.day);
-      app.toast(`Plan saved for ${dayName(draft.day).toLowerCase()} · ${plural(stops, 'stop')}`, { undo: () => Object.assign(app.ws, clone(before)) });
+      app.toast(`Plan saved for ${dayWord(draft.day)} · ${plural(stops, 'stop')}`, { undo: () => Object.assign(app.ws, clone(before)) });
     },
     planYourDay: ({ day }) => {
       const w = ws();
       if (!(w.planDraft && app.ctx().planDirty())) w.planDraft = null;
       w.selection.day = day;
       app.switchTab('targets', { root: true });
-      app.announce(`Select people or accounts for ${dayName(day).toLowerCase()}, then choose Review plan.`);
+      app.announce(`Select people or accounts for ${dayWord(day)}, then choose Review plan.`);
     },
     todayDay: ({ day }) => {
       app.entry().ui.day = day;
@@ -369,15 +398,77 @@ export function createActions(app) {
       app.switchTab('targets', { root: true });
       app.toast('Showing today’s planned targets on the map');
     },
-    findReplacement: () => {
-      const w = ws();
-      w.selection.day = w.replacement.day;
-      w.targets = { ...w.targets, sort: 'distance', planned: 'unplanned', view: 'list' };
-      app.switchTab('targets', { root: true });
-    },
+    findReplacement: () => showReplacements(),
     clearReplacement: () => {
       ws().replacement = null;
-      if (ws().targets.planned === 'unplanned' && ws().targets.sort === 'distance') ws().targets = { ...ws().targets, planned: 'any', sort: 'relevance' };
+      resetReplacementFilters();
+      app.closeSheet();
+    },
+    /** Puts someone in the free slot as a requested visit, then shows that day on Today. */
+    fillSlot: ({ id }) => {
+      const r = ws().replacement;
+      const entity = getEntity(id);
+      if (!r || !entity) return;
+      const item = {
+        id: uid('v'), targetId: id, siteId: siteOnDay(entity, fromIso(r.day).getDay()) || siteFor(entity).id,
+        mode: 'timed', time: r.time, duration: r.duration, type: entity.kind === 'hco' ? 'Meeting' : 'In-person visit', goal: '', status: 'planned',
+        booking: 'requested', via: bookingRoute(entity).label,
+      };
+      withUndo(`${entity.name} added at ${r.time} · not confirmed yet`, ['plans', 'planDraft', 'replacement', 'targets'], () => {
+        addItem(r.day, item);
+        ws().replacement = null;
+        resetReplacementFilters();
+      });
+      app.switchTab('today', { root: true });
+      app.entry().ui.day = r.day;
+    },
+
+    // ---- Booking -----------------------------------------------------------
+    bookVisit: ({ target, from, fromDay }) => app.openSheet('book', { target, from, fromDay }),
+    bookField: ({ field, value }) => {
+      const sheet = app.sheet;
+      sheet[field] = value;
+      if (sheet.error) sheet.error = null;
+    },
+    saveBooking: () => {
+      const sheet = app.sheet;
+      const ctx = app.ctx();
+      const w = ws();
+      const target = getEntity(sheet.target);
+      const from = sheet.from ? findItem(sheet.fromDay, sheet.from) : null;
+      const slots = ctx.slotsFor(target, from?.id);
+      const pick = sheet.pick ?? (slots.length ? '0' : 'other');
+      const fail = (field, message) => { sheet.error = { field, message }; app.focusAfter('.sheet [aria-invalid="true"]'); };
+      let slot = pick === 'other' ? null : slots[Number(pick)];
+      if (!slot) {
+        const day = sheet.day || app.todayIso;
+        if (!sheet.time) return fail('time', 'Choose a start time.');
+        slot = { day, time: sheet.time, siteId: siteOnDay(target, fromIso(day).getDay()) || siteFor(target).id };
+      }
+      const duration = from?.duration ?? (target.kind === 'hco' ? 45 : 30);
+      if (activeItems(w.plans[slot.day]).some((i) => i.targetId === target.id && i.id !== from?.id)) {
+        return fail('time', `${target.name} is already in your plan ${onDay(slot.day, ctx)}.`);
+      }
+      const clash = clashesWith(w.plans[slot.day], slot.time, duration, from?.id)[0];
+      if (clash) return fail('time', `Clashes with ${getEntity(clash.targetId).name} at ${clash.time}.`);
+      const confirmed = !!sheet.confirmed;
+      const route = bookingRoute(target);
+      const item = {
+        id: uid('v'), targetId: target.id, siteId: slot.siteId, mode: 'timed', time: slot.time, duration,
+        type: from?.type ?? (target.kind === 'hco' ? 'Meeting' : 'In-person visit'), goal: from?.goal ?? '', status: 'planned',
+        booking: confirmed ? 'confirmed' : 'requested', via: route.label,
+      };
+      const when = `${onDay(slot.day, ctx)} at ${slot.time}`;
+      withUndo(confirmed ? `Booked ${when}` : `Requested ${when} · mark it confirmed when they reply`, ['plans', 'planDraft'], () => {
+        if (from?.status === 'planned') removeItem(sheet.fromDay, from.id);
+        addItem(slot.day, item);
+      });
+      app.prefetchPlan(slot.day);
+      app.closeSheet();
+    },
+    confirmBooking: ({ item, day }) => {
+      withUndo('Visit confirmed', ['plans', 'planDraft'], () => forItem(day, item, (x) => { x.booking = 'confirmed'; }));
+      app.closeSheet();
     },
 
     // ---- Visits ----------------------------------------------------------
@@ -386,43 +477,19 @@ export function createActions(app) {
       const it = item ? findItem(day, item) : null;
       app.openSheet('note', it ? { target: it.targetId, item, day } : {});
     },
-    cancelVisit: ({ item, day }) => {
+    cancelVisit: ({ item, day }) => app.openSheet('cancel', { item, day }),
+    /** Cancels with the reason tapped; a timed visit's slot is then offered to someone nearby. */
+    confirmCancelVisit: ({ item, day, reason = '' }) => {
       const it = findItem(day, item);
-      app.openSheet('confirm', {
-        title: 'Cancel this visit?',
-        body: `${getEntity(it.targetId).name}${it.mode === 'timed' ? ` at ${it.time}` : ''} moves to Cancelled. You can restore it later.`,
-        confirmLabel: 'Cancel visit',
-        cancelLabel: 'Keep visit',
-        run: 'confirmCancelVisit',
-        data: { item, day },
-        danger: true,
-        reasons: CANCEL_REASONS,
-      });
-    },
-    confirmCancelVisit: ({ item, day, values = {} }) => {
-      const it = findItem(day, item);
-      const name = getEntity(it.targetId).name;
+      if (!it) return app.closeSheet();
+      const target = getEntity(it.targetId);
       const freesSlot = it.mode === 'timed' && day >= app.todayIso;
       withUndo(freesSlot ? `Visit cancelled · ${it.time} is free` : 'Visit cancelled', ['plans', 'planDraft', 'replacement'], () => {
-        forItem(day, item, (x) => { x.status = 'cancelled'; x.cancelReason = values.reason || ''; });
-        if (freesSlot) ws().replacement = { day, time: it.time, duration: it.duration, siteId: siteFor(getEntity(it.targetId), it.siteId).id, name, itemId: item };
+        forItem(day, item, (x) => { x.status = 'cancelled'; x.cancelReason = reason; });
+        if (freesSlot) ws().replacement = { day, time: it.time, duration: it.duration, siteId: siteFor(target, it.siteId).id, name: target.name, targetId: target.id, itemId: item };
       });
-      app.closeSheet();
-    },
-    moveTomorrow: ({ item, day }) => {
-      const it = findItem(day, item);
-      const next = tomorrow();
-      const w = ws();
-      const already = activeItems(w.plans[next]).some((i) => i.targetId === it.targetId);
-      const moved = { ...clone(it), id: uid('v') };
-      const clash = moved.mode === 'timed' && conflicts([...(w.plans[next] || []), moved]).length;
-      if (clash) moved.mode = 'flexible';
-      withUndo(already ? 'Already planned tomorrow · removed from today' : `Moved to tomorrow${moved.mode === 'timed' ? ` at ${moved.time}` : ' · flexible time'}`, ['plans', 'planDraft'], () => {
-        w.plans[day] = w.plans[day].filter((i) => i.id !== item);
-        if (w.planDraft?.day === day) w.planDraft.items = w.planDraft.items.filter((i) => i.id !== item);
-        if (!already) w.plans[next] = [...(w.plans[next] || []), moved];
-      });
-      app.closeSheet();
+      if (freesSlot) showReplacements();
+      else app.closeSheet();
     },
     reopenVisit: ({ item, day }) => {
       forItem(day, item, (x) => { x.status = 'planned'; });
@@ -456,6 +523,41 @@ export function createActions(app) {
       ws().drafts[noteKey(sheet)] = { ...noteDraft(sheet, app.ctx()), targetId: value, updatedAt: new Date().toISOString() };
       if (sheet.error?.field === 'targetId') sheet.error = null;
     },
+    /** Speak a note: speech becomes text in the note, after anything already typed. */
+    noteDictate: () => {
+      const sheet = app.sheet;
+      if (dictation) return dictation.stop();
+      const key = noteKey(sheet);
+      const before = noteDraft(sheet, app.ctx()).note.trim();
+      const join = (text) => [before, text].filter(Boolean).join(before && !/[.!?]$/.test(before) ? '. ' : ' ');
+      const finish = (text) => {
+        dictation = null;
+        if (app.sheet !== sheet) return;
+        sheet.dictating = false;
+        if (text) ws().drafts[key] = { ...noteDraft(sheet, app.ctx()), note: join(text), spoken: true, updatedAt: new Date().toISOString() };
+        app.render();
+      };
+      const onText = (text) => { const el = document.getElementById('note-text'); if (el) el.value = join(text); };
+      // Without a working microphone the demo plays a sample, so the flow can still be tried.
+      const sample = (why) => {
+        app.toast(`${why}, so here’s a sample spoken note.`);
+        sheet.dictating = true;
+        dictation = simulate('Talked through the outcomes data. They want the one-page summary before Friday and asked about training for the new team.', { onText, onDone: finish, wordMs: 90 });
+        app.render();
+      };
+      sheet.dictating = true;
+      if (!canListen()) return sample('This browser can’t turn speech into text');
+      dictation = listen({
+        onText,
+        onDone: finish,
+        onError: (code) => {
+          finish('');
+          if (code === 'no-speech') app.toast('Didn’t catch that. Tap Speak and try again.');
+          else if (code !== 'aborted') sample(['not-allowed', 'service-not-allowed', 'audio-capture'].includes(code) ? 'The microphone isn’t available' : 'Speech isn’t available here');
+        },
+      });
+      app.focusAfter('[data-action="noteDictate"]');
+    },
     saveNote: ({ values = {} }) => {
       const sheet = app.sheet;
       const w = ws();
@@ -463,6 +565,7 @@ export function createActions(app) {
       const d = { ...noteDraft(sheet, app.ctx()), ...values, followOn: sheet.edit ? false : values.followOn === 'on' };
       const fail = (field, message) => { sheet.error = { field, message }; app.focusAfter(`.sheet [aria-invalid="true"]`); };
       if (!d.targetId) return fail('targetId', 'Choose who this was with.');
+      if (!d.outcome) return fail('outcome', 'Choose what happened, even if it was only a message.');
       if (!d.date || d.date > app.todayIso) return fail('date', 'Use today or an earlier date.');
       if (d.followOn && !d.followText?.trim()) return fail('followText', 'Say what needs to happen, or untick “Create a follow-up”.');
       const before = { interactions: clone(w.interactions), followUps: clone(w.followUps), plans: clone(w.plans), planDraft: clone(w.planDraft), drafts: clone(w.drafts) };
@@ -470,12 +573,13 @@ export function createActions(app) {
       const parts = [];
       if (sheet.edit) {
         const i = w.interactions.find((x) => x.id === sheet.edit);
-        Object.assign(i, { type: d.type, outcome: d.outcome, date: d.date, note: d.note.trim(), edited: true });
+        Object.assign(i, { type: d.type, outcome: d.outcome, date: d.date, note: d.note.trim(), edited: true, ...(d.spoken ? { spoken: true } : {}) });
         parts.push('Note updated');
       } else {
         const interaction = {
           id: uid('i'), targetId: target.id, attendees: target.kind === 'hcp' ? [target.id] : [], contacts: d.contacts || [],
           date: d.date, type: d.type, outcome: d.outcome, author: 'You', note: d.note.trim(), local: true, createdAt: Date.now(),
+          ...(d.spoken ? { spoken: true } : {}),
         };
         w.interactions.push(interaction);
         parts.push(`${d.type === 'In-person visit' ? 'Visit' : d.type} logged`);

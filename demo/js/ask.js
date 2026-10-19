@@ -331,9 +331,9 @@ const BUILDERS = {
   },
 
   plan({ q, ctx }) {
-    const day = /\btomorrow\b/.test(q) ? ctx.planDays()[1].iso : ctx.todayIso;
+    const day = /\btomorrow\b/.test(q) ? ctx.tomorrowIso : ctx.todayIso;
     const items = routeOrder(activeItems(ctx.ws.plans[day]));
-    const name = ctx.dayName(day).toLowerCase();
+    const name = ctx.dayWord(day);
     if (!items.length) {
       return {
         scope: [ctx.dayName(day)],

@@ -1,5 +1,7 @@
 // Healthcare professionals (HCPs). Every person here is fictional; NPIs,
 // phone numbers (555) and emails (example.org) are deliberately not real.
+// contact.windows are the times each person prefers to be seen; booking
+// suggests slots inside them (see booking.js).
 
 import { series } from './series.js';
 
@@ -20,7 +22,7 @@ export const HCPS = [
       ['Fellowship', 'Interventional Cardiology, Mount Sinai Hospital'],
     ],
     boards: ['Cardiovascular Disease', 'Interventional Cardiology'],
-    contact: { phone: '(212) 555-0101', email: 'maya.patel@example.org', preferred: 'Tue & Thu, 7:30–8:30 before cases', assistant: 'Rosa Diaz, scheduler' },
+    contact: { phone: '(212) 555-0101', email: 'maya.patel@example.org', preferred: 'Tue & Thu, 7:30–8:30 before cases', assistant: 'Rosa Diaz, scheduler', windows: [{ days: 'Tue, Thu', from: '07:30', to: '08:30' }] },
     affiliations: [
       { orgId: 'msw', role: 'Attending, Cardiac Cath Lab', share: 68, days: 'Mon, Wed, Thu' },
       { orgId: 'msh', role: 'Interventional staff', share: 32, days: 'Tue' },
@@ -64,7 +66,7 @@ export const HCPS = [
       ['Fellowship', 'Cardiovascular Disease, Mount Sinai Hospital'],
     ],
     boards: ['Cardiovascular Disease'],
-    contact: { phone: '(212) 555-0202', email: 'jordan.lee@example.org', preferred: 'Email first; afternoons after 2 pm', assistant: null },
+    contact: { phone: '(212) 555-0202', email: 'jordan.lee@example.org', preferred: 'Email first; afternoons after 2 pm', assistant: null, windows: [{ days: 'Mon–Fri', from: '14:00', to: '17:00' }] },
     affiliations: [{ orgId: 'msm', role: 'Attending, General Cardiology', share: 100, days: 'Mon–Fri' }],
     procedures: [
       { family: 'Echocardiography', code: 'CPT 93306', series: series(260, -0.08) },
@@ -100,7 +102,7 @@ export const HCPS = [
       ['Fellowship', 'Clinical Cardiac Electrophysiology, Mount Sinai Hospital'],
     ],
     boards: ['Cardiovascular Disease', 'Clinical Cardiac Electrophysiology'],
-    contact: { phone: '(212) 555-0303', email: 'alex.morgan@example.org', preferred: 'Calls after 4 pm; EP lab mornings', assistant: 'Marta Silva, EP coordinator' },
+    contact: { phone: '(212) 555-0303', email: 'alex.morgan@example.org', preferred: 'Calls after 4 pm; EP lab mornings', assistant: 'Marta Silva, EP coordinator', windows: [{ days: 'Mon–Fri', from: '16:00', to: '17:30' }] },
     affiliations: [
       { orgId: 'msw', role: 'Director, EP Lab', share: 80, days: 'Mon–Thu' },
       { orgId: 'msh', role: 'Electrophysiology staff', share: 20, days: 'Fri' },
@@ -139,7 +141,7 @@ export const HCPS = [
       ['Fellowship', 'Cardiothoracic Surgery, Mount Sinai Hospital'],
     ],
     boards: ['Thoracic Surgery'],
-    contact: { phone: '(212) 555-0404', email: 'sam.rivera@example.org', preferred: 'Wednesday afternoons, through his PA', assistant: 'Leo Grant, PA' },
+    contact: { phone: '(212) 555-0404', email: 'sam.rivera@example.org', preferred: 'Wednesday afternoons, through his PA', assistant: 'Leo Grant, PA', windows: [{ days: 'Wed', from: '13:00', to: '17:00' }] },
     affiliations: [{ orgId: 'msh', role: 'Surgical Director, Structural Heart', share: 100, days: 'Mon–Fri' }],
     procedures: [
       { family: 'TAVR', code: 'CPT 33361', series: series(28, 0.14) },
@@ -178,7 +180,7 @@ export const HCPS = [
       ['Fellowship', 'Cardiovascular Disease, Mount Sinai West'],
     ],
     boards: ['Cardiovascular Disease'],
-    contact: { phone: '(212) 555-0505', email: 'priya.raman@example.org', preferred: 'Clinic days Tue & Thu; best at 12:30', assistant: null },
+    contact: { phone: '(212) 555-0505', email: 'priya.raman@example.org', preferred: 'Clinic days Tue & Thu; best at 12:30', assistant: null, windows: [{ days: 'Tue, Thu', from: '12:30', to: '13:30' }] },
     affiliations: [
       { orgId: 'harlem', role: 'Staff Cardiologist', share: 70, days: 'Tue, Thu, Fri' },
       { orgId: 'msw', role: 'Consulting cardiologist', share: 30, days: 'Mon' },
@@ -215,7 +217,7 @@ export const HCPS = [
       ['Fellowship', 'Interventional Cardiology, Mount Sinai Hospital'],
     ],
     boards: ['Cardiovascular Disease', 'Interventional Cardiology'],
-    contact: { phone: '(212) 555-0606', email: 'daniel.okafor@example.org', preferred: 'By appointment through his office', assistant: 'Anne Wu, executive assistant' },
+    contact: { phone: '(212) 555-0606', email: 'daniel.okafor@example.org', preferred: 'By appointment through his office', assistant: 'Anne Wu, executive assistant', windows: [{ days: 'Mon–Thu', from: '15:00', to: '17:00' }] },
     affiliations: [
       { orgId: 'msh', role: 'Director, Interventional Cardiology', share: 90, days: 'Mon–Thu' },
       { orgId: 'msw', role: 'Consulting interventionalist', share: 10, days: 'Fri' },
@@ -254,7 +256,7 @@ export const HCPS = [
       ['Residency', 'Vascular Surgery, Mount Sinai Hospital'],
     ],
     boards: ['Vascular Surgery'],
-    contact: { phone: '(212) 555-0707', email: 'elena.rossi@example.org', preferred: 'Fridays after the vascular clinic', assistant: null },
+    contact: { phone: '(212) 555-0707', email: 'elena.rossi@example.org', preferred: 'Fridays after the vascular clinic', assistant: null, windows: [{ days: 'Fri', from: '13:00', to: '16:00' }] },
     affiliations: [{ orgId: 'msm', role: 'Chief, Vascular Surgery', share: 100, days: 'Mon–Fri' }],
     procedures: [
       { family: 'Peripheral intervention', code: 'CPT 37225', series: series(40, 0.07) },
@@ -287,7 +289,7 @@ export const HCPS = [
       ['Fellowship', 'Advanced Heart Failure and Transplant, Mount Sinai Hospital'],
     ],
     boards: ['Cardiovascular Disease', 'Advanced Heart Failure and Transplant Cardiology'],
-    contact: { phone: '(212) 555-0808', email: 'kenji.watanabe@example.org', preferred: 'Monday mornings', assistant: null },
+    contact: { phone: '(212) 555-0808', email: 'kenji.watanabe@example.org', preferred: 'Monday mornings', assistant: null, windows: [{ days: 'Mon', from: '08:00', to: '11:00' }] },
     affiliations: [{ orgId: 'msh', role: 'Attending, Heart Failure Program', share: 100, days: 'Mon–Fri' }],
     procedures: [
       { family: 'Right heart cath', code: 'CPT 93451', series: series(30, 0.08) },
@@ -346,7 +348,7 @@ export const HCPS = [
       ['Residency', 'Internal Medicine, Harlem Hospital Center'],
     ],
     boards: ['Internal Medicine'],
-    contact: { phone: '(212) 555-1001', email: 'marcus.bell@example.org', preferred: 'Lunch hour, 12–1', assistant: null },
+    contact: { phone: '(212) 555-1001', email: 'marcus.bell@example.org', preferred: 'Lunch hour, 12–1', assistant: null, windows: [{ days: 'Mon–Fri', from: '12:00', to: '13:00' }] },
     affiliations: [{ orgId: 'harlem', role: 'Primary care physician', share: 100, days: 'Mon–Fri' }],
     procedures: null,
     proceduresUnavailable: 'No procedures in your cardiovascular code group for this specialty.',

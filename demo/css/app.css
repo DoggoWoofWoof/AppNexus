@@ -743,6 +743,11 @@ button.entity-row:hover { background: var(--surface-2); }
 .select-toggle:hover { border-color: var(--accent); }
 .select-toggle[aria-pressed="true"] { background: var(--accent-strong); border-color: var(--accent-strong); color: var(--on-accent); }
 .select-toggle.is-planned { border-color: transparent; background: var(--success-soft); color: var(--success); cursor: default; }
+/* Filling a cancelled slot: the row's button names the time it fills, and
+   drops below the name when the row is too narrow for both. */
+.entity-item:has(.select-fill) { flex-wrap: wrap; justify-content: flex-end; }
+.entity-item:has(.select-fill) > .entity-row { flex: 1 1 13em; }
+.select-toggle.select-fill { display: inline-flex; gap: 4px; width: auto; margin-block: 6px; padding: 0 12px 0 8px; border-color: var(--accent); border-radius: 999px; font-weight: 600; font-variant-numeric: tabular-nums; }
 
 .row-link {
   display: inline-flex;
@@ -1061,6 +1066,17 @@ fieldset.field > legend { margin-bottom: 8px; }
 .radio input { accent-color: var(--accent-strong); width: 1.1em; height: 1.1em; margin: 0; }
 .radio:has(input:checked) { background: var(--accent-soft); border-color: var(--accent-line); color: var(--accent); }
 .radio:has(input:focus-visible) { outline: 2.5px solid var(--focus); outline-offset: 2px; }
+
+.field-label-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.field-label-row > label { font-size: var(--fs-sm); font-weight: 650; }
+.sheet-lead { font-weight: 650; }
+
+/* Booking: one row per suggested time. */
+.slot-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 12em), 1fr)); gap: 8px; }
+.slot { display: flex; align-items: center; gap: 10px; min-height: var(--tap); padding: 8px 12px; border: 1px solid var(--line-strong); border-radius: var(--radius); background: var(--surface); cursor: pointer; }
+.slot input { flex: none; width: 1.1em; height: 1.1em; margin: 0; accent-color: var(--accent-strong); }
+.slot:has(input:checked) { border-color: var(--accent-line); background: var(--accent-soft); }
+.slot:has(input:focus-visible) { outline: 2.5px solid var(--focus); outline-offset: 2px; }
 
 /* ---- Sheets, tray, toasts ---------------------------------------------------- */
 

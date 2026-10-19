@@ -1,5 +1,6 @@
 // Building blocks shared by the HCP and HCO profiles.
 
+import { briefText, buildBrief, visitWhen } from '../brief.js';
 import { diagnosesOf, getEntity, getHcp, proceduresOf } from '../data/index.js';
 import { formatDate, formatNumber, html, lastQuarters, relativeDay, sum, yoy, fromIso, daysBetween } from '../format.js';
 import { addSeries } from '../data/series.js';
@@ -10,7 +11,7 @@ const TYPE_ICONS = { 'In-person visit': 'handshake', 'Phone call': 'phone', 'Vid
 /** Add to plan / selected / already planned, for the day the rep is planning. */
 export function planButton(entity, ctx) {
   const item = ctx.planItemFor(entity.id, ctx.ws.selection.day);
-  const dayName = ctx.dayName(ctx.ws.selection.day).toLowerCase();
+  const dayName = ctx.dayWord(ctx.ws.selection.day);
   if (item) {
     const when = item.mode === 'timed' ? item.time : 'flexible';
     return button({ label: `In ${dayName}'s plan · ${when}`, icon: 'calendar-days', action: 'reviewPlan', variant: 'secondary' });
@@ -29,6 +30,7 @@ export function planButton(entity, ctx) {
 export function profileActions(entity, ctx) {
   return html`<div class="profile-actions">
     ${planButton(entity, ctx)}
+    ${button({ label: 'Book a time', icon: 'calendar-clock', action: 'bookVisit', data: { target: entity.id } })}
     ${button({ label: 'Log visit', icon: 'notebook-pen', action: 'addNote', data: { target: entity.id } })}
     ${button({ label: 'Follow-up', icon: 'calendar-plus', action: 'addFollowUp', data: { target: entity.id } })}
   </div>`;
@@ -43,13 +45,27 @@ export function contactLine(entity, ctx) {
   return html`<p class="profile-status">${icon('clock')}<span>${parts.join(' · ')}</span></p>`;
 }
 
-/** Follow-ups due and the "why reach out" insight. */
-export function whyCard(entity, ctx, insight) {
-  const open = ctx.ws.followUps.filter((f) => !f.done && f.targetId === entity.id).sort((a, b) => a.due.localeCompare(b.due));
+/**
+ * The first card on a profile, and what Prepare opens: why see them now, the
+ * goal, three talking points and open follow-ups. With a visit coming up it
+ * says when; Copy gives the same brief as text.
+ */
+export function whyCard(entity, ctx) {
+  const b = buildBrief(entity, ctx);
+  const requested = b.visit?.item.booking === 'requested';
   return card(html`
-    ${sectionHead('Why reach out', { sub: 'Sample signals from claims and your activity' })}
-    <p class="insight">${icon('lightbulb')}<span>${insight}</span></p>
-    ${open.length ? html`<ul class="follow-list">${open.map((f) => followUpRow(f, ctx, { showTarget: false }))}</ul>` : ''}
+    ${sectionHead(b.visit ? 'Before your visit' : 'Why reach out', {
+      sub: b.visit ? `${visitWhen(b.visit, entity)}${requested ? ' · not confirmed yet' : ''}` : 'Sample signals from claims and your activity',
+      actions: button({ label: 'Copy brief', icon: 'copy', action: 'copy', data: { value: briefText(entity, b), label: 'brief' }, size: 'sm', variant: 'ghost', iconOnly: true }),
+    })}
+    <p class="insight">${icon('lightbulb')}<span>${b.insight}</span></p>
+    ${entity.kind === 'hcp' && (entity.contact.preferred || entity.contact.assistant) ? html`<p class="profile-status">${icon('clock')}<span>${[
+      entity.contact.preferred && `Best time: ${entity.contact.preferred}`,
+      entity.contact.assistant && `Book through ${entity.contact.assistant}`,
+    ].filter(Boolean).join(' · ')}</span></p>` : ''}
+    <p class="next-goal">${icon('target')}<span><span class="kicker">${b.goalSuggested ? 'Suggested goal' : 'Goal'}</span> ${b.goal}</span></p>
+    ${b.points.length ? html`<ul class="brief-points" aria-label="Talking points">${b.points.map((p) => html`<li>${icon(p.icon)}<span>${p.text}</span></li>`)}</ul>` : ''}
+    ${b.followUps.length ? html`<ul class="follow-list">${b.followUps.map((f) => followUpRow(f, ctx, { showTarget: false }))}</ul>` : ''}
   `, 'why-card');
 }
 
@@ -132,7 +148,7 @@ export function interactionItem(i, ctx, { showTarget = false } = {}) {
         <p class="timeline-title">${showTarget && target ? html`<button type="button" class="link" data-action="openProfile" data-id="${target.id}" data-tab="activity">${target.name}</button> · ` : ''}${i.type}</p>
         <p class="caption">${formatDate(i.date, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })} · ${i.author}${i.edited ? ' · edited' : ''}</p>
       </header>
-      <div class="timeline-tags">${tag(i.outcome, i.outcome === 'Met' ? 'success' : i.outcome === 'Attempted' ? 'warn' : 'neutral')}${i.local ? tag('Saved on this device', 'neutral') : ''}</div>
+      <div class="timeline-tags">${tag(i.outcome, i.outcome === 'Met' ? 'success' : i.outcome === 'Attempted' ? 'warn' : 'neutral')}${i.spoken ? html`<span class="tag tag-neutral">${icon('mic')}Spoken</span>` : ''}${i.local ? tag('Saved on this device', 'neutral') : ''}</div>
       ${i.note ? html`<p class="timeline-note">${i.note}</p>` : html`<p class="timeline-note muted">No note written.</p>`}
       ${people.length || i.contacts?.length ? html`<p class="caption">With ${[...people.map((p) => p.name), ...(i.contacts || [])].join(', ')}</p>` : ''}
       ${mine ? html`<div class="timeline-actions">${button({ label: 'Edit', icon: 'pencil', action: 'editNote', data: { id: i.id }, variant: 'ghost', size: 'sm' })}</div>` : ''}

@@ -1,9 +1,8 @@
 /* Screen-specific layout: Today, Targets, Ask, profiles, plan review,
    Activity and Insights. */
 
-/* ---- Ask bar (Today) and Ask composer share one look ------------------------- */
+/* ---- Ask composer ------------------------------------------------------------ */
 
-.ask-bar,
 .ask-form {
   display: flex;
   align-items: center;
@@ -15,10 +14,7 @@
   background: var(--surface);
   box-shadow: var(--shadow);
 }
-.ask-bar:focus-within,
 .ask-form:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft), var(--shadow); }
-.ask-bar > .icon { color: var(--accent); margin-right: 6px; }
-.ask-bar input,
 .ask-form input {
   flex: 1 1 auto;
   min-width: 0;
@@ -28,11 +24,8 @@
   background: none;
   font-size: var(--fs-md);
 }
-.ask-bar input:focus-visible,
 .ask-form input:focus-visible { outline: none; }
-.ask-bar input::placeholder,
 .ask-form input::placeholder { color: var(--muted); }
-.ask-bar .btn-icon,
 .ask-form .btn-icon { border-radius: 50%; }
 
 /* ---- Today ---------------------------------------------------------------- */
@@ -403,6 +396,10 @@ button.ask-row:hover { background: var(--surface-2); }
 }
 
 .why-card { border-left: 4px solid var(--orange); }
+.next-goal .kicker { display: block; margin-bottom: 2px; }
+.brief-points { display: flex; flex-direction: column; gap: 10px; margin: 0; padding: 0; list-style: none; font-size: var(--fs-sm); }
+.brief-points > li { display: flex; align-items: flex-start; gap: 10px; }
+.brief-points .icon { flex: none; margin-top: 0.15em; color: var(--accent); }
 
 .volume-total { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px; }
 .volume-total > div:first-child { display: flex; flex-direction: column; gap: 4px; }

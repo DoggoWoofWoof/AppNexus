@@ -2,11 +2,12 @@
 
 import { createActions } from './actions.js';
 import { createApi } from './api.js';
+import { suggestSlots } from './booking.js';
 import { allHcps, allOrgs, getEntity, getOrg, lastInteraction, priorityOf, signalsFor, siteFor } from './data/index.js';
 import { REP } from './data/seed.js';
 import { addDays, daysBetween, formatDate, fromIso, haversineKm, html, initials, isoDate, plural, startOfDay } from './format.js';
 import { TABS, currentEntry, freshNav, loadNav, makeEntry, pop, previousEntry, push, saveNav, switchTab } from './nav.js';
-import { activeItems } from './plan.js';
+import { activeItems, routeOrder } from './plan.js';
 import { searchTargets } from './search.js';
 import { renderSheet } from './sheets.js';
 import { freshWorkspace, loadWorkspace, saveWorkspace } from './store.js';
@@ -40,23 +41,52 @@ export function buildContext({ ws, entry, today: day, now = () => new Date(), sh
   const planItemFor = (id, d) => activeItems(ws.plans[d]).find((i) => i.targetId === id) || null;
   const strip = (items = []) => JSON.stringify(items.map(({ isNew, ...rest }) => rest));
   const dayName = (iso) => (iso === todayIso ? 'Today' : iso === tomorrowIso ? 'Tomorrow' : formatDate(iso, { weekday: 'long' }));
+  /** The day name to use mid-sentence: "today", "tomorrow" or "Wednesday". */
+  const dayWord = (iso) => (iso === todayIso || iso === tomorrowIso ? dayName(iso).toLowerCase() : dayName(iso));
   const entities = [...allHcps(), ...allOrgs()];
+  // Today and the next four working days: the days the rep plans and books.
+  const days = [];
+  for (let d = day; days.length < 5; d = addDays(d, 1)) {
+    if (!days.length || (d.getDay() !== 0 && d.getDay() !== 6)) days.push(isoDate(d));
+  }
+  const planDays = () => days.map((iso, i) => ({ iso, label: i === 0 ? 'Today' : formatDate(iso, { weekday: 'short', day: 'numeric' }) }));
+  /** The next planned visit with someone in the planning days, or null. */
+  const nextVisit = (id) => {
+    for (const d of days) {
+      const item = routeOrder(ws.plans[d] || []).find((i) => i.targetId === id && i.status === 'planned');
+      if (item) return { item, day: d };
+    }
+    return null;
+  };
+  const time = now();
 
   return {
-    ws, entry, sheet, now, voice, today: day, todayIso,
+    ws, entry, sheet, now, voice, today: day, todayIso, tomorrowIso,
     signals,
     planItemFor,
     dayName,
+    dayWord,
     lastInteraction: (id) => lastInteraction(id, ws),
     dayOf: (itemId) => Object.keys(ws.plans).find((d) => ws.plans[d].some((i) => i.id === itemId)),
-    planDays: () => [{ iso: todayIso, label: 'Today' }, { iso: tomorrowIso, label: 'Tomorrow' }],
+    planDays,
+    nextVisit,
+    /** Times to offer when booking someone, skipping days they're already planned (except the visit being moved). */
+    slotsFor: (entity, except) => suggestSlots(entity, {
+      days: days.filter((d) => !activeItems(ws.plans[d]).some((i) => i.targetId === entity.id && i.id !== except)),
+      plans: ws.plans,
+      duration: entity.kind === 'hco' ? 45 : 30,
+      earliest: { day: todayIso, minutes: time.getHours() * 60 + time.getMinutes() + 30 },
+      except,
+    }),
     planDraft: () => ws.planDraft || { day: ws.selection.day, items: clone(ws.plans[ws.selection.day] || []) },
     planDirty: () => !!ws.planDraft && strip(ws.planDraft.items) !== strip(ws.plans[ws.planDraft.day]),
     isSelected: (id) => ws.selection.ids.includes(id) ||
       !!(ws.planDraft?.day === ws.selection.day && ws.planDraft.items.some((i) => i.isNew && i.targetId === id)),
     search: (f) => {
       const origin = ws.replacement ? getOrg(ws.replacement.siteId).coords : REP.start.coords;
-      return searchTargets(entities, f, {
+      // While filling a cancelled slot, the person who cancelled isn't offered back.
+      const pool = ws.replacement ? entities.filter((e) => e.id !== ws.replacement.targetId) : entities;
+      return searchTargets(pool, f, {
         signals,
         distance: (e) => haversineKm(origin, siteFor(e).coords),
         planned: (e) => planItemFor(e.id, ws.selection.day),
@@ -66,8 +96,9 @@ export function buildContext({ ws, entry, today: day, now = () => new Date(), sh
           : [e.name, e.type, e.typeDetail, e.address, e.city]).join(' '),
       });
     },
+    /** The top of the Targets ranking for a day, leaving out anyone already planned, seen or cancelled that day. */
     suggestions: (d, count) => {
-      const planned = new Set(activeItems(ws.plans[d]).map((i) => i.targetId));
+      const planned = new Set((ws.plans[d] || []).map((i) => i.targetId));
       return entities
         .filter((e) => !planned.has(e.id) && e.type !== 'Health system' && (e.kind === 'hcp' || e.assigned))
         .map((e) => ({ entity: e, signals: signals(e), priority: priorityOf(e, ws, day) }))
@@ -321,7 +352,7 @@ export function createApp({ root, storage, session, now = () => new Date(), getM
     if (!picked && !dirty) return '';
     const day = draft && dirty ? draft.day : ws.selection.day;
     const text = picked
-      ? html`<strong>${plural(picked, 'target')} selected</strong><span class="caption">for ${ctx.dayName(day).toLowerCase()}${dirty && !ws.selection.ids.length ? ' · not saved yet' : ''}</span>`
+      ? html`<strong>${plural(picked, 'target')} selected</strong><span class="caption">for ${ctx.dayWord(day)}${dirty && !ws.selection.ids.length ? ' · not saved yet' : ''}</span>`
       : html`<strong>Unsaved plan</strong><span class="caption">${ctx.dayName(day)} · review to save</span>`;
     return html`<div class="tray" role="region" aria-label="Plan selection">
       <span class="tray-icon" aria-hidden="true">${icon('calendar-check')}</span>

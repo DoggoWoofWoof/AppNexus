@@ -1,17 +1,21 @@
 // Today: a calm start. What's next, the day's plan, follow-ups due and who to see.
+// "Who to see" is the top of the Targets list, with the same rows and buttons.
 
-import { getEntity, getOrg, siteFor, subtitle } from '../data/index.js';
+import { getEntity, getOrg, siteFor } from '../data/index.js';
 import { REP } from '../data/seed.js';
 import { daysBetween, formatDate, fromIso, greeting, html, plural } from '../format.js';
 import { mapView } from '../map.js';
 import { endTime, isOnSite, routeOrder } from '../plan.js';
-import { avatar, button, card, emptyState, icon, kpis, sectionHead, segmented, signalTags, tag } from '../ui.js';
-import { askBar } from './ask.js';
+import { avatar, button, card, emptyState, icon, sectionHead, segmented, signalTags, tag } from '../ui.js';
 import { followUpRow } from './profile-parts.js';
+import { targetRow } from './targets.js';
 
 export const title = () => 'Today';
 
 const TYPE_ICONS = { 'In-person visit': 'handshake', 'Phone call': 'phone', 'Video call': 'video', Email: 'mail', Meeting: 'users' };
+
+/** "Requested" until the office confirms the time. */
+const bookingTag = (item) => (item.status === 'planned' && item.booking === 'requested' ? tag('Requested', 'warn') : '');
 
 export function render(ctx) {
   const day = ctx.entry.ui.day && ctx.planDays().some((d) => d.iso === ctx.entry.ui.day) ? ctx.entry.ui.day : ctx.todayIso;
@@ -34,7 +38,6 @@ export function render(ctx) {
       <h1>${greeting(ctx.now())}, ${REP.firstName}</h1>
       <p class="page-sub">${summary}.</p>
     </header>
-    ${askBar({ id: 'today-ask' })}
     ${segmented(ctx.planDays().map((d) => ({ id: d.iso, label: d.label })), day, 'todayDay', { label: 'Day', key: 'day' })}
     ${replacementCard(ctx, day)}
     <div class="today-grid">
@@ -42,16 +45,15 @@ export function render(ctx) {
         ${next ? upNext(next, ctx, isToday) : ''}
         ${active.length ? planCard(all, ctx, day) : card(emptyState({
           icon: 'calendar-days',
-          title: `No visits planned for ${ctx.dayName(day).toLowerCase()}`,
+          title: `No visits planned for ${ctx.dayWord(day)}`,
           body: 'Pick a few people or accounts and review them as one plan. Suggestions below are a good start.',
           actions: button({ label: 'Plan your day', icon: 'target', action: 'planYourDay', data: { day }, variant: 'primary' }),
         }))}
         ${isToday ? followUpsCard(due, ctx) : ''}
       </div>
       <div class="today-side">
-        ${active.some(isOnSite) ? routeCard(active, ctx) : ''}
+        ${active.some(isOnSite) ? routeCard(active, ctx, day) : ''}
         ${suggestions(ctx, day)}
-        ${isToday ? weekCard(ctx) : ''}
       </div>
     </div>
   `;
@@ -70,7 +72,7 @@ function upNext(item, ctx, isToday) {
   return html`<section class="card next-card" aria-labelledby="next-title">
     <div class="next-top">
       <p class="eyebrow">${isToday ? 'Up next' : 'First stop'} · ${item.mode === 'timed' ? `${item.time}–${endTime(item)}` : 'Flexible'}</p>
-      ${tag(item.type, 'neutral')}
+      <span class="tag-row">${bookingTag(item)}${tag(item.type, 'neutral')}</span>
     </div>
     <div class="next-who">
       ${avatar(target, 'avatar-lg')}
@@ -94,20 +96,20 @@ function planCard(items, ctx, day) {
     ${sectionHead('Your plan', { sub: 'Tap a stop for options', actions: button({ label: 'Edit plan', icon: 'pencil', action: 'reviewPlan', data: { day }, size: 'sm' }) })}
     <ol class="day-timeline">${items.map((item) => {
       const target = getEntity(item.targetId);
-      const status = item.status === 'done' ? 'Done' : item.status === 'cancelled' ? 'Cancelled' : '';
+      const status = item.status === 'done' ? tag('Done', 'success') : item.status === 'cancelled' ? tag('Cancelled', 'neutral') : bookingTag(item);
       return html`<li class="day-stop is-${item.status}">
         <span class="day-time">${item.mode === 'timed' ? item.time : 'Any time'}<span class="caption">${item.duration} min</span></span>
         <button type="button" class="day-stop-body" data-action="visitOptions" data-item="${item.id}" data-day="${day}">
           <span class="day-stop-icon" aria-hidden="true">${item.status === 'done' ? icon('circle-check') : icon(TYPE_ICONS[item.type] || 'map-pin')}</span>
           <span class="entity-main"><span class="row-title${item.status === 'cancelled' ? ' strike' : ''}">${target.name}</span><span class="caption">${item.type} · ${siteFor(target, item.siteId).name}</span></span>
-          ${status ? tag(status, item.status === 'done' ? 'success' : 'neutral') : icon('chevron-right')}
+          ${status || icon('chevron-right')}
         </button>
       </li>`;
     })}</ol>
   `);
 }
 
-function routeCard(items, ctx) {
+function routeCard(items, ctx, day) {
   const onSite = routeOrder(items).filter(isOnSite);
   return card(html`
     ${sectionHead('Route', { sub: `${plural(onSite.length, 'site visit')} · straight-line order` })}
@@ -116,10 +118,10 @@ function routeCard(items, ctx) {
       start: REP.start,
       route: true,
       action: null,
-      label: 'Map of today’s stops in order',
+      label: `Map of ${ctx.dayWord(day)}’s stops in order`,
       height: 200,
     })}
-    ${button({ label: 'Open in Targets map', icon: 'map', action: 'openPlanMap', variant: 'ghost', size: 'sm' })}
+    ${day === ctx.todayIso ? button({ label: 'Open in Targets map', icon: 'map', action: 'openPlanMap', variant: 'ghost', size: 'sm' }) : ''}
   `);
 }
 
@@ -135,28 +137,10 @@ function followUpsCard(due, ctx) {
 function suggestions(ctx, day) {
   const picks = ctx.suggestions(day, 3);
   return card(html`
-    ${sectionHead('Who to see', { sub: 'Ranked by follow-ups, leakage and volume' })}
+    ${sectionHead('Who to see', { sub: 'Top of your Targets list: follow-ups, leakage and volume' })}
     ${picks.length
-      ? html`<ul class="entity-list">${picks.map(({ entity, signals }) => {
-        const selected = ctx.isSelected(entity.id);
-        return html`<li class="entity-item${selected ? ' is-selected' : ''}">
-          <button type="button" class="entity-row" data-action="openProfile" data-id="${entity.id}">${avatar(entity)}<span class="entity-main"><span class="row-title">${entity.name}</span><span class="caption">${subtitle(entity)}</span><span class="tag-row">${signalTags(signals, 2)}</span></span></button>
-          <button type="button" class="select-toggle" data-action="toggleSelect" data-id="${entity.id}" aria-pressed="${selected}" aria-label="${selected ? 'Remove' : 'Add'} ${entity.name} ${selected ? 'from' : 'to'} the plan">${icon(selected ? 'check' : 'plus')}</button>
-        </li>`;
-      })}</ul>`
+      ? html`<ul class="entity-list">${picks.map(({ entity, signals }) => targetRow({ entity, signals, planned: null }, ctx, { showDistance: false }))}</ul>`
       : emptyState({ icon: 'sparkles', title: 'Everyone suggested is planned', body: 'Search Targets for more people and accounts.' })}
-    ${button({ label: 'Search all targets', icon: 'search', action: 'tab', data: { tab: 'targets' }, variant: 'ghost', size: 'sm' })}
-  `);
-}
-
-function weekCard(ctx) {
-  const s = ctx.weekStats();
-  return card(html`
-    ${sectionHead('This week', { sub: 'Your activity on this device and in the sample history' })}
-    ${kpis([
-      { label: 'Logged · last 7 days', value: String(s.logged), sub: 'Visits, calls and notes' },
-      { label: 'People seen · 30 days', value: `${s.seen}/${s.people}` },
-      { label: 'Open follow-ups', value: String(s.open), tone: s.overdue ? 'orange' : '', sub: s.overdue ? `${s.overdue} overdue` : 'None overdue' },
-    ])}
+    ${button({ label: 'See all in Targets', icon: 'search', action: 'planYourDay', data: { day }, variant: 'ghost', size: 'sm' })}
   `);
 }

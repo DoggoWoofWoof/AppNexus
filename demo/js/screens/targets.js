@@ -26,7 +26,7 @@ export function render(ctx) {
       <h1>Targets</h1>
       <p class="page-sub">Search your assigned people and accounts. Select several, then review them as one plan.</p>
     </header>
-    ${rep ? html`<div class="banner banner-accent" role="status">${icon('calendar-plus')}<span><strong>Filling the ${rep.time} slot</strong> left by ${rep.name}. Nearest to ${getOrg(rep.siteId).name} first.</span>${button({ label: 'Stop', action: 'clearReplacement', size: 'sm', variant: 'ghost' })}</div>` : ''}
+    ${rep ? html`<div class="banner banner-accent" role="status">${icon('calendar-plus')}<span><strong>${rep.time} is free</strong> after ${rep.name} cancelled. Nearest to ${getOrg(rep.siteId).name} first; tap ${rep.time} on a row to add them.</span>${button({ label: 'Leave it free', action: 'clearReplacement', size: 'sm', variant: 'ghost' })}</div>` : ''}
     <div class="search">
       ${icon('search')}
       <input type="search" id="target-search" data-input="targetsQuery" value="${f.query}" placeholder="Name, specialty, organization or NPI" aria-label="Search targets" autocomplete="off">
@@ -52,6 +52,7 @@ export function render(ctx) {
 export function targetRow(row, ctx, { showDistance = true } = {}) {
   const { entity, signals, distance, planned } = row;
   const selected = ctx.isSelected(entity.id);
+  const free = ctx.ws.replacement?.day === ctx.ws.selection.day ? ctx.ws.replacement : null;
   return html`<li class="entity-item${selected ? ' is-selected' : ''}">
     <button type="button" class="entity-row" data-action="openProfile" data-id="${entity.id}">
       ${avatar(entity)}
@@ -64,6 +65,8 @@ export function targetRow(row, ctx, { showDistance = true } = {}) {
     </button>
     ${planned
       ? html`<span class="select-toggle is-planned" title="Already in the plan">${icon('calendar-days')}<span class="sr-only">Already planned</span></span>`
+      : free
+      ? html`<button type="button" class="select-toggle select-fill" data-action="fillSlot" data-id="${entity.id}" aria-label="Add ${entity.name} at ${free.time}">${icon('plus')}<span aria-hidden="true">${free.time}</span></button>`
       : html`<button type="button" class="select-toggle" data-action="toggleSelect" data-id="${entity.id}" aria-pressed="${selected}" aria-label="${selected ? 'Remove' : 'Add'} ${entity.name} ${selected ? 'from' : 'to'} the plan">${icon(selected ? 'check' : 'plus')}</button>`}
   </li>`;
 }

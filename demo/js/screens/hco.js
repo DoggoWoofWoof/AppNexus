@@ -43,9 +43,8 @@ function overview(org, ctx) {
   const people = hcpsAt(org.id);
   const facilities = descendantsOf(org.id);
   const parent = parentOf(org);
-  const insight = org.leakage?.insight || org.leakageUnavailable || 'No leakage signal for this facility.';
   return html`
-    ${whyCard(org, ctx, insight)}
+    ${whyCard(org, ctx)}
     ${kpis([
       org.procedures ? { label: 'Procedures · 12 mo', value: formatNumber(procedureTotal(org)), delta: procedureYoy(org) } : { label: 'Procedures · 12 mo', value: '—', sub: 'Not in your code group' },
       org.leakage ? { label: 'Patients leaving the system', value: `${org.leakage.leftPct}%`, sub: `of ${formatNumber(org.leakage.patients)} patients`, tone: org.leakage.leftPct >= 20 ? 'orange' : '' } : { label: 'Leakage', value: '—', sub: 'Not reported here' },

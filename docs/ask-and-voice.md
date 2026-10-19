@@ -2,7 +2,7 @@
 
 ## What is in the prototype
 
-**Ask** is the centre tab. Today also has an Ask bar, and a question typed into Targets search offers to go to Ask. A rep can ask in three ways:
+**Ask** is the centre tab, and a question typed into Targets search offers to go to Ask. A rep can ask in three ways:
 
 - **Typing.** Questions about their own book: "What has declined?", "Which accounts are leaking the most?", "Brief me on Mount Sinai West", "What's overdue?".
 - **Push-to-talk.** Tap the mic, speak, pause. The words appear as they are heard, and the question is sent when the rep stops.
@@ -19,6 +19,8 @@ Every answer has the same shape. That makes it quick to read, and it is the same
 Follow-ups keep the thread. After "Brief me on Dr. Maya Patel", the question "Where does she refer?" is about the same person. A new territory-wide question, such as "What has declined?", starts fresh.
 
 In the prototype, answers are worked out on the device from sample figures. When the browser has no speech recognition, or the mic is blocked, the app says so. It then offers **Try a sample voice question**, which plays a clearly labelled simulated question.
+
+**Speak** in **Log visit** uses the same speech input for the note. The words appear in the note as they are heard, the rep can edit them before saving, and the saved record is marked as spoken. Only the text is kept; no audio is stored. Without speech recognition it fills a labelled sample note instead.
 
 ## Recommendation
 

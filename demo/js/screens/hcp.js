@@ -47,7 +47,7 @@ function overview(hcp, ctx) {
   const total = procedureTotal(hcp);
 
   return html`
-    ${whyCard(hcp, ctx, hcp.insight)}
+    ${whyCard(hcp, ctx)}
     ${kpis([
       hcp.procedures ? { label: 'Procedures · 12 mo', value: formatNumber(total), delta: procedureYoy(hcp) } : { label: 'Procedures · 12 mo', value: '—', sub: 'Not in your code group' },
       { label: 'Patients · last quarter', value: formatNumber(patientsLastQ), sub: 'Across tracked diagnoses' },

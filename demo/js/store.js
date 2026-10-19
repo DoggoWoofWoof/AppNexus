@@ -18,7 +18,8 @@ export function freshWorkspace(today) {
     selection: { day: isoDate(today), ids: [] },
     // Unsaved edits to a day's plan: { day, items }.
     planDraft: null,
-    // A cancelled timed visit whose slot the rep is trying to fill: { day, time, duration, siteId, name }.
+    // A cancelled timed visit whose slot the rep is trying to fill:
+    // { day, time, duration, siteId, name, targetId, itemId }.
     replacement: null,
     // Unsent notes keyed by target id (or "edit:<interaction id>").
     drafts: {},
