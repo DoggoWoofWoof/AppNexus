@@ -8,13 +8,11 @@ import { useState, type ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Avatar } from '@/components/entity';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import { useChat } from '@/lib/chat';
-import { REP } from '@/lib/data/seed';
 import { plural } from '@/lib/format';
 import { useWorkspace } from '@/lib/store';
 
@@ -72,14 +70,7 @@ function MenuSheet({ due, onClose }: { due: number; onClose: () => void }) {
       <MenuRow icon={Bookmark} title="Saved" sub={saved ? `${plural(saved, 'item')} · visit prep and reports` : 'Visit prep and reports'} onPress={() => go('/saved')} />
       <MenuRow icon={ListChecks} title="Activity" sub={due ? `${plural(due, 'follow-up')} due · your notes` : 'Your notes and follow-ups'} onPress={() => go('/activity')} alert={due > 0} />
       <MenuRow icon={ChartColumn} title="Insights" sub="Your territory at a glance" onPress={() => go('/insights')} />
-      <View className="mt-2 flex-row items-center gap-3 border-t border-border px-2 pt-4">
-        <Avatar entity={{ name: REP.name }} />
-        <View className="flex-1">
-          <Text className="font-semibold">{REP.name}</Text>
-          <Text className="text-sm text-muted-foreground">{REP.team}</Text>
-        </View>
-      </View>
-      <Text className="px-2 text-xs text-muted-foreground">Sample data. Nothing you add leaves this device yet.</Text>
+      <Text className="mt-2 border-t border-border px-2 pt-4 text-xs text-muted-foreground">Sample data for a made-up territory. Nothing is sent anywhere yet.</Text>
     </DialogContent>
   );
 }

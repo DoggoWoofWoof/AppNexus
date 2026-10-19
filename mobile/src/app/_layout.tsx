@@ -6,7 +6,7 @@ import { PortalHost } from '@rn-primitives/portal';
 import { ThemeProvider } from 'expo-router';
 import { Tabs } from 'expo-router/js-tabs';
 import { StatusBar } from 'expo-status-bar';
-import { House, Mic, Target, type LucideIcon } from 'lucide-react-native';
+import { House, MessageCircle, Target, type LucideIcon } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import { useEffect } from 'react';
 import { Platform, useWindowDimensions } from 'react-native';
@@ -19,12 +19,14 @@ import { WorkspaceProvider } from '@/lib/store';
 import { NAV_THEME, THEME } from '@/lib/theme';
 
 // Three tabs: the day, Ask in the middle as the main button, and who to see.
+// Ask's icon is a speech bubble rather than a mic: the tab opens Ask, and the
+// mic on that screen is what listens.
 // Each one is a folder with its own stack, so Back stays inside the tab. Saved,
 // Activity and Insights open from the menu (components/menu.tsx); they're tabs
 // too, so they keep their own history, but they aren't in the bar.
 const TABS: { name: string; title: string; icon: LucideIcon }[] = [
   { name: 'today', title: 'Today', icon: House },
-  { name: 'ask', title: 'Ask', icon: Mic },
+  { name: 'ask', title: 'Ask', icon: MessageCircle },
   { name: 'targets', title: 'Targets', icon: Target },
 ];
 const MENU_TABS = ['activity', 'insights', 'saved'];

@@ -273,9 +273,9 @@ function NextStep({ step, onFollow }: { step: NonNullable<Answer['doThis']>; onF
 }
 
 /**
- * One box to type or talk in. The mic shows while the box is empty and Send once
- * there is text, so there is only ever one button beside it. Before the first
- * question (`big`) the mic is also a large button of its own, for talking on the go.
+ * One box to type or talk in, with at most one button beside it: the mic while
+ * the box is empty, Send once there is text. Before the first question (`big`)
+ * the mic is a large button above the box instead, for talking on the go.
  */
 function Composer({
   placeholder,
@@ -330,7 +330,7 @@ function Composer({
     setText('');
     onSend(q, 'typed');
   };
-  const showMic = voice && (listening || !text.trim());
+  const side = listening ? (big ? null : 'mic') : text.trim() ? 'send' : voice && !big ? 'mic' : null;
 
   return (
     <View className="gap-2 border-t border-border bg-background px-4 py-2">
@@ -344,7 +344,7 @@ function Composer({
           >
             <Icon as={listening ? Square : Mic} size={34} className="text-white" />
           </Pressable>
-          <Text className={cn('text-base', listening ? 'text-brand' : 'text-muted-foreground')}>{listening ? 'Listening… tap to stop' : 'Tap and ask'}</Text>
+          <Text className={cn('text-base', listening ? 'text-brand' : 'text-muted-foreground')}>{listening ? 'Listening… tap to stop' : 'Tap and talk'}</Text>
         </View>
       ) : null}
       {error ? <Text className="text-sm text-muted-foreground">{error}</Text> : null}
@@ -354,13 +354,13 @@ function Composer({
           className="flex-1 rounded-full px-4"
           value={text}
           onChangeText={setText}
-          placeholder={listening ? 'Listening…' : placeholder}
+          placeholder={listening ? 'Listening…' : big && voice ? 'Or type a question' : placeholder}
           onSubmitEditing={submit}
           returnKeyType="send"
           editable={!listening}
           accessibilityLabel="Ask a question"
         />
-        {showMic && !big ? (
+        {side === 'mic' ? (
           <Button
             size="icon"
             variant={listening ? 'destructive' : 'outline'}
@@ -370,11 +370,11 @@ function Composer({
           >
             <Icon as={listening ? Square : Mic} size={20} className={listening ? 'text-white' : undefined} />
           </Button>
-        ) : (
-          <Button size="icon" className="rounded-full" onPress={submit} disabled={!text.trim()} accessibilityLabel="Send">
+        ) : side === 'send' ? (
+          <Button size="icon" className="rounded-full" onPress={submit} accessibilityLabel="Send">
             <Icon as={ArrowUp} size={20} className="text-primary-foreground" />
           </Button>
-        )}
+        ) : null}
       </View>
     </View>
   );
