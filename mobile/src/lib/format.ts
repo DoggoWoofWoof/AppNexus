@@ -21,7 +21,16 @@ export const fromIso = (iso: string): Date => {
   return new Date(y, m - 1, d);
 };
 
-export const addDays = (date: Date, days: number): Date => new Date(startOfDay(date).getTime() + days * DAY);
+/**
+ * Local midnight `days` calendar days on. Counted by the calendar, not in steps of
+ * 24 hours: the day the clocks go back has 25, and 24 hours after its midnight is
+ * still that day.
+ */
+export const addDays = (date: Date, days: number): Date => {
+  const d = startOfDay(date);
+  d.setDate(d.getDate() + days);
+  return d;
+};
 
 export const daysBetween = (a: Date, b: Date): number => Math.round((startOfDay(b).getTime() - startOfDay(a).getTime()) / DAY);
 
