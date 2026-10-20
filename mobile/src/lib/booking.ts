@@ -3,7 +3,7 @@
 // slot uses Targets' own search, sorted nearest to the cancelled site, and is
 // only offered to people who are usually there at that time (`availability`).
 
-import { fromIso, fromMinutes, toMinutes } from './format';
+import { fromIso, fromMinutes, isoDate, toMinutes } from './format';
 import type { Entity, PlanItem, TimeWindow } from './types';
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -52,6 +52,31 @@ export const usualTimes = (entity: Entity): string =>
   `Usually ${windowsFor(entity)
     .map((w) => `${dayWords(w.days)} ${w.from}–${w.to}`)
     .join(' or ')}`;
+
+/** Their usual times on a weekday, such as "07:30–08:30", or "" when they have none that day. */
+export const hoursOn = (entity: Entity, weekday: number): string =>
+  windowsFor(entity)
+    .filter((w) => parseDays(w.days).has(weekday))
+    .map((w) => `${w.from}–${w.to}`)
+    .join(', ');
+
+const WEEKDAY_NAMES = ['Sundays', 'Mondays', 'Tuesdays', 'Wednesdays', 'Thursdays', 'Fridays', 'Saturdays'];
+
+/**
+ * Whether someone is in on a day, for Targets and adding: their usual times then,
+ * or why not, such as "Not in on Tuesdays". Today, a usual time already over doesn't count.
+ */
+export function inOnDay(entity: Entity, day: string, now?: Date): { ok: true; hours: string } | { ok: false; why: string } {
+  const weekday = fromIso(day).getDay();
+  if (!siteOnDay(entity, weekday)) return { ok: false, why: `Not in on ${WEEKDAY_NAMES[weekday]}` };
+  const hours = hoursOn(entity, weekday);
+  if (now && isoDate(now) === day) {
+    const minutes = now.getHours() * 60 + now.getMinutes();
+    const today = windowsFor(entity).filter((w) => parseDays(w.days).has(weekday));
+    if (today.length && today.every((w) => toMinutes(w.to) <= minutes)) return { ok: false, why: `Gone for today (in ${hours})` };
+  }
+  return { ok: true, hours };
+}
 
 /** Where they can be seen at a time, or why not: they need to be on site that day and inside one of their usual times. */
 export type Availability = { ok: true; siteId: string } | { ok: false; why: string };

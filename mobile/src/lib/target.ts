@@ -165,6 +165,20 @@ export function promiseDue(f: FollowUp, today: Date): { text: string; tone: 'lat
   return { text: `Due ${relativeDayLower(f.due, today)}`, tone: late === 0 ? 'today' : 'later' };
 }
 
+// ---- Which card a link opens ----------------------------------------------
+
+/** The cards that open in full. */
+export type CardId = 'followups' | 'notes' | 'visits' | 'volumes' | 'refer' | 'leakage' | 'doctors' | 'people' | 'system' | 'details';
+
+/** The card a link asks for, by the sections the old profile tabs had (links from Ask still use them). */
+export function cardFor(entity: Entity, section?: string): CardId | undefined {
+  if (section === 'activity') return 'notes';
+  if (section === 'volumes' || section === 'details') return section;
+  if (section === 'network') return entity.kind === 'hcp' ? 'refer' : 'doctors';
+  if (section === 'leakage') return entity.kind === 'hcp' ? 'refer' : 'leakage';
+  return undefined;
+}
+
 // ---- Who they refer to -----------------------------------------------------
 
 export interface ReferralRow {

@@ -202,6 +202,20 @@ export interface Workspace {
   saved: SavedReport[];
   /** The rep's own choices on the You page. */
   prefs: Prefs;
+  /** The rep's own Summary and goal for someone (their prep), by their id. Workspaces kept before this have none. */
+  prep?: Record<string, PrepEdit>;
+}
+
+/**
+ * What the rep changed in someone's Summary (called prep inside the app). The
+ * rest is rebuilt from the data each time (lib/saved.ts); only these edits are
+ * kept, and laid over it.
+ */
+export interface PrepEdit {
+  /** Their own goal, in place of the plan's or the suggested one. Empty for none. */
+  goal: string;
+  /** Their own summary, a point to a line, shown in place of the one written from the data. */
+  points: string[];
 }
 
 /** A sample place the day starts from. */

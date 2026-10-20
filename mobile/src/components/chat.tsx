@@ -18,6 +18,8 @@ import { useVisitSheets } from '@/components/visit-sheets';
 import { spoken, type Answer, type AnswerRow, type AskLink } from '@/lib/ask';
 import { useChat, type Turn } from '@/lib/chat';
 import { getEntity } from '@/lib/data';
+import { prepId } from '@/lib/saved';
+import { useWorkspace } from '@/lib/store';
 import { cn } from '@/lib/utils';
 import { canListen, canSpeak, listen, speak, stopSpeaking, VOICE_ERRORS, type Listening } from '@/lib/voice';
 
@@ -45,6 +47,7 @@ export function QuestionChips({ questions, onPick }: { questions: string[]; onPi
  * A full-screen chat. `header` sits above the thread and `empty` shows until the
  * first question, with a big mic under it when the device can listen.
  * `listenOnOpen` starts the mic straight away, for the mic on a person's page.
+ * `fromPrep` is a person's chat opened from their Summary, so "Add to summary" goes back there.
  */
 export function ChatView({
   chatKey,
@@ -53,6 +56,7 @@ export function ChatView({
   placeholder,
   inset = false,
   listenOnOpen = false,
+  fromPrep = false,
 }: {
   chatKey: string;
   header?: ReactNode;
@@ -60,6 +64,7 @@ export function ChatView({
   placeholder: string;
   inset?: boolean;
   listenOnOpen?: boolean;
+  fromPrep?: boolean;
 }) {
   const chat = useChat();
   const turns = chat.turns(chatKey);
@@ -68,7 +73,7 @@ export function ChatView({
   // The question last scrolled to, so a new answer opens at its start rather than its end.
   const shown = useRef<string | null>(null);
   const [reading, setReading] = useState<string | null>(null);
-  const { follow, openRow, sheets } = useFollow();
+  const { follow, openRow, sheets } = useFollow(fromPrep ? chatKey : undefined);
   const tab = useTab();
 
   // Stop reading when the chat closes.
@@ -136,8 +141,13 @@ export function ChatView({
   );
 }
 
-/** Where an answer's next step and rows lead, opened in the tab that's showing the chat. Render `sheets` for booking. */
-export function useFollow() {
+/**
+ * Where an answer's next step and rows lead, opened in the tab that's showing the
+ * chat. Render `sheets` for booking. `prepOf` is the person whose prep the chat
+ * was opened from, so adding to it goes back there rather than opening it again.
+ */
+export function useFollow(prepOf?: string) {
+  const ctx = useWorkspace();
   const visits = useVisitSheets();
   const profileHref = useProfileHref();
   const docHref = useDocHref();
@@ -148,6 +158,12 @@ export function useFollow() {
     }
     if (link.kind === 'saved') {
       router.push(docHref(link.id));
+      return;
+    }
+    if (link.kind === 'prep') {
+      ctx.addToPrep(link.id, { goal: link.goal, points: link.points });
+      if (link.id === prepOf) router.back();
+      else router.push(docHref(prepId(link.id)));
       return;
     }
     const entity = getEntity(link.id);

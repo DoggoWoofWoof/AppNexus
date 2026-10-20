@@ -1,8 +1,11 @@
 // Targets: who to see, best first. Search, one Filters button for everything
-// else, and + on each row to put them in the day's plan. Select picks several
-// to add in one go, with one Undo. After a visit is cancelled it fills the free
-// time instead: nearest first, "+ 11:00" for people usually seeing visitors
-// then, and why not ("Usually Tue/Thu 07:30–08:30") for everyone else.
+// else, and + on each row to put them in the day's plan. Each doctor says whether
+// they're in that day ("In 12:30–13:30" or "Not in on Tuesdays"), and those who
+// are come first; someone who isn't gets "+ Call", a phone call instead of a visit.
+// Someone already planned at any time gets "Set a time". Select picks several to
+// add in one go, with one Undo. After a visit is cancelled it fills the free time
+// instead: nearest first, "+ 11:00" for people usually seeing visitors then, and
+// why not ("Usually Tue/Thu 07:30–08:30") for everyone else.
 
 import { router } from 'expo-router';
 import { Check, SlidersHorizontal, Square, SquareCheckBig, X } from 'lucide-react-native';
@@ -14,6 +17,7 @@ import { Avatar, useProfileHref } from '@/components/entity';
 import { MenuButton } from '@/components/menu';
 import { Choices, SheetBody } from '@/components/note-sheet';
 import { Screen } from '@/components/screen';
+import { useStopTimeSheet } from '@/components/stop-time-sheet';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Icon } from '@/components/ui/icon';
@@ -21,7 +25,7 @@ import { Input } from '@/components/ui/input';
 import { Text } from '@/components/ui/text';
 import { allHcps, allOrgs, getOrg, shortName } from '@/lib/data';
 import { formatKm, plural } from '@/lib/format';
-import type { Availability } from '@/lib/booking';
+import { inOnDay, type Availability } from '@/lib/booking';
 import { activeFilterCount, DEFAULT_FILTERS, DISTANCES, SIGNAL_FILTERS, SORTS, type Filters, type SearchRow } from '@/lib/search';
 import { useWorkspace } from '@/lib/store';
 import { cn } from '@/lib/utils';
@@ -42,7 +46,16 @@ export default function Targets() {
   // While filling a time, whoever is usually seeing people then comes first, still nearest first.
   const fits = new Map(found.map((r) => [r.entity.id, ctx.fitsSlot(r.entity)]));
   const canSee = found.filter((r) => fits.get(r.entity.id)?.ok);
-  const rows = free ? [...canSee, ...found.filter((r) => !fits.get(r.entity.id)?.ok)] : found;
+  // Otherwise doctors who are in that day come first, unless sorted by name.
+  const [now] = useState(() => new Date());
+  const inDay = new Map(found.map((r) => [r.entity.id, r.entity.kind === 'hcp' ? inOnDay(r.entity, day, now) : null]));
+  const isIn = (r: SearchRow) => inDay.get(r.entity.id)?.ok !== false;
+  const rows = free
+    ? [...canSee, ...found.filter((r) => !fits.get(r.entity.id)?.ok)]
+    : applied.sort === 'name'
+      ? found
+      : [...found.filter(isIn), ...found.filter((r) => !isIn(r))];
+  const { openStopTime, sheet: timeSheet } = useStopTimeSheet();
   const picking = picked && !free ? picked : null;
   const count = activeFilterCount(filters);
   const people = filters.kind === 'hcp';
@@ -137,8 +150,11 @@ export default function Targets() {
                 row={row}
                 freeTime={free?.time ?? null}
                 fit={fits.get(row.entity.id) ?? null}
+                inDay={inDay.get(row.entity.id) ?? null}
+                dayWord={dayWord}
                 onFill={() => fill(row.entity.id)}
-                onAdd={() => ctx.addToPlan(row.entity.id, day)}
+                onAdd={() => ctx.addToPlan(row.entity.id, day, inDay.get(row.entity.id)?.ok === false ? 'Phone call' : undefined)}
+                onSetTime={() => row.planned && openStopTime(day, row.planned)}
               />
             ),
           )}
@@ -157,6 +173,7 @@ export default function Targets() {
             />
           ) : null}
         </Dialog>
+        {timeSheet}
       </Screen>
       {picking ? (
         // Room at the bottom for the Ask button, which rises out of the tab bar below.
@@ -171,8 +188,10 @@ export default function Targets() {
   );
 }
 
-/** Their picture, name, distance and the best reason to see them. */
-function RowInfo({ row }: { row: SearchRow }) {
+type InDay = ReturnType<typeof inOnDay>;
+
+/** Their picture, name, distance and the best reason to see them, and with `when` a line saying whether they're in that day. */
+function RowInfo({ row, when }: { row: SearchRow; when?: { text: string; tone: 'in' | 'out' | 'planned' } | null }) {
   const why = row.signals[0];
   return (
     <>
@@ -183,9 +202,22 @@ function RowInfo({ row }: { row: SearchRow }) {
           {formatKm(row.distance)}
           {why ? <Text className={cn('text-sm', why.tone === 'warn' ? 'text-warn' : why.tone === 'orange' ? 'text-signal-text' : why.tone === 'accent' ? 'text-brand' : 'text-muted-foreground')}>{` · ${why.label}`}</Text> : null}
         </Text>
+        {when ? (
+          <Text className={cn('text-sm', when.tone === 'out' ? 'text-warn' : when.tone === 'planned' ? 'text-success' : 'text-muted-foreground')} numberOfLines={1}>
+            {when.text}
+          </Text>
+        ) : null}
       </View>
     </>
   );
+}
+
+/** "In 12:30–13:30", "Not in on Tuesdays" or, once planned, when. */
+function whenLine(row: SearchRow, inDay: InDay | null, dayWord: string): { text: string; tone: 'in' | 'out' | 'planned' } | null {
+  if (row.planned) return { text: `In your plan · ${row.planned.mode === 'timed' && row.planned.time ? row.planned.time : 'any time'}`, tone: 'planned' };
+  if (!inDay) return null;
+  if (!inDay.ok) return { text: inDay.why, tone: 'out' };
+  return inDay.hours ? { text: `In ${dayWord} ${inDay.hours}`, tone: 'in' } : { text: `In ${dayWord}`, tone: 'in' };
 }
 
 const Added = ({ name }: { name: string }) => (
@@ -199,15 +231,22 @@ function TargetRow({
   row,
   freeTime,
   fit,
+  inDay,
+  dayWord,
   onFill,
   onAdd,
+  onSetTime,
 }: {
   row: SearchRow;
   freeTime: string | null;
   /** Whether they can be seen at the free time, while one is being filled. */
   fit: Availability | null;
+  /** Whether a doctor is in on the day being planned. */
+  inDay: InDay | null;
+  dayWord: string;
   onFill: () => void;
   onAdd: () => void;
+  onSetTime: () => void;
 }) {
   const profileHref = useProfileHref();
   const { entity, planned } = row;
@@ -226,19 +265,32 @@ function TargetRow({
         {fit && !fit.ok ? fit.why.replace(/–/g, '–⁠') : 'Not free then'}
       </Text>
     );
+  } else if (planned?.mode === 'flexible' && planned.status === 'planned') {
+    action = (
+      <Button size="sm" variant="outline" className="rounded-lg" onPress={onSetTime} accessibilityLabel={`Set a time for ${entity.name}`}>
+        <Text>Set a time</Text>
+      </Button>
+    );
   } else if (planned) {
     action = <Added name={entity.name} />;
   } else {
+    const call = inDay?.ok === false;
     action = (
-      <Button size="sm" variant="outline" className="rounded-lg" onPress={onAdd} accessibilityLabel={`Add ${entity.name} to your plan`}>
-        <Text>+ Add</Text>
+      <Button
+        size="sm"
+        variant="outline"
+        className="rounded-lg"
+        onPress={onAdd}
+        accessibilityLabel={call ? `Add a phone call with ${entity.name} to your plan` : `Add ${entity.name} to your plan`}
+      >
+        <Text>{call ? '+ Call' : '+ Add'}</Text>
       </Button>
     );
   }
   return (
     <View className="min-h-16 flex-row items-center gap-2 rounded-xl border border-border bg-card py-2 pl-3 pr-2">
       <Pressable onPress={() => router.push(profileHref(entity))} accessibilityRole="link" className="flex-1 flex-row items-center gap-3 active:opacity-70">
-        <RowInfo row={row} />
+        <RowInfo row={row} when={freeTime ? null : whenLine(row, inDay, dayWord)} />
       </Pressable>
       {action}
     </View>

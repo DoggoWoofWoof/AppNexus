@@ -40,13 +40,14 @@ const QUESTIONS: Record<Intent, string> = {
   people: 'Top doctors at Mount Sinai Hospital',
   points: 'What should I bring up with Dr. Patel?',
   brief: 'Brief me on Dr. Maya Patel',
+  prep: 'Help me prep for Dr. Patel',
   saved: 'What did I save?',
   week: 'Summarise my week',
   search: 'interventional',
 };
 
 // Answers built from volumes, referrals or leakage; the rest are about the rep's notes and plan.
-const FIGURES: Intent[] = ['inbound', 'referrals', 'mix', 'leakage', 'decline', 'growth', 'trend', 'where', 'suggest', 'people', 'points', 'brief'];
+const FIGURES: Intent[] = ['inbound', 'referrals', 'mix', 'leakage', 'decline', 'growth', 'trend', 'where', 'suggest', 'people', 'points', 'brief', 'prep'];
 
 describe('the period the figures cover', () => {
   test('is one constant, and the charts label the same quarters', () => {
@@ -166,5 +167,14 @@ describe('tags in plain words', () => {
     expect(subs.some((s) => s.startsWith('Same health system'))).toBe(true);
     expect(subs.some((s) => /outside the system/i.test(s))).toBe(true);
     for (const s of subs) expect(s).not.toMatch(/\b(in|out of) system\b/i);
+  });
+
+  test('Ask says "Not in" for a visit that didn’t happen, never "Attempted"', () => {
+    const history = answer('What happened last time with Dr. Raman?', ctx);
+    expect(history.summary).toMatch(/: in-person visit, not in\./);
+    expect(history.rows.map((r) => r.title)).toContain('In-person visit · Not in');
+    const brief = answer('Brief me on Dr. Priya Raman', ctx);
+    expect(brief.rows.some((r) => (r.sub ?? '').startsWith('In-person visit · Not in'))).toBe(true);
+    for (const a of [history, brief]) expect(JSON.stringify(a)).not.toMatch(/Attempted/);
   });
 });

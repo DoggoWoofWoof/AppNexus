@@ -1,43 +1,90 @@
-// What a person's or account's page shows under its two big buttons: the
-// headline figures, what to talk about, what was promised (with Done), last time,
-// what was asked about them before, every visit and call so far, how to get in,
-// similar doctors nearby who are in the same day, their volumes, who they refer
-// to or where patients go (and, at an account, who sends them out) and who they
-// work with. Short cards, each one tap from the rest ("See all"). The rules are
-// in lib/target.ts.
+// What someone's page shows under its two big buttons, as short cards: the
+// headline figures, follow-ups (with Done), last time, every visit and call so
+// far, what was asked before, how to get in (with Book a time), similar doctors
+// nearby, their volumes, who they refer to or where patients go (and, at an
+// account, who sends them out, its doctors, people and health system), and
+// contact details. "See all" opens a card in full where it is, and each figure
+// opens its card, so everything about someone is on this one page. The rules
+// are in lib/target.ts.
 
 import { router } from 'expo-router';
-import { Check, ChevronRight, Phone, Plus } from 'lucide-react-native';
-import { useState, type ReactNode } from 'react';
-import { Linking, Pressable, View } from 'react-native';
+import { Check, ChevronDown, ChevronRight, ChevronUp, Phone, Plus } from 'lucide-react-native';
+import { useRef, useState, type ReactNode, type RefObject } from 'react';
+import { Linking, Pressable, View, type LayoutChangeEvent, type ScrollViewInstance } from 'react-native';
 
-import { metWith } from '@/components/activity-log';
+import { InteractionItem, metWith } from '@/components/activity-log';
 import { BarRow, Delta, StackBar } from '@/components/charts';
-import { Avatar, useChatHref, useProfileHref } from '@/components/entity';
+import { Avatar, Tag, useChatHref, useProfileHref } from '@/components/entity';
+import { FinePrint } from '@/components/profile';
+import { AllVolumes } from '@/components/volumes';
 import { telUrl } from '@/components/quick-actions';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import type { Brief, Figure } from '@/lib/brief';
 import { useChat, whenLabel } from '@/lib/chat';
-import { descendantsOf, destination, getOrg, hcpsAt, proceduresOf, procedureTotal, shortName, topReferrersOut } from '@/lib/data';
+import { childrenOf, descendantsOf, destination, diagnosesOf, getEntity, getOrg, hcpsAt, parentOf, proceduresOf, procedureTotal, shortName, topReferrersOut } from '@/lib/data';
 import { DATA_PERIOD } from '@/lib/data/seed';
 import { daysBetween, formatDate, formatKm, formatNumber, fromIso, relativeDayLower, sum, yoy } from '@/lib/format';
 import { useWorkspace } from '@/lib/store';
-import { askedBefore, howToGetIn, promiseDue, siteThatDay, similarNearby, visitsSoFar, whoTheyReferTo, type AskedWhere, type VisitOutcome } from '@/lib/target';
+import { askedBefore, howToGetIn, promiseDue, siteThatDay, similarNearby, visitsSoFar, whoTheyReferTo, type AskedWhere, type CardId, type VisitOutcome } from '@/lib/target';
 import type { Entity, Hcp, Org } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
-/** A titled card. `more` opens the rest ("See all"), elsewhere or, with `expands`, in place. */
-function Block({ title, more, expands, children }: { title: string; more?: () => void; expands?: boolean; children: ReactNode }) {
+/**
+ * Which cards are open in full, and scrolling to one. Put `onBase` on the view
+ * holding TargetInfo, straight inside the scroll view, so a card's place on the page is known.
+ */
+export function useCards(scrollRef: RefObject<ScrollViewInstance | null>, initial?: CardId) {
+  const [open, setOpen] = useState<CardId[]>(initial ? [initial] : []);
+  const base = useRef(0);
+  const at = useRef<Partial<Record<CardId, number>>>({});
+  // A card a link asked for is scrolled to once it has been laid out.
+  const pending = useRef<CardId | null>(initial ?? null);
+  const scrollTo = (id: CardId) => {
+    const y = at.current[id];
+    if (y != null) scrollRef.current?.scrollTo({ y: Math.max(0, base.current + y - 12), animated: true });
+  };
+  return {
+    isOpen: (id: CardId) => open.includes(id),
+    toggle: (id: CardId) => setOpen((o) => (o.includes(id) ? o.filter((x) => x !== id) : [...o, id])),
+    /** Opens a card and scrolls to it. */
+    show: (id: CardId) => {
+      setOpen((o) => (o.includes(id) ? o : [...o, id]));
+      scrollTo(id);
+    },
+    onBase: (e: LayoutChangeEvent) => {
+      base.current = e.nativeEvent.layout.y;
+    },
+    place: (id: CardId, y: number) => {
+      at.current[id] = y;
+      if (pending.current === id) {
+        pending.current = null;
+        setTimeout(() => scrollTo(id), 50);
+      }
+    },
+  };
+}
+export type Cards = ReturnType<typeof useCards>;
+
+/** A titled card. With `id` and `canOpen`, "See all" opens it in full where it is. */
+function Block({ title, id, cards, canOpen = false, children }: { title: string; id?: CardId; cards?: Cards; canOpen?: boolean; children: ReactNode }) {
+  const open = !!id && !!cards?.isOpen(id);
   return (
-    <View className="gap-2">
+    <View className="gap-2" onLayout={id && cards ? (e) => cards.place(id, e.nativeEvent.layout.y) : undefined}>
       <View className="flex-row items-center justify-between">
         <Text variant="kicker">{title}</Text>
-        {more ? (
-          <Pressable onPress={more} accessibilityRole={expands ? 'button' : 'link'} accessibilityLabel={`See all: ${title}`} hitSlop={12} className="flex-row items-center">
-            <Text className="text-sm font-semibold text-brand">See all</Text>
-            <Icon as={ChevronRight} size={14} className="text-brand" />
+        {id && cards && canOpen ? (
+          <Pressable
+            onPress={() => cards.toggle(id)}
+            accessibilityRole="button"
+            accessibilityState={{ expanded: open }}
+            accessibilityLabel={open ? `Show less: ${title}` : `See all: ${title}`}
+            hitSlop={12}
+            className="flex-row items-center gap-0.5"
+          >
+            <Text className="text-sm font-semibold text-brand">{open ? 'Show less' : 'See all'}</Text>
+            <Icon as={open ? ChevronUp : ChevronDown} size={14} className="text-brand" />
           </Pressable>
         ) : null}
       </View>
@@ -45,6 +92,9 @@ function Block({ title, more, expands, children }: { title: string; more?: () =>
     </View>
   );
 }
+
+/** A small heading inside a card that's open in full. */
+const Sub = ({ children }: { children: string }) => <Text className="pt-1 text-sm font-semibold text-muted-foreground">{children}</Text>;
 
 /** Volume, leakage and last contact side by side. */
 function Glance({ figures, onPress }: { figures: Figure[]; onPress: (i: number) => void }) {
@@ -69,15 +119,6 @@ function Glance({ figures, onPress }: { figures: Figure[]; onPress: (i: number) 
   );
 }
 
-function Bullet({ children }: { children: string }) {
-  return (
-    <View className="flex-row items-start gap-2.5">
-      <View className="mt-2 h-1.5 w-1.5 rounded-full bg-primary" />
-      <Text className="flex-1 text-base leading-6">{children}</Text>
-    </View>
-  );
-}
-
 /** A row that opens someone's page. */
 function PersonRow({ entity, sub, figure }: { entity: Entity; sub: string; figure?: string }) {
   const profileHref = useProfileHref();
@@ -98,92 +139,70 @@ function Fact({ label, children }: { label: string; children: ReactNode }) {
   return (
     <View className="gap-0.5">
       <Text className="text-xs text-muted-foreground">{label}</Text>
-      {typeof children === 'string' ? <Text className="text-base">{children}</Text> : children}
+      {typeof children === 'string' ? (
+        <Text className="text-base" selectable>
+          {children}
+        </Text>
+      ) : (
+        children
+      )}
     </View>
   );
 }
 
-function CallButton({ phone, who }: { phone: string; who: string }) {
-  return (
-    <Button size="sm" variant="outline" className="self-start rounded-lg" onPress={() => void Linking.openURL(telUrl(phone))} accessibilityLabel={`Call ${who}`}>
-      <Icon as={Phone} size={16} />
-      <Text>{phone}</Text>
-    </Button>
-  );
-}
-
-/** Everything under the buttons on a person's or account's page. */
-export function TargetInfo({ entity, brief }: { entity: Entity; brief: Brief }) {
+/** Everything under the buttons on a person's or account's page. `onBook` books a time with them. */
+export function TargetInfo({ entity, brief, cards, onBook }: { entity: Entity; brief: Brief; cards: Cards; onBook: () => void }) {
   const ctx = useWorkspace();
-  const profileHref = useProfileHref();
-  const details = (section: string) => () => router.push(profileHref(entity, section));
-  const last = ctx.lastInteraction(entity.id);
-  const procedures = (proceduresOf(entity) ?? [])
-    .map((r) => ({ name: r.family, count: sum(r.series.slice(-4)), growth: yoy(r.series) }))
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 3);
-  const maxProc = Math.max(...procedures.map((p) => p.count), 1);
-  const leakSection = entity.kind === 'hcp' ? 'network' : 'leakage';
-  // Promised and Last time already show the open follow-ups and the last note, so they aren't talking points too.
-  const points = brief.points.filter((p) => !(p.kind === 'promise' && brief.followUps.length) && !(p.kind === 'lastNote' && last));
+  const byCount = (rows: { name: string; series: number[] }[]) =>
+    rows.map((r) => ({ name: r.name, count: sum(r.series.slice(-4)), growth: yoy(r.series) })).sort((a, b) => b.count - a.count);
+  const procedures = byCount((proceduresOf(entity) ?? []).map((r) => ({ name: r.family, series: r.series })));
+  // Someone without the procedures in this sample still has their diagnoses.
+  const top = procedures.length ? procedures : byCount(diagnosesOf(entity));
+  const maxTop = Math.max(...top.map((p) => p.count), 1);
+  const volumesOpen = cards.isOpen('volumes');
+  // Each figure opens the card that explains it.
+  const figureCards: CardId[] = ['volumes', entity.kind === 'hcp' ? 'refer' : 'leakage', 'notes'];
 
   return (
     <View className="gap-5">
       <View className="gap-1.5">
-        <Glance figures={brief.figures} onPress={(i) => details(['volumes', leakSection, 'activity'][i])()} />
+        <Glance figures={brief.figures} onPress={(i) => cards.show(figureCards[i])} />
         <Text className="text-xs text-muted-foreground">{DATA_PERIOD}</Text>
       </View>
 
-      {points.length ? (
-        <Block title="Talk about">
-          {points.map((p) => (
-            <Bullet key={p.text}>{p.text}</Bullet>
-          ))}
-        </Block>
-      ) : null}
-
-      <Promised brief={brief} more={details('activity')} />
-
-      {last ? (
-        <Block title="Last time" more={details('activity')}>
-          <View className="gap-1">
-            <Text className="text-sm text-muted-foreground">{`${relativeDayLower(last.date, ctx.today).replace(/^./, (c) => c.toUpperCase())} · ${last.type} · ${last.author === 'You' ? 'you' : last.author}${last.local ? ' · on this phone, not sent yet' : ''}`}</Text>
-            {last.note ? (
-              <Text className="text-base leading-6" numberOfLines={3}>
-                {last.note}
-              </Text>
-            ) : null}
-            {metWith(last).length ? <Text className="text-sm text-muted-foreground">{`With ${metWith(last).join(', ')}`}</Text> : null}
-          </View>
-        </Block>
-      ) : null}
-
+      <FollowUps brief={brief} cards={cards} />
+      <LastTime entity={entity} cards={cards} />
+      <VisitsSoFar entity={entity} cards={cards} />
       <AskedBefore entity={entity} />
-      <VisitsSoFar entity={entity} />
-      <HowToGetIn entity={entity} />
+      <HowToGetIn entity={entity} onBook={onBook} />
       {/* Who else to see while there: the day of their next visit, or the day being planned. */}
       {entity.kind === 'hcp' ? <SimilarNearby hcp={entity} day={brief.visit?.day ?? ctx.ws.selection.day} /> : null}
 
-      {procedures.length ? (
-        <Block title="Top procedures · 12 months" more={details('volumes')}>
-          {procedures.map((p) => (
-            <BarRow
-              key={p.name}
-              label={p.name}
-              value={p.count}
-              max={maxProc}
-              display={
-                <View className="items-end">
-                  <Text className="font-mono text-sm">{formatNumber(p.count)}</Text>
-                  <Delta value={p.growth} suffix="" />
-                </View>
-              }
-            />
-          ))}
+      {top.length ? (
+        <Block title={procedures.length ? 'Top procedures · 12 months' : 'Diagnosed patients · 12 months'} id="volumes" cards={cards} canOpen>
+          {volumesOpen ? (
+            <AllVolumes entity={entity} />
+          ) : (
+            top.slice(0, 3).map((p) => (
+              <BarRow
+                key={p.name}
+                label={p.name}
+                value={p.count}
+                max={maxTop}
+                display={
+                  <View className="items-end">
+                    <Text className="font-mono text-sm">{formatNumber(p.count)}</Text>
+                    <Delta value={p.growth} suffix="" />
+                  </View>
+                }
+              />
+            ))
+          )}
         </Block>
       ) : null}
 
-      {entity.kind === 'hcp' ? <HcpBlocks hcp={entity} more={details} /> : <OrgBlocks org={entity} more={details} />}
+      {entity.kind === 'hcp' ? <HcpBlocks hcp={entity} cards={cards} /> : <OrgBlocks org={entity} cards={cards} />}
+      <Details entity={entity} cards={cards} />
     </View>
   );
 }
@@ -191,12 +210,13 @@ export function TargetInfo({ entity, brief }: { entity: Entity; brief: Brief }) 
 const DUE_TONE = { late: 'text-danger', today: 'text-warn', later: 'text-muted-foreground' } as const;
 
 /** Open follow-ups, soonest due first, how late each is, and Done. */
-function Promised({ brief, more }: { brief: Brief; more: () => void }) {
+function FollowUps({ brief, cards }: { brief: Brief; cards: Cards }) {
   const ctx = useWorkspace();
   if (!brief.followUps.length) return null;
+  const shown = cards.isOpen('followups') ? brief.followUps : brief.followUps.slice(0, 3);
   return (
-    <Block title="Promised" more={brief.followUps.length > 3 ? more : undefined}>
-      {brief.followUps.slice(0, 3).map((f, i) => {
+    <Block title="Follow-ups" id="followups" cards={cards} canOpen={brief.followUps.length > 3}>
+      {shown.map((f, i) => {
         const due = promiseDue(f, ctx.today);
         return (
           <View key={f.id} className={cn('flex-row items-center gap-3', i > 0 && 'border-t border-border pt-3')}>
@@ -215,12 +235,41 @@ function Promised({ brief, more }: { brief: Brief; more: () => void }) {
   );
 }
 
+/** The last note, and every note on See all. */
+function LastTime({ entity, cards }: { entity: Entity; cards: Cards }) {
+  const ctx = useWorkspace();
+  const notes = ctx.interactionsFor(entity.id);
+  const last = notes[0];
+  if (!last) return null;
+  return (
+    <Block title={cards.isOpen('notes') ? 'All notes' : 'Last time'} id="notes" cards={cards} canOpen={notes.length > 1}>
+      {cards.isOpen('notes') ? (
+        <View className="gap-5">
+          {notes.map((i) => (
+            <InteractionItem key={i.id} interaction={i} about={entity.id} />
+          ))}
+        </View>
+      ) : (
+        <View className="gap-1">
+          <Text className="text-sm text-muted-foreground">{`${relativeDayLower(last.date, ctx.today).replace(/^./, (c) => c.toUpperCase())} · ${last.type} · ${last.author === 'You' ? 'you' : last.author}`}</Text>
+          {last.note ? (
+            <Text className="text-base leading-6" numberOfLines={3}>
+              {last.note}
+            </Text>
+          ) : null}
+          {metWith(last).length ? <Text className="text-sm text-muted-foreground">{`With ${metWith(last).join(', ')}`}</Text> : null}
+        </View>
+      )}
+    </Block>
+  );
+}
+
 /** The last few questions asked about them in Ask, each opening the conversation it was in. */
 function AskedBefore({ entity }: { entity: Entity }) {
   const ctx = useWorkspace();
   const chat = useChat();
   const chatHref = useChatHref();
-  const asked = askedBefore(entity.id, chat.asked(entity.id), chat.conversations(), (c) => (c.live ? chat.turns(c.key) : (chat.conversation(c.id)?.turns ?? [])), 4);
+  const asked = askedBefore(entity.id, chat.asked(entity.id), chat.conversations(), (c) => (c.live ? chat.turns(c.key) : (chat.conversation(c.id)?.turns ?? [])), 3);
   if (!asked.length) return null;
   // An ended conversation opens as it was; today's opens where the rep can carry on.
   const open = (where: AskedWhere) => {
@@ -229,8 +278,8 @@ function AskedBefore({ entity }: { entity: Entity }) {
     else router.push(chatHref(entity));
   };
   return (
-    <Block title="You asked before" more={asked.length > 3 ? () => router.navigate('/history') : undefined}>
-      {asked.slice(0, 3).map((a, i) => {
+    <Block title="You asked before">
+      {asked.map((a, i) => {
         const when = whenLabel(a.at, ctx.today);
         return (
           <Pressable
@@ -268,23 +317,22 @@ const KIND: Record<string, string> = { 'In-person visit': 'Visit', 'Phone call':
 const SHOWN_VISITS = 4;
 
 /** Every visit and call so far with what happened, a line on how it's gone, and the time that has worked. */
-function VisitsSoFar({ entity }: { entity: Entity }) {
+function VisitsSoFar({ entity, cards }: { entity: Entity; cards: Cards }) {
   const ctx = useWorkspace();
-  const [expanded, setExpanded] = useState(false);
   const visits = visitsSoFar(entity.id, ctx.ws, ctx.today);
   if (!visits.rows.length) return null;
   const dayLabel = (iso: string) => {
     const diff = daysBetween(ctx.today, fromIso(iso));
     return diff === 0 ? 'Today' : diff === 1 ? 'Tomorrow' : diff === -1 ? 'Yesterday' : formatDate(iso);
   };
-  const more = visits.rows.length > SHOWN_VISITS && !expanded;
+  const rows = cards.isOpen('visits') ? visits.rows : visits.rows.slice(0, SHOWN_VISITS);
   return (
-    <Block title="Visits so far" more={more ? () => setExpanded(true) : undefined} expands>
+    <Block title="Visits so far" id="visits" cards={cards} canOpen={visits.rows.length > SHOWN_VISITS}>
       <View className="gap-0.5">
         <Text className="text-base font-semibold">{visits.summary}</Text>
         {visits.worked ? <Text className="text-base">{`${visits.worked} have worked.`}</Text> : null}
       </View>
-      {(expanded ? visits.rows : visits.rows.slice(0, SHOWN_VISITS)).map((r, i) => (
+      {rows.map((r, i) => (
         <View key={`${r.day}-${r.time}-${r.type}-${i}`} className="flex-row items-center gap-3 border-t border-border pt-3">
           <View className="flex-1 gap-0.5">
             <Text className="text-base">{[dayLabel(r.day), r.time].filter(Boolean).join(' · ')}</Text>
@@ -297,8 +345,8 @@ function VisitsSoFar({ entity }: { entity: Entity }) {
   );
 }
 
-/** Who books, how they like to be asked, when, whether they confirm, and how to reach them. */
-function HowToGetIn({ entity }: { entity: Entity }) {
+/** Who books, how they like to be asked, when and whether they confirm, and Book a time. Phone and email are under Contact. */
+function HowToGetIn({ entity, onBook }: { entity: Entity; onBook: () => void }) {
   const way = howToGetIn(entity);
   return (
     <Block title="How to get in">
@@ -306,16 +354,9 @@ function HowToGetIn({ entity }: { entity: Entity }) {
       {way.reach ? <Fact label="How to ask">{way.reach}</Fact> : null}
       <Fact label="When">{way.best}</Fact>
       {way.confirms ? <Fact label="Do they confirm?">{way.confirms}</Fact> : null}
-      {entity.kind === 'hcp' ? (
-        <Fact label="Email">
-          <Text className="text-base" selectable>
-            {entity.contact.email}
-          </Text>
-        </Fact>
-      ) : (
-        <Fact label="Address">{`${entity.address}, ${entity.city}`}</Fact>
-      )}
-      {entity.kind === 'hcp' ? <CallButton phone={entity.contact.phone} who={entity.name} /> : <CallButton phone={entity.phone} who={`${entity.name} main line`} />}
+      <Button size="sm" variant="outline" className="self-start rounded-lg" onPress={onBook}>
+        <Text>Book a time</Text>
+      </Button>
     </Block>
   );
 }
@@ -376,17 +417,23 @@ function SimilarNearby({ hcp, day }: { hcp: Hcp; day: string }) {
   );
 }
 
-function HcpBlocks({ hcp, more }: { hcp: Hcp; more: (section: string) => () => void }) {
+const SHOWN_REFERRALS = 4;
+
+/** Who they send patients to; on See all, who sends patients to them and who they work closely with. */
+function HcpBlocks({ hcp, cards }: { hcp: Hcp; cards: Cards }) {
   const profileHref = useProfileHref();
   const refer = whoTheyReferTo(hcp);
-  const out = refer?.rows.slice(0, 4) ?? [];
+  const open = cards.isOpen('refer');
+  const out = (open ? refer?.rows : refer?.rows.slice(0, SHOWN_REFERRALS)) ?? [];
   const maxOut = Math.max(...out.map((r) => r.count), 1);
+  const inbound = [...hcp.referrals.inbound].sort((a, b) => b.count - a.count);
+  const more = (refer?.rows.length ?? 0) > SHOWN_REFERRALS || inbound.length > 0 || hcp.relationships.length > 0;
 
   return (
     <>
-      {refer ? (
-        <Block title="Who they refer to" more={more('network')}>
-          <Text className="text-base">{refer.summary}</Text>
+      {refer || more ? (
+        <Block title="Who they refer to" id="refer" cards={cards} canOpen={more}>
+          {refer ? <Text className="text-base">{refer.summary}</Text> : <Text className="text-base">They don’t refer patients on.</Text>}
           {out.map((r, i) => {
             const peer = r.entity;
             const row = (
@@ -417,6 +464,31 @@ function HcpBlocks({ hcp, more }: { hcp: Hcp; more: (section: string) => () => v
               <View key={`${r.name}-${i}`}>{row}</View>
             );
           })}
+          {open && inbound.length ? (
+            <>
+              <Sub>Who sends patients to them</Sub>
+              {inbound.map((x, i) => {
+                const peer = x.hcpId ? getEntity(x.hcpId) : null;
+                return peer ? (
+                  <PersonRow key={peer.id} entity={peer} sub={x.reason ?? (peer.kind === 'hcp' ? peer.specialty : peer.typeDetail)} figure={formatNumber(x.count)} />
+                ) : (
+                  <View key={`${x.label}-${i}`} className="flex-row items-center justify-between gap-3">
+                    <Text className="flex-1 text-base">{x.label ?? 'Others'}</Text>
+                    <Text className="font-mono text-sm">{formatNumber(x.count)}</Text>
+                  </View>
+                );
+              })}
+            </>
+          ) : null}
+          {open && hcp.relationships.length ? (
+            <>
+              <Sub>Works closely with</Sub>
+              {hcp.relationships.map((rel) => {
+                const peer = getEntity(rel.hcpId);
+                return peer ? <PersonRow key={rel.hcpId} entity={peer} sub={`${rel.type} · ${rel.detail}`} /> : null;
+              })}
+            </>
+          ) : null}
         </Block>
       ) : null}
 
@@ -430,20 +502,26 @@ function HcpBlocks({ hcp, more }: { hcp: Hcp; more: (section: string) => () => v
   );
 }
 
-function OrgBlocks({ org, more }: { org: Org; more: (section: string) => () => void }) {
+function OrgBlocks({ org, cards }: { org: Org; cards: Cards }) {
   const l = org.leakage;
-  const doctors = hcpsAt(org.id).slice(0, 3);
+  const leakOpen = cards.isOpen('leakage');
+  const allDoctors = hcpsAt(org.id);
+  const doctors = cards.isOpen('doctors') ? allDoctors : allDoctors.slice(0, 3);
   // The decision makers and gatekeepers here and at the sites below it.
-  const execs = [org, ...descendantsOf(org.id)].flatMap((o) => o.executives).slice(0, 3);
-  const destinations = (l?.destinations ?? []).slice(0, 3);
+  const allExecs = [org, ...descendantsOf(org.id)].flatMap((o) => o.executives);
+  const execs = cards.isOpen('people') ? allExecs : allExecs.slice(0, 3);
+  const destinations = (l?.destinations ?? []).slice(0, leakOpen ? undefined : 3);
   const maxDest = Math.max(...destinations.map((d) => d.patients), 1);
   // The doctors here whose referrals go outside the system: who to talk to about keeping patients.
   const sendersOut = topReferrersOut(org.id).slice(0, 3);
+  const parent = parentOf(org);
+  const allSites = childrenOf(org.id);
+  const sites = cards.isOpen('system') ? allSites : allSites.slice(0, 3);
 
   return (
     <>
       {l ? (
-        <Block title="Where patients go" more={more('leakage')}>
+        <Block title="Where patients go" id="leakage" cards={cards} canOpen={l.destinations.length > 3 || l.byFamily.length > 0}>
           <StackBar
             parts={[
               ...(l.keptPct ? [{ label: org.type === 'Health system' ? 'Kept' : 'Kept here', pct: l.keptPct, className: 'bg-primary' }] : []),
@@ -463,9 +541,24 @@ function OrgBlocks({ org, more }: { org: Org; more: (section: string) => () => v
                 value={d.patients}
                 max={maxDest}
                 tone={inSystem ? 'success' : 'orange'}
+                display={
+                  <View className="items-end">
+                    <Text className="font-mono text-sm">{formatNumber(d.patients)}</Text>
+                    {leakOpen && d.trend ? <Delta value={d.trend} suffix="" upIsBad /> : null}
+                  </View>
+                }
               />
             );
           })}
+          {leakOpen && l.byFamily.length ? (
+            <>
+              <Sub>Leaving, by procedure</Sub>
+              {l.byFamily.map((f) => (
+                <BarRow key={f.family} label={f.family} value={f.leftPct} display={<Text className="font-mono text-sm">{f.leftPct}%</Text>} max={50} tone="orange" />
+              ))}
+              <FinePrint>{`${l.scope}. Illustrative figures; places outside the system are fictional names.`}</FinePrint>
+            </>
+          ) : null}
         </Block>
       ) : null}
 
@@ -479,7 +572,7 @@ function OrgBlocks({ org, more }: { org: Org; more: (section: string) => () => v
       ) : null}
 
       {doctors.length ? (
-        <Block title="Busiest doctors here" more={more('network')}>
+        <Block title="Busiest doctors here" id="doctors" cards={cards} canOpen={allDoctors.length > 3}>
           {doctors.map((h) => (
             <PersonRow key={h.id} entity={h} sub={h.specialty} figure={procedureTotal(h) ? formatNumber(procedureTotal(h)) : undefined} />
           ))}
@@ -487,13 +580,18 @@ function OrgBlocks({ org, more }: { org: Org; more: (section: string) => () => v
       ) : null}
 
       {execs.length ? (
-        <Block title="People to meet" more={more('network')}>
+        <Block title="People to meet" id="people" cards={cards} canOpen={allExecs.length > 3}>
           {execs.map((e) => (
             <View key={e.id} className="flex-row items-center gap-3">
               <Avatar entity={{ name: e.name }} />
               <View className="flex-1 gap-0.5">
                 <Text className="font-semibold">{e.name}</Text>
                 <Text className="text-sm text-muted-foreground">{`${e.role} · ${e.title}`}</Text>
+                {cards.isOpen('people') ? (
+                  <Text className="text-sm" selectable>
+                    {e.email}
+                  </Text>
+                ) : null}
               </View>
               <Button size="icon" variant="outline" className="rounded-full" onPress={() => void Linking.openURL(telUrl(e.phone))} accessibilityLabel={`Call ${e.name}, ${e.phone}`}>
                 <Icon as={Phone} size={18} />
@@ -502,6 +600,66 @@ function OrgBlocks({ org, more }: { org: Org; more: (section: string) => () => v
           ))}
         </Block>
       ) : null}
+
+      {parent || allSites.length ? (
+        <Block title="Health system" id="system" cards={cards} canOpen={allSites.length > 3}>
+          {parent ? <PersonRow entity={parent} sub="Part of" /> : null}
+          {sites.map((c) => (
+            <PersonRow key={c.id} entity={c} sub={`${c.typeDetail} · ${c.address}`} />
+          ))}
+        </Block>
+      ) : null}
     </>
+  );
+}
+
+/** Phone, email and the rest of the record, closed until asked for. */
+function Details({ entity, cards }: { entity: Entity; cards: Cards }) {
+  const open = cards.isOpen('details');
+  const phone = entity.kind === 'hcp' ? entity.contact.phone : entity.phone;
+  return (
+    <Block title="Contact and details" id="details" cards={cards} canOpen>
+      <Fact label="Phone">{phone}</Fact>
+      {entity.kind === 'hcp' ? (
+        <>
+          <Fact label="Email">{entity.contact.email}</Fact>
+          {open ? (
+            <>
+              <Fact label="NPI">
+                <View className="flex-row flex-wrap items-center gap-2">
+                  <Text className="font-mono" selectable>
+                    {entity.npi}
+                  </Text>
+                  <Tag label="Sample" />
+                </View>
+              </Fact>
+              <Fact label="Board certification">{entity.boards.join(', ')}</Fact>
+              <Fact label="In practice">{`${entity.yearsInPractice} years`}</Fact>
+              <Fact label="Languages">{entity.languages.join(', ')}</Fact>
+              {entity.education.map(([label, value]) => (
+                <Fact key={label} label={label}>
+                  {value}
+                </Fact>
+              ))}
+            </>
+          ) : null}
+        </>
+      ) : (
+        <>
+          <Fact label="Address">{`${entity.address}, ${entity.city}${entity.onMap ? '' : ' (headquarters)'}`}</Fact>
+          {open ? (
+            <>
+              <Fact label="Type">{`${entity.type} · ${entity.typeDetail}`}</Fact>
+              <Fact label="Ownership">{entity.ownership}</Fact>
+              {entity.type === 'Health system' ? (
+                <Fact label="Facilities">{`${descendantsOf(entity.id).length} in this territory`}</Fact>
+              ) : (
+                <Fact label="Beds">{entity.beds ? `${formatNumber(entity.beds)} (sample figure)` : 'None · outpatient site'}</Fact>
+              )}
+            </>
+          ) : null}
+        </>
+      )}
+    </Block>
   );
 }

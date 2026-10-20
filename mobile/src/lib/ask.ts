@@ -6,12 +6,13 @@
 // A chat can be about one person or account (`about` with `scoped`), as on an
 // HCP's profile: every question is then about them unless it names someone else.
 
-import { buildBrief, visitWhen } from './brief';
+import { buildBrief, outcomeWord, visitWhen } from './brief';
 import { accountsByPatientsLost, allHcps, allOrgs, destination, getEntity, getOrg, hcpsAt, patientsLost, primaryOrg, procedureTotal, procedureYoy, proceduresOf, referredOut, shortName, siteFor, topReferrersOut } from './data';
 import { DATA_PERIOD, PRIOR_PERIOD } from './data/seed';
 import { addSeries } from './data/series';
 import { usualTimes } from './booking';
 import { addDays, formatDate, formatKm, formatNumber, formatPct, haversineKm, isoDate, plural, relativeDay, relativeDayLower, sum } from './format';
+import { PREP_QUESTION, prepAnswer } from './prep';
 import { DEFAULT_FILTERS } from './search';
 import type { Entity, PlanItem, Signal } from './types';
 import type { Context } from './workspace';
@@ -36,6 +37,7 @@ export type Intent =
   | 'people'
   | 'points'
   | 'brief'
+  | 'prep'
   | 'saved'
   | 'week'
   | 'search';
@@ -45,7 +47,9 @@ export type AskLink =
   | { kind: 'profile'; id: string; section?: string }
   | { kind: 'book'; id: string }
   | { kind: 'tab'; tab: 'activity' | 'today' | 'targets' | 'saved' }
-  | { kind: 'saved'; id: string };
+  | { kind: 'saved'; id: string }
+  /** Adds a goal and lines to someone's Summary as the rep's own (lib/prep.ts). */
+  | { kind: 'prep'; id: string; goal?: string; points: string[] };
 
 export interface AnswerRow {
   /** The person or account the row opens. */
@@ -86,7 +90,7 @@ export interface AskOptions {
   about?: string | null;
   /** Every question is about `about` unless it names someone else (a profile's own chat). */
   scoped?: boolean;
-  /** People and accounts the rep has asked about, whose visit prep is in Saved. */
+  /** People and accounts the rep has asked about, whose Summary is in Saved. */
   talkedAbout?: string[];
 }
 
@@ -163,7 +167,9 @@ export function findEntity(question: string): Entity | null {
 const INTENTS: [Intent, RegExp][] = [
   // The week before Saved, so "my report for this week" is the week, not the Saved list.
   ['week', /\b(my week|week(ly)? (summary|report|update|recap|review)|(summar\w*|recap|review|report on) (of )?(the|this|last) week|(this|last) week s (summary|report)|what (did|have) i (do|done|get done|achieve\w*)( [a-z]+)? (this|last) week|(report|summary|update|recap) for (the|this|last|my) week|(report|update) for my (manager|boss))\b/],
-  ['saved', /\b(saved|my reports?|my prep( notes)?|prep notes|what (did|have) i (save|kept|keep))\b/],
+  // Before Saved and Brief, so "improve their summary" works on it rather than listing or reading it.
+  ['prep', PREP_QUESTION],
+  ['saved', /\b(saved|my reports?|my prep( notes)?|prep notes|my summaries|what (did|have) i (save|kept|keep))\b/],
   ['contact', /\b(best time|when (can|should|do) i (see|catch|reach|visit|meet)|how (do|can|should) i (book|reach|contact|get hold of)|phone|email|assistant|scheduler|contact details|book (a )?(time|visit|meeting))\b|\bwhen can i see\b/],
   ['history', /\b(last (time|visit|met|meeting|call|contact|note)|what did (we|i)|discuss\w*|talked about|history|past (visits|notes))\b|\bwhat happened\b/],
   ['followups', /\b(follow ?-?ups?|overdue|owe|to ?-?dos?|tasks?|promised?)\b/],
@@ -296,8 +302,8 @@ const BUILDERS: Record<Intent, (input: Input) => Built> = {
     const [last] = notes;
     return {
       scope: ['Your notes and the team’s', 'Newest first', SAMPLE],
-      summary: `Last contact was ${relativeDayLower(last.date, ctx.today)}: ${last.type.toLowerCase()}, ${last.outcome.toLowerCase()}.${last.note ? ` “${last.note}”` : ''}`,
-      rows: notes.map((i) => ({ title: `${i.type} · ${i.outcome}`, sub: [i.author, i.note].filter(Boolean).join(' · '), figure: relativeDay(i.date, ctx.today) })),
+      summary: `Last contact was ${relativeDayLower(last.date, ctx.today)}: ${last.type.toLowerCase()}, ${outcomeWord(last.outcome, last.type).toLowerCase()}.${last.note ? ` “${last.note}”` : ''}`,
+      rows: notes.map((i) => ({ title: `${i.type} · ${outcomeWord(i.outcome, i.type)}`, sub: [i.author, i.note].filter(Boolean).join(' · '), figure: relativeDay(i.date, ctx.today) })),
       doThis: { text: 'See every note and follow-up.', label: 'Open activity', link: open(entity.id, 'activity') },
       next: ['What should I bring up?', 'Any open follow-ups?'],
       about: entity.id,
@@ -662,7 +668,7 @@ const BUILDERS: Record<Intent, (input: Input) => Built> = {
       {
         title: 'Last contact',
         figure: last ? relativeDay(last.date, ctx.today) : 'Never',
-        sub: last ? `${last.type} · ${last.outcome}${last.note ? ` · “${last.note.slice(0, 70)}${last.note.length > 70 ? '…' : ''}”` : ''}` : 'No interactions logged yet',
+        sub: last ? `${last.type} · ${outcomeWord(last.outcome, last.type)}${last.note ? ` · “${last.note.slice(0, 70)}${last.note.length > 70 ? '…' : ''}”` : ''}` : 'No interactions logged yet',
       },
       { title: 'Open follow-ups', figure: String(followUps.length), sub: followUps[0]?.text ?? 'None', tone: followUps.length ? 'warn' : undefined },
       t
@@ -685,11 +691,17 @@ const BUILDERS: Record<Intent, (input: Input) => Built> = {
     };
   },
 
-  /** What's in the menu's Saved list: visit prep and reports. */
+  /** Help with someone's Summary: a start, or what it doesn't say yet (lib/prep.ts). */
+  prep({ entity, ctx, q }) {
+    if (!entity) return { ...empty('Who is it for? Ask “Improve the summary for Dr. Patel”, or tap Improve with Ask on their Summary.'), scope: [SAMPLE], next: ['Who should I see today?', 'What’s on my plan today?'] };
+    return prepAnswer(entity, ctx, q);
+  },
+
+  /** What's in the menu's Saved list: summaries and reports. */
   saved({ entity, ctx, talkedAbout = [] }) {
     const preps = (entity ? talkedAbout.filter((id) => id === entity.id) : talkedAbout).flatMap((id) => {
       const e = getEntity(id);
-      return e ? [{ id: e.id, title: `Prep for ${e.name}`, sub: 'Visit prep', figure: '' }] : [];
+      return e ? [{ id: e.id, title: `Summary for ${e.name}`, sub: 'Summary', figure: '' }] : [];
     });
     const reports = ctx.ws.saved
       .filter((r) => !entity || r.about === entity.id)
@@ -698,8 +710,8 @@ const BUILDERS: Record<Intent, (input: Input) => Built> = {
     return {
       scope: ['Saved', 'On this device', SAMPLE],
       summary: total
-        ? `You have ${[preps.length ? plural(preps.length, 'visit prep') : '', reports.length ? plural(reports.length, 'saved report') : ''].filter(Boolean).join(' and ')}${entity ? ` about ${entity.name}` : ''}.`
-        : 'Nothing saved yet. Ask about a doctor and their visit prep is kept for you; say “save that” after any answer to keep it as a report.',
+        ? `You have ${[preps.length ? plural(preps.length, 'summary', 'summaries') : '', reports.length ? plural(reports.length, 'saved report') : ''].filter(Boolean).join(' and ')}${entity ? ` about ${entity.name}` : ''}.`
+        : 'Nothing saved yet. Ask about a doctor and their Summary is kept for you; say “save that” after any answer to keep it as a report.',
       rows: [...preps, ...reports],
       doThis: total ? { text: 'Everything you’ve kept is in the menu.', label: 'Open Saved', link: { kind: 'tab', tab: 'saved' } } : null,
       next: ['Who should I see today?', 'Where am I losing the most volume?'],

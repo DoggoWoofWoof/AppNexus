@@ -1,6 +1,6 @@
 // The row under the big buttons on someone's page, like a phone's contact card:
 // Ask about them, call them, get directions to where the visit is, and hear the
-// prep read aloud. Each is one tap, for the car park.
+// summary and what to bring up read aloud. Each is one tap, for the car park.
 
 import { router } from 'expo-router';
 import { Mic, Navigation, Phone, Square, Volume2, type LucideIcon } from 'lucide-react-native';
@@ -10,9 +10,9 @@ import { Linking, Platform, Pressable, View } from 'react-native';
 import { useChatHref } from '@/components/entity';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
-import { useChat } from '@/lib/chat';
+import { buildBrief, speechFor } from '@/lib/brief';
 import { shortName, siteFor } from '@/lib/data';
-import { buildPrep, docSpeech } from '@/lib/saved';
+import { improvedSummary } from '@/lib/prep';
 import { useWorkspace } from '@/lib/store';
 import type { Entity, LonLat } from '@/lib/types';
 import { canListen, canSpeak, speak, stopSpeaking } from '@/lib/voice';
@@ -41,7 +41,6 @@ function Action({ icon, label, hint, on = false, onPress }: { icon: LucideIcon; 
 /** Ask, Call, Directions and Listen. `siteId` is where the visit is, when there is one. */
 export function QuickActions({ entity, siteId }: { entity: Entity; siteId?: string }) {
   const ctx = useWorkspace();
-  const chat = useChat();
   const chatHref = useChatHref();
   const [reading, setReading] = useState(false);
   useEffect(() => () => stopSpeaking(), []);
@@ -59,7 +58,8 @@ export function QuickActions({ entity, siteId }: { entity: Entity; siteId?: stri
       return;
     }
     setReading(true);
-    speak(docSpeech(buildPrep(entity, ctx, chat.asked(entity.id))), { onEnd: () => setReading(false) });
+    // The rep's own summary, when they've written one, is what Listen reads.
+    speak(speechFor(entity, ctx, buildBrief(entity, ctx), improvedSummary(ctx.ws, entity.id) ?? undefined), { onEnd: () => setReading(false) });
   };
 
   return (
@@ -67,7 +67,7 @@ export function QuickActions({ entity, siteId }: { entity: Entity; siteId?: stri
       <Action icon={Mic} label="Ask" hint={`Ask about ${short}`} onPress={() => router.push(chatHref(entity, canListen()))} />
       <Action icon={Phone} label="Call" hint={`Call ${who}, ${phone}`} onPress={() => void Linking.openURL(telUrl(phone))} />
       <Action icon={Navigation} label="Directions" hint={`Directions to ${site.name}`} onPress={() => void Linking.openURL(directionsUrl(site.coords, site.name))} />
-      {canSpeak() ? <Action icon={reading ? Square : Volume2} label={reading ? 'Stop' : 'Listen'} hint={reading ? 'Stop reading' : `Hear the prep for ${short}`} on={reading} onPress={listen} /> : null}
+      {canSpeak() ? <Action icon={reading ? Square : Volume2} label={reading ? 'Stop' : 'Listen'} hint={reading ? 'Stop reading' : `Hear the summary for ${short}`} on={reading} onPress={listen} /> : null}
     </View>
   );
 }

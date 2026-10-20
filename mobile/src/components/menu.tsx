@@ -68,7 +68,7 @@ function MenuSheet({ due, onClose }: { due: number; onClose: () => void }) {
   return (
     <DialogContent className="gap-2 p-4" style={{ marginBottom: bottom }}>
       <DialogTitle className="px-2 pb-2 font-serif text-2xl font-normal">Menu</DialogTitle>
-      <MenuRow icon={Bookmark} title="Saved" sub={saved ? `${plural(saved, 'item')} · visit prep and reports` : 'Visit prep and reports'} onPress={() => go('/saved')} />
+      <MenuRow icon={Bookmark} title="Saved" sub={saved ? `${plural(saved, 'item')} · summaries and reports` : 'Summaries and reports'} onPress={() => go('/saved')} />
       <MenuRow
         icon={History}
         title="History"

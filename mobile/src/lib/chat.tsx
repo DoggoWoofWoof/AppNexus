@@ -7,7 +7,7 @@
 // since "today" in an answer means the day it was asked. Ended ones can be read
 // again in History, as they were.
 //
-// What the rep asks about someone feeds their visit prep (lib/saved.ts), and
+// What the rep asks about someone feeds their full Summary (lib/saved.ts), and
 // "save that" keeps the last answer as a report in the menu's Saved list.
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
@@ -311,9 +311,10 @@ function LoadedChats({ children, kept, storage }: { children: ReactNode; kept: C
         }
         return [...seen.entries()].sort((a, b) => b[1] - a[1]).map(([id]) => id);
       },
+      // Asking for help with their Summary isn't a question about them, so it doesn't go in it.
       asked: (id) =>
         all()
-          .filter(({ key, turn }) => turn.answer && !turn.answer.unknown && turn.answer.intent !== 'saved' && subjectOf(key, turn) === id)
+          .filter(({ key, turn }) => turn.answer && !turn.answer.unknown && turn.answer.intent !== 'saved' && turn.answer.intent !== 'prep' && subjectOf(key, turn) === id)
           .map(({ turn }) => ({ question: turn.question, answer: firstSentence(turn.answer?.summary ?? ''), at: turn.at })),
     };
   }, [threads, chats.past, chats.opened, opened, dayStart]);

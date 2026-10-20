@@ -1,46 +1,47 @@
-// Someone's page: who they are and when, two lines on why they matter, two big
-// buttons for what to do now, then Ask, Call, Directions and Listen, and short
-// cards worth knowing before a visit (components/target-info.tsx): what was
-// promised, last time, what was asked before, visits so far, how to get in and
-// similar doctors nearby. The full profile is behind "All details". Shared by
-// every tab (see src/app/*/target).
+// Someone's page, the one page for every doctor and account: who they are and
+// when, the Summary (where they work, when they're in, how it has gone and what to
+// do next, until the rep improves it), two big buttons for what to do now, then
+// Ask, Call, Directions and Listen, and short cards with everything else
+// (components/target-info.tsx), each opening in full where it is. A link from Ask
+// can open one card with `section`. Shared by every tab (see src/app/*/target).
 
-import { router, Stack, useLocalSearchParams } from 'expo-router';
-import { ChevronRight, CircleCheck } from 'lucide-react-native';
-import { Pressable, ScrollView, View } from 'react-native';
+import { Stack, useLocalSearchParams } from 'expo-router';
+import { CircleCheck } from 'lucide-react-native';
+import { useRef } from 'react';
+import { ScrollView, View, type ScrollViewInstance } from 'react-native';
 
-import { Avatar, SignalTag, useDocHref, useProfileHref } from '@/components/entity';
+import { Avatar } from '@/components/entity';
 import { useLogSheet } from '@/components/log-sheet';
-import { NotFound } from '@/components/profile';
+import { NotFound, SampleNote } from '@/components/profile';
 import { QuickActions } from '@/components/quick-actions';
-import { TargetInfo } from '@/components/target-info';
+import { SummaryCard } from '@/components/summary-card';
+import { TargetInfo, useCards } from '@/components/target-info';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import { useVisitSheets } from '@/components/visit-sheets';
-import { clashesWith, siteOnDay } from '@/lib/booking';
+import { clashesWith, inOnDay, siteOnDay } from '@/lib/booking';
 import { buildBrief } from '@/lib/brief';
-import { getEntity, shortName, signalMeaning, siteFor } from '@/lib/data';
-import { firstSentence, relativeDay } from '@/lib/format';
 import { useNoteOpened } from '@/lib/chat';
-import { prepId } from '@/lib/saved';
+import { getEntity, shortName, siteFor } from '@/lib/data';
+import { relativeDay } from '@/lib/format';
 import { useWorkspace } from '@/lib/store';
+import { cardFor } from '@/lib/target';
 import type { Entity } from '@/lib/types';
 
-const sentence = (text: string): string => (/[.!?]$/.test(text) ? text : `${text}.`);
-
 export default function TargetPage() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, section } = useLocalSearchParams<{ id: string; section?: string }>();
   const entity = getEntity(id);
-  return entity ? <Page entity={entity} /> : <NotFound />;
+  // A new section starts the page afresh, so the card it asks for opens.
+  return entity ? <Page key={`${id}-${section ?? ''}`} entity={entity} section={section} /> : <NotFound />;
 }
 
-function Page({ entity }: { entity: Entity }) {
+function Page({ entity, section }: { entity: Entity; section?: string }) {
   const ctx = useWorkspace();
-  const profileHref = useProfileHref();
-  const docHref = useDocHref();
-  const { openLog, sheet } = useLogSheet();
   const visits = useVisitSheets();
+  const { openLog, sheet } = useLogSheet({ onNotIn: visits.openNotIn });
+  const scrollRef = useRef<ScrollViewInstance>(null);
+  const cards = useCards(scrollRef, cardFor(entity, section));
   const short = shortName(entity);
   const brief = buildBrief(entity, ctx);
   useNoteOpened(entity.id);
@@ -49,63 +50,44 @@ function Page({ entity }: { entity: Entity }) {
   const visitToday = visit?.day === ctx.todayIso;
   const todayPlan = ctx.ws.plans[ctx.todayIso] ?? [];
   const loggedToday = todayPlan.find((i) => i.targetId === entity.id && i.status === 'done');
-  const seenToday = !!loggedToday;
+  const metToday = !!loggedToday && loggedToday.outcome !== 'Attempted';
   // Cancelled today and not planned again: it can go back, unless its time has been filled since.
-  const cancelled = !visit && !seenToday ? todayPlan.find((i) => i.targetId === entity.id && i.status === 'cancelled') : undefined;
+  const cancelled = !visit && !loggedToday ? todayPlan.find((i) => i.targetId === entity.id && i.status === 'cancelled') : undefined;
   const canRestore = !!cancelled && !(cancelled.mode === 'timed' && cancelled.time && clashesWith(todayPlan, cancelled.time, cancelled.duration, cancelled.id).length);
   const addDay = ctx.ws.selection.day;
+  // A doctor who isn't in that day gets a phone call instead of a visit.
+  const fit = entity.kind === 'hcp' ? inOnDay(entity, addDay, new Date()) : null;
+  const notIn = fit && !fit.ok ? fit.why : null;
   const unconfirmed = visit?.item.booking === 'requested';
 
   const when = visit
     ? visitToday
       ? (visit.item.time ?? 'Today')
       : `${relativeDay(visit.day, ctx.today)}${visit.item.time ? ` ${visit.item.time}` : ''}`
-    : seenToday
+    : metToday
       ? 'Seen today'
-      : cancelled
-        ? 'Cancelled today'
-        : '';
+      : loggedToday
+        ? 'Not in today'
+        : cancelled
+          ? 'Cancelled today'
+          : '';
   const what = entity.kind === 'hcp' ? entity.specialty : entity.typeDetail;
   // Where the visit is, or where they work today.
   const siteId = visit?.item.siteId ?? siteOnDay(entity, ctx.today.getDay()) ?? undefined;
-  const where = entity.kind === 'hcp' ? siteFor(entity, siteId).name : entity.city.replace(/ \d{5}$/, '');
-  const signals = ctx.signals(entity);
 
   return (
-    <ScrollView className="flex-1 bg-background" contentContainerClassName="gap-4 px-4 pb-10 pt-4">
+    <ScrollView ref={scrollRef} className="flex-1 bg-background" contentContainerClassName="gap-4 px-4 pb-10 pt-4">
       <Stack.Screen options={{ title: short, headerTitle: '' }} />
       <View className="flex-row items-center gap-3">
         <Avatar entity={entity} size="lg" />
         <View className="flex-1 gap-0.5">
           <Text className="text-xl font-semibold">{entity.name}</Text>
           <Text className="text-base text-muted-foreground">{[what, when].filter(Boolean).join(' · ')}</Text>
-          <Text className="text-sm text-muted-foreground">{where}</Text>
+          {visit && entity.kind === 'hcp' ? <Text className="text-sm text-muted-foreground">{siteFor(entity, visit.item.siteId).name}</Text> : null}
         </View>
       </View>
-      {/* Each tag with what it means in plain words, since this is where a rep first meets them. */}
-      {signals.length ? (
-        <View className="-mt-1 gap-2">
-          {signals.map((s) => (
-            <View key={s.id} className="flex-row items-start gap-2">
-              <SignalTag signal={s} />
-              <Text className="flex-1 text-sm text-muted-foreground">{signalMeaning(s, entity)}</Text>
-            </View>
-          ))}
-        </View>
-      ) : null}
 
-      <Pressable
-        onPress={() => router.push(docHref(prepId(entity.id)))}
-        accessibilityRole="link"
-        accessibilityHint="Opens the full prep"
-        className="gap-2 rounded-xl bg-brand-soft p-4 active:opacity-80"
-      >
-        <Text className="text-base leading-6">{`${firstSentence(brief.insight)} ${sentence(brief.goal)}`}</Text>
-        <View className="flex-row items-center gap-1">
-          <Text className="text-sm font-semibold text-brand">Full prep</Text>
-          <Icon as={ChevronRight} size={14} className="text-brand" />
-        </View>
-      </Pressable>
+      <SummaryCard entity={entity} brief={brief} />
 
       {visit && unconfirmed ? (
         <View className="flex-row flex-wrap items-center gap-x-3 gap-y-2 rounded-xl bg-warn-soft py-3 pl-4 pr-3">
@@ -122,10 +104,7 @@ function Page({ entity }: { entity: Entity }) {
       {loggedToday && !visit ? (
         <View className="flex-row items-center gap-2 rounded-xl bg-success-soft p-4">
           <Icon as={CircleCheck} size={20} className="text-success" />
-          <View className="flex-1 gap-0.5">
-            <Text className="text-base font-semibold">{loggedToday.outcome === 'Attempted' ? 'Logged as not in.' : 'Logged. Nice work.'}</Text>
-            <Text className="text-sm text-muted-foreground">On this phone · not sent yet</Text>
-          </View>
+          <Text className="flex-1 text-base font-semibold">{metToday ? 'Logged. Nice work.' : 'Logged as not in.'}</Text>
         </View>
       ) : null}
 
@@ -139,10 +118,13 @@ function Page({ entity }: { entity: Entity }) {
           <Button size="lg" className="rounded-xl" onPress={() => ctx.restoreVisit(ctx.todayIso, cancelled.id)}>
             <Text className="text-lg">{cancelled.time ? `Put it back at ${cancelled.time}` : 'Put it back'}</Text>
           </Button>
-        ) : !visit && !seenToday ? (
-          <Button size="lg" className="rounded-xl" onPress={() => ctx.addToPlan(entity.id, addDay)}>
-            <Text className="text-lg">{`Add to ${ctx.dayWord(addDay)}`}</Text>
-          </Button>
+        ) : !visit && !loggedToday ? (
+          <>
+            <Button size="lg" className="rounded-xl" onPress={() => ctx.addToPlan(entity.id, addDay, notIn ? 'Phone call' : undefined)}>
+              <Text className="text-lg">{notIn ? `Add a call ${ctx.dayWord(addDay)}` : `Add to ${ctx.dayWord(addDay)}`}</Text>
+            </Button>
+            {notIn ? <Text className="text-center text-sm text-muted-foreground">{`${notIn}, so it’s a phone call.`}</Text> : null}
+          </>
         ) : null}
         {visit ? (
           <Button size="lg" variant="outline" className="rounded-xl" onPress={() => visits.openCantMakeIt(entity, { day: visit.day, id: visit.item.id, item: visit.item })}>
@@ -153,23 +135,19 @@ function Page({ entity }: { entity: Entity }) {
             size="lg"
             variant="outline"
             className="rounded-xl"
-            onPress={() => openLog(entity, undefined, seenToday ? { title: 'Add a note', seen: true } : { title: 'Log a visit' })}
+            onPress={() => openLog(entity, undefined, metToday ? { title: 'Add a note', seen: true } : { title: 'Log a visit' })}
           >
-            <Text className="text-lg">{seenToday ? 'Add a note' : 'Log a visit'}</Text>
+            <Text className="text-lg">{metToday ? 'Add a note' : 'Log a visit'}</Text>
           </Button>
         )}
       </View>
 
       <QuickActions entity={entity} siteId={siteId} />
 
-      <View className="mt-2">
-        <TargetInfo entity={entity} brief={brief} />
+      <View className="mt-2" onLayout={cards.onBase}>
+        <TargetInfo entity={entity} brief={brief} cards={cards} onBook={() => visits.openBook(entity)} />
       </View>
-
-      <Button variant="ghost" className="self-center" onPress={() => router.push(profileHref(entity, 'details'))}>
-        <Text className="text-muted-foreground">All details</Text>
-        <Icon as={ChevronRight} size={16} className="text-muted-foreground" />
-      </Button>
+      <SampleNote />
       {sheet}
       {visits.sheets}
     </ScrollView>

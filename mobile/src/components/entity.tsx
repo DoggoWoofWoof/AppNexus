@@ -64,10 +64,10 @@ export function Avatar({ entity, size = 'md' }: { entity: { name: string; kind?:
  */
 export function useProfileHref() {
   const tab = useTab();
-  return (entity: Pick<Entity, 'id' | 'kind'>, section?: string): Href =>
-    section === undefined
-      ? { pathname: `/${tab}/target/[id]`, params: { id: entity.id } }
-      : { pathname: `/${tab}/${entity.kind}/[id]`, params: section === 'details' ? { id: entity.id } : { id: entity.id, section } };
+  return (entity: Pick<Entity, 'id' | 'kind'>, section?: string): Href => ({
+    pathname: `/${tab}/target/[id]`,
+    params: section === undefined ? { id: entity.id } : { id: entity.id, section },
+  });
 }
 
 /** A visit prep or saved report, opened in the tab that's showing it so Back returns there. */
@@ -76,12 +76,15 @@ export function useDocHref() {
   return (id: string): Href => (tab === 'saved' ? { pathname: '/saved/[id]', params: { id } } : { pathname: `/${tab}/doc/[id]`, params: { id } });
 }
 
-/** Ask about someone, opened from their page; `listen` starts the mic straight away. */
+/**
+ * Ask about someone, opened from their page; `listen` starts the mic straight
+ * away. `fromPrep` is for their Summary, so "Add to summary" goes back there.
+ */
 export function useChatHref() {
   const tab = useTab();
-  return (entity: Pick<Entity, 'id'>, listen = false): Href => ({
+  return (entity: Pick<Entity, 'id'>, listen = false, fromPrep = false): Href => ({
     pathname: `/${tab}/chat/[id]`,
-    params: listen ? { id: entity.id, listen: '1' } : { id: entity.id },
+    params: { id: entity.id, ...(listen ? { listen: '1' } : {}), ...(fromPrep ? { from: 'prep' } : {}) },
   });
 }
 

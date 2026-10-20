@@ -1,4 +1,4 @@
-// Saved, from the menu: visit prep for anyone you've asked about or are seeing
+// Saved, from the menu: the Summary of anyone you've asked about or are seeing
 // today or the next working day, then the answers you kept from Ask as reports.
 
 import { router } from 'expo-router';
@@ -37,9 +37,9 @@ export default function Saved() {
 
   return (
     <Screen inset>
-      <TabHeader title="Saved" sub="Visit prep and reports from Ask" />
+      <TabHeader title="Saved" sub="Summaries and reports from Ask" />
 
-      <Section title="Visit prep" sub="Who you’re seeing and who you asked about">
+      <Section title="Summaries" sub="Who you’re seeing and who you asked about">
         {preps.length ? (
           preps.map(({ entity, doc }) => {
             const asked = chat.asked(entity.id).length;

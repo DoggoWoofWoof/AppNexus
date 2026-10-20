@@ -135,6 +135,79 @@ export function suggestOrder(items: PlanItem[], coordsOf: CoordsOf, start: LonLa
 /** Whether the visit needs the rep to travel. */
 export const isOnSite = (item: PlanItem): boolean => item.type === 'In-person visit' || item.type === 'Meeting';
 
+/**
+ * How many stops at the start of the route stay where they are when stops are
+ * placed or reordered: up to the last one logged, or, today, the last one whose
+ * time has started. Nothing is put before a visit that has already happened.
+ */
+export function fixedStops(route: PlanItem[], minutesNow: number | null): number {
+  let fixed = 0;
+  route.forEach((item, i) => {
+    const started = minutesNow != null && item.mode === 'timed' && item.time != null && startOf(item) <= minutesNow;
+    if (item.status !== 'planned' || started) fixed = i + 1;
+  });
+  return fixed;
+}
+
+/** Straight-line km for a route in this order, from the start point, counting only the stops that need travel. */
+const travel = (route: PlanItem[], coordsOf: CoordsOf, start: LonLat): number => {
+  let from = start;
+  let total = 0;
+  for (const item of route) {
+    if (!isOnSite(item)) continue;
+    const to = coordsOf(item);
+    total += haversineKm(from, to);
+    from = to;
+  }
+  return total;
+};
+
+/** The route with a stop put where it adds the least travel, no earlier than `from`. A call or an email goes last. */
+function insertCheapest(route: PlanItem[], item: PlanItem, coordsOf: CoordsOf, start: LonLat, from: number): PlanItem[] {
+  if (!isOnSite(item)) return [...route, item];
+  let best: PlanItem[] | null = null;
+  let bestKm = Infinity;
+  for (let k = from; k <= route.length; k++) {
+    const tried = [...route.slice(0, k), item, ...route.slice(k)];
+    const km = travel(tried, coordsOf, start);
+    if (km < bestKm - 1e-9) {
+      best = tried;
+      bestKm = km;
+    }
+  }
+  return best ?? [...route, item];
+}
+
+/**
+ * Puts newly added "Any time" stops where each adds the least travel, between the
+ * fixed visits and after anything that has already happened (`minutesNow`, for today).
+ */
+export function placeStops(items: PlanItem[], ids: string[], coordsOf: CoordsOf, start: LonLat, minutesNow: number | null = null): PlanItem[] {
+  const placing = new Set(ids);
+  let route = routeOrder(activeItems(items)).filter((i) => !placing.has(i.id));
+  const from = fixedStops(route, minutesNow);
+  for (const item of items.filter((i) => placing.has(i.id) && i.status !== 'cancelled')) {
+    route = item.mode === 'timed' ? routeOrder([...route, item]) : insertCheapest(route, item, coordsOf, start, from);
+  }
+  return [...route, ...items.filter((i) => i.status === 'cancelled')];
+}
+
+/**
+ * The day's "Any time" stops that need travel, each put where it adds the least,
+ * farthest first. Visits with a time keep it, calls stay where they are, and
+ * nothing moves before a visit that has already happened.
+ */
+export function bestOrder(items: PlanItem[], coordsOf: CoordsOf, start: LonLat, minutesNow: number | null = null): PlanItem[] {
+  const route = routeOrder(activeItems(items));
+  const from = fixedStops(route, minutesNow);
+  const movable = route.filter((i, n) => n >= from && i.mode !== 'timed' && i.status === 'planned' && isOnSite(i));
+  let ordered = route.filter((i) => !movable.includes(i));
+  const fixed = fixedStops(ordered, minutesNow);
+  const far = [...movable].sort((a, b) => haversineKm(start, coordsOf(b)) - haversineKm(start, coordsOf(a)));
+  for (const item of far) ordered = insertCheapest(ordered, item, coordsOf, start, fixed);
+  return [...ordered, ...items.filter((i) => i.status === 'cancelled')];
+}
+
 /** Total straight-line distance of the route, in km, from the start point. */
 export function routeDistance(items: PlanItem[], coordsOf: CoordsOf, start: LonLat): number {
   let from = start;

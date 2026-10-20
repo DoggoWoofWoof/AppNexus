@@ -3,10 +3,12 @@
 // make it); a visit whose time has gone, or an "Any time" one still open at 17:30,
 // gets its own Log button. Above the day, one "Still to do" card holds what's left
 // from before: visits earlier in the week never logged, and follow-ups due.
-// "Add a visit" opens Targets, where + puts someone in the plan. One small Edit
-// above the stops shows how to change the day: arrows move an "Any time" stop
-// (timed ones go by their time), "Set a time" fixes one, and Remove takes it out.
-// A visit with a time can only be moved or cancelled, as someone is expecting you.
+// "Add a visit" opens Targets, where + puts someone in the plan where it adds the
+// least travel. A freed time offers the three best people to see instead. "Best
+// order" (when it would help) puts the "Any time" stops in the shortest order, with
+// Undo. One small Edit above the stops shows how to change the day: arrows move an
+// "Any time" stop (timed ones go by their time), "Set a time" fixes one, and Remove
+// takes it out. A visit with a time can only be moved or cancelled, as someone is expecting you.
 
 import { router, useFocusEffect } from 'expo-router';
 import { ArrowDown, ArrowUp, CalendarClock, ChevronRight, CircleCheck, Clock, ListTodo, Plus, Sparkles, Trash2, X } from 'lucide-react-native';
@@ -46,9 +48,9 @@ function useMinutesNow(): number {
 export default function Today() {
   const ctx = useWorkspace();
   const profileHref = useProfileHref();
-  const { openLog, sheet } = useLogSheet();
-  const { openStopTime, sheet: timeSheet } = useStopTimeSheet();
   const visits = useVisitSheets();
+  const { openLog, sheet } = useLogSheet({ onNotIn: visits.openNotIn });
+  const { openStopTime, sheet: timeSheet } = useStopTimeSheet();
   const { width } = useWindowDimensions();
   // The day being edited, so switching days or tabs leaves Edit.
   const [editing, setEditing] = useState<string | null>(null);
@@ -187,10 +189,7 @@ export default function Today() {
           <Button
             size="sm"
             className="rounded-lg"
-            onPress={() => {
-              ctx.chooseSlot(slot.itemId);
-              router.navigate('/targets');
-            }}
+            onPress={() => visits.openFill({ day, siteId: slot.siteId, time: slot.time, duration: slot.duration, except: slot.targetId, slotId: slot.itemId })}
             accessibilityLabel={`Find someone for ${slot.time}`}
           >
             <Text>Find someone</Text>
@@ -222,6 +221,11 @@ export default function Today() {
             <Text className="flex-1 text-sm text-muted-foreground" accessibilityLiveRegion="polite">
               {edit ? 'Arrows move an “Any time” stop' : `${plural(active.length, 'stop')}${done ? ` · ${done} done` : ''}`}
             </Text>
+            {!edit && ctx.bestOrderHelps(day, new Date()) ? (
+              <Button size="sm" variant="ghost" onPress={() => ctx.bestOrder(day)} accessibilityLabel="Put the Any time stops in the shortest order">
+                <Text className="text-brand">Best order</Text>
+              </Button>
+            ) : null}
             <Button
               size="sm"
               variant="ghost"

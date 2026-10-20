@@ -1,19 +1,21 @@
 // Log a visit: Met or Not in, then talk (or type) and Save. Logging a planned
-// visit marks it done. At an account it also asks who was there. Once they've
-// been seen today it's just a note. The full note form, with follow-ups and other
-// dates, stays on the profile for when there's more to add.
+// visit marks it done; with nothing planned it asks whether it was a visit or a
+// call. At an account it also asks who was there. Once they've been seen today
+// it's just a note. "Add a follow-up" saves something to do next, and when.
 
-import { Check, Mic, Square } from 'lucide-react-native';
+import { Check, Mic, Plus, Square } from 'lucide-react-native';
 import { useEffect, useRef, useState } from 'react';
 import { AccessibilityInfo, Platform, Pressable, View } from 'react-native';
 
-import { Problem, SheetBody, SheetContent } from '@/components/note-sheet';
+import { Choices, DueChoices, Problem, SheetBody, SheetContent } from '@/components/note-sheet';
 import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
 import { Icon } from '@/components/ui/icon';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Text } from '@/components/ui/text';
 import { descendantsOf, getEntity, hcpsAt, shortName } from '@/lib/data';
+import { addDays, isoDate } from '@/lib/format';
 import { draftKey } from '@/lib/persist';
 import { useWorkspace } from '@/lib/store';
 import type { Entity, VisitType } from '@/lib/types';
@@ -28,8 +30,8 @@ type Options = {
   seen?: boolean;
 };
 
-/** The log sheet. Render `sheet` once on the screen that opens it. */
-export function useLogSheet() {
+/** The log sheet. Render `sheet` once on the screen that opens it. `onNotIn` follows a visit logged as not in. */
+export function useLogSheet({ onNotIn }: { onNotIn?: (target: Entity, visit: Visit) => void } = {}) {
   const [open, setOpen] = useState<{ target: Entity; visit?: Visit; options: Options } | null>(null);
   const close = () => setOpen(null);
   return {
@@ -39,7 +41,16 @@ export function useLogSheet() {
       <Dialog open={!!open} onOpenChange={(o) => !o && close()}>
         {open ? (
           <SheetContent title={open.options.title ?? (open.visit ? 'Log visit' : 'Add a note')} target={open.target}>
-            <LogForm target={open.target} visit={open.visit} seen={!!open.options.seen} onDone={close} />
+            <LogForm
+              target={open.target}
+              visit={open.visit}
+              seen={!!open.options.seen}
+              onDone={(outcome) => {
+                const { target, visit } = open;
+                close();
+                if (outcome === 'Attempted' && visit) onNotIn?.(target, visit);
+              }}
+            />
           </SheetContent>
         ) : null}
       </Dialog>
@@ -47,9 +58,10 @@ export function useLogSheet() {
   };
 }
 
-function LogForm({ target, visit, seen, onDone }: { target: Entity; visit?: Visit; seen: boolean; onDone: () => void }) {
+function LogForm({ target, visit, seen, onDone }: { target: Entity; visit?: Visit; seen: boolean; onDone: (outcome: string) => void }) {
   const ctx = useWorkspace();
-  const type: VisitType = visit?.type ?? (target.kind === 'hco' ? 'Meeting' : 'In-person visit');
+  const inPersonType: VisitType = target.kind === 'hco' ? 'Meeting' : 'In-person visit';
+  const [type, setType] = useState<VisitType>(visit?.type ?? inPersonType);
   const inPerson = type === 'In-person visit' || type === 'Meeting';
   const choices = inPerson
     ? [
@@ -87,6 +99,9 @@ function LogForm({ target, visit, seen, onDone }: { target: Entity; visit?: Visi
         ]
       : [];
   const [there, setThere] = useState<string[]>(kept?.there ?? []);
+  const [followOn, setFollowOn] = useState(false);
+  const [followText, setFollowText] = useState('');
+  const [followDue, setFollowDue] = useState(() => isoDate(addDays(ctx.today, 7)));
   const [listening, setListening] = useState(false);
   const [voiceError, setVoiceError] = useState<string | null>(null);
   const [error, setError] = useState<DraftError | null>(null);
@@ -140,6 +155,8 @@ function LogForm({ target, visit, seen, onDone }: { target: Entity; visit?: Visi
       note,
       attendees: people.filter((p) => p.doctor && there.includes(p.key)).map((p) => p.key),
       contacts: people.filter((p) => !p.doctor && there.includes(p.key)).map((p) => p.key),
+      // Left blank, there's no follow-up.
+      followUp: followOn && followText.trim() ? { text: followText, due: followDue } : null,
       visit: visit ? { day: visit.day, id: visit.id } : undefined,
     });
     if (problem) {
@@ -148,13 +165,27 @@ function LogForm({ target, visit, seen, onDone }: { target: Entity; visit?: Visi
       return;
     }
     keepDraft(key, null);
-    onDone();
+    onDone(outcome);
   };
 
   return (
     <>
       <SheetBody>
         {kept ? <Text className="text-sm text-muted-foreground">Not saved yet. This is where you left off.</Text> : null}
+        {visit || seen ? null : (
+          <Choices
+            label="Visit or call?"
+            value={type}
+            onChange={(t) => {
+              setType(t);
+              setOutcome(start);
+            }}
+            options={[
+              { value: inPersonType, label: target.kind === 'hco' ? 'Meeting' : 'Visit' },
+              { value: 'Phone call', label: 'Phone call' },
+            ]}
+          />
+        )}
         {seen ? null : (
           <View className="flex-row gap-2" accessibilityRole="radiogroup" accessibilityLabel={inPerson ? 'Did you see them?' : 'Did you get through?'}>
             {choices.map((c) => {
@@ -228,6 +259,24 @@ function LogForm({ target, visit, seen, onDone }: { target: Entity; visit?: Visi
           accessibilityLabel={seen ? 'Note' : 'Note, optional'}
         />
         <Text className="-mt-3 text-sm text-muted-foreground">Keep patient details out. Your team can read notes.</Text>
+        {followOn ? (
+          <View className="gap-3 rounded-xl border border-border p-3">
+            <Input
+              value={followText}
+              onChangeText={setFollowText}
+              maxLength={140}
+              placeholder="What to do next, e.g. send the outcomes summary"
+              accessibilityLabel="Follow-up, what to do next"
+              autoFocus
+            />
+            <DueChoices value={followDue} onChange={setFollowDue} />
+          </View>
+        ) : (
+          <Button variant="outline" className="self-start rounded-lg" onPress={() => setFollowOn(true)}>
+            <Icon as={Plus} size={16} />
+            <Text>Add a follow-up</Text>
+          </Button>
+        )}
       </SheetBody>
       <View className="gap-2 border-t border-border px-5 py-3">
         {error ? <Problem message={error.field === 'outcome' ? `Tap ${choices[0].label} or ${choices[1].label} first.` : error.message} /> : null}

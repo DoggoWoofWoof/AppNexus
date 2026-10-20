@@ -2,9 +2,10 @@
 // profile and can be shared as text. Talking points are fixed rules over the
 // sample data, not AI. Ported from demo/js/brief.js.
 
-import { destination, getEntity, openFollowUps, patientsLost, procedureTotal, procedureYoy, proceduresOf, referredOut, siteFor } from './data';
+import { usualTimes } from './booking';
+import { destination, getEntity, getOrg, hcpsAt, openFollowUps, parentOf, patientsLost, procedureTotal, procedureYoy, proceduresOf, referredOut, siteFor } from './data';
 import { DATA_PERIOD } from './data/seed';
-import { daysBetween, firstSentence, formatDate, formatNumber, fromIso, plural, relativeDay, relativeDayLower, sum, yoy } from './format';
+import { daysBetween, firstSentence, formatDate, formatNumber, fromIso, isoDate, plural, relativeDay, relativeDayLower, sum, yoy } from './format';
 import { endTime, isOnSite } from './plan';
 import type { Entity, FollowUp, PlanItem } from './types';
 import type { Context } from './workspace';
@@ -83,13 +84,15 @@ export function briefFigures(entity: Entity, ctx: Context): Figure[] {
   const contact: Figure = {
     label: 'Last contact',
     value: last ? relativeDay(last.date, ctx.today) : 'Never',
-    sub: last ? `${last.type} · ${last.outcome}` : 'Nothing logged yet',
+    sub: last ? `${last.type} · ${outcomeWord(last.outcome, last.type)}` : 'Nothing logged yet',
   };
   return [volume, leak, contact];
 }
 
 export function buildBrief(entity: Entity, ctx: Context): Brief {
   const visit = ctx.nextVisit(entity.id);
+  // A goal the rep wrote in their prep (lib/prep.ts) comes before the plan's or a suggested one.
+  const ownGoal = ctx.ws.prep?.[entity.id]?.goal || '';
   const open = openFollowUps(entity.id, ctx.ws).sort((a, b) => a.due.localeCompare(b.due));
   const last = ctx.lastInteraction(entity.id);
   const proc = topProcedure(entity);
@@ -103,7 +106,7 @@ export function buildBrief(entity: Entity, ctx: Context): Brief {
 
   // With no goal in the plan, the soonest follow-up is the goal, so the first
   // point goes back to last time rather than saying the follow-up again.
-  const goalFollowUp = visit?.item.goal ? null : (open[0] ?? null);
+  const goalFollowUp = ownGoal || visit?.item.goal ? null : (open[0] ?? null);
   if (open[0] && !goalFollowUp) points.push({ kind: 'promise', text: `You promised: ${open[0].text} (${dueText(open[0], ctx.today)}).` });
   else if (last?.note) points.push({ kind: 'lastNote', text: `Last time (${relativeDayLower(last.date, ctx.today)}): ${firstSentence(last.note)}` });
 
@@ -144,14 +147,70 @@ export function buildBrief(entity: Entity, ctx: Context): Brief {
   const suggested = goalFollowUp?.text ?? (leakName ? `Ask what would keep ${leakName} patients in the system` : 'Catch up and agree a next step');
   return {
     visit,
-    goal: visit?.item.goal || suggested,
-    goalSuggested: !visit?.item.goal,
+    goal: ownGoal || visit?.item.goal || suggested,
+    goalSuggested: !ownGoal && !visit?.item.goal,
     goalDue: goalFollowUp ? dueText(goalFollowUp, ctx.today) : null,
     insight,
     points: points.slice(0, 3),
     figures: briefFigures(entity, ctx),
     followUps: open,
   };
+}
+
+/** A logged outcome in the log sheet's words: "Met" or "Not in" after a visit, "Talked" or "No answer" after a call. */
+export function outcomeWord(outcome: string, type: string): string {
+  const call = type === 'Phone call' || type === 'Video call';
+  if (outcome === 'Attempted') return call ? 'No answer' : 'Not in';
+  return outcome === 'Met' && call ? 'Talked' : outcome;
+}
+
+/**
+ * A few plain sentences on who someone is, for the Summary at the top of their
+ * page until the rep improves it: where they work and when they're in, the last
+ * contact, and follow-ups owed. The numbers sit in the figures under it.
+ */
+export function summaryOf(entity: Entity, ctx: Context): string {
+  const todayIso = isoDate(ctx.today);
+  const last = ctx.lastInteraction(entity.id);
+  const open = openFollowUps(entity.id, ctx.ws);
+  const late = open.filter((f) => f.due < todayIso).length;
+  const dueToday = open.filter((f) => f.due === todayIso).length;
+  let who: string;
+  if (entity.kind === 'hcp') {
+    const sites = [...entity.affiliations].sort((a, b) => b.share - a.share).flatMap((a) => getOrg(a.orgId)?.name ?? []);
+    who = `Works at ${sites[0] ?? siteFor(entity).name}${sites.length > 1 ? ` and ${plural(sites.length - 1, 'other place')}` : ''}. ${usualTimes(entity)}.`;
+  } else {
+    const parent = parentOf(entity);
+    const doctors = hcpsAt(entity.id).length;
+    who = [
+      `${entity.typeDetail} in ${entity.city.replace(/ \d{5}$/, '')}${parent ? `, part of ${parent.name}` : ''}.`,
+      doctors ? `${plural(doctors, 'doctor')} you cover ${doctors === 1 ? 'works' : 'work'} here.` : '',
+    ]
+      .filter(Boolean)
+      .join(' ');
+  }
+  const by = last && last.author !== 'You' ? ` by ${last.author}` : '';
+  const seen = last
+    ? `Last contact ${relativeDayLower(last.date, ctx.today)}: ${last.type.toLowerCase()}${by}, ${outcomeWord(last.outcome, last.type).toLowerCase()}.`
+    : 'You haven’t been in touch yet.';
+  const owed = late ? `${plural(late, 'follow-up')} late.` : dueToday ? `${plural(dueToday, 'follow-up')} due today.` : open.length ? `${plural(open.length, 'follow-up')} open.` : '';
+  return [who, seen, owed].filter(Boolean).join(' ');
+}
+
+/** What Listen reads on someone's page: who they are, the summary, the numbers that matter and what to bring up. */
+export function speechFor(entity: Entity, ctx: Context, brief: Brief, summary = summaryOf(entity, ctx)): string {
+  const [volume] = brief.figures;
+  const trend = volume.delta != null ? `, ${volume.delta >= 0 ? 'up' : 'down'} ${Math.abs(Math.round(volume.delta))}% on last year` : '';
+  return [
+    `${entity.name}.`,
+    summary,
+    volume.value !== '—' ? `${volume.value} procedures in the last 12 months${trend}.` : '',
+    brief.insight,
+    `Next time: ${brief.goal.replace(/[.!?]?$/, '.')}`,
+    ...brief.points.filter((p) => p.kind !== 'up' && p.kind !== 'down').map((p) => p.text),
+  ]
+    .filter(Boolean)
+    .join(' ');
 }
 
 /** When and where a visit is, e.g. "Thu 22 Oct · 07:30–08:00 · Mount Sinai West"; calls and emails have no place. */

@@ -26,7 +26,7 @@ describe('visit prep', () => {
     expect(prepTarget(doc.id)).toBe('maya');
     expect(prepTarget(prepId('msw'))).toBe('msw');
     expect(prepTarget('r-123')).toBeNull();
-    expect(doc).toMatchObject({ kind: 'prep', title: 'Prep for Dr. Patel', about: 'maya' });
+    expect(doc).toMatchObject({ kind: 'prep', title: 'Summary for Dr. Patel', about: 'maya' });
     expect(doc.summary).toMatch(/^Goal: Bring the procedure mix vs\. peers report/);
     expect(doc.when).toMatch(/^Today, .* · 10:00–10:30 · /);
     expect(doc.sections.map((s) => s.title)).toEqual(expect.arrayContaining(['Why now', 'Talking points']));

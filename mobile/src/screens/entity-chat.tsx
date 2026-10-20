@@ -1,5 +1,6 @@
 // Ask about one person or account, opened from their profile. Every question is
 // about them unless it names someone else, so "where do their patients go?" works.
+// Opened from their Summary (`from=prep`), "Add to summary" goes back there.
 // Shared by every tab (see src/app/*/chat), like the profiles.
 
 import { Stack, useLocalSearchParams } from 'expo-router';
@@ -14,7 +15,7 @@ import { useChat } from '@/lib/chat';
 import { getEntity, shortName, subtitle } from '@/lib/data';
 
 export default function EntityChat() {
-  const { id, listen } = useLocalSearchParams<{ id: string; listen?: string }>();
+  const { id, listen, from } = useLocalSearchParams<{ id: string; listen?: string; from?: string }>();
   const entity = getEntity(id);
   const chat = useChat();
   if (!entity) return <NotFound />;
@@ -26,6 +27,7 @@ export default function EntityChat() {
       <ChatView
         chatKey={entity.id}
         listenOnOpen={listen === '1'}
+        fromPrep={from === 'prep'}
         placeholder={`Ask about ${short}`}
         empty={
           <View className="gap-4">

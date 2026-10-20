@@ -4,11 +4,12 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { AppState } from 'react-native';
 
-import { getEntity } from './data';
+import { getEntity, shortName } from './data';
 import { addDays, formatDate, isoDate, plural, startOfDay } from './format';
 import { DRAFTS_KEY, laterWriter, loadKept, restoreDrafts, restoreWorkspace, WORKSPACE_KEY, type DeviceStorage, type Kept, type LogDraft } from './persist';
 import { withPrefs } from './prefs';
-import type { Prefs, SavedReport, Workspace } from './types';
+import { withPrepAdded, withPrepEdit, type PrepAdd, type PrepEdit } from './prep';
+import type { Prefs, SavedReport, VisitType, Workspace } from './types';
 import {
   addAllToPlan,
   addPeople,
@@ -27,14 +28,18 @@ import {
   followUpRecord,
   freshWorkspace,
   leaveFree,
+  moveToDay,
+  moveToDayError,
   moveVisit,
   noteError,
   noteRecords,
   removeSaved,
+  orderBest,
   removeVisit,
   restoreVisit,
   saveReport,
   setVisitTime,
+  stopNumber,
   visitsLogged,
   visitTimeError,
   withRecords,
@@ -79,8 +84,12 @@ type Store = Context & {
   /** Books or reschedules a visit. Returns what's wrong instead when it can't be saved. */
   book: (draft: BookingDraft) => string | null;
   confirmBooking: (day: string, id: string) => void;
-  /** Adds someone to a day's plan (the selected day by default) at no fixed time. */
-  addToPlan: (targetId: string, day?: string) => void;
+  /** Adds someone to a day's plan (the selected day by default) at no fixed time, where it adds the least travel. `type` makes it a call. */
+  addToPlan: (targetId: string, day?: string, type?: VisitType) => void;
+  /** Puts the day's "Any time" visits in the shortest order, with Undo. */
+  bestOrder: (day: string) => void;
+  /** Moves an "Any time" visit to another day. Returns what's wrong instead when it can't. */
+  moveToDay: (day: string, id: string, toDay: string) => string | null;
   /** Adds several people to a day, nearest first. */
   addAllToPlan: (targetIds: string[], day: string) => void;
   /** Adds the people picked on Targets after the day's other stops, with one Undo. */
@@ -90,6 +99,10 @@ type Store = Context & {
   removeSaved: (id: string) => void;
   /** Changes the rep's own choices on the You page. Quietly, and Undo leaves them as they are. */
   setPrefs: (patch: Partial<Prefs>) => void;
+  /** Keeps the rep's own summary and goal for someone (their prep), with Undo. Both blank goes back to the one from the data. */
+  editPrep: (id: string, edit: PrepEdit) => void;
+  /** Adds a goal and lines from Ask to someone's Summary, after the rep's own, with Undo. */
+  addToPrep: (id: string, add: PrepAdd) => void;
   /** A note started in the log sheet and closed before it was saved. */
   draftFor: (key: string) => LogDraft | null;
   /** Keeps a half-written note, or with null lets it go. */
@@ -310,10 +323,25 @@ function LoadedWorkspace({
         if (!findItem(current.current, day, id)) return;
         apply(confirmBooking(current.current, day, id), 'Visit confirmed');
       },
-      addToPlan: (targetId: string, day = current.current.selection.day) => {
+      addToPlan: (targetId: string, day = current.current.selection.day, type?: VisitType) => {
         const who = getEntity(targetId);
         if (!who) return;
-        apply(addToPlan(current.current, day, targetId), `${who.name} added ${onDay(day)}`);
+        const next = addToPlan(current.current, day, targetId, now(), type);
+        // Say where it went, as the map numbers the stops, so the rep needn't go and look.
+        const spot = stopNumber(next, day, targetId);
+        const where = !spot ? ' as a call' : spot.of < 2 ? '' : ` · stop ${spot.number}${spot.after ? `, after ${shortName(getEntity(spot.after.targetId) ?? who)}` : ', first'}`;
+        apply(next, `${who.name} added ${onDay(day)}${where}`);
+      },
+      bestOrder: (day: string) => {
+        const next = orderBest(current.current, day, now());
+        if (next !== current.current) apply(next, 'Stops put in the shortest order');
+      },
+      moveToDay: (day: string, id: string, toDay: string) => {
+        const error = moveToDayError(current.current, day, id, toDay);
+        if (error) return error;
+        const who = getEntity(findItem(current.current, day, id)?.targetId ?? '');
+        apply(moveToDay(current.current, day, id, toDay), `${who?.name ?? 'Visit'} moved to ${toDay === todayIso ? 'today' : formatDate(toDay, { weekday: 'long' })}`);
+        return null;
       },
       addAllToPlan: (targetIds: string[], day: string) => {
         const next = addAllToPlan(current.current, day, targetIds);
@@ -321,7 +349,7 @@ function LoadedWorkspace({
         if (added) apply(next, `${plural(added, 'person', 'people')} added ${onDay(day)}`);
       },
       addPeople: (targetIds: string[], day: string) => {
-        const next = addPeople(current.current, day, targetIds);
+        const next = addPeople(current.current, day, targetIds, now());
         const added = (next.plans[day]?.length ?? 0) - (current.current.plans[day]?.length ?? 0);
         const only = added === 1 ? getEntity(next.plans[day][next.plans[day].length - 1].targetId) : null;
         if (added) apply(next, `${only ? only.name : plural(added, 'person', 'people')} added ${onDay(day)}`);
@@ -329,6 +357,15 @@ function LoadedWorkspace({
       saveReport: (report: SavedReport) => apply(saveReport(current.current, report), 'Saved. Find it in the menu.'),
       removeSaved: (id: string) => apply(removeSaved(current.current, id), 'Removed from Saved'),
       setPrefs: (patch: Partial<Prefs>) => quietly(withPrefs(current.current, patch)),
+      editPrep: (id: string, edit: PrepEdit) => {
+        const next = withPrepEdit(current.current, id, edit);
+        if (next !== current.current) apply(next, writers ? 'Summary saved on this phone' : 'Summary saved');
+      },
+      addToPrep: (id: string, add: PrepAdd) => {
+        const next = withPrepAdded(current.current, id, add);
+        if (next === current.current) setNotice({ id: Date.now(), message: 'That’s already in the summary', canUndo: false });
+        else apply(next, 'Added to the summary');
+      },
       // Drafts aren't part of the workspace, so typing doesn't redraw every screen.
       draftFor: (key: string) => drafts.current[key] ?? null,
       keepDraft: (key: string, draft: LogDraft | null) => {

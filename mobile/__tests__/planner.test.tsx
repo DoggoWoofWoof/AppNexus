@@ -211,13 +211,13 @@ describe('changing the day from Edit', () => {
 });
 
 describe('adding several people from Targets', () => {
-  test('adds them after the day’s stops in the order picked, skipping anyone already planned', () => {
+  test('puts each where it adds the least travel, skipping anyone already planned', () => {
     const ws = moveVisit(freshWorkspace(today), todayIso, 'v-alex', -1);
     const next = addPeople(ws, todayIso, ['kenji', 'jordan', 'hannah', 'kenji', 'nobody']);
     const plan = buildContext(next, today).dayPlan(todayIso);
-    // The rep's own order is kept: Dr. Morgan stays between the two fixed visits.
-    expect(plan.map((i) => i.targetId)).toEqual(['maya', 'alex', 'jordan', 'kenji', 'hannah']);
-    expect(plan.slice(3).every((i) => i.mode === 'flexible' && i.status === 'planned')).toBe(true);
+    // The rep's own order of the stops already there is kept: Dr. Morgan stays before Dr. Lee.
+    expect(plan.map((i) => i.targetId)).toEqual(['maya', 'kenji', 'alex', 'jordan', 'hannah']);
+    expect(plan.filter((i) => i.targetId === 'kenji' || i.targetId === 'hannah').every((i) => i.mode === 'flexible' && i.status === 'planned')).toBe(true);
     expect(addPeople(ws, todayIso, ['nobody'])).toBe(ws);
   });
 });
@@ -370,7 +370,8 @@ describe('store', () => {
   test('several people picked on Targets go in with one toast and one Undo', async () => {
     const store = await renderStore();
     await act(() => store.current.addPeople(['kenji', 'hannah', 'jordan'], todayIso));
-    expect(store.current.dayPlan(todayIso).map((i) => i.targetId)).toEqual(['maya', 'jordan', 'alex', 'kenji', 'hannah']);
+    // Each goes where it adds the least travel; Dr. Lee was already planned.
+    expect(store.current.dayPlan(todayIso).map((i) => i.targetId)).toEqual(['maya', 'kenji', 'jordan', 'hannah', 'alex']);
     expect(store.current.notice).toMatchObject({ message: '2 people added today', canUndo: true });
     await act(() => store.current.undo());
     expect(store.current.dayPlan(todayIso)).toHaveLength(3);
