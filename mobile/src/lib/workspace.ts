@@ -6,7 +6,7 @@ import { availability, bookingRoute, clashesWith, hoursOn, parseDays, siteOnDay,
 import { allEntities, getEntity, getOrg, lastInteraction, priorityOf, signalsFor, siteFor } from './data';
 import { seedWorkspace } from './data/seed';
 import { addDays, daysBetween, formatDate, fromIso, haversineKm, isoDate, toMinutes, uid } from './format';
-import { activeItems, addTargets, bestOrder, isOnSite, moveStop, placeStops, routeOrder, suggestOrder, timeStop } from './plan';
+import { activeItems, addTargets, bestOrder, fixedStops, isOnSite, placeStops, routeOrder, scheduleDay, timeStop, travelMinutes, type ScheduleOptions } from './plan';
 import { DEFAULT_PREFS, startPoint } from './prefs';
 import { searchTargets, type Filters, type SearchContext } from './search';
 import type { Entity, FollowUp, FreeSlot, Hcp, Interaction, PlanItem, SavedReport, Signal, VisitType, Workspace } from './types';
@@ -62,9 +62,10 @@ export function buildContext(ws: Workspace, today: Date) {
   const pool = filling ? entities.filter((e) => e.id !== filling.targetId) : entities;
   const searchContext: SearchContext = {
     signals,
-    distance: (e) => haversineKm(origin, where(e).coords),
+    distance: (e, near) => haversineKm((near && getOrg(near)?.coords) || origin, where(e).coords),
     planned: (e) => planItemFor(e.id, ws.selection.day),
     priority: (e) => priorityOf(e, ws, today),
+    inDay: (e) => !!siteOnDay(e, weekday),
     haystack,
   };
 
@@ -96,10 +97,21 @@ export function buildContext(ws: Workspace, today: Date) {
     ],
     /** A plan day mid-sentence: "today", "tomorrow", or "Monday" on a Friday. */
     dayWord: (day: string): string => (day === todayIso ? 'today' : day === nextDay ? (nextLabel === 'Tomorrow' ? 'tomorrow' : nextLabel) : formatDate(day)),
-    /** The day's visits in route order, cancelled ones last. */
-    dayPlan: (day: string): PlanItem[] => {
+    /** The day's visits in the order they happen (`scheduleDay` in plan.ts), cancelled ones last. */
+    dayPlan: (day: string, now?: Date): PlanItem[] => {
       const items = ws.plans[day] ?? [];
-      return [...routeOrder(activeItems(items)), ...items.filter((i) => i.status === 'cancelled')];
+      return [...dayOrder(ws, day, now), ...items.filter((i) => i.status === 'cancelled')];
+    },
+    /**
+     * The day with a time for every stop and the drive to it, and any visits with a
+     * time too close to get between (`scheduleDay` in plan.ts). An "Any time" stop
+     * goes in their usual times that day, and today no earlier than now.
+     */
+    daySchedule: (day: string, now?: Date) => scheduleDay(ws.plans[day] ?? [], scheduleFor(ws, day, now)),
+    /** Minutes to drive from a site to a stop; 0 when either is a call or there is no site. */
+    travelTo: (siteId: string | null, item: PlanItem): number => {
+      const site = siteId ? getOrg(siteId) : null;
+      return site && isOnSite(item) ? travelMinutes(haversineKm(site.coords, stopCoords(item))) : 0;
     },
     /** The next planned visit to a target, today or later. */
     nextVisit: (id: string): { item: PlanItem; day: string } | null => {
@@ -196,7 +208,7 @@ export function buildContext(ws: Workspace, today: Date) {
         .slice(0, count)
         .map(({ score: _score, ...standIn }) => standIn);
     },
-    /** Whether Best order would change the day: two or more "Any time" visits that could go in a shorter order. */
+    /** Whether Best order would change the day: two or more "Any time" visits that could go in an order with less driving. */
     bestOrderHelps: (day: string, now?: Date): boolean => {
       const before = routeOrder(activeItems(ws.plans[day])).map((i) => i.id).join();
       return before !== routeOrder(activeItems(orderBest(ws, day, now).plans[day])).map((i) => i.id).join();
@@ -344,7 +356,8 @@ export function withRecords(ws: Workspace, add: { interactions?: Interaction[]; 
 
 const TIME_24 = /^([01]\d|2[0-3]):[0-5]\d$/;
 
-const defaultDuration = (e: Pick<Entity, 'kind'>): number => (e.kind === 'hco' ? 45 : 30);
+/** How long a new visit is: a meeting at an account takes longer. */
+export const defaultDuration = (e: Pick<Entity, 'kind'>): number => (e.kind === 'hco' ? 45 : 30);
 const visitType = (e: Pick<Entity, 'kind'>): VisitType => (e.kind === 'hco' ? 'Meeting' : 'In-person visit');
 
 const changed = (ws: Workspace, patch: Partial<Workspace>): Workspace => ({ ...ws, ...patch, pristine: false });
@@ -365,8 +378,37 @@ const stopCoords = (i: PlanItem) => (getOrg(i.siteId) ?? siteFor(getEntity(i.tar
 const minutesOn = (day: string, now?: Date): number | null => (now && isoDate(now) === day ? now.getHours() * 60 + now.getMinutes() : null);
 
 /**
+ * Their usual times on a day in minutes, for working out the day: none for a
+ * visit in person on a day they aren't in, and no limit on a day they're in but
+ * have no usual times, as any time then is as good as another.
+ */
+const usualOn = (day: string) => {
+  const weekday = fromIso(day).getDay();
+  return (item: PlanItem): [number, number][] | null => {
+    const who = getEntity(item.targetId);
+    if (!who) return null;
+    if (isOnSite(item) && !siteOnDay(who, weekday)) return [];
+    const windows = windowsFor(who)
+      .filter((w) => parseDays(w.days).has(weekday))
+      .map((w): [number, number] => [toMinutes(w.from), toMinutes(w.to)]);
+    return windows.length ? windows : null;
+  };
+};
+
+/** How a day is worked out: from where the rep starts, in each person's usual times, and today from now on. */
+const scheduleFor = (ws: Workspace, day: string, now?: Date): ScheduleOptions => ({
+  coordsOf: stopCoords,
+  start: startPoint(ws).coords,
+  windowsOf: usualOn(day),
+  now: minutesOn(day, now),
+});
+
+/** The day's visits in the order they happen, cancelled ones left out. */
+const dayOrder = (ws: Workspace, day: string, now?: Date): PlanItem[] => scheduleDay(ws.plans[day] ?? [], scheduleFor(ws, day, now)).stops.map((s) => s.item);
+
+/**
  * Adds people to a day's plan at no fixed time, each where it adds the least
- * travel, after anything that has already happened. Anyone already in that
+ * driving in their usual times (`placeStops`), after anything that has already happened. Anyone already in that
  * day's plan is left as they are. `type` makes them calls rather than visits.
  */
 export function addPeople(ws: Workspace, day: string, targetIds: string[], now?: Date, type?: VisitType): Workspace {
@@ -380,7 +422,7 @@ export function addPeople(ws: Workspace, day: string, targetIds: string[], now?:
       !before.has(i.id) && type ? { ...i, type } : i,
     );
     const ids = added.filter((i) => !before.has(i.id)).map((i) => i.id);
-    return placeStops(added, ids, stopCoords, startPoint(ws).coords, minutesOn(day, now));
+    return placeStops(added, ids, stopCoords, startPoint(ws).coords, minutesOn(day, now), usualOn(day));
   });
 }
 
@@ -388,15 +430,46 @@ export function addPeople(ws: Workspace, day: string, targetIds: string[], now?:
 export const addToPlan = (ws: Workspace, day: string, targetId: string, now?: Date, type?: VisitType): Workspace => addPeople(ws, day, [targetId], now, type);
 
 /** Where someone is in the day, as the map numbers the stops that need travel, and who comes before them. Null for a call. */
-export function stopNumber(ws: Workspace, day: string, targetId: string): { number: number; of: number; after: PlanItem | null } | null {
-  const stops = routeOrder(activeItems(ws.plans[day])).filter(isOnSite);
+export function stopNumber(ws: Workspace, day: string, targetId: string, now?: Date): { number: number; of: number; after: PlanItem | null } | null {
+  const stops = dayOrder(ws, day, now).filter(isOnSite);
   const index = stops.findIndex((i) => i.targetId === targetId);
   return index < 0 ? null : { number: index + 1, of: stops.length, after: stops[index - 1] ?? null };
 }
 
-/** The day's "Any time" visits in the shortest order (`bestOrder` in plan.ts). Visits with a time keep it. */
+/** The day's "Any time" visits in the order with the least driving, in their usual times (`bestOrder` in plan.ts). Visits with a time keep it. */
 export const orderBest = (ws: Workspace, day: string, now?: Date): Workspace =>
-  withPlan(ws, day, (items) => bestOrder(items, stopCoords, startPoint(ws).coords, minutesOn(day, now)));
+  withPlan(ws, day, (items) => bestOrder(items, stopCoords, startPoint(ws).coords, minutesOn(day, now), usualOn(day)));
+
+/**
+ * Puts an "Any time" stop where the rep wants it in the day as Today shows it:
+ * `at` counts the other stops not cancelled, so 0 makes it the next one. Nothing
+ * goes before a visit that has happened, and visits with a time keep it, so a stop
+ * that can't fit before one comes straight after it. The day comes back as it is
+ * when what Today shows wouldn't change.
+ */
+export function moveStop(ws: Workspace, day: string, id: string, at: number, now?: Date): Workspace {
+  const shown = dayOrder(ws, day, now);
+  const item = shown.find((i) => i.id === id);
+  if (!item || item.mode === 'timed' || item.status !== 'planned') return ws;
+  const rest = shown.filter((i) => i !== item);
+  const k = Math.min(Math.max(at, fixedStops(rest, minutesOn(day, now))), rest.length);
+  const cancelled = (ws.plans[day] ?? []).filter((i) => i.status === 'cancelled');
+  const next = withPlan(ws, day, () => [...rest.slice(0, k), item, ...rest.slice(k), ...cancelled]);
+  const ids = (w: Workspace) => dayOrder(w, day, now).map((i) => i.id).join();
+  return ids(next) === ids(ws) ? ws : next;
+}
+
+/** Where a stop is in the day as Today shows it: whether it's the first still to do, and the stop before it. */
+export function placeOf(ws: Workspace, day: string, id: string, now?: Date): { first: boolean; after: PlanItem | null } | null {
+  const shown = dayOrder(ws, day, now);
+  const k = shown.findIndex((i) => i.id === id);
+  if (k < 0) return null;
+  return { first: fixedStops(shown.slice(0, k), minutesOn(day, now)) === k, after: shown[k - 1] ?? null };
+}
+
+/** Makes a visit in person or a phone call, or changes how long it takes. The day's times follow from it. */
+export const changeStop = (ws: Workspace, day: string, id: string, change: Partial<Pick<PlanItem, 'type' | 'duration'>>): Workspace =>
+  withPlan(ws, day, (items) => items.map((i) => (i.id === id ? { ...i, ...change } : i)));
 
 /** Why an "Any time" visit can't move to another day, or null when it can. */
 export function moveToDayError(ws: Workspace, day: string, id: string, toDay: string): string | null {
@@ -410,7 +483,7 @@ export function moveToDayError(ws: Workspace, day: string, id: string, toDay: st
 
 /**
  * Moves an "Any time" visit to another day, keeping its goal, where it adds the
- * least travel there. Where they work that day is used when it differs.
+ * least driving there. Where they work that day is used when it differs.
  */
 export function moveToDay(ws: Workspace, day: string, id: string, toDay: string): Workspace {
   if (moveToDayError(ws, day, id, toDay)) return ws;
@@ -423,20 +496,16 @@ export function moveToDay(ws: Workspace, day: string, id: string, toDay: string)
     movedFrom: item.movedFrom ?? { day, time: null },
   };
   const plans = { ...ws.plans, [day]: ws.plans[day].filter((i) => i.id !== id) };
-  plans[toDay] = placeStops([...(plans[toDay] ?? []), moved], [moved.id], stopCoords, startPoint(ws).coords);
+  plans[toDay] = placeStops([...(plans[toDay] ?? []), moved], [moved.id], stopCoords, startPoint(ws).coords, null, usualOn(toDay));
   return changed(ws, { plans });
 }
 
-/** Adds several people to a day at no fixed time, then puts the day's untimed stops nearest first. */
-export function addAllToPlan(ws: Workspace, day: string, targetIds: string[]): Workspace {
-  const next = addPeople(ws, day, targetIds);
+/** Adds several people to a day at no fixed time, then puts the day's "Any time" stops in the best order. */
+export function addAllToPlan(ws: Workspace, day: string, targetIds: string[], now?: Date): Workspace {
+  const next = addPeople(ws, day, targetIds, now);
   if (next === ws) return ws;
-  return withPlan(next, day, (items) => suggestOrder(items, stopCoords, startPoint(ws).coords));
+  return orderBest(next, day, now);
 }
-
-/** Moves a flexible stop one place earlier or later in the day. */
-export const moveVisit = (ws: Workspace, day: string, id: string, direction: -1 | 1): Workspace =>
-  withPlan(ws, day, (items) => moveStop(items, id, direction));
 
 /** Why a flexible stop can't go at a time, or null when it can. A time that has already gone today can't be chosen. */
 export function visitTimeError(ws: Workspace, day: string, id: string, time: string, now?: Date): string | null {

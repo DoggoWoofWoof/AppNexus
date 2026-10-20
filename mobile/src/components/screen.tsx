@@ -10,8 +10,19 @@ import { cn } from '@/lib/utils';
 /**
  * A scrolling page. Tab roots hide the navigation header, so they pass `inset`
  * to keep clear of the status bar; pushed screens sit under a header already.
+ * `scrollEnabled` is off while something on the page is being dragged.
  */
-export function Screen({ children, inset = false, scrollRef }: { children: ReactNode; inset?: boolean; scrollRef?: Ref<ScrollViewInstance> }) {
+export function Screen({
+  children,
+  inset = false,
+  scrollRef,
+  scrollEnabled = true,
+}: {
+  children: ReactNode;
+  inset?: boolean;
+  scrollRef?: Ref<ScrollViewInstance>;
+  scrollEnabled?: boolean;
+}) {
   const { top } = useSafeAreaInsets();
   return (
     <ScrollView
@@ -20,6 +31,7 @@ export function Screen({ children, inset = false, scrollRef }: { children: React
       contentContainerClassName="gap-5 px-4 pb-10"
       contentContainerStyle={{ paddingTop: (inset ? top : 0) + 16 }}
       keyboardShouldPersistTaps="handled"
+      scrollEnabled={scrollEnabled}
     >
       {children}
     </ScrollView>

@@ -1,13 +1,15 @@
-// Changing the day: putting new stops where they add the least travel, Best order,
-// who to see instead after a cancel or "Not in", moving a visit to the next day,
-// and whether a doctor is in that day. The sample day is Monday 19 October 2026.
+// Changing the day: putting new stops where they add the least driving, Best order,
+// who to see instead after a cancel or "Not in" (and the filters Targets opens
+// with), moving a visit to the next day, whether a doctor is in that day, and the
+// day view for choosing a time. The sample day is Monday 19 October 2026.
 
 import { describe, expect, test } from '@jest/globals';
 
-import { availability, inOnDay } from '@/lib/booking';
+import { availability, dayGrid, inOnDay } from '@/lib/booking';
 import { getEntity } from '@/lib/data';
 import { addDays, isoDate, startOfDay } from '@/lib/format';
-import { bestOrder, placeStops } from '@/lib/plan';
+import { bestOrder, placeStops, scheduleDay } from '@/lib/plan';
+import { activeFilterCount, insteadFilters } from '@/lib/search';
 import type { Entity, LonLat, PlanItem } from '@/lib/types';
 import { addPeople, buildContext, freshWorkspace, moveToDay, moveToDayError, orderBest, stopNumber } from '@/lib/workspace';
 
@@ -45,12 +47,27 @@ describe('placing stops', () => {
     expect(ids(placeStops(items, ['a'], coordsOf, START))).toEqual(['b', 'a', 'c']);
   });
 
-  test('Best order puts the Any time stops in the shortest order and leaves a timed visit at its time', () => {
-    const items = [item('c'), item('a'), item('d', { mode: 'timed', time: '09:00' }), item('b')];
+  test('Best order puts the Any time stops in the order with the least driving and leaves a timed visit at its time', () => {
+    const items = [item('c'), item('a'), item('d', { mode: 'timed', time: '13:00' }), item('b')];
     const ordered = bestOrder(items, coordsOf, START);
-    expect(ordered.find((i) => i.id === 'd')).toMatchObject({ mode: 'timed', time: '09:00' });
-    expect(ids(ordered.filter((i) => i.mode === 'flexible'))).toEqual(['a', 'b', 'c']);
-    expect(ids(bestOrder(ordered, coordsOf, START))).toEqual(ids(ordered));
+    expect(ordered.find((i) => i.id === 'd')).toMatchObject({ mode: 'timed', time: '13:00' });
+    expect(ids(ordered)).toEqual(['a', 'b', 'c', 'd']);
+    // Nothing left to improve, so the day comes back as it is.
+    expect(bestOrder(ordered, coordsOf, START)).toBe(ordered);
+    // With the farthest visit at 09:00 only one stop fits before it, so the others come on the way back.
+    const early = items.map((i) => (i.id === 'd' ? { ...i, time: '09:00' } : i));
+    const day = scheduleDay(bestOrder(early, coordsOf, START), { coordsOf, start: START });
+    expect(day.stops.map((s) => s.item.id)).toEqual(['a', 'd', 'c', 'b']);
+    expect(day.clashes).toEqual([]);
+  });
+
+  test('Best order sees someone in their usual times even when that means more driving', () => {
+    // b is only in until 08:45, so b comes first although a is on the way.
+    const items = [item('a'), item('b'), item('c')];
+    const windowsOf = (i: PlanItem): [number, number][] | null => (i.id === 'b' ? [[8 * 60, 8 * 60 + 45]] : null);
+    const day = scheduleDay(bestOrder(items, coordsOf, START, null, windowsOf), { coordsOf, start: START, windowsOf });
+    expect(day.stops[0].item.id).toBe('b');
+    expect(day.stops.some((s) => s.outside)).toBe(false);
   });
 
   test('on the sample day, Best order keeps the booked times and has nothing left to improve', () => {
@@ -115,11 +132,60 @@ describe('moving a visit to the next day', () => {
 });
 
 describe('whether a doctor is in', () => {
-  test('in that day, with their hours; not in on a day they aren’t on site; gone once their time is over', () => {
+  test('in that day, with their hours, or not in on a day they aren’t on site', () => {
     expect(inOnDay(entity('maya'), todayIso)).toMatchObject({ ok: true });
     expect(inOnDay(entity('priya'), isoDate(addDays(today, 2)))).toEqual({ ok: false, why: 'Not in on Wednesdays' });
-    const late = new Date(2026, 9, 19, 22, 0);
-    expect(inOnDay(entity('hannah'), todayIso)).toMatchObject({ ok: true });
-    expect(inOnDay(entity('hannah'), todayIso, late)).toMatchObject({ ok: false, why: expect.stringMatching(/^Gone for today/) });
+  });
+});
+
+describe('See everyone after a cancel', () => {
+  test('opens Targets on doctors in that day and not planned, nearest to where the visit was, and says so in Filters', () => {
+    const ctx = buildContext(freshWorkspace(today), today);
+    const filters = insteadFilters('msm');
+    expect(activeFilterCount(filters)).toBe(3);
+    const rows = ctx.search(filters);
+    expect(rows.length).toBeGreaterThan(0);
+    for (const r of rows) {
+      expect(r.entity.kind).toBe('hcp');
+      expect(r.planned).toBeNull();
+      expect(inOnDay(r.entity, todayIso).ok).toBe(true);
+    }
+    const km = rows.map((r) => r.distance);
+    expect(km).toEqual([...km].sort((a, b) => a - b));
+    expect(rows.map((r) => r.entity.id)).not.toContain('maya');
+  });
+});
+
+describe('the day view for choosing a time', () => {
+  const plan = freshWorkspace(today).plans[todayIso];
+
+  test('half hours from 08:00 to 18:00, the rep’s visits taken, their usual times shaded and the first of those picked', () => {
+    const grid = dayGrid(entity('kenji'), { day: todayIso, plan, duration: 30, onSite: true });
+    expect(grid.rows[0].time).toBe('08:00');
+    expect(grid.rows.at(-1)?.time).toBe('17:30');
+    expect(grid.rows.find((r) => r.time === '10:00')?.taken).toBe(true);
+    expect(grid.rows.find((r) => r.time === '14:00')?.taken).toBe(true);
+    expect(grid.rows.find((r) => r.time === '09:30')?.taken).toBe(false);
+    expect(grid.rows.filter((r) => r.usual).map((r) => r.time)).toEqual(['08:00', '08:30', '09:00', '09:30', '10:00', '10:30']);
+    expect(grid.pick).toBe('08:00');
+    expect(grid.visits.map((i) => i.id)).toEqual(['v-maya', 'v-jordan']);
+    expect(grid.anyTime.map((i) => i.id)).toEqual(['v-alex']);
+  });
+
+  test('times already gone today can’t be picked, and a visit being moved doesn’t block its own time', () => {
+    const later = dayGrid(entity('kenji'), { day: todayIso, plan, duration: 30, onSite: true, earliest: 8 * 60 + 45 });
+    expect(later.rows.filter((r) => r.past).map((r) => r.time)).toEqual(['08:00', '08:30']);
+    expect(later.pick).toBe('09:00');
+    const moving = dayGrid(entity('maya'), { day: todayIso, plan, duration: 30, onSite: true, except: 'v-maya' });
+    expect(moving.rows.find((r) => r.time === '10:00')?.taken).toBe(false);
+    expect(moving.visits.map((i) => i.id)).toEqual(['v-jordan']);
+  });
+
+  test('stretches to an early usual time, and on a day they aren’t in nothing is shaded', () => {
+    const tuesday = isoDate(addDays(today, 1));
+    expect(dayGrid(entity('maya'), { day: tuesday, plan: [], duration: 30, onSite: true }).rows[0].time).toBe('07:00');
+    const wednesday = dayGrid(entity('priya'), { day: isoDate(addDays(today, 2)), plan: [], duration: 30, onSite: true });
+    expect(wednesday.rows.some((r) => r.usual)).toBe(false);
+    expect(wednesday.pick).toBe('08:00');
   });
 });

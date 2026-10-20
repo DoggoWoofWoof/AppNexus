@@ -9,7 +9,7 @@ import { addDays, formatDate, isoDate, plural, startOfDay } from './format';
 import { DRAFTS_KEY, laterWriter, loadKept, restoreDrafts, restoreWorkspace, WORKSPACE_KEY, type DeviceStorage, type Kept, type LogDraft } from './persist';
 import { withPrefs } from './prefs';
 import { withPrepAdded, withPrepEdit, type PrepAdd, type PrepEdit } from './prep';
-import type { Prefs, SavedReport, VisitType, Workspace } from './types';
+import type { PlanItem, Prefs, SavedReport, VisitType, Workspace } from './types';
 import {
   addAllToPlan,
   addPeople,
@@ -18,6 +18,7 @@ import {
   bookVisit,
   buildContext,
   cancelVisit,
+  changeStop,
   chooseSlot,
   completeFollowUp,
   confirmBooking,
@@ -28,13 +29,14 @@ import {
   followUpRecord,
   freshWorkspace,
   leaveFree,
+  moveStop,
   moveToDay,
   moveToDayError,
-  moveVisit,
   noteError,
   noteRecords,
   removeSaved,
   orderBest,
+  placeOf,
   removeVisit,
   restoreVisit,
   saveReport,
@@ -75,8 +77,6 @@ type Store = Context & {
   fillSlot: (slotId: string, targetId: string) => void;
   /** Stops offering a free slot. */
   leaveFree: (slotId: string) => void;
-  /** Moves a flexible stop one place earlier or later. */
-  moveStop: (day: string, id: string, direction: -1 | 1) => void;
   /** Gives a flexible stop a time. Returns what's wrong instead when it can't go then. */
   setStopTime: (day: string, id: string, time: string) => string | null;
   /** Takes a stop out of the day's plan. */
@@ -86,8 +86,12 @@ type Store = Context & {
   confirmBooking: (day: string, id: string) => void;
   /** Adds someone to a day's plan (the selected day by default) at no fixed time, where it adds the least travel. `type` makes it a call. */
   addToPlan: (targetId: string, day?: string, type?: VisitType) => void;
-  /** Puts the day's "Any time" visits in the shortest order, with Undo. */
+  /** Puts the day's "Any time" visits in the order with the least driving, with Undo. */
   bestOrder: (day: string) => void;
+  /** Puts an "Any time" stop at a place in the day as Today shows it (0 is next), with Undo. */
+  moveStop: (day: string, id: string, at: number) => void;
+  /** Makes a visit in person or a phone call, or changes how long it takes, with Undo. */
+  changeStop: (day: string, id: string, change: Partial<Pick<PlanItem, 'type' | 'duration'>>) => void;
   /** Moves an "Any time" visit to another day. Returns what's wrong instead when it can't. */
   moveToDay: (day: string, id: string, toDay: string) => string | null;
   /** Adds several people to a day, nearest first. */
@@ -292,12 +296,6 @@ function LoadedWorkspace({
         apply(fillSlot(current.current, slotId, targetId, now()), `${getEntity(targetId)?.name} added at ${slot.time} · not confirmed yet`);
       },
       leaveFree: (slotId: string) => quietly(leaveFree(current.current, slotId)),
-      moveStop: (day: string, id: string, direction: -1 | 1) => {
-        // The arrows put a move back, so it needs no Undo; an older Undo would also lose the move.
-        before.current = null;
-        setNotice((n) => (n?.canUndo ? null : n));
-        quietly(moveVisit(current.current, day, id, direction));
-      },
       setStopTime: (day: string, id: string, time: string) => {
         const error = visitTimeError(current.current, day, id, time, now());
         if (error) return error;
@@ -328,13 +326,28 @@ function LoadedWorkspace({
         if (!who) return;
         const next = addToPlan(current.current, day, targetId, now(), type);
         // Say where it went, as the map numbers the stops, so the rep needn't go and look.
-        const spot = stopNumber(next, day, targetId);
+        const spot = stopNumber(next, day, targetId, now());
         const where = !spot ? ' as a call' : spot.of < 2 ? '' : ` · stop ${spot.number}${spot.after ? `, after ${shortName(getEntity(spot.after.targetId) ?? who)}` : ', first'}`;
         apply(next, `${who.name} added ${onDay(day)}${where}`);
       },
       bestOrder: (day: string) => {
         const next = orderBest(current.current, day, now());
-        if (next !== current.current) apply(next, 'Stops put in the shortest order');
+        if (next !== current.current) apply(next, 'Stops put in the order with the least driving');
+      },
+      moveStop: (day: string, id: string, at: number) => {
+        const next = moveStop(current.current, day, id, at, now());
+        const who = getEntity(findItem(next, day, id)?.targetId ?? '');
+        const spot = placeOf(next, day, id, now());
+        if (next === current.current || !who || !spot) return;
+        // Say where it went, as a stop that can't fit before a visit with a time goes after it.
+        const before = spot.after && getEntity(spot.after.targetId);
+        apply(next, spot.first ? `${who.name} is ${day === todayIso ? 'next' : 'first'}` : `${who.name} moved, after ${before ? shortName(before) : 'the stop before'}`);
+      },
+      changeStop: (day: string, id: string, change: Partial<Pick<PlanItem, 'type' | 'duration'>>) => {
+        const who = getEntity(findItem(current.current, day, id)?.targetId ?? '');
+        if (!who) return;
+        const what = change.type ? `is now ${change.type === 'Phone call' ? 'a phone call' : 'a visit in person'}` : `now takes ${change.duration} min`;
+        apply(changeStop(current.current, day, id, change), `${who.name} ${what}`);
       },
       moveToDay: (day: string, id: string, toDay: string) => {
         const error = moveToDayError(current.current, day, id, toDay);
@@ -344,7 +357,7 @@ function LoadedWorkspace({
         return null;
       },
       addAllToPlan: (targetIds: string[], day: string) => {
-        const next = addAllToPlan(current.current, day, targetIds);
+        const next = addAllToPlan(current.current, day, targetIds, now());
         const added = (next.plans[day]?.length ?? 0) - (current.current.plans[day]?.length ?? 0);
         if (added) apply(next, `${plural(added, 'person', 'people')} added ${onDay(day)}`);
       },

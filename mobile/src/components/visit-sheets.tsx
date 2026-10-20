@@ -1,43 +1,41 @@
-// Book a time, after the prototype's book sheet (demo/js/sheets.js). Ask offers
-// it. "Can't make it" on the person's page (screens/target.tsx) asks first: move
-// the visit to another time (or, for an "Any time" one, to the next working day),
-// or cancel it. Cancelling, or logging "Not in" today, then offers the three best
-// people to see instead (`standIns` in lib/workspace.ts), and after "Not in" the
-// next time to try them again. "See everyone" opens Targets for the rest.
+// Booking a time (the sheet in components/time-sheet.tsx). Ask offers it.
+// "Change visit" on the person's page (screens/target.tsx) and Today's ⋯ asks
+// what to change, like tapping an event in a phone's calendar: a visit with a time
+// can have its time changed or be cancelled; an "Any time" stop can be given a
+// time, moved to the next working day or taken off the day. Either can be made a
+// phone call or a visit in person, and take longer or shorter. Cancelling,
+// or logging "Not in" today, then offers the three best people to see instead
+// (`standIns` in lib/workspace.ts), and after "Not in" the next time to try them
+// again. "See everyone" opens Targets for the rest, with the same filters on.
 
 import { router } from 'expo-router';
-import { CalendarArrowUp, CalendarClock, CalendarX } from 'lucide-react-native';
+import { CalendarArrowUp, CalendarClock, CalendarX, Clock, Trash2, type LucideIcon } from 'lucide-react-native';
 import { useState } from 'react';
-import { AccessibilityInfo, Pressable, View } from 'react-native';
+import { AccessibilityInfo, View } from 'react-native';
 
 import { Avatar } from '@/components/entity';
-import { Choices, Field, Footer, SheetBody, SheetContent } from '@/components/note-sheet';
-import { FinePrint } from '@/components/profile';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Choices, SheetBody, SheetContent } from '@/components/note-sheet';
+import { TimeForm } from '@/components/time-sheet';
 import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
 import { Icon } from '@/components/ui/icon';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Text } from '@/components/ui/text';
-import { bookingRoute, siteOnDay, type Slot } from '@/lib/booking';
 import { getEntity, getOrg, shortName, siteFor } from '@/lib/data';
-import { formatDate, formatKm, fromIso, relativeDay } from '@/lib/format';
-import { endTime } from '@/lib/plan';
+import { formatDate, formatKm, relativeDay } from '@/lib/format';
+import { endTime, isOnSite } from '@/lib/plan';
 import { useWorkspace } from '@/lib/store';
-import type { Entity, PlanItem } from '@/lib/types';
-import { cn } from '@/lib/utils';
+import type { Entity, PlanItem, VisitType } from '@/lib/types';
 import type { Gap, StandIn } from '@/lib/workspace';
 
 type Ref = { day: string; id: string };
 type Visit = Ref & { item: PlanItem };
 type Open =
   | { kind: 'book'; targetId: string }
-  | { kind: 'cant' | 'move'; targetId: string; from: Visit }
+  | { kind: 'change' | 'move' | 'set'; targetId: string; from: Visit }
   /** Someone to see instead; `notIn` when they weren't in, so trying again comes first. */
   | { kind: 'fill'; targetId: string; gap: Gap; notIn?: boolean };
 
-/** Booking a time, "Can't make it" and who to see instead. Render `sheets` once on the screen that opens them. */
+/** Booking a time, changing a visit and who to see instead. Render `sheets` once on the screen that opens them. */
 export function useVisitSheets() {
   const ctx = useWorkspace();
   const [open, setOpen] = useState<Open | null>(null);
@@ -56,8 +54,10 @@ export function useVisitSheets() {
   return {
     /** Book a time with someone. */
     openBook: (entity: Entity) => setOpen({ kind: 'book', targetId: entity.id }),
-    /** Move a planned visit or cancel it. */
-    openCantMakeIt: (entity: Entity, from: Visit) => setOpen({ kind: 'cant', targetId: entity.id, from }),
+    /** Change a planned visit: its time or day, or cancel or remove it. */
+    openChange: (entity: Entity, from: Visit) => setOpen({ kind: 'change', targetId: entity.id, from }),
+    /** Give an "Any time" stop a time, such as from Targets. */
+    openSetTime: (entity: Entity, from: Visit) => setOpen({ kind: 'set', targetId: entity.id, from }),
     /** Who could go in a free time, such as from Today's "14:00 is free". */
     openFill: (gap: Gap) => setOpen({ kind: 'fill', targetId: gap.except, gap }),
     /** After "Not in" today: try them again, or see someone close by instead. */
@@ -68,14 +68,21 @@ export function useVisitSheets() {
     },
     sheets: (
       <Dialog open={!!target} onOpenChange={(o) => !o && close()}>
-        {target && open?.kind === 'cant' ? (
-          <CantMakeIt target={target} from={open.from} onMove={() => setOpen({ ...open, kind: 'move' })} onCancelVisit={() => cancel(open.from)} onKeep={close} />
+        {target && open?.kind === 'change' ? (
+          <ChangeVisit
+            target={target}
+            from={open.from}
+            // With the visit as it is now, as how long it takes may have changed in the sheet.
+            onTime={(item) => setOpen({ ...open, kind: item.mode === 'timed' ? 'move' : 'set', from: { ...open.from, item } })}
+            onCancelVisit={(item) => cancel({ ...open.from, item })}
+            onClose={close}
+          />
         ) : target && open?.kind === 'fill' ? (
           <FillGap target={target} gap={open.gap} notIn={!!open.notIn} onBook={() => setOpen({ kind: 'book', targetId: target.id })} onClose={close} />
         ) : target && open ? (
-          <BookForm
+          <TimeForm
             target={target}
-            from={open.kind === 'move' ? open.from : null}
+            mode={open.kind === 'move' ? { kind: 'move', from: open.from } : open.kind === 'set' ? { kind: 'set', day: open.from.day, item: open.from.item } : { kind: 'book' }}
             onCancel={close}
             onSaved={(message) => {
               close();
@@ -89,49 +96,93 @@ export function useVisitSheets() {
 }
 
 /**
- * Asks before anything changes: moving keeps the visit's goal, cancelling frees its
- * time. An "Any time" visit can go to the next working day in one tap.
+ * What to change about a visit, as a short list like a phone's action sheet. A
+ * visit with a time has someone expecting the rep: its time changes (keeping its
+ * goal) or it's cancelled, which frees the time. An "Any time" stop gets a time,
+ * goes to the next working day, or comes off the day, with Undo. Either
+ * can be a visit in person or a phone call, and take 15 to 60 minutes; those change
+ * straight away, with Undo, and the sheet stays open.
  */
-function CantMakeIt({ target, from, onMove, onCancelVisit, onKeep }: { target: Entity; from: Visit; onMove: () => void; onCancelVisit: () => void; onKeep: () => void }) {
+function ChangeVisit({
+  target,
+  from,
+  onTime,
+  onCancelVisit,
+  onClose,
+}: {
+  target: Entity;
+  from: Visit;
+  onTime: (item: PlanItem) => void;
+  onCancelVisit: (item: PlanItem) => void;
+  onClose: () => void;
+}) {
   const ctx = useWorkspace();
   const [error, setError] = useState<string | null>(null);
-  const nextDay = from.item.mode === 'timed' ? undefined : ctx.bookingDays.find((d) => d > from.day);
+  // The visit as it is now, as how and how long change it while the sheet is open.
+  const item = (ctx.ws.plans[from.day] ?? []).find((i) => i.id === from.id) ?? from.item;
+  const timed = item.mode === 'timed';
+  const how: VisitType = isOnSite(item) ? 'In-person visit' : 'Phone call';
+  const lengths = [...new Set([15, 30, 45, 60, item.duration])].sort((a, b) => a - b);
+  const nextDay = timed ? undefined : ctx.bookingDays.find((d) => d > from.day);
   const toNextDay = () => {
     if (!nextDay) return;
     const problem = ctx.moveToDay(from.day, from.id, nextDay);
     if (problem) {
       setError(problem);
       AccessibilityInfo.announceForAccessibility(problem);
-    } else onKeep();
+    } else onClose();
+  };
+  const remove = () => {
+    ctx.removeStop(from.day, from.id);
+    onClose();
   };
   return (
-    <SheetContent title="Can’t make it?" target={target} sub={`${target.name} · ${visitLine(from.item, from.day, ctx.today)}`}>
+    <SheetContent title="Change visit" target={target} sub={`${target.name} · ${visitLine(item, from.day, ctx.today)}`}>
       <SheetBody>
-        {nextDay ? (
-          <Button size="lg" className="rounded-xl" onPress={toNextDay}>
-            <Icon as={CalendarArrowUp} size={20} className="text-primary-foreground" />
-            <Text className="text-lg">{`Move to ${ctx.dayWord(nextDay)}`}</Text>
-          </Button>
+        <View className="gap-2">
+          <Action icon={timed ? CalendarClock : Clock} label={timed ? 'Change the time' : 'Set a time'} onPress={() => onTime(item)} />
+          {nextDay ? <Action icon={CalendarArrowUp} label={`Move to ${ctx.dayWord(nextDay)}`} onPress={toNextDay} /> : null}
+          {error ? (
+            <Text className="text-sm text-danger" accessibilityLiveRegion="polite">
+              {error}
+            </Text>
+          ) : null}
+        </View>
+        <Choices
+          label="How"
+          options={[
+            { value: 'In-person visit', label: 'In person' },
+            { value: 'Phone call', label: 'Phone call' },
+          ]}
+          value={how}
+          onChange={(type) => type !== how && ctx.changeStop(from.day, from.id, { type })}
+        />
+        <Choices
+          label="How long"
+          options={lengths.map((m) => ({ value: String(m), label: `${m} min` }))}
+          value={String(item.duration)}
+          onChange={(m) => Number(m) !== item.duration && ctx.changeStop(from.day, from.id, { duration: Number(m) })}
+        />
+        {timed ? (
+          <Action icon={CalendarX} label="Cancel the visit" danger onPress={() => onCancelVisit(item)} />
         ) : (
-          <Button size="lg" className="rounded-xl" onPress={onMove}>
-            <Icon as={CalendarClock} size={20} className="text-primary-foreground" />
-            <Text className="text-lg">Move to another time</Text>
-          </Button>
+          <Action icon={Trash2} label={`Remove from ${ctx.dayWord(from.day)}`} danger onPress={remove} />
         )}
-        {error ? (
-          <Text className="-mt-2 text-sm text-danger" accessibilityLiveRegion="polite">
-            {error}
-          </Text>
-        ) : null}
-        <Button size="lg" variant="outline" className="-mt-2 rounded-xl" onPress={onCancelVisit}>
-          <Icon as={CalendarX} size={20} className="text-danger" />
-          <Text className="text-lg text-danger">Cancel the visit</Text>
-        </Button>
-        <Button variant="ghost" className="-mt-2" onPress={onKeep}>
-          <Text className="text-muted-foreground">Keep it</Text>
+        <Button variant="ghost" className="-mt-2" onPress={onClose}>
+          <Text className="text-muted-foreground">Done</Text>
         </Button>
       </SheetBody>
     </SheetContent>
+  );
+}
+
+/** One choice in the Change visit sheet: a full-width button with an icon. */
+function Action({ icon, label, danger = false, onPress }: { icon: LucideIcon; label: string; danger?: boolean; onPress: () => void }) {
+  return (
+    <Button size="lg" variant="outline" className="justify-start rounded-xl" onPress={onPress}>
+      <Icon as={icon} size={20} className={danger ? 'text-danger' : 'text-brand'} />
+      <Text className={danger ? 'text-lg text-danger' : 'text-lg'}>{label}</Text>
+    </Button>
   );
 }
 
@@ -157,11 +208,12 @@ function FillGap({ target, gap, notIn, onBook, onClose }: { target: Entity; gap:
     if (ctx.book({ targetId: target.id, slot: retry, confirmed: false })) onBook();
     else onClose();
   };
+  // Targets with the same filters this sheet goes by, so the list is the rest of these.
   const seeEveryone = () => {
     if (gap.slotId) ctx.chooseSlot(gap.slotId);
     else ctx.selectDay(gap.day);
     onClose();
-    router.navigate('/targets');
+    router.navigate({ pathname: '/targets', params: { near: gap.siteId, except: gap.except, at: String(Date.now()) } });
   };
   const title = notIn ? 'Not in today' : gap.time ? `${gap.time} is free` : `See someone else ${day}?`;
   const moved = ctx.ws.freeSlots.some((s) => s.itemId === gap.slotId && s.moved);
@@ -226,143 +278,6 @@ function FillGap({ target, gap, notIn, onBook, onClose }: { target: Entity; gap:
 
 const visitLine = (item: PlanItem, day: string, today: Date): string => {
   const target = getEntity(item.targetId);
-  const when = item.mode === 'timed' && item.time ? `${item.time}–${endTime(item)}` : 'Flexible time';
-  return [relativeDay(day, today), when, target ? siteFor(target, item.siteId).name : ''].filter(Boolean).join(' · ');
+  const when = item.mode === 'timed' && item.time ? `${item.time}–${endTime(item)}` : 'Any time';
+  return [relativeDay(day, today), when, !isOnSite(item) ? item.type : target ? siteFor(target, item.siteId).name : ''].filter(Boolean).join(' · ');
 };
-
-const OTHER = 'other';
-
-/** Book a time, or move a planned visit: their usual times first, clear of the rest of the plan. */
-function BookForm({
-  target,
-  from,
-  onCancel,
-  onSaved,
-}: {
-  target: Entity;
-  from: (Ref & { item: PlanItem }) | null;
-  onCancel: () => void;
-  onSaved: (message: string) => void;
-}) {
-  const ctx = useWorkspace();
-  const slots = ctx.slotsFor(target, from?.item);
-  const [pick, setPick] = useState(slots.length ? '0' : OTHER);
-  const [day, setDay] = useState(ctx.bookingDays[0]);
-  const [time, setTime] = useState('');
-  const [confirmed, setConfirmed] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const route = bookingRoute(target);
-  const best = target.kind === 'hcp' ? (target.contact.preferred ?? 'Not recorded · using office hours') : 'Office hours, Mon–Fri';
-
-  const chosen: Slot | null =
-    pick === OTHER
-      ? time
-        ? { day, time: time.trim().padStart(5, '0'), siteId: siteOnDay(target, fromIso(day).getDay()) ?? siteFor(target).id }
-        : null
-      : (slots[Number(pick)] ?? null);
-  const label = chosen ? ` ${formatDate(chosen.day)} ${chosen.time}` : '';
-
-  const save = () => {
-    const problem = ctx.book({ targetId: target.id, slot: chosen, confirmed, from: from ? { day: from.day, id: from.id } : undefined });
-    if (problem) {
-      setError(problem);
-      AccessibilityInfo.announceForAccessibility(problem);
-      return;
-    }
-    onSaved(confirmed ? 'Visit booked' : 'Visit requested');
-  };
-  const choose = (value: string) => {
-    setPick(value);
-    setError(null);
-  };
-
-  return (
-    <SheetContent
-      title={from ? 'Reschedule' : 'Book a time'}
-      target={target}
-      sub={from ? `${target.name} · was ${visitLine(from.item, from.day, ctx.today)}` : undefined}
-    >
-      <SheetBody>
-        <View className="gap-1">
-          <Text className="text-sm text-muted-foreground">Best time</Text>
-          <Text>{best}</Text>
-        </View>
-        <View className="gap-1">
-          <Text className="text-sm text-muted-foreground">Book through</Text>
-          <Text selectable>{route.label === 'Email' ? route.value : `${route.label} · ${route.value}`}</Text>
-        </View>
-
-        <View className="gap-2" accessibilityRole="radiogroup" accessibilityLabel="When">
-          <Text className="text-sm font-medium">When</Text>
-          {slots.map((slot, i) => (
-            <SlotRow
-              key={`${slot.day}-${slot.time}`}
-              title={`${formatDate(slot.day)} · ${slot.time}`}
-              sub={getOrg(slot.siteId)?.name}
-              on={pick === String(i)}
-              onPress={() => choose(String(i))}
-            />
-          ))}
-          <SlotRow
-            title="Another time"
-            sub={slots.length ? undefined : 'No times in their usual hours in the next five working days'}
-            on={pick === OTHER}
-            onPress={() => choose(OTHER)}
-          />
-        </View>
-        {pick === OTHER ? (
-          <View className="gap-4 rounded-md border border-border p-3">
-            <Choices label="Day" value={day} onChange={setDay} options={ctx.bookingDays.map((d) => ({ value: d, label: relativeDay(d, ctx.today) }))} />
-            <Field label="Start time" id="book-time">
-              <Input
-                value={time}
-                onChangeText={(t) => {
-                  setTime(t);
-                  setError(null);
-                }}
-                placeholder="e.g. 14:30"
-                keyboardType="numbers-and-punctuation"
-                maxLength={5}
-                accessibilityLabel="Start time"
-                aria-labelledby="book-time"
-                aria-invalid={!!error}
-                className={cn(error && 'border-danger')}
-              />
-            </Field>
-          </View>
-        ) : null}
-
-        <View className="min-h-11 flex-row items-center gap-3">
-          <Checkbox checked={confirmed} onCheckedChange={setConfirmed} aria-labelledby="book-confirmed" accessibilityLabel="They’ve already agreed to this time" />
-          <Label nativeID="book-confirmed" onPress={() => setConfirmed(!confirmed)} className="flex-1 text-base">
-            They’ve already agreed to this time
-          </Label>
-        </View>
-        <FinePrint>
-          {`${confirmed ? 'It goes in your plan as confirmed.' : 'It goes in your plan as requested until you mark it confirmed.'} Calendar and CRM sync come later.`}
-        </FinePrint>
-      </SheetBody>
-      <Footer onCancel={onCancel} onSave={save} saveLabel={`${confirmed ? 'Book' : 'Request'}${label}`} error={error ? { message: error } : null} />
-    </SheetContent>
-  );
-}
-
-function SlotRow({ title, sub, on, onPress }: { title: string; sub?: string; on: boolean; onPress: () => void }) {
-  return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="radio"
-      accessibilityState={{ checked: on }}
-      accessibilityLabel={sub ? `${title}, ${sub}` : title}
-      className={cn('min-h-12 flex-row items-center gap-3 rounded-md border px-3 py-2', on ? 'border-primary bg-accent' : 'border-border bg-card')}
-    >
-      <View className={cn('h-4 w-4 items-center justify-center rounded-full border', on ? 'border-primary' : 'border-muted-foreground')}>
-        {on ? <View className="h-2 w-2 rounded-full bg-primary" /> : null}
-      </View>
-      <View className="flex-1 gap-0.5">
-        <Text className={cn('font-medium', on && 'text-accent-foreground')}>{title}</Text>
-        {sub ? <Text className="text-sm text-muted-foreground">{sub}</Text> : null}
-      </View>
-    </Pressable>
-  );
-}

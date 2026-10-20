@@ -34,13 +34,13 @@ GitHub Actions runs the typecheck, lint and tests on every push.
 src/app/              routes (Expo Router)
   _layout.tsx         fonts, theme, the three tabs and the menu's screens
   today/ ask/ targets/             the tab bar: the day, Ask, who to see
-  saved/ activity/ insights/ history/ you/  opened from the ☰ menu
+  saved/ activity/ insights/ you/  opened from the ☰ menu
     _layout.tsx       the tab's own stack (src/components/tab-stack.tsx)
     index.tsx         the tab's screen
     target/[id].tsx   someone's page, the only one for each doctor and account
     chat/[id].tsx     Ask about one person
     doc/[id].tsx      someone's full summary or a saved report (saved/[id].tsx in Saved)
-    history/[id].tsx  an ended conversation, read again (History only)
+    history.tsx       every Ask conversation, opened again to carry on (Ask only)
 src/screens/          the screens above, shared by every tab
 src/components/       sheets, rows, map, charts, and ui/ from react-native-reusables
 src/lib/              types, plan, search, Ask and Saved rules, sample data, workspace state
@@ -51,28 +51,37 @@ __tests__/            Jest tests for the plan, search, brief, notes, planner, th
   - **Today:** the day's map and stops, with one "Add a visit" button that opens Targets.
     - The button at the top switches to the next working day: "Tomorrow", or "Monday" on a Friday (`planDays()` and `dayWord()` in `src/lib/workspace.ts`).
     - Each stop says why they're worth seeing, and where: the site for a visit, or "Phone call". A visit with a time says "Not logged yet" once it's over, and an "Any time" stop from 17:30 (`notLogged()` in `src/lib/plan.ts`); each has its own Log button. Today checks the time every minute.
+    - Every stop has a time: its own, or "About 10:50" for an "Any time" stop. The app works it out from the drive between stops and their usual times that day, and never puts an "Any time" stop where it would make the rep late for a visit with a time. Today, nothing still to do goes before now (`scheduleDay()` in `src/lib/plan.ts`).
+      - The drive is a city guess from straight lines: 5 minutes to park and walk in, and 4 a km, rounded up to 5 (`travelMinutes()`). A call needs no drive.
+      - The line over the stops says how many, the driving and when the day should finish: "6 stops · 1 h 5 min driving · finish about 16:15".
+      - The drive to each stop is on a line between it and the one before, like directions in a maps app: "20 min drive". The next stop's line also says when to set off, "· Leave by 09:50" (on the next day, the first stop's). A call has no line.
+      - A stop put outside their usual times, or after 17:30, says so. Two visits with a time too close to drive between say so on the line between them: "Too tight: 15 min drive from Dr. Lee, only 5 min between".
+      - Putting all of this as lines of text on each stop was tried too, and read as a wall of words.
     - One "Still to do" card at the top holds what's left from before, in the app's plain card style rather than a coloured bar:
       - visits from the last seven days that were never logged, each with Log (dated that day) and "Didn't happen" side by side;
       - "2 follow-ups due", with how many are late, which opens Activity.
     - An empty day offers "Pick 5 for me": the five most worth seeing, in route order, with Undo. Suggestions are people who work that weekday, and for the next day anyone planned or seen today waits.
     - The map grows with the screen and says where the route starts, and that lines are straight, not roads.
-    - "Best order" shows above the stops when the "Any time" ones could go in a shorter order, and puts them in it, with Undo. Visits with a time keep it, and nothing moves before a visit that has happened (`bestOrder()` in `src/lib/plan.ts`).
-    - One small "Edit" on the list shows arrows to move an "Any time" stop between the fixed visits, "Set a time" (their usual times that day, or type one) and "Remove", with Undo. A visit with a time stays at its time and offers "Can't make it" (move or cancel) instead of Remove, since someone is expecting the rep. Edit closes when the rep leaves the screen.
+    - "Best order" shows above the stops when the "Any time" ones could go in an order with less driving, and puts them in it, with Undo. It keeps people in their usual times, even when that means a little more driving. Visits with a time keep it, and nothing moves before a visit that has happened (`bestOrder()` and `dayCost()` in `src/lib/plan.ts`).
+    - There is no edit mode. Each stop has a ⋯ that opens "Change visit" (below) right on Today, like tapping an event in a phone's calendar, and a line under the stops says so.
+    - "Any time" stops have dots on the left: hold them and drag the stop up or down, and the others move to make room. The drives fade while it moves, then show the new ones. Visits with a time keep it and have no dots. A stop dropped before one it can't fit before goes straight after it, and the message says where it went, with Undo (`moveStop()` in `src/lib/workspace.ts`). With a screen reader, swipe up or down on the dots to move it one place.
+      - A "Go here next" choice in Change visit was tried first. Dragging was liked better: the order is right there to change, and a stop can go anywhere, not only next.
     - Each cancelled or moved visit whose time hasn't come leaves its own "14:00 is free" banner, so a second one doesn't hide the first. A banner goes once its time has gone or someone else is in it, and filling it says why when someone can't go in (`fillSlotError()`).
-    - Cancelling a visit, its banner's "Find someone", or logging "Not in" opens one sheet with the three best people to see instead: in that day, free then, close to where the visit was and most worth seeing (`standIns` in `src/lib/workspace.ts`). Each is one tap to add, with "See everyone" for Targets. After "Not in" it offers their next usual time first.
+    - Cancelling a visit, its banner's "Find someone", or logging "Not in" opens one sheet with the three best people to see instead: in that day, free then, close to where the visit was and most worth seeing (`standIns` in `src/lib/workspace.ts`). Each is one tap to add. "See everyone" opens Targets with the same things set as filters: in that day, not planned, nearest to where the visit was first (`insteadFilters()` in `src/lib/search.ts`). A line at the top says who it's instead of, Filters shows each one to change, and the X shows everyone again. After "Not in" it offers their next usual time first.
+  - **Choosing a time:** one sheet for "Book a time", "Change the time" and "Set a time", like booking on a scheduling page (`src/components/time-sheet.tsx`). It shows only the free times, as big buttons: their usual times first with the best one already picked, and "Other times" one tap away. Times too close to another visit to drive between aren't shown, and a line says what else the rep has that day and how far each is. Booking can switch between the next five working days, and it says when they aren't usually in that day (`dayGrid()` in `src/lib/booking.ts`).
   - **Targets:** a search box, one Filters button, and "+ Add" on each row. "Select" picks several people, and one button at the bottom adds them all, with one toast and Undo.
-    - Each doctor says whether they're in that day ("In 12:30–13:30", "Not in on Tuesdays" or "Gone for today"), and those who are come first (`inOnDay()` in `src/lib/booking.ts`). Someone who isn't gets "+ Call", a phone call instead of a visit.
-    - Adding puts each person where they add the least travel, between the visits with a time (`placeStops()` in `src/lib/plan.ts`). Someone already in the plan at any time gets "Set a time".
+    - Each doctor says whether they usually work that day ("In 12:30–13:30" or "Not in on Tuesdays"), and those who do come first (`inOnDay()` in `src/lib/booking.ts`). It goes by their usual days only, so adding is always a plain "+ Add". Filters can also show only who's in that day.
+    - Adding puts each person where they add the least driving, in their usual times and between the visits with a time (`placeStops()` in `src/lib/plan.ts`). Someone already in the plan at any time gets "Set a time".
     - While filling a free slot, people on site that day and usually seeing people then come first with "+ 14:00". Everyone else says when they usually are, e.g. "Usually Tue/Thu 07:30–08:30". Other free slots that day show as "Also free".
   - **Someone's page:** one page for every doctor and account, the same layout whether they're new or well known (`src/screens/target.tsx`).
     - The name, what they do and when the next visit is, then the **Summary**: where they work and when they're in, the last contact, follow-ups owed, why they matter and the next step (`summaryOf()` in `src/lib/brief.ts`). It's written from the data until the rep improves it through Ask, and "Full summary" opens the rest.
-    - Then "Log visit" and "Can't make it" (or "Add to today", or "Add a call today" when they aren't in), then Ask, Call, Directions and Listen. Listen reads the summary, the volume, the next step and the points to bring up (`speechFor()`).
-    - "Can't make it" offers three things: "Move to tomorrow" (or "Move to another time" for a visit with a time), "Cancel the visit" and "Keep it". A cancelled visit can be put back at its time. A visit still waiting for a reply says how it was booked, with a "They confirmed" button.
+    - Then "Log visit" and "Change visit" (or "Add to today"), then Ask, Call, Directions and Listen. Listen reads the summary, the volume, the next step and the points to bring up (`speechFor()`).
+    - "Change visit" (also the ⋯ on Today) is a short list of choices. A visit with a time offers "Change the time" and "Cancel the visit", since someone is expecting the rep. An "Any time" stop offers "Set a time", "Move to tomorrow" and "Remove from today", with Undo. Either kind can be made a phone call or a visit in person ("How") and take 15 to 60 minutes ("How long"). These change straight away, with Undo, and the day's times and driving follow. "Done" closes it. A cancelled visit can be put back at its time. A visit still waiting for a reply says how it was booked, with a "They confirmed" button.
     - Below that are short cards (`src/components/target-info.tsx`, `src/lib/target.ts`, `__tests__/target.test.tsx`). "See all" opens a card in full where it is, and each figure at the top opens its card, so nothing opens another page. A link from Ask opens the card it's about (`cardFor()`):
       - The volume, patients leaving and last contact.
       - "Follow-ups": open ones, how late each is, and Done.
       - "Last time": the last note; See all shows every note.
-      - "You asked before": the last 3 questions asked about them in Ask. An ended conversation opens in History; one from today opens where the rep can carry on.
+      - "You asked before": the last 3 questions asked about them in Ask. Each opens the conversation it was asked in, to carry on, as History does.
       - "Visits so far": every visit and call, planned or noted, with what happened (Met, Not in, Cancelled, Not logged yet) and when, plus a line like "Tried 3 times, met once." Once enough have worked it says when, e.g. "Tuesday mornings have worked."
       - "How to get in": who books, how they like to be asked, their usual times and whether they usually confirm, and "Book a time". The notes on how to ask are fictional sample notes (`access` in `src/lib/data`).
       - "Similar doctors nearby" (doctors only): up to 3 who do the same procedures or specialty, or see the same main conditions, work within 3 km that day and usually see people then. Each has + to add them to that day.
@@ -98,7 +107,7 @@ __tests__/            Jest tests for the plan, search, brief, notes, planner, th
   - The sample figures are a fixed snapshot, so charts label their quarters from `FIGURES_END`, not today.
 - **Plain words for tags.** "Patients going elsewhere" and "Busier than last year" replace "Leakage risk" and "Rising volume", on rows, the Targets filters and in Ask. Where patients go says "Same health system" and "Outside the system", not "In system" and "Out of system". `signalMeaning()` in `src/lib/data/index.ts` gives each tag's one-line meaning.
   - There's no "Leakage" or "code group": procedure codes show only when the volumes card is opened in full, and Ask offers "See where they go".
-- **Menu screens are tabs without a button.** Saved, Activity, Insights, History and You keep their own Back like the other tabs, and their buttons are left out of the bar.
+- **Menu screens are tabs without a button.** Saved, Activity, Insights and You keep their own Back like the other tabs, and their buttons are left out of the bar. The menu's History opens History on Ask.
   - Don't use `href: null` for them. Expo Router 58 now sends a hidden tab back to the first tab.
 - **Saved.**
   - **Summaries** open from the card on someone's page ("Full summary") or from Saved. Each is written from the data, the plan and what the rep asked in Ask, until the rep improves it. Inside the app it's still called prep (`prepId`, `src/lib/prep.ts`, `src/components/prep-actions.tsx`, `src/components/summary-card.tsx`, `__tests__/prep.test.tsx`):
@@ -108,13 +117,13 @@ __tests__/            Jest tests for the plan, search, brief, notes, planner, th
     - With nothing planned, owed, written or asked (`isThinPrep()`), the button says "Write a summary with Ask", and the full summary leads with it. Ask drafts a goal and what to bring up, and "Write my own" opens Edit.
     - Asking Ask for help with the summary isn't added to it as a question about them.
   - **Reports** are answers kept with Save or by saying "save that".
-- **History.** In the menu, under Saved (`src/app/history/index.tsx`, `src/lib/chat.tsx`).
-  - **Conversations:** what was asked in Ask, about the territory or one person, newest first, with when and how many questions.
-    - "New" on Ask ends a conversation and starts another; so does the day ending. Ask's empty screen then links to History.
-    - Today's conversation opens where the rep can carry on. An ended one opens read-only, as it was, saying figures and plans may have changed since. Its answers can still be saved, read aloud and followed, and one button carries on in Ask.
+- **History.** Like the list of chats in a chat app. "History" at the top of Ask opens it, and so does History in the menu, under Saved (`src/app/ask/history.tsx`, `src/lib/chat.tsx`).
+  - **Conversations:** what was asked in Ask, about the territory or one person, under Today, Yesterday and Earlier, newest first (`groupConversations()`). Each is titled by its first question, with how many questions and when. "New chat" at the top starts afresh.
+    - "New" on Ask ends a conversation and starts another; so does the day ending. Both stay in History.
+    - Tapping one opens that chat itself, on Ask or in the person's own Ask, to carry on asking (`reopenConversation()`). Whatever was going there goes to History in its place, so today's stays in the list. One from an earlier day says when it started and that its answers are as they were then.
     - The last 30 are kept on the phone under `CHATS_KEY`, written a moment after each change. A question still waiting for its answer isn't kept.
   - **People you opened:** the last 10 doctors and accounts whose page was opened, once each, newest first.
-  - "Delete this conversation" and "Clear history" each ask first. Neither touches Saved, notes or the plan.
+  - Pressing and holding a conversation deletes it, and "Clear history" clears the lot. Each asks first, and neither touches Saved, notes or the plan.
   - A full summary uses every question kept about the person. Saved's list of people asked about only covers this week.
 - **Summarise my week.** The report a rep sends their manager, from the last seven days (`week` in `src/lib/ask.ts`). It's one of the four chips on Ask, and "my week", "what did I do this week" or "weekly report" work too.
   - It covers visits logged out of those due so far ("2 of 3 visits logged", leaving out cancelled visits and those later today), which were cancelled, moved or never logged ("Dr. Rossi: visit cancelled (Fri)"), notes logged, follow-ups still open and late, and the accounts covered. "Not in" is counted on its own.

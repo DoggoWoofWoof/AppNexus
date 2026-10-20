@@ -97,6 +97,9 @@ export function haversineKm([lon1, lat1]: LonLat, [lon2, lat2]: LonLat): number 
   return 6371 * 2 * Math.asin(Math.sqrt(a));
 }
 
+/** Minutes as "55 min" or "1 h 25 min". */
+export const formatMinutes = (mins: number): string => (mins < 60 ? `${mins} min` : `${Math.floor(mins / 60)} h${mins % 60 ? ` ${mins % 60} min` : ''}`);
+
 export const formatKm = (km: number): string => (km < 0.1 ? 'Under 0.1 km' : `${km.toFixed(1)} km`);
 
 export const initials = (name: string): string =>

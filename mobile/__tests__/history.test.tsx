@@ -1,13 +1,29 @@
-// The menu's History: Ask conversations kept on the phone, ended by New or by
-// the day going, read again as they were, and the people the rep opened.
-// The sample day is Tuesday 20 October 2026.
+// History, on Ask and in the menu: Ask conversations kept on the phone, ended by
+// New or by the day going, listed like a chat app's and opened again to carry
+// on, and the people the rep opened. The sample day is Tuesday 20 October 2026.
 
 import { describe, expect, test } from '@jest/globals';
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 import type { ReactNode } from 'react';
 
 import { answer } from '@/lib/ask';
-import { ChatProvider, endConversation, KEEP_CONVERSATIONS, KEEP_OPENED, NO_CHATS, restoreChats, TERRITORY, useChat, whenLabel, type Chats, type Turn } from '@/lib/chat';
+import {
+  ChatProvider,
+  endConversation,
+  groupConversations,
+  KEEP_CONVERSATIONS,
+  KEEP_OPENED,
+  listWhen,
+  NO_CHATS,
+  reopenConversation,
+  restoreChats,
+  TERRITORY,
+  useChat,
+  whenLabel,
+  type Chats,
+  type ConversationItem,
+  type Turn,
+} from '@/lib/chat';
 import { startOfDay } from '@/lib/format';
 import { CHATS_KEY, type DeviceStorage } from '@/lib/persist';
 import { useWorkspace, WorkspaceProvider } from '@/lib/store';
@@ -73,6 +89,31 @@ describe('what History keeps', () => {
     expect(whenLabel(at(20, 14, 32), today)).toBe('Today 14:32');
     expect(whenLabel(at(19, 9, 5), today)).toBe('Yesterday 09:05');
     expect(whenLabel(at(16, 16, 0), today)).toBe('Fri 16 Oct 16:00');
+    // In the list, under Today and Yesterday the time is enough.
+    expect(listWhen(at(20, 14, 32), today)).toBe('14:32');
+    expect(listWhen(at(19, 9, 5), today)).toBe('09:05');
+    expect(listWhen(at(16, 16, 0), today)).toBe('Fri 16 Oct');
+  });
+
+  test('lists conversations under Today, Yesterday and Earlier, newest first', () => {
+    const item = (id: string, when: number): ConversationItem => ({ id, key: TERRITORY, live: false, title: id, questions: 1, at: when });
+    const groups = groupConversations([item('last week', at(13, 9)), item('this morning', at(20, 8)), item('just now', at(20, 15)), item('Friday', at(16, 16))], today);
+    expect(groups.map((g) => [g.title, g.items.map((c) => c.id)])).toEqual([
+      ['Today', ['just now', 'this morning']],
+      ['Earlier', ['Friday', 'last week']],
+    ]);
+    expect(groupConversations([], today)).toEqual([]);
+  });
+
+  test('opening an ended conversation puts it back in its chat, and what was going there goes to History', () => {
+    const yesterday: Chats = { ...NO_CHATS, threads: { [TERRITORY]: [] }, past: [{ id: 'c-1', key: TERRITORY, turns: [turn('Who should I see today?', at(19, 9))] }] };
+    const going = { ...yesterday, threads: { [TERRITORY]: [turn('How is my week going?', at(20, 10))] } };
+    const opened = reopenConversation(going, 'c-1');
+    expect(opened.threads[TERRITORY].map((t) => t.question)).toEqual(['Who should I see today?']);
+    expect(opened.past.map((c) => c.turns[0].question)).toEqual(['How is my week going?']);
+    // With nothing going, nothing else is added; an unknown id changes nothing.
+    expect(reopenConversation(yesterday, 'c-1').past).toEqual([]);
+    expect(reopenConversation(going, 'nope')).toBe(going);
   });
 });
 
@@ -104,6 +145,57 @@ describe('History in the app', () => {
     expect(again.result.current.chat.conversations()).toEqual([]);
     // Deleting a conversation leaves what was saved from it.
     expect(again.result.current.ws.ws.saved).toHaveLength(1);
+  });
+
+  test('a conversation opened from History carries on where it was, in its own chat', async () => {
+    const { storage } = memoryStorage(
+      new Map([
+        [
+          CHATS_KEY,
+          kept({
+            threads: { [TERRITORY]: [turn('What’s on my plan today?', at(20, 8))] },
+            past: [
+              { id: 'c-mine', key: TERRITORY, turns: [turn('Who should I see today?', at(19, 9))] },
+              { id: 'c-maya', key: 'maya', turns: [turn('Where does she refer?', at(16, 9))] },
+            ],
+          }),
+        ],
+      ]),
+    );
+    const { result } = await renderChat(storage);
+    expect(result.current.chat.conversations().map((c) => [c.title, c.live])).toEqual([
+      ['What’s on my plan today?', true],
+      ['Who should I see today?', false],
+      ['Where does she refer?', false],
+    ]);
+
+    // Opening it gives the chat to show it in, the Ask tab or the person's own.
+    let key = '';
+    await act(() => {
+      key = result.current.chat.open('c-mine');
+    });
+    expect(key).toBe(TERRITORY);
+    expect(result.current.chat.turns(TERRITORY).map((t) => t.question)).toEqual(['Who should I see today?']);
+    await act(async () => {
+      await result.current.chat.ask(TERRITORY, 'Who is near?');
+    });
+    expect(result.current.chat.turns(TERRITORY).map((t) => t.question)).toEqual(['Who should I see today?', 'Who is near?']);
+    // Today's chat that was showing is still in the list, and nothing is listed twice.
+    const list = result.current.chat.conversations();
+    expect(list.map((c) => [c.title, c.live, c.questions])).toEqual([
+      ['Who should I see today?', true, 2],
+      ['What’s on my plan today?', false, 1],
+      ['Where does she refer?', false, 1],
+    ]);
+
+    await act(() => {
+      key = result.current.chat.open('c-maya');
+    });
+    expect(key).toBe('maya');
+    expect(result.current.chat.turns('maya').map((t) => t.question)).toEqual(['Where does she refer?']);
+    // One going today opens as it is.
+    expect(result.current.chat.open(TERRITORY)).toBe(TERRITORY);
+    expect(result.current.chat.conversations()).toHaveLength(3);
   });
 
   test('lists the people opened, newest first, once each, and Clear history empties it all', async () => {

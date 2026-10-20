@@ -1,11 +1,12 @@
 // The Ask conversations: one about the whole territory (the Ask tab) and one per
 // person or account (from their page). They're kept on the phone, so leaving a
-// chat and coming back keeps the thread, and so is the menu's History: the
-// conversations that have ended and the people the rep opened.
+// chat and coming back keeps the thread, and so is History, like a chat app's
+// list of chats: every conversation and the people the rep opened.
 //
 // A conversation ends when the rep taps New on Ask, or when its day has gone,
-// since "today" in an answer means the day it was asked. Ended ones can be read
-// again in History, as they were.
+// since "today" in an answer means the day it was asked. Opening an ended one
+// from History puts it back in its chat to carry on, and whatever was going
+// there goes to History in its place.
 //
 // What the rep asks about someone feeds their full Summary (lib/saved.ts), and
 // "save that" keeps the last answer as a report in the menu's Saved list.
@@ -89,6 +90,31 @@ export function endConversation(chats: Chats, key: string): Chats {
   return { ...chats, threads, past };
 }
 
+/** Puts an ended conversation back in its chat to carry on; whatever was going there ends and goes to History. */
+export function reopenConversation(chats: Chats, id: string): Chats {
+  const c = chats.past.find((p) => p.id === id);
+  if (!c) return chats;
+  const ended = endConversation({ ...chats, past: chats.past.filter((p) => p !== c) }, c.key);
+  return { ...ended, threads: { ...ended.threads, [c.key]: c.turns } };
+}
+
+/** History's conversations under Today, Yesterday and Earlier, newest first, leaving out a group with none. */
+export function groupConversations(items: ConversationItem[], today: Date): { title: 'Today' | 'Yesterday' | 'Earlier'; items: ConversationItem[] }[] {
+  const groups = [
+    { title: 'Today' as const, items: [] as ConversationItem[] },
+    { title: 'Yesterday' as const, items: [] as ConversationItem[] },
+    { title: 'Earlier' as const, items: [] as ConversationItem[] },
+  ];
+  for (const c of [...items].sort((a, b) => b.at - a.at)) groups[Math.min(2, Math.max(0, daysBetween(new Date(c.at), today)))].items.push(c);
+  return groups.filter((g) => g.items.length);
+}
+
+/** When, in History's list: the time under Today and Yesterday, the date under Earlier. */
+export function listWhen(at: number, today: Date): string {
+  const d = new Date(at);
+  return daysBetween(d, today) > 1 ? formatDate(d) : fromMinutes(d.getHours() * 60 + d.getMinutes());
+}
+
 /** Ends every thread last asked in before `dayStart`, so each day's chats start afresh. */
 export function settleChats(chats: Chats, dayStart: number): Chats {
   return Object.entries(chats.threads)
@@ -131,6 +157,8 @@ interface ChatStore {
   conversations: () => ConversationItem[];
   /** An ended conversation. */
   conversation: (id: string) => Conversation | null;
+  /** Opens a conversation from History in its chat to carry on, and gives that chat's key: TERRITORY or the person's id. */
+  open: (id: string) => string;
   /** Takes a conversation out of History: an ended one by its id, or one going today by its key. */
   forget: (id: string) => void;
   /** Clears every conversation and the people opened. */
@@ -296,6 +324,12 @@ function LoadedChats({ children, kept, storage }: { children: ReactNode; kept: C
         return [...going, ...chats.past.map((c) => item(c.id, c.key, false, c.turns))].sort((a, b) => b.at - a.at);
       },
       conversation: (id) => chats.past.find((c) => c.id === id) ?? null,
+      open: (id) => {
+        const ended = chats.past.find((c) => c.id === id);
+        if (!ended) return id;
+        setChats((c) => reopenConversation(c, id));
+        return ended.key;
+      },
       forget: (id) =>
         setChats((c) => (c.past.some((p) => p.id === id) ? { ...c, past: c.past.filter((p) => p.id !== id) } : { ...c, threads: { ...c.threads, [id]: [] } })),
       forgetAll: () => setChats(NO_CHATS),

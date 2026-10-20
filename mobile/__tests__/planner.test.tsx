@@ -1,13 +1,13 @@
 // The planner flows, ported from the prototype's tests/flows.test.js: cancel →
 // fill from Targets, booking and rescheduling, and logging a planned visit. Then
-// changing the day from Edit on Today, and adding several people from Targets.
+// changing a visit, and adding several people from Targets.
 // The sample day is Monday 19 October 2026.
 
 import { describe, expect, test } from '@jest/globals';
 import { act, renderHook } from '@testing-library/react-native';
 import type { ReactNode } from 'react';
 
-import { availability, bookingRoute, parseDays, suggestSlots, timesOnDay, usualTimes } from '@/lib/booking';
+import { availability, bookingRoute, parseDays, suggestSlots, usualTimes } from '@/lib/booking';
 import { getEntity } from '@/lib/data';
 import { addDays, formatDate, fromIso, isoDate, startOfDay } from '@/lib/format';
 import { DEFAULT_FILTERS } from '@/lib/search';
@@ -20,14 +20,16 @@ import {
   bookVisit,
   buildContext,
   cancelVisit,
+  changeStop,
   chooseSlot,
   fillSlot,
   fillingSlot,
   findItem,
   freshWorkspace,
   leaveFree,
-  moveVisit,
+  moveStop,
   noteError,
+  placeOf,
   removeVisit,
   restoreVisit,
   setVisitTime,
@@ -164,17 +166,7 @@ describe('more than one free slot', () => {
   });
 });
 
-describe('changing the day from Edit', () => {
-  test('an "Any time" stop moves between fixed visits, and the fixed ones stay at their times', () => {
-    const ws = freshWorkspace(today);
-    expect(dayIds(ws)).toEqual(['v-maya', 'v-jordan', 'v-alex']);
-    const once = moveVisit(ws, todayIso, 'v-alex', -1);
-    expect(dayIds(once)).toEqual(['v-maya', 'v-alex', 'v-jordan']);
-    expect(dayIds(moveVisit(once, todayIso, 'v-alex', -1))).toEqual(['v-alex', 'v-maya', 'v-jordan']);
-    expect(dayIds(moveVisit(ws, todayIso, 'v-jordan', 1))).toEqual(dayIds(ws));
-    expect(once.pristine).toBe(false);
-  });
-
+describe('changing a visit', () => {
   test('giving an "Any time" stop a time checks it, then puts it in time order without booking anything', () => {
     const ws = freshWorkspace(today);
     const noon = new Date(2026, 9, 19, 12, 0);
@@ -184,22 +176,10 @@ describe('changing the day from Edit', () => {
     expect(visitTimeError(ws, tomorrowIso, 'v-alex', '16:00', noon)).toMatch(/no longer planned/);
     expect(visitTimeError(ws, todayIso, 'v-alex', '12:30', noon)).toBeNull();
 
-    const timed = setVisitTime(moveVisit(ws, todayIso, 'v-alex', -1), todayIso, 'v-alex', '08:30');
+    const timed = setVisitTime(ws, todayIso, 'v-alex', '08:30');
     expect(findItem(timed, todayIso, 'v-alex')).toMatchObject({ mode: 'timed', time: '08:30' });
     expect(findItem(timed, todayIso, 'v-alex')?.booking).toBeUndefined();
     expect(dayIds(timed)).toEqual(['v-alex', 'v-maya', 'v-jordan']);
-  });
-
-  test('the times offered are their usual ones that day, clear of the plan', () => {
-    const ws = freshWorkspace(today);
-    const alex = findItem(ws, todayIso, 'v-alex')!;
-    // A phone call: inside 16:00–17:30, every half hour.
-    expect(timesOnDay(entity('alex'), { day: todayIso, plan: ws.plans[todayIso], duration: alex.duration, onSite: false, except: alex.id })).toEqual(['16:00', '16:30', '17:00']);
-    expect(timesOnDay(entity('alex'), { day: todayIso, plan: ws.plans[todayIso], duration: 15, onSite: false, earliest: 16 * 60 + 15 })).toEqual(['16:30', '17:00']);
-    // Dr. Lee is at 14:00, so a half-hour visit to Dr. Cohen can't start then.
-    expect(timesOnDay(entity('hannah'), { day: todayIso, plan: ws.plans[todayIso], duration: 30, onSite: true, count: 20 })).not.toContain('14:00');
-    // In person on a day they aren't on site: nothing to offer.
-    expect(timesOnDay(entity('priya'), { day: isoDate(addDays(today, 2)), plan: [], duration: 30, onSite: true })).toEqual([]);
   });
 
   test('a stop can be taken out of the plan, but a logged one stays', () => {
@@ -208,15 +188,64 @@ describe('changing the day from Edit', () => {
     const logged = { ...ws, plans: { ...ws.plans, [todayIso]: ws.plans[todayIso].map((i) => (i.id === 'v-maya' ? { ...i, status: 'done' as const } : i)) } };
     expect(removeVisit(logged, todayIso, 'v-maya')).toBe(logged);
   });
+
+  // Dr. Watanabe, Dr. Patel at 10:00, Dr. Lee at 14:00, Dr. Cohen, then the call to Dr. Morgan.
+  const fuller = () => addPeople(freshWorkspace(today), todayIso, ['kenji', 'hannah']);
+  const idOf = (ws: Workspace, targetId: string) => ws.plans[todayIso].find((i) => i.targetId === targetId)!.id;
+  const order = (ws: Workspace, now?: Date) => buildContext(ws, today).dayPlan(todayIso, now).map((i) => i.targetId);
+
+  test('an "Any time" stop dragged to the top is the next one', () => {
+    const ws = fuller();
+    expect(order(ws)).toEqual(['kenji', 'maya', 'jordan', 'hannah', 'alex']);
+    const next = moveStop(ws, todayIso, idOf(ws, 'hannah'), 0);
+    // Dr. Watanabe no longer fits before Dr. Patel's 10:00, so comes after it.
+    expect(order(next)).toEqual(['hannah', 'maya', 'kenji', 'jordan', 'alex']);
+    expect(placeOf(next, todayIso, idOf(ws, 'hannah'))).toEqual({ first: true, after: null });
+    // One that's next already, or has a time, stays where it is.
+    expect(moveStop(ws, todayIso, idOf(ws, 'kenji'), 0)).toBe(ws);
+    expect(moveStop(ws, todayIso, 'v-maya', 0)).toBe(ws);
+  });
+
+  test('later in the day it goes after the visits that have started, or after a visit with a time it can’t fit before', () => {
+    const ws = fuller();
+    const eleven = new Date(2026, 9, 19, 11, 0);
+    const late = moveStop(ws, todayIso, idOf(ws, 'hannah'), 0, eleven);
+    expect(order(late, eleven).slice(0, 2)).toEqual(['maya', 'hannah']);
+    expect(placeOf(late, todayIso, idOf(ws, 'hannah'), eleven)?.first).toBe(true);
+    // At 09:40 there's no time before Dr. Patel's 10:00, so Dr. Cohen comes straight after it.
+    const soon = new Date(2026, 9, 19, 9, 40);
+    const tight = moveStop(ws, todayIso, idOf(ws, 'hannah'), 0, soon);
+    expect(order(tight, soon).slice(0, 2)).toEqual(['maya', 'hannah']);
+    expect(placeOf(tight, todayIso, idOf(ws, 'hannah'), soon)).toMatchObject({ first: false, after: { id: 'v-maya' } });
+  });
+
+  test('a stop dragged to a place goes there, even outside their usual times, which the day then says', () => {
+    const ws = fuller();
+    const next = moveStop(ws, todayIso, idOf(ws, 'kenji'), 2);
+    expect(order(next)).toEqual(['maya', 'jordan', 'kenji', 'hannah', 'alex']);
+    // Dr. Watanabe is usually in on Monday mornings only.
+    expect(buildContext(next, today).daySchedule(todayIso).stops.find((s) => s.item.targetId === 'kenji')?.outside).toBe(true);
+  });
+
+  test('a visit can become a phone call, or take longer, and the day’s times follow', () => {
+    const ws = fuller();
+    const stop = (w: Workspace, targetId: string) => buildContext(w, today).daySchedule(todayIso).stops.find((s) => s.item.targetId === targetId)!;
+    expect(stop(ws, 'kenji').travel).toBeGreaterThan(0);
+    const call = changeStop(ws, todayIso, idOf(ws, 'kenji'), { type: 'Phone call' });
+    expect(stop(call, 'kenji').travel).toBe(0);
+    const longer = changeStop(ws, todayIso, 'v-jordan', { duration: 60 });
+    expect(stop(longer, 'hannah').start - stop(ws, 'hannah').start).toBe(30);
+  });
 });
 
 describe('adding several people from Targets', () => {
-  test('puts each where it adds the least travel, skipping anyone already planned', () => {
-    const ws = moveVisit(freshWorkspace(today), todayIso, 'v-alex', -1);
+  test('puts each where it adds the least driving in their usual times, skipping anyone already planned', () => {
+    const ws = freshWorkspace(today);
     const next = addPeople(ws, todayIso, ['kenji', 'jordan', 'hannah', 'kenji', 'nobody']);
     const plan = buildContext(next, today).dayPlan(todayIso);
-    // The rep's own order of the stops already there is kept: Dr. Morgan stays before Dr. Lee.
-    expect(plan.map((i) => i.targetId)).toEqual(['maya', 'kenji', 'alex', 'jordan', 'hannah']);
+    // Dr. Watanabe fits before the 10:00 and Dr. Cohen after Dr. Lee's 14:00; the call
+    // to Dr. Morgan stays in his usual 16:00–17:30, so it comes last.
+    expect(plan.map((i) => i.targetId)).toEqual(['kenji', 'maya', 'jordan', 'hannah', 'alex']);
     expect(plan.filter((i) => i.targetId === 'kenji' || i.targetId === 'hannah').every((i) => i.mode === 'flexible' && i.status === 'planned')).toBe(true);
     expect(addPeople(ws, todayIso, ['nobody'])).toBe(ws);
   });
@@ -327,13 +356,9 @@ describe('store', () => {
     expect(store.current.ws.freeSlots[0]?.time).toBe('10:00');
   });
 
-  test('Edit on Today: moving needs no Undo, setting a time and taking a stop out can be undone', async () => {
+  test('Change visit: setting a time and taking a stop out can be undone', async () => {
     const store = await renderStore();
     const ids = () => store.current.dayPlan(todayIso).map((i) => i.id);
-
-    await act(() => store.current.moveStop(todayIso, 'v-alex', -1));
-    expect(ids()).toEqual(['v-maya', 'v-alex', 'v-jordan']);
-    expect(store.current.notice).toBeNull();
 
     // Before eight, and clashing, are refused with a reason.
     let error: string | null = null;
@@ -346,32 +371,41 @@ describe('store', () => {
     });
     expect(error).toBeNull();
     expect(store.current.notice).toMatchObject({ message: 'Dr. Alex Morgan at 16:00 today', canUndo: true });
-    expect(ids()).toEqual(['v-maya', 'v-jordan', 'v-alex']);
+    expect(findItem(store.current.ws, todayIso, 'v-alex')).toMatchObject({ mode: 'timed', time: '16:00' });
     await act(() => store.current.undo());
-    expect(ids()).toEqual(['v-maya', 'v-alex', 'v-jordan']);
     expect(findItem(store.current.ws, todayIso, 'v-alex')?.mode).toBe('flexible');
 
     await act(() => store.current.removeStop(todayIso, 'v-alex'));
     expect(ids()).toEqual(['v-maya', 'v-jordan']);
     expect(store.current.notice).toMatchObject({ message: 'Dr. Alex Morgan taken out of the plan', canUndo: true });
     await act(() => store.current.undo());
-    expect(ids()).toEqual(['v-maya', 'v-alex', 'v-jordan']);
+    expect(ids()).toEqual(['v-maya', 'v-jordan', 'v-alex']);
   });
 
-  test('a move drops an older Undo, so it can’t take the move back with it', async () => {
+  test('Change visit: putting a stop next, making it a call and making it longer can each be undone', async () => {
     const store = await renderStore();
-    await act(() => store.current.removeStop(todayIso, 'v-jordan'));
-    await act(() => store.current.moveStop(todayIso, 'v-alex', -1));
+    const ids = () => store.current.dayPlan(todayIso).map((i) => i.id);
+    await act(() => store.current.moveStop(todayIso, 'v-alex', 0));
+    expect(ids()).toEqual(['v-alex', 'v-maya', 'v-jordan']);
+    expect(store.current.notice).toMatchObject({ message: 'Dr. Alex Morgan is next', canUndo: true });
     await act(() => store.current.undo());
-    // Dr. Lee stays out and Dr. Morgan stays before the 10:00.
-    expect(store.current.dayPlan(todayIso).map((i) => i.id)).toEqual(['v-alex', 'v-maya']);
+    expect(ids()).toEqual(['v-maya', 'v-jordan', 'v-alex']);
+
+    await act(() => store.current.changeStop(todayIso, 'v-maya', { type: 'Phone call' }));
+    expect(store.current.notice?.message).toBe('Dr. Maya Patel is now a phone call');
+    await act(() => store.current.undo());
+    expect(findItem(store.current.ws, todayIso, 'v-maya')?.type).toBe('In-person visit');
+
+    await act(() => store.current.changeStop(todayIso, 'v-maya', { duration: 45 }));
+    expect(store.current.notice?.message).toBe('Dr. Maya Patel now takes 45 min');
+    expect(findItem(store.current.ws, todayIso, 'v-maya')?.duration).toBe(45);
   });
 
   test('several people picked on Targets go in with one toast and one Undo', async () => {
     const store = await renderStore();
     await act(() => store.current.addPeople(['kenji', 'hannah', 'jordan'], todayIso));
-    // Each goes where it adds the least travel; Dr. Lee was already planned.
-    expect(store.current.dayPlan(todayIso).map((i) => i.targetId)).toEqual(['maya', 'kenji', 'jordan', 'hannah', 'alex']);
+    // Each goes where it adds the least driving; Dr. Lee was already planned.
+    expect(store.current.dayPlan(todayIso).map((i) => i.targetId)).toEqual(['kenji', 'maya', 'jordan', 'hannah', 'alex']);
     expect(store.current.notice).toMatchObject({ message: '2 people added today', canUndo: true });
     await act(() => store.current.undo());
     expect(store.current.dayPlan(todayIso)).toHaveLength(3);

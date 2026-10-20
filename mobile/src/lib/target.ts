@@ -21,7 +21,7 @@ const midSentence = (text: string) => (/^[A-Z][a-z]/.test(text) ? text[0].toLowe
 
 // ---- You asked before ------------------------------------------------------
 
-/** Where a question opens: its ended conversation in History, the person's own Ask today, or the Ask tab today. */
+/** Where a question was asked: a conversation now in History, or today's in the person's own Ask or the Ask tab. */
 export type AskedWhere = { kind: 'history'; id: string } | { kind: 'chat' } | { kind: 'ask' };
 
 export interface AskedBefore extends Asked {
@@ -30,8 +30,8 @@ export interface AskedBefore extends Asked {
 
 /**
  * The last few questions asked about someone, newest first, a question asked
- * twice once. Each opens the conversation it was asked in: an ended one in
- * History, or today's, where the rep can carry on. `turnsOf` gives a conversation's questions.
+ * twice once. Each opens the conversation it was asked in, to carry on: an
+ * ended one goes back in its chat. `turnsOf` gives a conversation's questions.
  */
 export function askedBefore(id: string, asked: Asked[], conversations: ConversationItem[], turnsOf: (c: ConversationItem) => Turn[], count = 3): AskedBefore[] {
   const seen = new Set<string>();

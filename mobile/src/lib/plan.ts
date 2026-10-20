@@ -1,4 +1,5 @@
-// Pure day-plan logic: ordering, conflicts, adding targets and straight-line route estimates.
+// Pure day-plan logic: ordering, conflicts, adding targets, and the day with a time
+// and a drive for every stop, from straight-line distances.
 
 import { fromMinutes, haversineKm, toMinutes, uid } from './format';
 import type { Entity, LonLat, OrgData, PlanItem, VisitType } from './types';
@@ -87,20 +88,6 @@ export function addTargets(items: PlanItem[], targets: Target[], siteFor: (t: Ta
 }
 
 /**
- * Moves a flexible stop one place earlier or later in the route, past a timed
- * stop if that's what is next to it. Timed stops stay put: their time sets
- * their place. Cancelled visits go to the end, as the day shows them.
- */
-export function moveStop(items: PlanItem[], id: string, direction: -1 | 1): PlanItem[] {
-  const route = routeOrder(activeItems(items));
-  const index = route.findIndex((i) => i.id === id);
-  const to = index + direction;
-  if (index < 0 || route[index].mode === 'timed' || to < 0 || to >= route.length) return items;
-  [route[index], route[to]] = [route[to], route[index]];
-  return [...route, ...items.filter((i) => i.status === 'cancelled')];
-}
-
-/**
  * Gives a flexible stop a start time. It goes to the end of the list, where it
  * can't pick up the flexible stops after it, and routeOrder puts it at its time.
  */
@@ -108,28 +95,6 @@ export function timeStop(items: PlanItem[], id: string, time: string): PlanItem[
   const item = items.find((i) => i.id === id);
   if (!item) return items;
   return [...items.filter((i) => i.id !== id), { ...item, mode: 'timed', time }];
-}
-
-/**
- * Re-orders flexible stops nearest-first, starting after the last timed stop
- * (or the rep's start point). Timed stops keep their times.
- */
-export function suggestOrder(items: PlanItem[], coordsOf: CoordsOf, start: LonLat): PlanItem[] {
-  const timed = routeOrder(items).filter((i) => i.mode === 'timed');
-  const remaining = items.filter((i) => i.mode !== 'timed' && i.status !== 'cancelled');
-  const cancelled = items.filter((i) => i.mode !== 'timed' && i.status === 'cancelled');
-  let from = timed.length ? coordsOf(timed[timed.length - 1]) : start;
-  const ordered: PlanItem[] = [];
-  while (remaining.length) {
-    let best = 0;
-    remaining.forEach((item, i) => {
-      if (haversineKm(from, coordsOf(item)) < haversineKm(from, coordsOf(remaining[best]))) best = i;
-    });
-    const [next] = remaining.splice(best, 1);
-    ordered.push(next);
-    from = coordsOf(next);
-  }
-  return [...timed, ...ordered, ...cancelled];
 }
 
 /** Whether the visit needs the rep to travel. */
@@ -149,62 +114,190 @@ export function fixedStops(route: PlanItem[], minutesNow: number | null): number
   return fixed;
 }
 
-/** Straight-line km for a route in this order, from the start point, counting only the stops that need travel. */
-const travel = (route: PlanItem[], coordsOf: CoordsOf, start: LonLat): number => {
-  let from = start;
-  let total = 0;
-  for (const item of route) {
-    if (!isOnSite(item)) continue;
-    const to = coordsOf(item);
-    total += haversineKm(from, to);
-    from = to;
-  }
-  return total;
-};
+/** When the working day starts: "Any time" stops go no earlier. */
+export const DAY_START = '08:00';
 
-/** The route with a stop put where it adds the least travel, no earlier than `from`. A call or an email goes last. */
-function insertCheapest(route: PlanItem[], item: PlanItem, coordsOf: CoordsOf, start: LonLat, from: number): PlanItem[] {
-  if (!isOnSite(item)) return [...route, item];
-  let best: PlanItem[] | null = null;
-  let bestKm = Infinity;
-  for (let k = from; k <= route.length; k++) {
-    const tried = [...route.slice(0, k), item, ...route.slice(k)];
-    const km = travel(tried, coordsOf, start);
-    if (km < bestKm - 1e-9) {
-      best = tried;
-      bestKm = km;
-    }
-  }
-  return best ?? [...route, item];
+/**
+ * About how many minutes it takes to drive from one place to another in the
+ * city: 5 to park and walk in, and 4 a km, rounded up to 5. Distances are
+ * straight lines, not roads, so it's a guess. Nothing within the same building.
+ */
+export const travelMinutes = (km: number): number => (km < 0.05 ? 0 : Math.ceil((5 + km * 4) / 5) * 5);
+
+/** A stop in the day: when it is, and the drive to it from the last place the rep was. */
+export interface Stop {
+  item: PlanItem;
+  /** Minutes since midnight. */
+  start: number;
+  end: number;
+  /** Minutes and straight-line km to get there; 0 for a call or the same building. */
+  travel: number;
+  km: number;
+  /** An "Any time" stop put outside their usual times, as none were left. */
+  outside: boolean;
+  /** An "Any time" stop that ends after the working day. */
+  late: boolean;
+}
+
+/** Two visits with a time that overlap, or without time to get from one to the other. */
+export interface Clash {
+  kind: 'overlap' | 'travel';
+  earlier: PlanItem;
+  later: PlanItem;
+  /** Minutes needed to get there, and free between them. */
+  need: number;
+  free: number;
+}
+
+export interface ScheduleOptions {
+  coordsOf: CoordsOf;
+  /** Where the day starts. */
+  start: LonLat;
+  /** Their usual times that day as [from, to] minutes, [] when they have none, null when it doesn't matter. */
+  windowsOf?: (item: PlanItem) => [number, number][] | null;
+  /** Today, minutes since midnight: a stop still to do goes no earlier. */
+  now?: number | null;
 }
 
 /**
- * Puts newly added "Any time" stops where each adds the least travel, between the
- * fixed visits and after anything that has already happened (`minutesNow`, for today).
+ * The day with a time for every stop, in time order. Visits with a time are at
+ * their time. Each "Any time" stop, in the day's order, goes at the first time
+ * after the stop before it and the drive there, and only where it still leaves
+ * time to get to the next visit with a time; if it can't, that visit comes first.
+ * It waits for their usual times when that still leaves time, and otherwise goes
+ * as early as it can, said to be outside them, so the day keeps the rep's order.
+ * So the app never puts a stop where it clashes. Visits with a time can still clash with each other, by overlapping or
+ * by leaving too little time to get between them, and `clashes` says which.
  */
-export function placeStops(items: PlanItem[], ids: string[], coordsOf: CoordsOf, start: LonLat, minutesNow: number | null = null): PlanItem[] {
+export function scheduleDay(items: PlanItem[], { coordsOf, start, windowsOf = () => null, now = null }: ScheduleOptions): { stops: Stop[]; clashes: Clash[] } {
+  const dayStart = toMinutes(DAY_START);
+  const dayEnd = toMinutes(END_OF_DAY);
+  const route = routeOrder(activeItems(items));
+  const hasTime = (i: PlanItem) => i.mode === 'timed' && !!i.time;
+  const timed = route.filter(hasTime);
+  const stops: Stop[] = [];
+  const clashes: Clash[] = [];
+  let last: Stop | null = null;
+  let here = start;
+  const kmTo = (from: LonLat, item: PlanItem) => (isOnSite(item) ? haversineKm(from, coordsOf(item)) : 0);
+  const put = (item: PlanItem, at: number, km: number, outside = false) => {
+    const stop: Stop = { item, start: at, end: at + item.duration, travel: travelMinutes(km), km, outside, late: !hasTime(item) && at + item.duration > dayEnd };
+    stops.push(stop);
+    if (!last || stop.end >= last.end) last = stop;
+    if (isOnSite(item)) here = coordsOf(item);
+  };
+  const putTimed = (item: PlanItem) => {
+    const at = startOf(item);
+    const km = kmTo(here, item);
+    const need = travelMinutes(km);
+    if (last && last.end + need > at) {
+      clashes.push({ kind: last.end > at ? 'overlap' : 'travel', earlier: last.item, later: item, need, free: Math.max(0, at - last.end) });
+    }
+    put(item, at, km);
+  };
+  const putAnyTime = (item: PlanItem) => {
+    for (;;) {
+      const km = kmTo(here, item);
+      const soonest = item.status === 'planned' && now != null && now < dayEnd ? Math.ceil(now / 5) * 5 : 0;
+      const at = Math.max(dayStart, last?.end ?? 0, soonest) + travelMinutes(km);
+      const windows = windowsOf(item);
+      const usual = windows?.map(([a, b]) => ({ at: Math.max(at, a), to: b })).find((w) => w.at + item.duration <= w.to)?.at;
+      const next = timed.find((t) => !stops.some((s) => s.item === t));
+      const after = isOnSite(item) ? coordsOf(item) : here;
+      const fits = (t: number) => !next || t + item.duration + travelMinutes(kmTo(after, next)) <= startOf(next);
+      if (fits(usual ?? at)) return put(item, usual ?? at, km, usual == null && windows != null);
+      if (fits(at)) return put(item, at, km, true);
+      putTimed(next!);
+    }
+  };
+  for (const item of route) {
+    if (stops.some((s) => s.item === item)) continue;
+    if (hasTime(item)) putTimed(item);
+    else putAnyTime(item);
+  }
+  return { stops: [...stops].sort((a, b) => a.start - b.start), clashes };
+}
+
+/**
+ * How good the day's order is, lower being better: the minutes driving, and an
+ * hour more for each "Any time" stop outside their usual times or after the
+ * working day. Minutes aren't rounded here, so two orders rarely tie.
+ */
+export function dayCost(items: PlanItem[], options: ScheduleOptions): number {
+  return scheduleDay(items, options).stops.reduce((sum, s) => sum + (s.travel ? 5 + s.km * 4 : 0) + (s.outside ? 60 : 0) + (s.late ? 60 : 0), 0);
+}
+
+/** The route with a stop put where the day costs least, no earlier than `from`. Among equal places a visit goes first, a call last. */
+function insertBest(route: PlanItem[], item: PlanItem, cost: (route: PlanItem[]) => number, from: number): PlanItem[] {
+  const places = Array.from({ length: route.length - from + 1 }, (_, n) => from + n);
+  if (!isOnSite(item)) places.reverse();
+  let best = [...route, item];
+  let bestCost = Infinity;
+  for (const k of places) {
+    const tried = [...route.slice(0, k), item, ...route.slice(k)];
+    const c = cost(tried);
+    if (c < bestCost - 1e-9) {
+      best = tried;
+      bestCost = c;
+    }
+  }
+  return best;
+}
+
+/**
+ * Puts newly added "Any time" stops where the day costs least (`dayCost`): the
+ * least driving, in their usual times, between the visits with a time and after
+ * anything that has already happened (`minutesNow`, for today).
+ */
+export function placeStops(
+  items: PlanItem[],
+  ids: string[],
+  coordsOf: CoordsOf,
+  start: LonLat,
+  minutesNow: number | null = null,
+  windowsOf: ScheduleOptions['windowsOf'] = () => null,
+): PlanItem[] {
   const placing = new Set(ids);
+  const cost = (route: PlanItem[]) => dayCost(route, { coordsOf, start, windowsOf, now: minutesNow });
   let route = routeOrder(activeItems(items)).filter((i) => !placing.has(i.id));
   const from = fixedStops(route, minutesNow);
   for (const item of items.filter((i) => placing.has(i.id) && i.status !== 'cancelled')) {
-    route = item.mode === 'timed' ? routeOrder([...route, item]) : insertCheapest(route, item, coordsOf, start, from);
+    route = item.mode === 'timed' ? routeOrder([...route, item]) : insertBest(route, item, cost, from);
   }
   return [...route, ...items.filter((i) => i.status === 'cancelled')];
 }
 
 /**
- * The day's "Any time" stops that need travel, each put where it adds the least,
- * farthest first. Visits with a time keep it, calls stay where they are, and
- * nothing moves before a visit that has already happened.
+ * The day's "Any time" stops that need travel in the order that costs least
+ * (`dayCost`): each put in its best place, farthest first, then moved while a
+ * better place helps. Visits with a time keep it, calls stay where they are, and
+ * nothing moves before a visit that has already happened. When that saves less
+ * than a minute the day comes back as it is.
  */
-export function bestOrder(items: PlanItem[], coordsOf: CoordsOf, start: LonLat, minutesNow: number | null = null): PlanItem[] {
+export function bestOrder(
+  items: PlanItem[],
+  coordsOf: CoordsOf,
+  start: LonLat,
+  minutesNow: number | null = null,
+  windowsOf: ScheduleOptions['windowsOf'] = () => null,
+): PlanItem[] {
+  const cost = (route: PlanItem[]) => dayCost(route, { coordsOf, start, windowsOf, now: minutesNow });
   const route = routeOrder(activeItems(items));
   const from = fixedStops(route, minutesNow);
   const movable = route.filter((i, n) => n >= from && i.mode !== 'timed' && i.status === 'planned' && isOnSite(i));
   let ordered = route.filter((i) => !movable.includes(i));
   const fixed = fixedStops(ordered, minutesNow);
   const far = [...movable].sort((a, b) => haversineKm(start, coordsOf(b)) - haversineKm(start, coordsOf(a)));
-  for (const item of far) ordered = insertCheapest(ordered, item, coordsOf, start, fixed);
+  for (const item of far) ordered = insertBest(ordered, item, cost, fixed);
+  for (let round = 0; round < movable.length; round++) {
+    const before = cost(ordered);
+    for (const item of movable) {
+      const moved = insertBest(ordered.filter((i) => i !== item), item, cost, fixed);
+      if (cost(moved) < cost(ordered) - 1e-9) ordered = moved;
+    }
+    if (cost(ordered) > before - 1e-9) break;
+  }
+  if (cost(ordered) > cost(route) - 1) return items;
   return [...ordered, ...items.filter((i) => i.status === 'cancelled')];
 }
 

@@ -1,6 +1,8 @@
 // The chat used by the Ask tab and by each profile's own Ask: questions on the
 // right, answers on the left, suggestions to tap and one box to type or talk in.
 // An answer leads with one sentence, then the figures behind it and one next step.
+// A conversation reopened from History says when it started, since its answers
+// are as they were then.
 
 import { router } from 'expo-router';
 import { ArrowUp, Bookmark, BookmarkCheck, ChevronRight, Mic, Square, Volume2 } from 'lucide-react-native';
@@ -16,8 +18,9 @@ import { Input } from '@/components/ui/input';
 import { Text } from '@/components/ui/text';
 import { useVisitSheets } from '@/components/visit-sheets';
 import { spoken, type Answer, type AnswerRow, type AskLink } from '@/lib/ask';
-import { useChat, type Turn } from '@/lib/chat';
+import { useChat, whenLabel, type Turn } from '@/lib/chat';
 import { getEntity } from '@/lib/data';
+import { startOfDay } from '@/lib/format';
 import { prepId } from '@/lib/saved';
 import { useWorkspace } from '@/lib/store';
 import { cn } from '@/lib/utils';
@@ -67,6 +70,7 @@ export function ChatView({
   fromPrep?: boolean;
 }) {
   const chat = useChat();
+  const { today } = useWorkspace();
   const turns = chat.turns(chatKey);
   const { top } = useSafeAreaInsets();
   const scrollRef = useRef<ScrollViewInstance>(null);
@@ -102,6 +106,9 @@ export function ChatView({
         keyboardShouldPersistTaps="handled"
       >
         {header}
+        {turns.length && turns[0].at < startOfDay(today).getTime() ? (
+          <Text className="text-sm text-muted-foreground">{`Started ${whenLabel(turns[0].at, today)}. Answers from before today are as they were then: figures and plans may have changed since.`}</Text>
+        ) : null}
         {turns.length
           ? turns.map((turn, i) => (
               <View

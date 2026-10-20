@@ -30,6 +30,10 @@ export interface Filters {
   distance: (typeof DISTANCES)[number]['id'];
   planned: 'any' | 'planned' | 'unplanned';
   sort: (typeof SORTS)[number]['id'];
+  /** Only people who usually work on the day being planned. */
+  inDay: boolean;
+  /** Distances from this site instead of where the day starts, such as a cancelled visit's; '' for the start. */
+  near: string;
 }
 
 export const DEFAULT_FILTERS: Filters = {
@@ -41,11 +45,28 @@ export const DEFAULT_FILTERS: Filters = {
   distance: 'any',
   planned: 'any',
   sort: 'relevance',
+  inDay: false,
+  near: '',
 };
+
+/**
+ * Who could be seen instead of a visit that won't happen: doctors in that day and
+ * not planned yet, nearest to where the visit was first. The same things the
+ * "See someone else" sheet goes by, set as filters so Targets shows them and they can be changed.
+ */
+export const insteadFilters = (siteId: string): Filters => ({ ...DEFAULT_FILTERS, kind: 'hcp', inDay: true, near: siteId, planned: 'unplanned', sort: 'distance' });
 
 /** Number of filters applied beyond the search text and the People/Accounts tab. */
 export function activeFilterCount(f: Filters): number {
-  return f.signals.length + (f.specialty ? 1 : 0) + (f.orgType ? 1 : 0) + (f.distance !== 'any' ? 1 : 0) + (f.planned !== 'any' ? 1 : 0);
+  return (
+    f.signals.length +
+    (f.specialty ? 1 : 0) +
+    (f.orgType ? 1 : 0) +
+    (f.distance !== 'any' ? 1 : 0) +
+    (f.planned !== 'any' ? 1 : 0) +
+    (f.inDay ? 1 : 0) +
+    (f.near ? 1 : 0)
+  );
 }
 
 const normalise = (s: string): string => s.toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '');
@@ -53,9 +74,12 @@ const normalise = (s: string): string => s.toLowerCase().normalize('NFKD').repla
 export interface SearchContext {
   haystack: (e: Entity) => string;
   signals: (e: Entity) => Signal[];
-  distance: (e: Entity) => number;
+  /** How far away they are, from `near` when it's set. */
+  distance: (e: Entity, near: string) => number;
   planned: (e: Entity) => PlanItem | null;
   priority: (e: Entity) => number;
+  /** Whether they usually work on the day being planned. */
+  inDay: (e: Entity) => boolean;
 }
 
 export interface SearchRow {
@@ -76,7 +100,7 @@ export function searchTargets(entities: Entity[], f: Filters, ctx: SearchContext
     .map((entity) => ({
       entity,
       signals: ctx.signals(entity),
-      distance: ctx.distance(entity),
+      distance: ctx.distance(entity, f.near),
       planned: ctx.planned(entity),
       priority: ctx.priority(entity),
     }))
@@ -89,6 +113,7 @@ export function searchTargets(entities: Entity[], f: Filters, ctx: SearchContext
       if (row.distance > maxKm) return false;
       if (f.planned === 'planned' && !row.planned) return false;
       if (f.planned === 'unplanned' && row.planned) return false;
+      if (f.inDay && !ctx.inDay(row.entity)) return false;
       return true;
     });
 

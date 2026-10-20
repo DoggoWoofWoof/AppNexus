@@ -1,13 +1,14 @@
 // Targets: who to see, best first. Search, one Filters button for everything
 // else, and + on each row to put them in the day's plan. Each doctor says whether
-// they're in that day ("In 12:30–13:30" or "Not in on Tuesdays"), and those who
-// are come first; someone who isn't gets "+ Call", a phone call instead of a visit.
-// Someone already planned at any time gets "Set a time". Select picks several to
-// add in one go, with one Undo. After a visit is cancelled it fills the free time
-// instead: nearest first, "+ 11:00" for people usually seeing visitors then, and
-// why not ("Usually Tue/Thu 07:30–08:30") for everyone else.
+// they're usually in that day ("In 12:30–13:30" or "Not in on Tuesdays"), and
+// those who are come first. Someone already planned at any time gets "Set a
+// time". Select picks several to add in one go, with one Undo.
+// "See everyone" after a cancel or "Not in" opens it with the filters that sheet
+// goes by (in that day, not planned, nearest to the visit first), shown in
+// Filters to change. Filling a freed time, it shows "+ 11:00" for people usually
+// seeing visitors then, and why not ("Usually Tue/Thu 07:30–08:30") for everyone else.
 
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { Check, SlidersHorizontal, Square, SquareCheckBig, X } from 'lucide-react-native';
 import { useState, type ReactNode } from 'react';
 import { Pressable, useWindowDimensions, View } from 'react-native';
@@ -17,16 +18,16 @@ import { Avatar, useProfileHref } from '@/components/entity';
 import { MenuButton } from '@/components/menu';
 import { Choices, SheetBody } from '@/components/note-sheet';
 import { Screen } from '@/components/screen';
-import { useStopTimeSheet } from '@/components/stop-time-sheet';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Icon } from '@/components/ui/icon';
 import { Input } from '@/components/ui/input';
 import { Text } from '@/components/ui/text';
-import { allHcps, allOrgs, getOrg, shortName } from '@/lib/data';
+import { useVisitSheets } from '@/components/visit-sheets';
+import { allHcps, allOrgs, getEntity, getOrg, shortName } from '@/lib/data';
 import { formatKm, plural } from '@/lib/format';
 import { inOnDay, type Availability } from '@/lib/booking';
-import { activeFilterCount, DEFAULT_FILTERS, DISTANCES, SIGNAL_FILTERS, SORTS, type Filters, type SearchRow } from '@/lib/search';
+import { activeFilterCount, DEFAULT_FILTERS, DISTANCES, insteadFilters, SIGNAL_FILTERS, SORTS, type Filters, type SearchRow } from '@/lib/search';
 import { useWorkspace } from '@/lib/store';
 import { cn } from '@/lib/utils';
 
@@ -35,6 +36,17 @@ export default function Targets() {
   const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS);
   const [showFilters, setShowFilters] = useState(false);
   const set = (patch: Partial<Filters>) => setFilters((f) => ({ ...f, ...patch }));
+  // From "See everyone": who it's instead of and where the visit was, set as filters each time it's tapped.
+  const params = useLocalSearchParams<{ near?: string; except?: string; at?: string }>();
+  const [instead, setInstead] = useState<{ near: string; except: string; at?: string } | null>(null);
+  if (params.at && params.near && params.at !== instead?.at) {
+    setInstead({ near: params.near, except: params.except ?? '', at: params.at });
+    setFilters(insteadFilters(params.near));
+  }
+  const clearFilters = () => {
+    setFilters({ ...DEFAULT_FILTERS, query: filters.query, kind: filters.kind });
+    setInstead((i) => (i ? { ...i, near: '' } : i));
+  };
   // Select: the people ticked to add in one go, or null when not selecting.
   const [picked, setPicked] = useState<string[] | null>(null);
   const day = ctx.ws.selection.day;
@@ -42,20 +54,21 @@ export default function Targets() {
   const free = ctx.filling;
   const others = ctx.freeSlotsOn(day, new Date()).filter((s) => s.itemId !== free?.itemId);
   const applied = free ? { ...filters, sort: 'distance' as const, planned: 'unplanned' as const } : filters;
-  const found = ctx.search(applied);
+  // Whose visit it was isn't offered back, until the filters are cleared.
+  const found = ctx.search(applied).filter((r) => !instead?.near || r.entity.id !== instead.except);
+  const insteadOf = instead?.near && filters.near === instead.near ? getEntity(instead.except) : undefined;
   // While filling a time, whoever is usually seeing people then comes first, still nearest first.
   const fits = new Map(found.map((r) => [r.entity.id, ctx.fitsSlot(r.entity)]));
   const canSee = found.filter((r) => fits.get(r.entity.id)?.ok);
   // Otherwise doctors who are in that day come first, unless sorted by name.
-  const [now] = useState(() => new Date());
-  const inDay = new Map(found.map((r) => [r.entity.id, r.entity.kind === 'hcp' ? inOnDay(r.entity, day, now) : null]));
+  const inDay = new Map(found.map((r) => [r.entity.id, r.entity.kind === 'hcp' ? inOnDay(r.entity, day) : null]));
   const isIn = (r: SearchRow) => inDay.get(r.entity.id)?.ok !== false;
   const rows = free
     ? [...canSee, ...found.filter((r) => !fits.get(r.entity.id)?.ok)]
     : applied.sort === 'name'
       ? found
       : [...found.filter(isIn), ...found.filter((r) => !isIn(r))];
-  const { openStopTime, sheet: timeSheet } = useStopTimeSheet();
+  const visits = useVisitSheets();
   const picking = picked && !free ? picked : null;
   const count = activeFilterCount(filters);
   const people = filters.kind === 'hcp';
@@ -90,6 +103,17 @@ export default function Targets() {
           </Button>
         </View>
 
+        {insteadOf && !free && !picking ? (
+          <View className="flex-row items-center gap-2">
+            <Text className="flex-1 text-base text-muted-foreground" accessibilityLiveRegion="polite">
+              <Text className="text-base font-semibold">{`Instead of ${shortName(insteadOf)}`}</Text>
+              {` · in ${dayWord}, nearest to ${getOrg(filters.near)?.name ?? 'the visit'} first`}
+            </Text>
+            <Button size="icon" variant="ghost" onPress={clearFilters} accessibilityLabel="Show everyone">
+              <Icon as={X} size={18} className="text-muted-foreground" />
+            </Button>
+          </View>
+        ) : null}
         {free ? (
           <View className="gap-2">
             <View className="flex-row items-center gap-2">
@@ -130,7 +154,7 @@ export default function Targets() {
         ) : (
           <View className="flex-row items-center gap-2">
             <Text className="flex-1 text-base text-muted-foreground" accessibilityLiveRegion="polite">
-              {rows.length ? `${plural(rows.length, people ? 'doctor' : 'account')}, best first · + adds to ${dayWord}` : 'Nobody matches. Try fewer filters.'}
+              {rows.length ? `${plural(rows.length, people ? 'doctor' : 'account')}, ${ORDER_WORDS[applied.sort]} · + adds to ${dayWord}` : 'Nobody matches. Try fewer filters.'}
             </Text>
             {rows.some((r) => !r.planned) ? (
               <Button size="sm" variant="ghost" onPress={() => setPicked([])} accessibilityLabel={`Select several to add to ${dayWord}`}>
@@ -153,8 +177,8 @@ export default function Targets() {
                 inDay={inDay.get(row.entity.id) ?? null}
                 dayWord={dayWord}
                 onFill={() => fill(row.entity.id)}
-                onAdd={() => ctx.addToPlan(row.entity.id, day, inDay.get(row.entity.id)?.ok === false ? 'Phone call' : undefined)}
-                onSetTime={() => row.planned && openStopTime(day, row.planned)}
+                onAdd={() => ctx.addToPlan(row.entity.id, day)}
+                onSetTime={() => row.planned && visits.openSetTime(row.entity, { day, id: row.planned.id, item: row.planned })}
               />
             ),
           )}
@@ -167,13 +191,15 @@ export default function Targets() {
             <FilterSheet
               filters={filters}
               onChange={set}
-              onClear={() => setFilters({ ...DEFAULT_FILTERS, query: filters.query, kind: filters.kind })}
+              onClear={clearFilters}
               onDone={() => setShowFilters(false)}
               results={rows.length}
+              dayWord={dayWord}
+              nearSite={(instead?.near && getOrg(instead.near)) || undefined}
             />
           ) : null}
         </Dialog>
-        {timeSheet}
+        {visits.sheets}
       </Screen>
       {picking ? (
         // Room at the bottom for the Ask button, which rises out of the tab bar below.
@@ -189,6 +215,8 @@ export default function Targets() {
 }
 
 type InDay = ReturnType<typeof inOnDay>;
+
+const ORDER_WORDS: Record<Filters['sort'], string> = { relevance: 'best first', distance: 'nearest first', name: 'by name' };
 
 /** Their picture, name, distance and the best reason to see them, and with `when` a line saying whether they're in that day. */
 function RowInfo({ row, when }: { row: SearchRow; when?: { text: string; tone: 'in' | 'out' | 'planned' } | null }) {
@@ -274,16 +302,9 @@ function TargetRow({
   } else if (planned) {
     action = <Added name={entity.name} />;
   } else {
-    const call = inDay?.ok === false;
     action = (
-      <Button
-        size="sm"
-        variant="outline"
-        className="rounded-lg"
-        onPress={onAdd}
-        accessibilityLabel={call ? `Add a phone call with ${entity.name} to your plan` : `Add ${entity.name} to your plan`}
-      >
-        <Text>{call ? '+ Call' : '+ Add'}</Text>
+      <Button size="sm" variant="outline" className="rounded-lg" onPress={onAdd} accessibilityLabel={`Add ${entity.name} to your plan`}>
+        <Text>+ Add</Text>
       </Button>
     );
   }
@@ -325,12 +346,17 @@ function FilterSheet({
   onClear,
   onDone,
   results,
+  dayWord,
+  nearSite,
 }: {
   filters: Filters;
   onChange: (patch: Partial<Filters>) => void;
   onClear: () => void;
   onDone: () => void;
   results: number;
+  dayWord: string;
+  /** Where a cancelled visit was, offered as where to measure from. */
+  nearSite?: { id: string; name: string };
 }) {
   const { height } = useWindowDimensions();
   const { top, bottom } = useSafeAreaInsets();
@@ -386,7 +412,27 @@ function FilterSheet({
             options={[{ value: '', label: 'Any' }, ...ORG_TYPES.map((t) => ({ value: t, label: t }))]}
           />
         )}
+        <Choices
+          label="Who's in"
+          value={filters.inDay ? 'in' : 'any'}
+          onChange={(v) => onChange({ inDay: v === 'in' })}
+          options={[
+            { value: 'any', label: 'Anyone' },
+            { value: 'in', label: `In ${dayWord}` },
+          ]}
+        />
         <Choices label="Distance" value={filters.distance} onChange={(distance) => onChange({ distance })} options={DISTANCES.map((d) => ({ value: d.id, label: d.label }))} />
+        {nearSite ? (
+          <Choices
+            label="Measured from"
+            value={filters.near}
+            onChange={(near) => onChange({ near })}
+            options={[
+              { value: '', label: 'Where you start' },
+              { value: nearSite.id, label: nearSite.name },
+            ]}
+          />
+        ) : null}
         <Choices
           label="In your plan"
           value={filters.planned}

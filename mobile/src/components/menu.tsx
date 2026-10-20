@@ -60,9 +60,10 @@ function MenuSheet({ due, onClose }: { due: number; onClose: () => void }) {
   const { bottom } = useSafeAreaInsets();
   const saved = ctx.ws.saved.length + chat.talkedAbout().length;
   const talks = chat.conversations().length;
-  const go = (href: Href) => {
+  // History is on Ask, so Ask goes under it, for Back and for opening a chat there.
+  const go = (href: Href, withAnchor = false) => {
     onClose();
-    router.navigate(href);
+    router.navigate(href, { withAnchor });
   };
 
   return (
@@ -73,7 +74,7 @@ function MenuSheet({ due, onClose }: { due: number; onClose: () => void }) {
         icon={History}
         title="History"
         sub={talks ? `${plural(talks, 'conversation')} · people you opened` : 'Past conversations and people you opened'}
-        onPress={() => go('/history')}
+        onPress={() => go('/ask/history', true)}
       />
       <MenuRow icon={ListChecks} title="Activity" sub={due ? `${plural(due, 'follow-up')} due · your notes` : 'Your notes and follow-ups'} onPress={() => go('/activity')} alert={due > 0} />
       <MenuRow icon={ChartColumn} title="Insights" sub="Your territory at a glance" onPress={() => go('/insights')} />

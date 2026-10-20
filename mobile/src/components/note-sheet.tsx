@@ -22,12 +22,12 @@ import type { DraftError } from '@/lib/workspace';
 
 /** A dialog with a fixed header, a body that scrolls and the buttons pinned below it, like the prototype's sheets. */
 export function SheetContent({ title, target, sub, children }: { title: string; target: Entity; sub?: string; children: ReactNode }) {
-  const { height } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const { top, bottom } = useSafeAreaInsets();
   return (
-    // A percentage max height has nothing to resolve against inside the dialog's
-    // wrappers, so cap it by the window instead.
-    <DialogContent className="gap-0 p-0" style={{ maxHeight: Math.round((height - top - bottom) * 0.92) }}>
+    // Percentages have nothing to resolve against inside the dialog's wrappers, so
+    // the window sets the size: otherwise a sheet of short buttons comes out narrow.
+    <DialogContent className="gap-0 p-0" style={{ width: Math.min(width - 16, 512), maxHeight: Math.round((height - top - bottom) * 0.92) }}>
       <View className="flex-row items-center gap-3 border-b border-border px-5 pb-4 pr-12 pt-5">
         <Avatar entity={target} />
         <View className="flex-1 gap-0.5">
@@ -125,7 +125,8 @@ export function Choices<T extends string>({
               onPress={() => onChange(o.value)}
               accessibilityRole="radio"
               accessibilityLabel={o.label}
-              accessibilityState={{ checked: on }}
+              // Not accessibilityState: the web build only passes aria-checked on.
+              aria-checked={on}
               hitSlop={4}
               className={cn('min-h-9 justify-center rounded-full border px-3 py-1.5', on ? 'border-primary bg-accent' : 'border-border bg-card')}
             >

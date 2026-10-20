@@ -3,7 +3,7 @@
 // slot uses Targets' own search, sorted nearest to the cancelled site, and is
 // only offered to people who are usually there at that time (`availability`).
 
-import { fromIso, fromMinutes, isoDate, toMinutes } from './format';
+import { fromIso, fromMinutes, toMinutes } from './format';
 import type { Entity, PlanItem, TimeWindow } from './types';
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -63,19 +63,14 @@ export const hoursOn = (entity: Entity, weekday: number): string =>
 const WEEKDAY_NAMES = ['Sundays', 'Mondays', 'Tuesdays', 'Wednesdays', 'Thursdays', 'Fridays', 'Saturdays'];
 
 /**
- * Whether someone is in on a day, for Targets and adding: their usual times then,
- * or why not, such as "Not in on Tuesdays". Today, a usual time already over doesn't count.
+ * Whether someone works that weekday, for Targets: their usual times then, or
+ * "Not in on Tuesdays". It goes by their usual days only; nobody can tell from
+ * here whether they've gone home.
  */
-export function inOnDay(entity: Entity, day: string, now?: Date): { ok: true; hours: string } | { ok: false; why: string } {
+export function inOnDay(entity: Entity, day: string): { ok: true; hours: string } | { ok: false; why: string } {
   const weekday = fromIso(day).getDay();
   if (!siteOnDay(entity, weekday)) return { ok: false, why: `Not in on ${WEEKDAY_NAMES[weekday]}` };
-  const hours = hoursOn(entity, weekday);
-  if (now && isoDate(now) === day) {
-    const minutes = now.getHours() * 60 + now.getMinutes();
-    const today = windowsFor(entity).filter((w) => parseDays(w.days).has(weekday));
-    if (today.length && today.every((w) => toMinutes(w.to) <= minutes)) return { ok: false, why: `Gone for today (in ${hours})` };
-  }
-  return { ok: true, hours };
+  return { ok: true, hours: hoursOn(entity, weekday) };
 }
 
 /** Where they can be seen at a time, or why not: they need to be on site that day and inside one of their usual times. */
@@ -151,33 +146,69 @@ export function suggestSlots(
   return out.slice(0, count);
 }
 
+/** A half hour on a day in the time sheet, and whether it can be chosen. */
+export interface GridRow {
+  time: string;
+  /** Inside their usual times, on a day they're in when the visit is in person. */
+  usual: boolean;
+  /** Another of the rep's visits is then, for a visit this long. */
+  taken: boolean;
+  /** Already gone, or too soon, today. */
+  past: boolean;
+  /** Free, but too close to a visit with a time somewhere else to drive between them. */
+  tight: boolean;
+}
+
 /**
- * Start times on one day, every half hour inside their usual times and clear
- * of the rep's other timed visits, for giving a flexible stop a time. A visit
- * in person also needs them to be on site that day.
+ * One day's times for choosing one: every half hour from 08:00 to 18:00,
+ * stretched to fit their usual times and the rep's visits, with the visits that
+ * day. A time is taken when it overlaps a visit with a time, and tight when it
+ * leaves too little time to drive from the visit before or to the one after
+ * (`travelTo`, minutes from this visit's place to another's). `pick` is the first
+ * free time in their usual hours, or else the first free time.
  */
-export function timesOnDay(
+export function dayGrid(
   entity: Entity,
   {
     day,
-    plan,
+    plan = [],
     duration,
     onSite,
     earliest = 0,
     except,
-    count = 6,
-  }: { day: string; plan: PlanItem[] | undefined; duration: number; onSite: boolean; earliest?: number; except?: string; count?: number },
-): string[] {
+    travelTo = () => 0,
+  }: { day: string; plan: PlanItem[] | undefined; duration: number; onSite: boolean; earliest?: number; except?: string; travelTo?: (item: PlanItem) => number },
+): { from: number; to: number; rows: GridRow[]; visits: PlanItem[]; anyTime: PlanItem[]; pick: string | null } {
   const weekday = fromIso(day).getDay();
-  if (onSite && !siteOnDay(entity, weekday)) return [];
-  const out = new Set<string>();
-  for (const w of windowsFor(entity)) {
-    if (!parseDays(w.days).has(weekday)) continue;
-    for (let m = toMinutes(w.from); m + duration <= toMinutes(w.to); m += 30) {
-      if (m >= earliest && !clashesWith(plan, fromMinutes(m), duration, except).length) out.add(fromMinutes(m));
-    }
+  const inToday = !onSite || !!siteOnDay(entity, weekday);
+  const windows = windowsFor(entity).filter((w) => parseDays(w.days).has(weekday));
+  const live = plan.filter((i) => i.id !== except && i.status !== 'cancelled');
+  const visits = live.filter((i) => i.mode === 'timed' && i.time).sort((a, b) => a.time!.localeCompare(b.time!));
+  const anyTime = live.filter((i) => i.mode !== 'timed' || !i.time);
+  const starts = [8 * 60, ...windows.map((w) => toMinutes(w.from)), ...visits.map((i) => toMinutes(i.time!))];
+  const ends = [18 * 60, ...windows.map((w) => toMinutes(w.to)), ...visits.map((i) => toMinutes(i.time!) + i.duration)];
+  const from = Math.floor(Math.min(...starts) / 60) * 60;
+  const to = Math.ceil(Math.max(...ends) / 60) * 60;
+  const endOf = (i: PlanItem) => toMinutes(i.time!) + i.duration;
+  const tight = (m: number) => {
+    const before = visits.filter((v) => endOf(v) <= m).sort((a, b) => endOf(b) - endOf(a))[0];
+    const after = visits.find((v) => toMinutes(v.time!) >= m + duration);
+    return (!!before && m - endOf(before) < travelTo(before)) || (!!after && toMinutes(after.time!) - (m + duration) < travelTo(after));
+  };
+  const rows: GridRow[] = [];
+  for (let m = from; m + 30 <= to; m += 30) {
+    const time = fromMinutes(m);
+    rows.push({
+      time,
+      usual: inToday && windows.some((w) => toMinutes(w.from) <= m && m + duration <= toMinutes(w.to)),
+      taken: clashesWith(plan, time, duration, except).length > 0,
+      past: m < earliest,
+      tight: tight(m),
+    });
   }
-  return [...out].sort().slice(0, count);
+  const open = rows.filter((r) => !r.taken && !r.past && !r.tight);
+  const pick = (open.find((r) => r.usual) ?? open[0])?.time ?? null;
+  return { from, to, rows, visits, anyTime, pick };
 }
 
 /** Who to contact to book them, most direct first. */

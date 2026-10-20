@@ -22,7 +22,7 @@ import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import type { Brief, Figure } from '@/lib/brief';
-import { useChat, whenLabel } from '@/lib/chat';
+import { TERRITORY, useChat, whenLabel } from '@/lib/chat';
 import { childrenOf, descendantsOf, destination, diagnosesOf, getEntity, getOrg, hcpsAt, parentOf, proceduresOf, procedureTotal, shortName, topReferrersOut } from '@/lib/data';
 import { DATA_PERIOD } from '@/lib/data/seed';
 import { daysBetween, formatDate, formatKm, formatNumber, fromIso, relativeDayLower, sum, yoy } from '@/lib/format';
@@ -264,18 +264,18 @@ function LastTime({ entity, cards }: { entity: Entity; cards: Cards }) {
   );
 }
 
-/** The last few questions asked about them in Ask, each opening the conversation it was in. */
+/** The last few questions asked about them in Ask, each opening the conversation it was in to carry on. */
 function AskedBefore({ entity }: { entity: Entity }) {
   const ctx = useWorkspace();
   const chat = useChat();
   const chatHref = useChatHref();
   const asked = askedBefore(entity.id, chat.asked(entity.id), chat.conversations(), (c) => (c.live ? chat.turns(c.key) : (chat.conversation(c.id)?.turns ?? [])), 3);
   if (!asked.length) return null;
-  // An ended conversation opens as it was; today's opens where the rep can carry on.
+  // An ended conversation goes back in its chat, like opening it from History.
   const open = (where: AskedWhere) => {
-    if (where.kind === 'history') router.push({ pathname: '/history/[id]', params: { id: where.id } });
-    else if (where.kind === 'ask') router.navigate('/ask');
-    else router.push(chatHref(entity));
+    const key = where.kind === 'history' ? chat.open(where.id) : where.kind === 'ask' ? TERRITORY : entity.id;
+    if (key === TERRITORY) router.navigate('/ask');
+    else router.push(chatHref({ id: key }));
   };
   return (
     <Block title="You asked before">
@@ -286,7 +286,7 @@ function AskedBefore({ entity }: { entity: Entity }) {
             key={`${a.at}-${a.question}`}
             onPress={() => open(a.where)}
             accessibilityRole="link"
-            accessibilityHint={a.where.kind === 'history' ? 'Opens that conversation' : 'Opens it to carry on'}
+            accessibilityHint="Opens that conversation to carry on"
             className={cn('flex-row items-center gap-3 rounded-md active:bg-accent', i > 0 && 'border-t border-border pt-3')}
           >
             <View className="flex-1 gap-0.5">
@@ -296,7 +296,7 @@ function AskedBefore({ entity }: { entity: Entity }) {
                   {a.answer}
                 </Text>
               ) : null}
-              <Text className="text-xs text-muted-foreground">{a.where.kind === 'history' ? when : `${when} · carry on`}</Text>
+              <Text className="text-xs text-muted-foreground">{when}</Text>
             </View>
             <Icon as={ChevronRight} size={16} className="text-muted-foreground" />
           </Pressable>

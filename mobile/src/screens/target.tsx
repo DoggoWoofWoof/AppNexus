@@ -20,7 +20,7 @@ import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import { useVisitSheets } from '@/components/visit-sheets';
-import { clashesWith, inOnDay, siteOnDay } from '@/lib/booking';
+import { clashesWith, siteOnDay } from '@/lib/booking';
 import { buildBrief } from '@/lib/brief';
 import { useNoteOpened } from '@/lib/chat';
 import { getEntity, shortName, siteFor } from '@/lib/data';
@@ -55,9 +55,6 @@ function Page({ entity, section }: { entity: Entity; section?: string }) {
   const cancelled = !visit && !loggedToday ? todayPlan.find((i) => i.targetId === entity.id && i.status === 'cancelled') : undefined;
   const canRestore = !!cancelled && !(cancelled.mode === 'timed' && cancelled.time && clashesWith(todayPlan, cancelled.time, cancelled.duration, cancelled.id).length);
   const addDay = ctx.ws.selection.day;
-  // A doctor who isn't in that day gets a phone call instead of a visit.
-  const fit = entity.kind === 'hcp' ? inOnDay(entity, addDay, new Date()) : null;
-  const notIn = fit && !fit.ok ? fit.why : null;
   const unconfirmed = visit?.item.booking === 'requested';
 
   const when = visit
@@ -119,16 +116,13 @@ function Page({ entity, section }: { entity: Entity; section?: string }) {
             <Text className="text-lg">{cancelled.time ? `Put it back at ${cancelled.time}` : 'Put it back'}</Text>
           </Button>
         ) : !visit && !loggedToday ? (
-          <>
-            <Button size="lg" className="rounded-xl" onPress={() => ctx.addToPlan(entity.id, addDay, notIn ? 'Phone call' : undefined)}>
-              <Text className="text-lg">{notIn ? `Add a call ${ctx.dayWord(addDay)}` : `Add to ${ctx.dayWord(addDay)}`}</Text>
-            </Button>
-            {notIn ? <Text className="text-center text-sm text-muted-foreground">{`${notIn}, so it’s a phone call.`}</Text> : null}
-          </>
+          <Button size="lg" className="rounded-xl" onPress={() => ctx.addToPlan(entity.id, addDay)}>
+            <Text className="text-lg">{`Add to ${ctx.dayWord(addDay)}`}</Text>
+          </Button>
         ) : null}
         {visit ? (
-          <Button size="lg" variant="outline" className="rounded-xl" onPress={() => visits.openCantMakeIt(entity, { day: visit.day, id: visit.item.id, item: visit.item })}>
-            <Text className="text-lg">Can’t make it</Text>
+          <Button size="lg" variant="outline" className="rounded-xl" onPress={() => visits.openChange(entity, { day: visit.day, id: visit.item.id, item: visit.item })}>
+            <Text className="text-lg">Change visit</Text>
           </Button>
         ) : (
           <Button

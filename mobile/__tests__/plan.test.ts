@@ -2,7 +2,7 @@
 
 import { expect, test } from '@jest/globals';
 
-import { addTargets, conflicts, endTime, moveStop, routeDistance, routeOrder, suggestOrder, timeStop } from '@/lib/plan';
+import { addTargets, conflicts, endTime, routeDistance, routeOrder, timeStop } from '@/lib/plan';
 import type { LonLat, PlanItem } from '@/lib/types';
 
 const item = (id: string, extra: Partial<PlanItem> = {}): PlanItem => ({
@@ -57,36 +57,12 @@ test('a cancelled visit can be planned again', () => {
   expect(out).toHaveLength(2);
 });
 
-test('a flexible stop moves past its neighbours, timed or not; timed stops stay at their time', () => {
-  const items = [item('t', { mode: 'timed', time: '09:00' }), item('a'), item('u', { mode: 'timed', time: '14:00' }), item('b'), item('x', { status: 'cancelled' })];
-  const ids = (list: PlanItem[]) => routeOrder(list.filter((i) => i.status !== 'cancelled')).map((i) => i.id);
-  // Before the 09:00 visit, then back after it.
-  const early = moveStop(items, 'a', -1);
-  expect(ids(early)).toEqual(['a', 't', 'u', 'b']);
-  expect(ids(moveStop(early, 'a', 1))).toEqual(['t', 'a', 'u', 'b']);
-  // Between the two timed visits.
-  expect(ids(moveStop(items, 'b', -1))).toEqual(['t', 'a', 'b', 'u']);
-  // Cancelled visits are kept, at the end.
-  expect(early[early.length - 1].id).toBe('x');
-  // Timed stops don't move, and nothing moves past either end.
-  expect(moveStop(items, 't', 1)).toBe(items);
-  expect(moveStop(early, 'a', -1)).toBe(early);
-  expect(moveStop(items, 'b', 1)).toBe(items);
-});
-
 test('a flexible stop given a time goes in by that time without taking the stops after it along', () => {
   const items = [item('t', { mode: 'timed', time: '10:00' }), item('a'), item('b'), item('u', { mode: 'timed', time: '14:00' })];
   const timed = timeStop(items, 'a', '16:00');
   expect(timed.find((i) => i.id === 'a')).toMatchObject({ mode: 'timed', time: '16:00' });
   expect(routeOrder(timed).map((i) => i.id)).toEqual(['t', 'b', 'u', 'a']);
   expect(routeOrder(timeStop(items, 'b', '08:00')).map((i) => i.id)).toEqual(['b', 't', 'a', 'u']);
-});
-
-test('suggested order visits the nearest flexible stop next', () => {
-  const coords: Record<string, LonLat> = { far: [-73.94, 40.81], near: [-73.98, 40.77], mid: [-73.96, 40.79] };
-  const items = [item('far'), item('near'), item('mid')];
-  const order = suggestOrder(items, (i) => coords[i.id], [-73.982, 40.768]);
-  expect(order.map((i) => i.id)).toEqual(['near', 'mid', 'far']);
 });
 
 test('route distance only counts on-site stops', () => {
