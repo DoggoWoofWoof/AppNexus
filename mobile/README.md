@@ -46,7 +46,7 @@ src/app/              routes (Expo Router)
 src/screens/          the screens above, shared by every tab
 src/components/       sheets, rows, map, charts, and ui/ from react-native-reusables
 src/lib/              types, plan, search, Ask and Saved rules, sample data, workspace state
-__tests__/            Jest tests for the plan, search, brief, notes, planner, the day as it goes, Saved, figures, week summary, reminders, keeping work, History and You page rules
+__tests__/            Jest tests for the plan, search, brief, notes, planner, the day as it goes, Saved, figures, week summary, reminders, keeping work, History, someone's page and You page rules
 ```
 
 - **One or two big buttons, and filters for the rest.** Reps should never have to hunt for the next step.
@@ -66,7 +66,16 @@ __tests__/            Jest tests for the plan, search, brief, notes, planner, th
     - The top has "Log visit" and "Can't make it" (or "Add to today"), then Ask, Call, Directions and Listen.
     - "Can't make it" asks whether to move the visit or cancel it. A cancelled visit can be put back at its time. A visit still waiting for a reply says how it was booked, with a "They confirmed" button.
     - Each tag under the name has a line in plain words saying what it means here, e.g. "Patients going elsewhere: 26% of patients here go to centres outside Mount Sinai Health System."
-    - Below that are short cards: what to talk about, last time, top procedures, where patients go, where they work and how to reach them. An account also lists who sends patients out (the doctors there with the most referrals outside the system) and the people to meet, each with a call button.
+    - Below that are short cards, each with "See all" where there's more (`src/lib/target.ts`, `__tests__/target.test.tsx`):
+      - "Talk about": up to three talking points.
+      - "Promised": open follow-ups, how late each is, and a big Done button.
+      - "Last time": the last note.
+      - "You asked before": the last 3 questions asked about them in Ask. An ended conversation opens in History; one from today opens where the rep can carry on.
+      - "Visits so far": every visit and call, planned or noted, with what happened (Met, Not in, Cancelled, Not logged yet) and when, plus a line like "Tried 3 times, met once." Once enough have worked it says when, e.g. "Tuesday mornings have worked."
+      - "How to get in": who books, how they like to be asked, their usual times and whether they usually confirm, then email or address and a call button. The notes on how to ask are fictional sample notes (`access` in `src/lib/data`).
+      - "Similar doctors nearby" (doctors only): up to 3 who do the same procedures or specialty, or see the same main conditions, work within 3 km that day and usually see people then. Each has + to add them to that day.
+      - Top procedures, "Who they refer to" (by doctor or centre, with how many went outside the system), and where they work.
+    - An account has "Where patients go", who sends patients out (the doctors there with the most referrals outside the system), its busiest doctors and the people to meet, each with a call button.
   - **Logging:** Met or Not in, tap and talk (or type), then Save. "Not in" shows on Today and the week as itself, not as done. The note and follow-up boxes say to keep patient details out.
     - At an account, Met asks who was there, with doctors planned there today first. Ticking one marks their visit that day done too (`visitsLogged()` in `src/lib/workspace.ts`).
     - A note of the same kind on the same day logs a planned visit with them too, but a call doesn't stand for a visit.

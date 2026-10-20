@@ -38,6 +38,19 @@ export function seedWorkspace(today: Date) {
     }
     return isoDate(d);
   };
+  // The latest given weekday (0 is Sunday) at least `atLeast` days before today, for a visit at someone's usual time.
+  const weekdayAgo = (weekday: number, atLeast: number) => {
+    let d = addDays(today, -atLeast);
+    while (d.getDay() !== weekday) d = addDays(d, -1);
+    return isoDate(d);
+  };
+  // Earlier tries, older than each person's last contact, for "Visits so far" on their page:
+  // Tuesday mornings have worked with Dr. Patel, and Dr. Raman was met once in three tries.
+  const mayaTue = weekdayAgo(2, 15);
+  const mayaThu = weekdayAgo(4, 22);
+  const mayaTueBefore = weekdayAgo(2, 29);
+  const priyaThu = weekdayAgo(4, 110);
+  const priyaTue = weekdayAgo(2, 125);
 
   const interactions: Interaction[] = [
     { id: 'i-maya-1', targetId: 'maya', attendees: ['maya'], date: day(-12), type: 'In-person visit', outcome: 'Met', author: 'You', note: 'Reviewed her last quarter of PCI cases. She wants procedure mix against peer centres before the next cath lab meeting. Prefers a printed one-pager.' },
@@ -52,6 +65,11 @@ export function seedWorkspace(today: Date) {
     { id: 'i-kenji-1', targetId: 'kenji', attendees: ['kenji'], date: day(-33), type: 'Phone call', outcome: 'Met', author: 'You', note: 'Discussed heart failure referral patterns to EP and device follow-up.' },
     { id: 'i-okafor-2', targetId: 'okafor', attendees: ['okafor'], date: workday(2), type: 'In-person visit', outcome: 'Met', author: 'You', note: 'Brought the TAVR sizing data Jamie promised. He wants the heart team to see it before they choose.' },
     { id: 'i-msh-2', targetId: 'msh', attendees: [], date: workday(1), type: 'Meeting', outcome: 'Met', author: 'You', note: 'The second hybrid OR opens in spring. They asked for a training plan for the new team.' },
+    { id: 'i-maya-3', targetId: 'maya', attendees: ['maya'], date: mayaTue, type: 'In-person visit', outcome: 'Met', author: 'You', note: 'Caught her before cases. She asked how her complex PCI numbers compare.' },
+    { id: 'i-maya-4', targetId: 'maya', attendees: ['maya'], date: mayaThu, type: 'In-person visit', outcome: 'Attempted', author: 'You', note: 'Called into an emergency case. Rosa offered a Tuesday instead.' },
+    { id: 'i-maya-5', targetId: 'maya', attendees: ['maya'], date: mayaTueBefore, type: 'In-person visit', outcome: 'Met', author: 'You', note: 'Ten minutes before her first case. Talked through the new guide catheter.' },
+    { id: 'i-priya-2', targetId: 'priya', attendees: ['priya'], date: priyaThu, type: 'In-person visit', outcome: 'Attempted', author: 'You', note: 'Clinic overran. Waited 40 minutes, then left.' },
+    { id: 'i-priya-3', targetId: 'priya', attendees: ['priya'], date: priyaTue, type: 'In-person visit', outcome: 'Met', author: 'You', note: 'First visit. Keen on quicker cath referrals for her heart failure patients.' },
   ];
 
   const followUps: FollowUp[] = [
@@ -82,6 +100,12 @@ export function seedWorkspace(today: Date) {
       { id: 'v-okafor-past', targetId: 'okafor', siteId: 'msh', mode: 'timed', time: '15:30', duration: 30, type: 'In-person visit', goal: 'Bring the TAVR sizing data.', status: 'done', booking: 'confirmed', via: 'Anne Wu, executive assistant', movedFrom: { day: workday(3), time: '15:30' } },
     ],
     [workday(3)]: [{ id: 'v-raman-past', targetId: 'priya', siteId: 'harlem', mode: 'flexible', time: null, duration: 30, type: 'In-person visit', goal: 'Try again after the missed visit.', status: 'planned' }],
+    // The earlier tries noted above, each logged from the plan.
+    [mayaTue]: [{ id: 'v-maya-tue', targetId: 'maya', siteId: 'msh', mode: 'timed', time: '07:30', duration: 30, type: 'In-person visit', goal: 'Show the complex PCI figures.', status: 'done', outcome: 'Met', booking: 'confirmed', via: 'Rosa Diaz, scheduler' }],
+    [mayaThu]: [{ id: 'v-maya-thu', targetId: 'maya', siteId: 'msw', mode: 'timed', time: '07:30', duration: 30, type: 'In-person visit', goal: 'Follow up on the guide catheter.', status: 'done', outcome: 'Attempted', booking: 'confirmed', via: 'Rosa Diaz, scheduler' }],
+    [mayaTueBefore]: [{ id: 'v-maya-tue-2', targetId: 'maya', siteId: 'msh', mode: 'timed', time: '07:45', duration: 15, type: 'In-person visit', goal: 'Introduce the new guide catheter.', status: 'done', outcome: 'Met', booking: 'confirmed', via: 'Rosa Diaz, scheduler' }],
+    [priyaThu]: [{ id: 'v-priya-thu', targetId: 'priya', siteId: 'harlem', mode: 'timed', time: '12:30', duration: 30, type: 'In-person visit', goal: 'Bring the cath referral pathway.', status: 'done', outcome: 'Attempted', booking: 'requested', via: 'Office phone' }],
+    [priyaTue]: [{ id: 'v-priya-tue', targetId: 'priya', siteId: 'harlem', mode: 'timed', time: '12:30', duration: 30, type: 'In-person visit', goal: 'Introduce yourself.', status: 'done', outcome: 'Met', booking: 'confirmed', via: 'Office phone' }],
   };
 
   return { interactions, followUps, plans };

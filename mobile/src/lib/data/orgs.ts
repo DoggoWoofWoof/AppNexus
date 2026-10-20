@@ -31,6 +31,7 @@ export const ORGS: OrgData[] = [
     beds: null,
     founded: null,
     assigned: true,
+    access: { reach: 'Through Nina Alvarez in value analysis. Ask two weeks ahead.', confirms: 'usually' },
     executives: [
       { id: 'grant', name: 'Dr. Thomas Grant', title: 'Chief Medical Officer', role: 'Economic buyer', phone: '(212) 555-0141', email: 'thomas.grant@example.org' },
       { id: 'fischer', name: 'Lauren Fischer', title: 'VP, Cardiovascular Service Line', role: 'Decision maker', phone: '(212) 555-0142', email: 'lauren.fischer@example.org' },
@@ -75,6 +76,7 @@ export const ORGS: OrgData[] = [
     phone: '(212) 555-0150',
     beds: 1100,
     assigned: true,
+    access: { reach: 'Call the main line and ask for the cath lab office. Email Grace Liu for the structural heart team.', confirms: 'usually' },
     executives: [
       { id: 'mehta', name: 'Raj Mehta', title: 'Director, Cardiac Cath Lab', role: 'Clinical champion', phone: '(212) 555-0151', email: 'raj.mehta@example.org' },
       { id: 'liu', name: 'Grace Liu', title: 'Nurse Manager, Structural Heart', role: 'Influencer', phone: '(212) 555-0152', email: 'grace.liu@example.org' },
@@ -129,6 +131,7 @@ export const ORGS: OrgData[] = [
     phone: '(212) 555-0160',
     beds: 510,
     assigned: true,
+    access: { reach: 'Dana Ortiz books cath lab meetings. Email her with a short agenda.', confirms: 'usually' },
     executives: [
       { id: 'nguyen', name: 'Dr. Paul Nguyen', title: 'Chief of Cardiology', role: 'Clinical champion', phone: '(212) 555-0161', email: 'paul.nguyen@example.org' },
       { id: 'ortiz', name: 'Dana Ortiz', title: 'Cath Lab Manager', role: 'Gatekeeper', phone: '(212) 555-0162', email: 'dana.ortiz@example.org' },
@@ -179,6 +182,7 @@ export const ORGS: OrgData[] = [
     phone: '(212) 555-0170',
     beds: 495,
     assigned: true,
+    access: { reach: 'Call Helen Park’s office. Mornings are for surgery.', confirms: 'sometimes' },
     executives: [
       { id: 'park', name: 'Helen Park', title: 'Director, Perioperative Services', role: 'Influencer', phone: '(212) 555-0171', email: 'helen.park@example.org' },
     ],
@@ -226,6 +230,7 @@ export const ORGS: OrgData[] = [
     phone: '(212) 555-0180',
     beds: null,
     assigned: false,
+    access: { reach: 'Call the main line and ask for the clinic manager.', confirms: 'sometimes' },
     executives: [],
     procedures: null,
     proceduresUnavailable: 'This clinic doesn’t do the cardiovascular procedures in this sample.',
@@ -250,6 +255,7 @@ export const ORGS: OrgData[] = [
     phone: '(212) 555-0190',
     beds: null,
     assigned: true,
+    access: { reach: 'Carmen Reyes keeps the diary. Call, don’t email.', confirms: 'rarely' },
     executives: [
       { id: 'reyes', name: 'Carmen Reyes', title: 'Practice Administrator', role: 'Gatekeeper', phone: '(212) 555-0191', email: 'carmen.reyes@example.org' },
     ],

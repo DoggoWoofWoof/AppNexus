@@ -14,6 +14,16 @@ export interface Affiliation { orgId: string; role: string; share: number; days:
 export interface Referral { hcpId?: string; ref?: string; label?: string; count: number; reason?: string }
 export interface Relationship { hcpId: string; type: string; detail: string }
 
+/** Whether someone usually confirms a time booked with them. */
+export type Confirms = 'usually' | 'sometimes' | 'rarely';
+
+/** How to get in to see someone, as a rep would note it. Sample notes, fictional like the rest. */
+export interface Access {
+  /** How they like to be asked, in a rep's words, such as "Call Rosa a week ahead." */
+  reach: string;
+  confirms: Confirms;
+}
+
 export interface HcpData {
   id: string;
   name: string;
@@ -32,6 +42,7 @@ export interface HcpData {
     /** The times they prefer to be seen, such as Tue, Thu 07:30–08:30. Office hours when there are none. */
     windows?: TimeWindow[];
   };
+  access?: Access;
   affiliations: Affiliation[];
   procedures: ProcedureRow[] | null;
   proceduresUnavailable?: string;
@@ -73,6 +84,7 @@ export interface OrgData {
   beds: number | null;
   founded?: number | null;
   assigned: boolean;
+  access?: Access;
   executives: Executive[];
   /** 'rollup' means the figures are the sum of the facilities below it. */
   procedures: ProcedureRow[] | 'rollup' | null;

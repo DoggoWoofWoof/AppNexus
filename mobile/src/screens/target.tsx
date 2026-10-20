@@ -1,7 +1,9 @@
 // Someone's page: who they are and when, two lines on why they matter, two big
-// buttons for what to do now, then Ask, Call, Directions and Listen, and the facts
-// worth knowing before a visit (components/target-info.tsx). The full profile is
-// behind "All details". Shared by every tab (see src/app/*/target).
+// buttons for what to do now, then Ask, Call, Directions and Listen, and short
+// cards worth knowing before a visit (components/target-info.tsx): what was
+// promised, last time, what was asked before, visits so far, how to get in and
+// similar doctors nearby. The full profile is behind "All details". Shared by
+// every tab (see src/app/*/target).
 
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { ChevronRight, CircleCheck } from 'lucide-react-native';
