@@ -34,7 +34,7 @@ GitHub Actions runs the typecheck, lint and tests on every push.
 src/app/              routes (Expo Router)
   _layout.tsx         fonts, theme, the three tabs and the menu's screens
   today/ ask/ targets/             the tab bar: the day, Ask, who to see
-  saved/ activity/ insights/ you/  opened from the ☰ menu
+  saved/ activity/ insights/ history/ you/  opened from the ☰ menu
     _layout.tsx       the tab's own stack (src/components/tab-stack.tsx)
     index.tsx         the tab's screen
     target/[id].tsx   someone's page: the big buttons, then what to know
@@ -42,18 +42,21 @@ src/app/              routes (Expo Router)
     doc/[id].tsx      visit prep or a saved report (saved/[id].tsx in Saved)
     hcp/[id].tsx      the full profile, behind "All details"
     hco/[id].tsx
+    history/[id].tsx  an ended conversation, read again (History only)
 src/screens/          the screens above, shared by every tab
 src/components/       sheets, rows, map, charts, and ui/ from react-native-reusables
 src/lib/              types, plan, search, Ask and Saved rules, sample data, workspace state
-__tests__/            Jest tests for the plan, search, brief, notes, planner, the day as it goes, Saved, figures, week summary, reminders, keeping work and You page rules
+__tests__/            Jest tests for the plan, search, brief, notes, planner, the day as it goes, Saved, figures, week summary, reminders, keeping work, History and You page rules
 ```
 
 - **One or two big buttons, and filters for the rest.** Reps should never have to hunt for the next step.
   - **Today:** the day's map and stops, with one "Add a visit" button that opens Targets.
     - The button at the top switches to the next working day: "Tomorrow", or "Monday" on a Friday (`planDays()` and `dayWord()` in `src/lib/workspace.ts`).
     - Each stop says why they're worth seeing, and where: the site for a visit, or "Phone call". A visit with a time says "Not logged yet" once it's over, and an "Any time" stop from 17:30 (`notLogged()` in `src/lib/plan.ts`); each has its own Log button. Today checks the time every minute.
-    - A bar at the top lists visits from the last seven days that were never logged, each with Log (dated that day) and "Didn't happen".
-    - A "follow-ups due" bar opens Activity. An empty day offers "Pick 5 for me": the five most worth seeing, in route order, with Undo. Suggestions are people who work that weekday, and for the next day anyone planned or seen today waits.
+    - One "Still to do" card at the top holds what's left from before, in the app's plain card style rather than a coloured bar:
+      - visits from the last seven days that were never logged, each with Log (dated that day) and "Didn't happen" side by side;
+      - "2 follow-ups due", with how many are late, which opens Activity.
+    - An empty day offers "Pick 5 for me": the five most worth seeing, in route order, with Undo. Suggestions are people who work that weekday, and for the next day anyone planned or seen today waits.
     - The map grows with the screen and says where the route starts, and that lines are straight, not roads.
     - One small "Edit" on the list shows arrows to move an "Any time" stop between the fixed visits, "Set a time" (their usual times that day, or type one) and "Remove", with Undo. A visit with a time stays at its time and offers "Can't make it" (move or cancel) instead of Remove, since someone is expecting the rep. Edit closes when the rep leaves the screen.
     - Each cancelled or moved visit whose time hasn't come leaves its own "14:00 is free" banner, so a second one doesn't hide the first. A banner goes once its time has gone or someone else is in it, and filling it says why when someone can't go in (`fillSlotError()`).
@@ -82,11 +85,19 @@ __tests__/            Jest tests for the plan, search, brief, notes, planner, th
   - The sample figures are a fixed snapshot, so charts label their quarters from `FIGURES_END`, not today.
 - **Plain words for tags.** "Patients going elsewhere" and "Busier than last year" replace "Leakage risk" and "Rising volume", on rows, the Targets filters and in Ask. Where patients go says "Same health system" and "Outside the system", not "In system" and "Out of system". `signalMeaning()` in `src/lib/data/index.ts` gives each tag's one-line meaning.
   - Outside "All details" there's no "Leakage", "code group" or CPT code: an account's tab is "Patients leaving", and Ask offers "See where they go".
-- **Menu screens are tabs without a button.** Saved, Activity, Insights and You keep their own Back like the other tabs, and their buttons are left out of the bar.
+- **Menu screens are tabs without a button.** Saved, Activity, Insights, History and You keep their own Back like the other tabs, and their buttons are left out of the bar.
   - Don't use `href: null` for them. Expo Router 58 now sends a hidden tab back to the first tab.
 - **Saved.**
   - **Visit prep** is rebuilt each time from the data, the plan and what the rep asked in Ask.
   - **Reports** are answers kept with Save or by saying "save that".
+- **History.** In the menu, under Saved (`src/app/history/index.tsx`, `src/lib/chat.tsx`).
+  - **Conversations:** what was asked in Ask, about the territory or one person, newest first, with when and how many questions.
+    - "New" on Ask ends a conversation and starts another; so does the day ending. Ask's empty screen then links to History.
+    - Today's conversation opens where the rep can carry on. An ended one opens read-only, as it was, saying figures and plans may have changed since. Its answers can still be saved, read aloud and followed, and one button carries on in Ask.
+    - The last 30 are kept on the phone under `CHATS_KEY`, written a moment after each change. A question still waiting for its answer isn't kept.
+  - **People you opened:** the last 10 doctors and accounts whose page was opened, once each, newest first.
+  - "Delete this conversation" and "Clear history" each ask first. Neither touches Saved, notes or the plan.
+  - Visit prep uses every question kept about the person. Saved's list of people asked about only covers this week.
 - **Summarise my week.** The report a rep sends their manager, from the last seven days (`week` in `src/lib/ask.ts`). It's one of the four chips on Ask, and "my week", "what did I do this week" or "weekly report" work too.
   - It covers visits logged out of those due so far ("2 of 3 visits logged", leaving out cancelled visits and those later today), which were cancelled, moved or never logged ("Dr. Rossi: visit cancelled (Fri)"), notes logged, follow-ups still open and late, and the accounts covered. "Not in" is counted on its own.
   - It ends with two or three people to see next week, one row each that opens them, with the app's own reasons and when they're usually free.

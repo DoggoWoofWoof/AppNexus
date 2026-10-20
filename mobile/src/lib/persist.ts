@@ -11,6 +11,8 @@ export const WORKSPACE_KEY = 'fieldpro.app.workspace';
 export const DRAFTS_KEY = 'fieldpro.app.drafts';
 /** What was kept, when it couldn't be carried on from, so starting again loses nothing for good. */
 export const BACKUP_KEY = 'fieldpro.app.workspace.backup';
+/** The Ask conversations and History (lib/chat.tsx). */
+export const CHATS_KEY = 'fieldpro.app.chats';
 
 /** Where things are kept. AsyncStorage in the app; a plain object in tests. */
 export interface DeviceStorage {

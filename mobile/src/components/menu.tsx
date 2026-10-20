@@ -1,9 +1,9 @@
 // The menu behind the ☰ button on each main screen: the detail most reps only
-// need now and then (Saved, Activity, Insights, You), kept out of the tab bar so
+// need now and then (Saved, History, Activity, Insights, You), kept out of the tab bar so
 // the main screens stay down to one or two big buttons.
 
 import { router, type Href } from 'expo-router';
-import { Bookmark, ChartColumn, ChevronRight, CircleUserRound, ListChecks, Menu as MenuIcon, type LucideIcon } from 'lucide-react-native';
+import { Bookmark, ChartColumn, ChevronRight, CircleUserRound, History, ListChecks, Menu as MenuIcon, type LucideIcon } from 'lucide-react-native';
 import { useState, type ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -59,6 +59,7 @@ function MenuSheet({ due, onClose }: { due: number; onClose: () => void }) {
   const chat = useChat();
   const { bottom } = useSafeAreaInsets();
   const saved = ctx.ws.saved.length + chat.talkedAbout().length;
+  const talks = chat.conversations().length;
   const go = (href: Href) => {
     onClose();
     router.navigate(href);
@@ -68,6 +69,12 @@ function MenuSheet({ due, onClose }: { due: number; onClose: () => void }) {
     <DialogContent className="gap-2 p-4" style={{ marginBottom: bottom }}>
       <DialogTitle className="px-2 pb-2 font-serif text-2xl font-normal">Menu</DialogTitle>
       <MenuRow icon={Bookmark} title="Saved" sub={saved ? `${plural(saved, 'item')} · visit prep and reports` : 'Visit prep and reports'} onPress={() => go('/saved')} />
+      <MenuRow
+        icon={History}
+        title="History"
+        sub={talks ? `${plural(talks, 'conversation')} · people you opened` : 'Past conversations and people you opened'}
+        onPress={() => go('/history')}
+      />
       <MenuRow icon={ListChecks} title="Activity" sub={due ? `${plural(due, 'follow-up')} due · your notes` : 'Your notes and follow-ups'} onPress={() => go('/activity')} alert={due > 0} />
       <MenuRow icon={ChartColumn} title="Insights" sub="Your territory at a glance" onPress={() => go('/insights')} />
       <MenuRow icon={CircleUserRound} title="You" sub="Sample profile, start point, light or dark" onPress={() => go('/you')} />

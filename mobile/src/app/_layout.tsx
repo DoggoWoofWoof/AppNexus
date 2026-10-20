@@ -25,14 +25,14 @@ import { NAV_THEME, THEME } from '@/lib/theme';
 // Ask's icon is a speech bubble rather than a mic: the tab opens Ask, and the
 // mic on that screen is what listens.
 // Each one is a folder with its own stack, so Back stays inside the tab. Saved,
-// Activity, Insights and You open from the menu (components/menu.tsx); they're
+// History, Activity, Insights and You open from the menu (components/menu.tsx); they're
 // tabs too, so they keep their own history, but they aren't in the bar.
 const TABS: { name: string; title: string; icon: LucideIcon }[] = [
   { name: 'today', title: 'Today', icon: House },
   { name: 'ask', title: 'Ask', icon: MessageCircle },
   { name: 'targets', title: 'Targets', icon: Target },
 ];
-const MENU_TABS = ['activity', 'insights', 'saved', 'you'];
+const MENU_TABS = ['activity', 'insights', 'saved', 'history', 'you'];
 
 const LABEL = { fontSize: 11.5, lineHeight: 14, fontWeight: '600' } as const;
 
@@ -67,7 +67,8 @@ function App() {
     <ThemeProvider value={NAV_THEME[scheme]}>
       {/* The rep's work is kept on the phone and loaded on launch. */}
       <WorkspaceProvider storage={AsyncStorage}>
-        <ChatProvider>
+        {/* So are the Ask conversations, which the menu's History lists. */}
+        <ChatProvider storage={AsyncStorage}>
           <FollowAppearance />
           <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
           <AppTabs scheme={scheme} />

@@ -1,14 +1,15 @@
 // Today: the day, a map of the stops and one row per visit, each saying why
 // they're worth seeing. Tap a row for that person's page (log it, or say you can't
 // make it); a visit whose time has gone, or an "Any time" one still open at 17:30,
-// gets its own Log button, and so does one from earlier in the week never logged.
+// gets its own Log button. Above the day, one "Still to do" card holds what's left
+// from before: visits earlier in the week never logged, and follow-ups due.
 // "Add a visit" opens Targets, where + puts someone in the plan. One small Edit
 // above the stops shows how to change the day: arrows move an "Any time" stop
 // (timed ones go by their time), "Set a time" fixes one, and Remove takes it out.
 // A visit with a time can only be moved or cancelled, as someone is expecting you.
 
 import { router, useFocusEffect } from 'expo-router';
-import { ArrowDown, ArrowUp, CalendarClock, ChevronRight, CircleCheck, Clock, Plus, Sparkles, Trash2, X } from 'lucide-react-native';
+import { ArrowDown, ArrowUp, CalendarClock, ChevronRight, CircleCheck, Clock, ListTodo, Plus, Sparkles, Trash2, X } from 'lucide-react-native';
 import { useCallback, useEffect, useState } from 'react';
 import { Pressable, useWindowDimensions, View } from 'react-native';
 
@@ -63,8 +64,14 @@ export default function Today() {
   const unlogged = (i: PlanItem): boolean => isToday && notLogged(i, now);
   const next = isToday ? active.find((i) => i.status === 'planned' && !unlogged(i)) : undefined;
   const free = ctx.freeSlotsOn(day, new Date());
-  const earlier = isToday ? ctx.unloggedBefore() : [];
-  const due = isToday ? ctx.openFollowUps().filter((f) => f.overdueBy >= 0).length : 0;
+  const earlier = isToday
+    ? ctx.unloggedBefore().flatMap((e) => {
+        const who = getEntity(e.item.targetId);
+        return who ? [{ ...e, who }] : [];
+      })
+    : [];
+  const due = isToday ? ctx.openFollowUps().filter((f) => f.overdueBy >= 0) : [];
+  const late = due.filter((f) => f.overdueBy > 0).length;
   // Editing ends by itself once there is nothing left to edit.
   const edit = editing === day && plan.length > 0;
   const done = active.filter((i) => i.status === 'done').length;
@@ -116,43 +123,58 @@ export default function Today() {
         </Button>
       </View>
 
-      {/* Visits from earlier days that were never logged: log them on their day, or say they didn't happen. */}
-      {earlier.map(({ day: on, item }) => {
-        const who = getEntity(item.targetId);
-        if (!who) return null;
-        return (
-          <View key={item.id} className="flex-row flex-wrap items-center gap-x-2 gap-y-2 rounded-xl bg-warn-soft py-2 pl-4 pr-2">
-            <Text className="min-w-40 flex-1 text-base">
-              <Text className="text-base font-semibold">{shortName(who)}</Text>
-              {`, ${formatDate(on)}: not logged yet`}
-            </Text>
-            <Button size="sm" className="rounded-lg" onPress={() => log(item, on)} accessibilityLabel={`Log the visit with ${who.name} on ${formatDate(on)}`}>
-              <Text>Log</Text>
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              className="rounded-lg bg-card"
-              onPress={() => ctx.cancelVisit(on, item.id, 'Didn’t happen')}
-              accessibilityLabel={`The visit with ${who.name} on ${formatDate(on)} didn’t happen`}
-            >
-              <Text>Didn’t happen</Text>
-            </Button>
+      {/* What's left from before, in one quiet card so the day stays the main thing:
+          visits never logged (log them on their day, or say they didn't happen), then follow-ups due. */}
+      {earlier.length || due.length ? (
+        <View className="gap-2">
+          <Text className="text-sm text-muted-foreground">Still to do</Text>
+          <View className="rounded-xl border border-border bg-card">
+            {earlier.map(({ day: on, item, who }, i) => (
+              <View key={item.id} className={cn('gap-3 p-3', i > 0 && 'border-t border-border')}>
+                <View className="flex-row items-center gap-3">
+                  <Avatar entity={who} />
+                  <View className="flex-1 gap-0.5">
+                    <Text className="text-base font-semibold">{shortName(who)}</Text>
+                    <Text className="text-sm font-medium text-warn">{`Visit on ${formatDate(on)} · not logged yet`}</Text>
+                  </View>
+                </View>
+                <View className="flex-row gap-2">
+                  <Button className="flex-1 rounded-lg" onPress={() => log(item, on)} accessibilityLabel={`Log the visit with ${who.name} on ${formatDate(on)}`}>
+                    <Text>Log</Text>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="flex-1 rounded-lg"
+                    onPress={() => ctx.cancelVisit(on, item.id, 'Didn’t happen')}
+                    accessibilityLabel={`The visit with ${who.name} on ${formatDate(on)} didn’t happen`}
+                  >
+                    <Text>Didn’t happen</Text>
+                  </Button>
+                </View>
+              </View>
+            ))}
+            {due.length ? (
+              <Pressable
+                onPress={() => router.navigate('/activity')}
+                accessibilityRole="link"
+                accessibilityHint="Opens Activity"
+                className={cn('min-h-16 flex-row items-center gap-3 rounded-xl p-3 active:bg-accent', earlier.length && 'rounded-t-none border-t border-border')}
+              >
+                <View className="h-10 w-10 items-center justify-center rounded-full bg-warn-soft">
+                  <Icon as={ListTodo} size={20} className="text-warn" />
+                </View>
+                <View className="flex-1 gap-0.5">
+                  <Text className="text-base font-semibold">{`${plural(due.length, 'follow-up')} due`}</Text>
+                  <Text className="text-sm text-muted-foreground">
+                    {[late && `${late} late`, due.length - late && `${due.length - late} due today`].filter(Boolean).join(' · ')}
+                  </Text>
+                </View>
+                <Text className="text-base text-brand">See them</Text>
+                <Icon as={ChevronRight} size={18} className="text-brand" />
+              </Pressable>
+            ) : null}
           </View>
-        );
-      })}
-
-      {due ? (
-        <Pressable
-          onPress={() => router.navigate('/activity')}
-          accessibilityRole="link"
-          accessibilityHint="Opens Activity"
-          className="min-h-12 flex-row items-center gap-2 rounded-xl bg-warn-soft px-4 py-2 active:opacity-80"
-        >
-          <Text className="flex-1 text-base font-semibold">{`${plural(due, 'follow-up')} due`}</Text>
-          <Text className="text-base text-brand">See them</Text>
-          <Icon as={ChevronRight} size={16} className="text-brand" />
-        </Pressable>
+        </View>
       ) : null}
 
       {/* One line per freed time, so a second cancel doesn't hide the first. */}

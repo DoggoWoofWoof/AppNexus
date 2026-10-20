@@ -68,9 +68,7 @@ export function ChatView({
   // The question last scrolled to, so a new answer opens at its start rather than its end.
   const shown = useRef<string | null>(null);
   const [reading, setReading] = useState<string | null>(null);
-  const visits = useVisitSheets();
-  const profileHref = useProfileHref();
-  const docHref = useDocHref();
+  const { follow, openRow, sheets } = useFollow();
   const tab = useTab();
 
   // Stop reading when the chat closes.
@@ -87,21 +85,6 @@ export function ChatView({
     const turn = await chat.ask(chatKey, question, via);
     // A spoken question gets a spoken answer, for when the rep is on the move.
     if (via === 'voice') read(turn);
-  };
-
-  const follow = (link: AskLink) => {
-    if (link.kind === 'tab') {
-      router.navigate(`/${link.tab}`);
-      return;
-    }
-    if (link.kind === 'saved') {
-      router.push(docHref(link.id));
-      return;
-    }
-    const entity = getEntity(link.id);
-    if (!entity) return;
-    if (link.kind === 'book') visits.openBook(entity);
-    else router.push(profileHref(entity, link.section));
   };
 
   return (
@@ -138,10 +121,7 @@ export function ChatView({
                   onSave={() => chat.save(chatKey, turn.id)}
                   onAsk={(q) => send(q, 'typed')}
                   onFollow={follow}
-                  onOpenRow={(id) => {
-                    const e = getEntity(id);
-                    if (e) router.push(profileHref(e));
-                  }}
+                  onOpenRow={openRow}
                 />
               </View>
             ))
@@ -151,12 +131,38 @@ export function ChatView({
         ) : null}
       </ScrollView>
       <Composer key={`${tab}-${chatKey}`} placeholder={placeholder} onSend={send} listenOnOpen={listenOnOpen} big={!turns.length} />
-      {visits.sheets}
+      {sheets}
     </KeyboardAvoidingView>
   );
 }
 
-function Question({ turn }: { turn: Turn }) {
+/** Where an answer's next step and rows lead, opened in the tab that's showing the chat. Render `sheets` for booking. */
+export function useFollow() {
+  const visits = useVisitSheets();
+  const profileHref = useProfileHref();
+  const docHref = useDocHref();
+  const follow = (link: AskLink) => {
+    if (link.kind === 'tab') {
+      router.navigate(`/${link.tab}`);
+      return;
+    }
+    if (link.kind === 'saved') {
+      router.push(docHref(link.id));
+      return;
+    }
+    const entity = getEntity(link.id);
+    if (!entity) return;
+    if (link.kind === 'book') visits.openBook(entity);
+    else router.push(profileHref(entity, link.section));
+  };
+  const openRow = (id: string) => {
+    const e = getEntity(id);
+    if (e) router.push(profileHref(e));
+  };
+  return { follow, openRow, sheets: visits.sheets };
+}
+
+export function Question({ turn }: { turn: Turn }) {
   return (
     <View className="max-w-[85%] flex-row items-center gap-1.5 self-end rounded-2xl rounded-br-sm bg-primary px-4 py-2.5">
       {turn.via === 'voice' ? <Icon as={Mic} size={14} className="text-primary-foreground" /> : null}
@@ -167,7 +173,7 @@ function Question({ turn }: { turn: Turn }) {
 
 const TONE = { up: 'text-success', down: 'text-signal-text', warn: 'text-warn' } as const;
 
-function AnswerView({
+export function AnswerView({
   turn,
   isLast,
   reading,

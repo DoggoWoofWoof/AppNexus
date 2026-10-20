@@ -20,6 +20,7 @@ import { clashesWith, siteOnDay } from '@/lib/booking';
 import { buildBrief } from '@/lib/brief';
 import { getEntity, shortName, signalMeaning, siteFor } from '@/lib/data';
 import { firstSentence, relativeDay } from '@/lib/format';
+import { useNoteOpened } from '@/lib/chat';
 import { prepId } from '@/lib/saved';
 import { useWorkspace } from '@/lib/store';
 import type { Entity } from '@/lib/types';
@@ -40,6 +41,7 @@ function Page({ entity }: { entity: Entity }) {
   const visits = useVisitSheets();
   const short = shortName(entity);
   const brief = buildBrief(entity, ctx);
+  useNoteOpened(entity.id);
 
   const visit = ctx.nextVisit(entity.id);
   const visitToday = visit?.day === ctx.todayIso;
