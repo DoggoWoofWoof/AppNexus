@@ -58,8 +58,8 @@ export function insightFor(entity: Entity): string {
 export function briefFigures(entity: Entity, ctx: Context): Figure[] {
   const last = ctx.lastInteraction(entity.id);
   const volume: Figure = proceduresOf(entity)
-    ? { label: 'Procedures · 12 mo', value: formatNumber(procedureTotal(entity)), delta: procedureYoy(entity) }
-    : { label: 'Procedures · 12 mo', value: '—', sub: 'Not in your code group' };
+    ? { label: 'Procedures · 12 months', value: formatNumber(procedureTotal(entity)), delta: procedureYoy(entity) }
+    : { label: 'Procedures · 12 months', value: '—', sub: 'None in this sample' };
   let leak: Figure;
   if (entity.kind === 'hcp') {
     const out = entity.referrals.outbound;
@@ -168,7 +168,7 @@ export function briefText(entity: Entity, brief: Brief, today: Date): string {
   if (brief.visit) lines.push(visitWhen(brief.visit, entity, today));
   lines.push('', `Goal: ${brief.goal}${brief.goalDue ? ` (follow-up ${brief.goalDue})` : ''}`, `Why now: ${brief.insight}`);
   if (brief.points.length) lines.push('', 'Talking points:', ...brief.points.map((p) => `- ${p.text}`));
-  lines.push('', brief.figures.map((f) => `${f.label}: ${f.value}${f.delta != null ? ` (${f.delta >= 0 ? '+' : ''}${Math.round(f.delta)}% YoY)` : ''}`).join(' · '));
+  lines.push('', brief.figures.map((f) => `${f.label}: ${f.value}${f.delta != null ? ` (${f.delta >= 0 ? '+' : ''}${Math.round(f.delta)}% on last year)` : ''}`).join(' · '));
   lines.push('', `${DATA_PERIOD}.`);
   return lines.join('\n');
 }

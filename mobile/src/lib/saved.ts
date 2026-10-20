@@ -63,8 +63,10 @@ export function buildPrep(entity: Entity, ctx: Context, asked: Asked[] = []): Do
         .map((a) => ({ label: `You asked: ${a.question}`, text: a.answer })),
     });
   }
-  // The soonest follow-up is already the goal when nothing else was set.
-  const owed = brief.goalDue ? brief.followUps.slice(1) : brief.followUps;
+  // The soonest follow-up is already the goal when nothing else was set, or the first talking point.
+  const said = brief.goalDue || brief.points.some((p) => p.kind === 'promise');
+  const owed = said ? brief.followUps.slice(1) : brief.followUps;
+
   if (owed.length) {
     sections.push({
       title: 'Still to do',
@@ -140,15 +142,19 @@ export function reportDoc(r: SavedReport, today: Date): Doc {
     question: r.question,
     summary: r.summary,
     sections: r.rows.length
-      ? [{ title: r.facts ? 'Details' : 'Figures', lines: r.rows.map((row) => (r.facts ? { label: row.title, text: row.sub ?? '', figure: row.figure } : { text: row.title, sub: row.sub, figure: row.figure, id: row.id })) }]
+      ? [{ title: r.facts ? 'Details' : 'Figures', lines: r.rows.map((row) => (r.facts ? { label: row.title, text: row.sub ?? '', figure: row.figure, id: row.id } : { text: row.title, sub: row.sub, figure: row.figure, id: row.id })) }]
       : [],
     scope: r.scope,
   };
 }
 
-/** What Listen reads: the summary, then the first lines of each section. */
+/** What Listen reads: the summary, then the first lines of each section, or every line of a report like the week, with its labels. */
 export function docSpeech(doc: Doc): string {
-  const lines = doc.sections.flatMap((s) => s.lines.slice(0, 3).map((l) => [l.text, l.figure].filter(Boolean).join(', ')));
+  const lines = doc.sections.flatMap((s) =>
+    doc.kind === 'report' && s.lines.some((l) => l.label)
+      ? s.lines.map((l) => `${[l.label, l.figure].filter(Boolean).join(', ')}: ${l.text}`)
+      : s.lines.slice(0, 3).map((l) => [l.text, l.figure].filter(Boolean).join(', ')),
+  );
   return [doc.title, doc.summary, ...lines].map((t) => t.replace(/[.\s]+$/, '')).join('. ') + '.';
 }
 

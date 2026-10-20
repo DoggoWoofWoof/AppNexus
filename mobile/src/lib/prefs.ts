@@ -3,11 +3,13 @@
 // work, so changing them doesn't stop an untouched sample being re-seeded.
 
 import { START_POINTS } from './data/seed';
-import type { Appearance, Prefs, StartPoint, Workspace } from './types';
+import type { Appearance, Prefs, ReminderSetting, StartPoint, Workspace } from './types';
 
 export const APPEARANCES: Appearance[] = ['system', 'light', 'dark'];
+export const REMINDER_SETTINGS: ReminderSetting[] = ['all', 'end-of-day', 'off'];
 
-export const DEFAULT_PREFS: Prefs = { start: 'office', appearance: 'system' };
+// Reminders are on until the rep says no; the phone still asks before any is shown.
+export const DEFAULT_PREFS: Prefs = { start: 'office', appearance: 'system', reminders: 'all' };
 
 /** Where the day starts: the place chosen on the You page, or the office. */
 export const startPoint = (ws: Pick<Workspace, 'prefs'>): StartPoint =>
@@ -21,5 +23,6 @@ export function restorePrefs(kept: unknown): Prefs {
   return {
     start: START_POINTS.some((p) => p.id === k.start) ? (k.start as string) : DEFAULT_PREFS.start,
     appearance: APPEARANCES.includes(k.appearance as Appearance) ? (k.appearance as Appearance) : DEFAULT_PREFS.appearance,
+    reminders: REMINDER_SETTINGS.includes(k.reminders as ReminderSetting) ? (k.reminders as ReminderSetting) : DEFAULT_PREFS.reminders,
   };
 }

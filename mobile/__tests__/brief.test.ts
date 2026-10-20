@@ -38,7 +38,8 @@ describe('buildBrief', () => {
     expect(visitWhen(maya.visit!, entity('maya'), today)).toMatch(/^Today, .* · 10:00–10:30 · /);
     expect(maya.points[0]).toEqual({ kind: 'promise', text: 'You promised: Send procedure mix vs. peers report (due today).' });
     expect(maya.points.length).toBeLessThanOrEqual(3);
-    expect(maya.figures.map((f) => f.label)).toEqual(['Procedures · 12 mo', 'Sent outside the system', 'Last contact']);
+    expect(maya.figures.map((f) => f.label)).toEqual(['Procedures · 12 months', 'Sent outside the system', 'Last contact']);
+
   });
 
   test('a planned call says when, but not where', () => {

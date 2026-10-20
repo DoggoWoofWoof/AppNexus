@@ -8,8 +8,9 @@
 
 import { buildBrief, visitWhen } from './brief';
 import { accountsByPatientsLost, allHcps, allOrgs, destination, getEntity, getOrg, hcpsAt, patientsLost, primaryOrg, procedureTotal, procedureYoy, proceduresOf, referredOut, shortName, siteFor, topReferrersOut } from './data';
-import { DATA_PERIOD } from './data/seed';
+import { DATA_PERIOD, PRIOR_PERIOD } from './data/seed';
 import { addSeries } from './data/series';
+import { usualTimes } from './booking';
 import { addDays, formatDate, formatKm, formatNumber, formatPct, haversineKm, isoDate, plural, relativeDay, relativeDayLower, sum } from './format';
 import { DEFAULT_FILTERS } from './search';
 import type { Entity, PlanItem, Signal } from './types';
@@ -160,8 +161,9 @@ export function findEntity(question: string): Entity | null {
 
 // Most specific first: "who refers to her" is inbound, not referrals.
 const INTENTS: [Intent, RegExp][] = [
+  // The week before Saved, so "my report for this week" is the week, not the Saved list.
+  ['week', /\b(my week|week(ly)? (summary|report|update|recap|review)|(summar\w*|recap|review|report on) (of )?(the|this|last) week|(this|last) week s (summary|report)|what (did|have) i (do|done|get done|achieve\w*)( [a-z]+)? (this|last) week|(report|summary|update|recap) for (the|this|last|my) week|(report|update) for my (manager|boss))\b/],
   ['saved', /\b(saved|my reports?|my prep( notes)?|prep notes|what (did|have) i (save|kept|keep))\b/],
-  ['week', /\b(my week|week(ly)? (summary|report|update|recap|review)|(summar\w*|recap|review|report on) (of )?(the|this|last) week|(this|last) week s (summary|report)|what (did|have) i (do|done|get done|achieve\w*)( [a-z]+)? (this|last) week|(report|update) for my (manager|boss))\b/],
   ['contact', /\b(best time|when (can|should|do) i (see|catch|reach|visit|meet)|how (do|can|should) i (book|reach|contact|get hold of)|phone|email|assistant|scheduler|contact details|book (a )?(time|visit|meeting))\b|\bwhen can i see\b/],
   ['history', /\b(last (time|visit|met|meeting|call|contact|note)|what did (we|i)|discuss\w*|talked about|history|past (visits|notes))\b|\bwhat happened\b/],
   ['followups', /\b(follow ?-?ups?|overdue|owe|to ?-?dos?|tasks?|promised?)\b/],
@@ -213,11 +215,12 @@ const PHRASES: Partial<Record<Signal['id'], (s: Signal) => string>> = {
 /** Signals as a phrase, e.g. "patients going elsewhere and no visit in 30+ days". */
 const reasons = (signals: Signal[]) => listJoin(signals.map((s) => PHRASES[s.id]?.(s) ?? s.label.toLowerCase()));
 const possessive = (name: string) => `${name}’s`;
+const capitalise = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 
 // Answers about the rep's own notes and plan say they're sample data; answers
 // with volumes, referrals or leakage give the dates those figures cover.
 export const SAMPLE = 'Sample data';
-const VS_LAST_YEAR = 'Compared with the year before';
+const VS_LAST_YEAR = `Compared with ${PRIOR_PERIOD}`;
 const last4 = (series: number[]) => sum(series.slice(-4));
 const prev4 = (series: number[]) => sum(series.slice(0, 4));
 const totals = (e: Entity) => {
@@ -387,7 +390,7 @@ const BUILDERS: Record<Intent, (input: Input) => Built> = {
     return {
       scope: ['Procedures', DATA_PERIOD],
       summary: `${sorted[0].family} is ${Math.round((last4(sorted[0].series) / total) * 100)}% of ${possessive(e.name)} ${formatNumber(total)} procedures in the last 12 months.`,
-      rows: sorted.map((r) => ({ title: r.family, sub: `${r.code} · ${formatPct(((last4(r.series) - prev4(r.series)) / (prev4(r.series) || 1)) * 100)} on last year`, figure: formatNumber(last4(r.series)) })),
+      rows: sorted.map((r) => ({ title: r.family, sub: `${formatPct(((last4(r.series) - prev4(r.series)) / (prev4(r.series) || 1)) * 100)} on last year`, figure: formatNumber(last4(r.series)) })),
       doThis: { text: 'The quarter-by-quarter trend is on the profile.', label: 'Open volumes', link: open(e.id, 'volumes') },
       next: [e.kind === 'hco' ? `Top doctors at ${e.name}` : 'How is their volume trending?', 'Which accounts are growing the most?'],
       about: e.id,
@@ -407,7 +410,7 @@ const BUILDERS: Record<Intent, (input: Input) => Built> = {
           const org = d.orgId ? getOrg(d.orgId) : null;
           return org ? row(org, formatNumber(d.patients), 'Same health system') : { title: destination(d.ref!).name, sub: `${destination(d.ref!).note} · outside the system`, figure: formatNumber(d.patients), tone: 'warn' as const };
         }),
-        doThis: { text: `${l.byFamily[0].family} is the biggest gap: ${l.byFamily[0].leftPct}% of those patients leave.`, label: 'Open leakage', link: open(entity.id, 'leakage') },
+        doThis: { text: `${l.byFamily[0].family} is the biggest gap: ${l.byFamily[0].leftPct}% of those patients leave.`, label: 'See where they go', link: open(entity.id, 'leakage') },
         next: [`Top doctors at ${entity.name}`, 'Which accounts are growing the most?', 'Who should I see today?'],
         about: entity.id,
       };
@@ -502,7 +505,7 @@ const BUILDERS: Record<Intent, (input: Input) => Built> = {
     return {
       scope: [VS_LAST_YEAR, DATA_PERIOD],
       summary: `${entity.name} is ${direction} on last year: ${formatNumber(t.prev)} to ${formatNumber(t.cur)} procedures (${formatPct(t.growth)}). The biggest change is ${mover.r.family} (${formatPct(mover.pct)}).`,
-      rows: families.map((f) => ({ title: f.r.family, sub: `${f.r.code} · ${formatNumber(f.cur)} in the last 12 months`, figure: formatPct(f.pct), tone: f.pct >= 0 ? ('up' as const) : ('down' as const) })),
+      rows: families.map((f) => ({ title: f.r.family, sub: `${formatNumber(f.cur)} in the last 12 months`, figure: formatPct(f.pct), tone: f.pct >= 0 ? ('up' as const) : ('down' as const) })),
       doThis: { text: 'See the quarter-by-quarter trend before the visit.', label: 'Open volumes', link: open(entity.id, 'volumes') },
       next: entity.kind === 'hcp' ? ['Where do their patients go?', 'What should I bring up?'] : [`Where do patients at ${entity.name} go?`, `Top doctors at ${entity.name}`],
       about: entity.id,
@@ -593,10 +596,11 @@ const BUILDERS: Record<Intent, (input: Input) => Built> = {
   },
 
   plan({ q, ctx }) {
-    const tomorrow = isoDate(addDays(ctx.today, 1));
-    const day = /\btomorrow\b/.test(q) ? tomorrow : ctx.todayIso;
+    // "Tomorrow" is the next working day Today plans: Monday, on a Friday.
+    const [, next] = ctx.planDays();
+    const day = /\btomorrow\b/.test(q) ? next.iso : ctx.todayIso;
     const items = ctx.dayPlan(day).filter((i) => i.status !== 'cancelled');
-    const name = day === ctx.todayIso ? 'today' : 'tomorrow';
+    const name = day === ctx.todayIso ? 'today' : next.label === 'Tomorrow' ? 'tomorrow' : `on ${next.label}`;
     if (!items.length) {
       return {
         scope: [formatDate(day), SAMPLE],
@@ -663,7 +667,7 @@ const BUILDERS: Record<Intent, (input: Input) => Built> = {
       { title: 'Open follow-ups', figure: String(followUps.length), sub: followUps[0]?.text ?? 'None', tone: followUps.length ? 'warn' : undefined },
       t
         ? { title: 'Procedures · 12 months', figure: formatNumber(t.cur), sub: `${formatPct(t.growth)} on last year`, tone: t.growth >= 0 ? 'up' : 'down' }
-        : { title: 'Procedures', figure: '—', sub: 'Not in your code group' },
+        : { title: 'Procedures', figure: '—', sub: 'None in this sample' },
       entity.kind === 'hcp'
         ? { title: 'Sent outside the system', figure: String(referredOut(entity)), sub: 'Patients, last 12 months', tone: entity.leakageRisk ? 'warn' : undefined }
         : { title: 'Patients leaving', figure: entity.leakage ? formatNumber(patientsLost(entity.leakage)) : '—', sub: entity.leakage ? `${entity.leakage.leftPct}% of ${formatNumber(entity.leakage.patients)} patients` : 'Not reported', tone: (entity.leakage?.leftPct ?? 0) >= 20 ? 'warn' : undefined },
@@ -705,34 +709,46 @@ const BUILDERS: Record<Intent, (input: Input) => Built> = {
 
   /**
    * The last seven days, today included, as the report a rep sends their manager:
-   * visits done against those planned, what didn't go to plan, notes, follow-ups,
+   * visits logged against those due, what didn't go to plan, notes, follow-ups,
    * accounts covered and who to see next week.
    */
   week({ ctx }) {
     const from = isoDate(addDays(ctx.today, -6));
     const inWeek = (day: string) => day >= from && day <= ctx.todayIso;
     const dayName = (day: string) => formatDate(day, inWeek(day) ? { weekday: 'short' } : { weekday: 'short', day: 'numeric', month: 'short' });
-    // Visits planned in the week, and any moved out of it.
+    type Visit = { day: string; item: PlanItem; who: Entity };
+    // Visits planned on the week's days, and any moved from the week to a later day.
     const visits = Object.entries(ctx.ws.plans)
       .flatMap(([day, items]) => items.map((item) => ({ day, item, who: getEntity(item.targetId) })))
-      .filter((v): v is { day: string; item: PlanItem; who: Entity } => !!v.who && (inWeek(v.day) || (!!v.item.movedFrom && inWeek(v.item.movedFrom.day))))
+      .filter((v): v is Visit => !!v.who && (inWeek(v.day) || (!!v.item.movedFrom && inWeek(v.item.movedFrom.day))))
       .sort((a, b) => a.day.localeCompare(b.day) || (a.item.time ?? '').localeCompare(b.item.time ?? ''));
-    const name = (v: { who: Entity }) => shortName(v.who);
-    const done = visits.filter((v) => v.item.status === 'done');
-    const laterToday = visits.filter((v) => v.item.status === 'planned' && v.day === ctx.todayIso).length;
+    const name = (v: Visit) => shortName(v.who);
+    const ofWeek = visits.filter((v) => inWeek(v.day));
+    const done = ofWeek.filter((v) => v.item.status === 'done');
+    const notIn = done.filter((v) => v.item.outcome === 'Attempted').length;
+    // Due: visits on the days gone by that weren't cancelled, and today's once logged. Today's others are still to come.
+    const due = ofWeek.filter((v) => v.item.status !== 'cancelled' && (v.day < ctx.todayIso || v.item.status === 'done'));
+    const laterToday = ofWeek.filter((v) => v.item.status === 'planned' && v.day === ctx.todayIso).length;
+    const moved = ({ day, item }: Visit) =>
+      !item.movedFrom ? '' : item.movedFrom.day === day ? `moved from ${item.movedFrom.time ?? 'any time'}` : `moved from ${dayName(item.movedFrom.day)}`;
+    const when = (v: Visit, ...more: string[]) => `(${[dayName(v.day), ...more, moved(v)].filter(Boolean).join(', ')})`;
     const changes = [
-      ...visits.filter((v) => v.item.status === 'cancelled').map((v) => `${name(v)} cancelled (${dayName(v.day)})`),
-      ...visits.flatMap(({ day, item, who }) => {
-        if (!item.movedFrom || item.status === 'cancelled') return [];
-        return [item.movedFrom.day === day ? `${shortName(who)} moved to ${item.time} (${dayName(day)})` : `${shortName(who)} moved from ${dayName(item.movedFrom.day)} to ${dayName(day)}`];
-      }),
-      ...visits.filter((v) => v.item.status === 'planned' && v.day < ctx.todayIso && inWeek(v.day)).map((v) => `${name(v)} not seen (${dayName(v.day)})`),
+      ...ofWeek.filter((v) => v.item.status === 'cancelled').map((v) => `${name(v)}: visit cancelled (${dayName(v.day)})`),
+      // A move still to happen; one that has happened says so where it's listed.
+      ...visits
+        .filter((v) => v.item.movedFrom && v.item.status === 'planned' && v.day >= ctx.todayIso)
+        .map((v) => (v.item.movedFrom!.day === v.day ? `${name(v)} moved to ${v.item.time} (${dayName(v.day)})` : `${name(v)} moved from ${dayName(v.item.movedFrom!.day)} to ${dayName(v.day)}`)),
+      ...ofWeek.filter((v) => v.item.status === 'planned' && v.day < ctx.todayIso).map((v) => `${name(v)} not logged ${when(v)}`),
     ];
     const notes = ctx.ws.interactions.filter((i) => !i.deleted && i.author === 'You' && inWeek(i.date));
     const noted = [...new Set(notes.map((i) => i.targetId))].flatMap((id) => getEntity(id) ?? []);
-    // Accounts visited in person, and accounts the rep wrote a note about.
+    // Accounts where the rep met someone in person: a visit there, or a meeting with the account.
+    const inPerson = (type: string) => type === 'In-person visit' || type === 'Meeting';
     const covered = [
-      ...new Set([...done.filter((v) => v.item.type === 'In-person visit' || v.item.type === 'Meeting').map((v) => v.item.siteId), ...noted.filter((e) => e.kind === 'hco').map((e) => e.id)]),
+      ...new Set([
+        ...done.filter((v) => v.item.outcome !== 'Attempted' && inPerson(v.item.type)).map((v) => v.item.siteId),
+        ...notes.filter((i) => i.outcome === 'Met' && inPerson(i.type) && getEntity(i.targetId)?.kind === 'hco').map((i) => i.targetId),
+      ]),
     ].flatMap((id) => getOrg(id) ?? []);
     const followUps = ctx.openFollowUps();
     const late = followUps.filter((f) => f.overdueBy > 0);
@@ -740,9 +756,9 @@ const BUILDERS: Record<Intent, (input: Input) => Built> = {
       const who = getEntity(f.targetId);
       return `“${f.text}”${who ? ` for ${shortName(who)}` : ''}`;
     };
-    // Worth seeing next week: the app's own reasons, leaving out anyone seen this week or already planned.
+    // Worth seeing next week: the app's own reasons, leaving out anyone seen or written about this week, or already planned.
     const nextMonday = isoDate(addDays(ctx.today, (8 - ctx.today.getDay()) % 7 || 7));
-    const seen = new Set(done.map((v) => v.who.id));
+    const seen = new Set([...done.map((v) => v.who.id), ...notes.flatMap((i) => [i.targetId, ...i.attendees])]);
     const picks = ctx
       .suggestions(nextMonday, 50)
       .map((s) => ({ entity: s.entity, why: s.signals.filter((g) => g.id !== 'followup') }))
@@ -750,8 +766,10 @@ const BUILDERS: Record<Intent, (input: Input) => Built> = {
       .slice(0, 3);
     const top = picks[0];
 
-    const rows: AnswerRow[] = [{ title: 'Visits done', figure: `${done.length} of ${visits.length}`, sub: done.length ? listJoin(done.map((v) => `${name(v)} (${dayName(v.day)})`)) : 'None logged yet' }];
-    if (changes.length) rows.push({ title: 'Cancelled, moved or not seen', figure: String(changes.length), sub: changes.join(' · '), tone: 'warn' });
+    const rows: AnswerRow[] = [
+      { title: 'Visits logged', figure: `${done.length} of ${due.length}`, sub: done.length ? listJoin(done.map((v) => `${name(v)} ${when(v, v.item.outcome === 'Attempted' ? 'not in' : '')}`)) : 'None logged yet' },
+    ];
+    if (changes.length) rows.push({ title: 'Cancelled, moved or not logged', figure: String(changes.length), sub: changes.join(' · '), tone: 'warn' });
     rows.push(
       { title: 'Notes logged', figure: String(notes.length), sub: noted.length ? listJoin(noted.map(shortName)) : 'None yet' },
       {
@@ -763,24 +781,22 @@ const BUILDERS: Record<Intent, (input: Input) => Built> = {
         tone: late.length ? 'warn' : undefined,
       },
       { title: 'Accounts covered', figure: String(covered.length), sub: covered.length ? listJoin(covered.map((o) => o.name)) : 'None yet' },
+      // One row each, which opens their page, with why and when they're usually free.
+      ...picks.map((p) => ({ id: p.entity.id, title: `Next week: ${shortName(p.entity)}`, figure: '', sub: `${capitalise(reasons(p.why.slice(0, 2)))} · ${usualTimes(p.entity)}` })),
     );
-    // Grouped by their strongest reason: "Dr. Raman and Mount Sinai Morningside: patients going elsewhere".
-    const byReason = new Map<string, string[]>();
-    for (const p of picks) {
-      const why = reasons(p.why.slice(0, 1));
-      byReason.set(why, [...(byReason.get(why) ?? []), shortName(p.entity)]);
-    }
-    if (picks.length) rows.push({ title: 'See next week', figure: '', sub: [...byReason].map(([why, names]) => `${listJoin(names)}: ${why}`).join(' · ') });
 
     const dayMonth = { day: 'numeric', month: 'short' } as const;
     const range = `${formatDate(from, from.slice(0, 7) === ctx.todayIso.slice(0, 7) ? { day: 'numeric' } : dayMonth)} to ${formatDate(ctx.today, dayMonth)}`;
     const lateText = late.length ? `, ${plural(late.length, 'follow-up')} late` : '';
+    const notInText = notIn ? ` (${notIn} not in)` : '';
+    const laterText = laterToday ? `, ${laterToday} more today` : '';
     return {
       title: `Your week to ${formatDate(ctx.today, dayMonth)}`,
       scope: [range, 'Your plan and notes', SAMPLE],
-      summary: visits.length
-        ? `Your week: ${done.length} of ${plural(visits.length, 'planned visit')} done${laterToday ? `, ${laterToday} more today` : ''}. ${plural(notes.length, 'note')} logged${lateText}.`
-        : `Your week: no visits planned. ${plural(notes.length, 'note')} logged${lateText}.`,
+      summary:
+        due.length || laterToday
+          ? `Your week: ${done.length} of ${plural(due.length, 'visit')} logged${notInText}${laterText}. ${plural(notes.length, 'note')} logged${lateText}.`
+          : `Your week: no visits planned. ${plural(notes.length, 'note')} logged${lateText}.`,
       rows,
       facts: true,
       doThis: top ? { text: `Next week, start with ${shortName(top.entity)}: ${reasons(top.why.slice(0, 2))}.`, label: `Open ${shortName(top.entity)}`, link: open(top.entity.id) } : null,
@@ -812,8 +828,9 @@ const BUILDERS: Record<Intent, (input: Input) => Built> = {
   },
 };
 
-/** A short version for reading aloud: the answer and the next step, without the table. */
+/** A short version for reading aloud: the answer and the next step, without the table. The week reads every line, as it's a report. */
 export function spoken(a: Answer): string {
   const points = a.intent === 'points' ? a.rows.map((r) => r.title) : [];
-  return [a.summary, ...points, a.doThis?.text].filter(Boolean).join(' ');
+  const lines = a.intent === 'week' ? a.rows.map((r) => `${[r.title, r.figure].filter(Boolean).join(', ')}: ${r.sub ?? ''}.`.replace(/: \.$/, '.')) : [];
+  return [a.summary, ...points, ...lines, a.doThis?.text].filter(Boolean).join(' ');
 }

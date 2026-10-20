@@ -1,14 +1,16 @@
 // Today: the day, a map of the stops and one row per visit, each saying why
 // they're worth seeing. Tap a row for that person's page (log it, or say you can't
-// make it); a visit whose time has gone and isn't logged gets its own Log button.
+// make it); a visit whose time has gone, or an "Any time" one still open at 17:30,
+// gets its own Log button, and so does one from earlier in the week never logged.
 // "Add a visit" opens Targets, where + puts someone in the plan. One small Edit
 // above the stops shows how to change the day: arrows move an "Any time" stop
 // (timed ones go by their time), "Set a time" fixes one, and Remove takes it out.
+// A visit with a time can only be moved or cancelled, as someone is expecting you.
 
-import { router } from 'expo-router';
-import { ArrowDown, ArrowUp, ChevronRight, CircleCheck, Clock, Plus, Sparkles, Trash2, X } from 'lucide-react-native';
-import { useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { router, useFocusEffect } from 'expo-router';
+import { ArrowDown, ArrowUp, CalendarClock, ChevronRight, CircleCheck, Clock, Plus, Sparkles, Trash2, X } from 'lucide-react-native';
+import { useCallback, useEffect, useState } from 'react';
+import { Pressable, useWindowDimensions, View } from 'react-native';
 
 import { Avatar, useProfileHref } from '@/components/entity';
 import { useLogSheet } from '@/components/log-sheet';
@@ -19,9 +21,10 @@ import { StopMap, type MapPin } from '@/components/stop-map';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
+import { useVisitSheets } from '@/components/visit-sheets';
 import { getEntity, getOrg, shortName } from '@/lib/data';
-import { formatDate, plural, toMinutes } from '@/lib/format';
-import { isOnSite } from '@/lib/plan';
+import { formatDate, plural } from '@/lib/format';
+import { isOnSite, notLogged } from '@/lib/plan';
 import { useWorkspace } from '@/lib/store';
 import type { Entity, PlanItem } from '@/lib/types';
 import { cn } from '@/lib/utils';
@@ -29,34 +32,53 @@ import { cn } from '@/lib/utils';
 /** Minutes since midnight, to tell which of today's visits have already happened. */
 const minutesNow = (now = new Date()): number => now.getHours() * 60 + now.getMinutes();
 
+/** Minutes since midnight, kept up to date, so a visit is flagged when its time passes with the app open. */
+function useMinutesNow(): number {
+  const [now, setNow] = useState(minutesNow);
+  useEffect(() => {
+    const timer = setInterval(() => setNow(minutesNow()), 60_000);
+    return () => clearInterval(timer);
+  }, []);
+  return now;
+}
+
 export default function Today() {
   const ctx = useWorkspace();
   const profileHref = useProfileHref();
   const { openLog, sheet } = useLogSheet();
   const { openStopTime, sheet: timeSheet } = useStopTimeSheet();
-  const [editing, setEditing] = useState(false);
-  const [today, tomorrow] = ctx.planDays();
+  const visits = useVisitSheets();
+  const { width } = useWindowDimensions();
+  // The day being edited, so switching days or tabs leaves Edit.
+  const [editing, setEditing] = useState<string | null>(null);
+  useFocusEffect(useCallback(() => () => setEditing(null), []));
+  const [today, nextDay] = ctx.planDays();
   // The day is shared with Targets, so + there adds to the day shown here.
-  const day = ctx.ws.selection.day === tomorrow.iso ? tomorrow.iso : today.iso;
+  const day = ctx.ws.selection.day === nextDay.iso ? nextDay.iso : today.iso;
   const isToday = day === today.iso;
   const plan = ctx.dayPlan(day);
   const active = plan.filter((i) => i.status !== 'cancelled');
-  // A timed visit that has ended and is still only planned hasn't been logged.
-  const now = minutesNow();
-  const unlogged = (i: PlanItem): boolean => isToday && i.status === 'planned' && i.mode === 'timed' && !!i.time && toMinutes(i.time) + i.duration <= now;
+  // A visit with a time is due a log once it's over; an "Any time" one from 17:30.
+  const now = useMinutesNow();
+  const unlogged = (i: PlanItem): boolean => isToday && notLogged(i, now);
   const next = isToday ? active.find((i) => i.status === 'planned' && !unlogged(i)) : undefined;
-  const free = ctx.freeSlotsOn(day);
+  const free = ctx.freeSlotsOn(day, new Date());
+  const earlier = isToday ? ctx.unloggedBefore() : [];
   const due = isToday ? ctx.openFollowUps().filter((f) => f.overdueBy >= 0).length : 0;
   // Editing ends by itself once there is nothing left to edit.
-  const edit = editing && plan.length > 0;
+  const edit = editing === day && plan.length > 0;
   const done = active.filter((i) => i.status === 'done').length;
   const open = (targetId: string) => {
     const who = getEntity(targetId);
     if (who) router.push(profileHref(who));
   };
-  const log = (item: PlanItem) => {
+  const log = (item: PlanItem, on = day) => {
     const who = getEntity(item.targetId);
-    if (who) openLog(who, { day, id: item.id, type: item.type });
+    if (who) openLog(who, { day: on, id: item.id, type: item.type }, on === today.iso ? {} : { title: `Log ${formatDate(on)}` });
+  };
+  const cantMakeIt = (item: PlanItem) => {
+    const who = getEntity(item.targetId);
+    if (who) visits.openCantMakeIt(who, { day, id: item.id, item });
   };
   const pickFive = () => ctx.addAllToPlan(ctx.suggestions(day, 5).map((s) => s.entity.id), day);
 
@@ -87,12 +109,38 @@ export default function Today() {
         <Button
           size="sm"
           variant="ghost"
-          onPress={() => ctx.selectDay(isToday ? tomorrow.iso : today.iso)}
-          accessibilityLabel={isToday ? 'Show tomorrow' : 'Back to today'}
+          onPress={() => ctx.selectDay(isToday ? nextDay.iso : today.iso)}
+          accessibilityLabel={isToday ? `Show ${ctx.dayWord(nextDay.iso)}` : 'Back to today'}
         >
-          <Text className="text-brand">{isToday ? 'Tomorrow' : 'Today'}</Text>
+          <Text className="text-brand">{isToday ? nextDay.label : 'Today'}</Text>
         </Button>
       </View>
+
+      {/* Visits from earlier days that were never logged: log them on their day, or say they didn't happen. */}
+      {earlier.map(({ day: on, item }) => {
+        const who = getEntity(item.targetId);
+        if (!who) return null;
+        return (
+          <View key={item.id} className="flex-row flex-wrap items-center gap-x-2 gap-y-2 rounded-xl bg-warn-soft py-2 pl-4 pr-2">
+            <Text className="min-w-40 flex-1 text-base">
+              <Text className="text-base font-semibold">{shortName(who)}</Text>
+              {`, ${formatDate(on)}: not logged yet`}
+            </Text>
+            <Button size="sm" className="rounded-lg" onPress={() => log(item, on)} accessibilityLabel={`Log the visit with ${who.name} on ${formatDate(on)}`}>
+              <Text>Log</Text>
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="rounded-lg bg-card"
+              onPress={() => ctx.cancelVisit(on, item.id, 'Didn’t happen')}
+              accessibilityLabel={`The visit with ${who.name} on ${formatDate(on)} didn’t happen`}
+            >
+              <Text>Didn’t happen</Text>
+            </Button>
+          </View>
+        );
+      })}
 
       {due ? (
         <Pressable
@@ -112,7 +160,7 @@ export default function Today() {
         <View key={slot.itemId} className="flex-row items-center gap-3 rounded-xl bg-brand-soft py-2 pl-4 pr-1">
           <Text className="flex-1 text-base">
             <Text className="text-base font-semibold">{`${slot.time} is free.`}</Text>
-            {` ${slot.name.replace(/^Dr\. \S+ /, 'Dr. ')} can’t make it.`}
+            {` The visit with ${slot.name.replace(/^Dr\. \S+ /, 'Dr. ')} ${slot.moved ? 'moved' : 'was cancelled'}.`}
           </Text>
           <Button
             size="sm"
@@ -132,14 +180,18 @@ export default function Today() {
       ))}
 
       {pins.length ? (
-        <StopMap
-          pins={pins}
-          start={{ coords: ctx.start.coords, label: `${ctx.start.title}, ${ctx.start.place}` }}
-          route
-          onPinPress={open}
-          label={`Map of ${isToday ? 'today’s' : 'tomorrow’s'} stops`}
-          height={190}
-        />
+        <View className="gap-1">
+          <StopMap
+            pins={pins}
+            start={{ coords: ctx.start.coords, label: `${ctx.start.title}, ${ctx.start.place}` }}
+            route
+            onPinPress={open}
+            label={`Map of ${ctx.dayWord(day)}’s stops`}
+            // Taller on a wider screen, such as an iPad, up to the column's width.
+            height={Math.round(Math.min(360, Math.max(190, (Math.min(width, 720) - 32) * 0.55)))}
+          />
+          <Text className="text-sm text-muted-foreground">{`From ${ctx.start.title}, ${ctx.start.place} · straight lines, not roads`}</Text>
+        </View>
       ) : null}
 
       {plan.length ? (
@@ -151,7 +203,7 @@ export default function Today() {
             <Button
               size="sm"
               variant="ghost"
-              onPress={() => setEditing(!edit)}
+              onPress={() => setEditing(edit ? null : day)}
               accessibilityLabel={edit ? 'Done changing the day' : 'Edit the day: move, set a time or remove stops'}
             >
               <Text className="text-brand">{edit ? 'Done' : 'Edit'}</Text>
@@ -168,6 +220,7 @@ export default function Today() {
                 onMove={(direction) => ctx.moveStop(day, item.id, direction)}
                 onSetTime={() => openStopTime(day, item)}
                 onRemove={() => ctx.removeStop(day, item.id)}
+                onCantMakeIt={() => cantMakeIt(item)}
               />
             ) : (
               <StopRow
@@ -206,6 +259,7 @@ export default function Today() {
       </Button>
       {sheet}
       {timeSheet}
+      {visits.sheets}
     </Screen>
   );
 }
@@ -232,8 +286,9 @@ function StopRow({
   const done = item.status === 'done';
   const when = item.mode === 'timed' && item.time ? item.time : 'Any time';
   const unconfirmed = !done && !cancelled && !unlogged && item.booking === 'requested';
-  const status = done ? 'Done' : cancelled ? 'Cancelled' : unlogged ? 'Not logged yet' : next ? 'Next' : '';
-  const how = isOnSite(item) ? '' : item.type;
+  const status = done ? (item.outcome === 'Attempted' ? 'Not in' : 'Done') : cancelled ? 'Cancelled' : unlogged ? 'Not logged yet' : next ? 'Next' : '';
+  // Where to go for a visit, or how for a call.
+  const how = isOnSite(item) ? (getOrg(item.siteId)?.name ?? '') : item.type;
   const sub = [when, how, status, unconfirmed && 'Not confirmed yet'].filter(Boolean).join(' · ');
   // Why they're worth seeing: the visit's own goal, or what makes them a priority.
   const why = done || cancelled ? '' : item.goal || ctx.signals(who)[0]?.label || '';
@@ -291,9 +346,11 @@ function StopAvatar({ who, number, next = false }: { who: Entity; number: number
 }
 
 /**
- * A stop while the day is being changed. An "Any time" stop has arrows and Set a
- * time; a timed one keeps its place by its time. Anything not yet logged can be
- * removed, with Undo. Nothing here opens their page, so a tap can't lose the edit.
+ * A stop while the day is being changed. An "Any time" stop has arrows, Set a
+ * time and Remove, with Undo. A timed one keeps its place by its time, and as
+ * someone is expecting the rep, it can only be moved or cancelled. Logged and
+ * cancelled visits stay as the record. Nothing here opens their page, so a tap
+ * can't lose the edit.
  */
 function EditRow({
   item,
@@ -303,6 +360,7 @@ function EditRow({
   onMove,
   onSetTime,
   onRemove,
+  onCantMakeIt,
 }: {
   item: PlanItem;
   number: number;
@@ -311,6 +369,7 @@ function EditRow({
   onMove: (direction: -1 | 1) => void;
   onSetTime: () => void;
   onRemove: () => void;
+  onCantMakeIt: () => void;
 }) {
   const who = getEntity(item.targetId);
   if (!who) return null;
@@ -339,20 +398,24 @@ function EditRow({
           </View>
         ) : null}
       </View>
-      {done ? null : (
+      {flexible ? (
         <View className="flex-row gap-2">
-          {flexible ? (
-            <Button size="sm" variant="outline" className="flex-1 rounded-lg" onPress={onSetTime} accessibilityLabel={`Set a time for ${who.name}`}>
-              <Icon as={Clock} size={16} />
-              <Text>Set a time</Text>
-            </Button>
-          ) : null}
+          <Button size="sm" variant="outline" className="flex-1 rounded-lg" onPress={onSetTime} accessibilityLabel={`Set a time for ${who.name}`}>
+            <Icon as={Clock} size={16} />
+            <Text>Set a time</Text>
+          </Button>
           <Button size="sm" variant="outline" className="flex-1 rounded-lg" onPress={onRemove} accessibilityLabel={`Take ${who.name} out of the plan`}>
             <Icon as={Trash2} size={16} className="text-danger" />
             <Text className="text-danger">Remove</Text>
           </Button>
         </View>
-      )}
+      ) : item.status === 'planned' ? (
+        <Button size="sm" variant="outline" className="rounded-lg" onPress={onCantMakeIt} accessibilityLabel={`Can’t make it to ${who.name} at ${item.time}: move or cancel`}>
+          <Icon as={CalendarClock} size={16} />
+          <Text>Can’t make it</Text>
+        </Button>
+      ) : null}
+
     </View>
   );
 }

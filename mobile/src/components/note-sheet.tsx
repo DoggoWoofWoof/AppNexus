@@ -179,7 +179,7 @@ export function NoteForm({
           onChange={setDate}
           options={days.map((d) => ({ value: d, label: relativeDay(d, ctx.today) }))}
         />
-        <Field label="Note" id="note-text">
+        <Field label="Note" id="note-text" hint="Keep patient details out. Your team can read notes.">
           <Textarea
             value={note}
             onChangeText={setNote}
@@ -200,7 +200,7 @@ export function NoteForm({
         </View>
         {followOn ? (
           <View className="gap-5 rounded-md border border-border p-3">
-            <Field label="Follow-up" id="note-follow-text">
+            <Field label="Follow-up" id="note-follow-text" hint="No patient names or details.">
               <Input
                 ref={followInput}
                 value={followText}
@@ -220,7 +220,7 @@ export function NoteForm({
           </View>
         ) : null}
 
-        <FinePrint>Notes stay in the app until you close it. Saving to the device and syncing come later.</FinePrint>
+        <FinePrint>Notes are kept on this phone. Sending them to your team comes later.</FinePrint>
       </SheetBody>
       <Footer onCancel={onCancel} onSave={save} saveLabel="Save note" error={error} />
     </>
@@ -248,7 +248,7 @@ function FollowUpForm({ target, onCancel, onSaved }: { target: Entity; onCancel:
   return (
     <>
       <SheetBody>
-        <Field label="What needs to happen?" id="follow-text">
+        <Field label="What needs to happen?" id="follow-text" hint="No patient names or details.">
           <Input
             ref={textInput}
             value={text}
@@ -286,14 +286,17 @@ function DueChoices({ value, onChange, withToday = false }: { value: string; onC
   );
 }
 
-export function Field({ label, id, children }: { label: string; id: string; children: ReactNode }) {
+/** A labelled field, with an optional line under it, such as a reminder to keep patients out. */
+export function Field({ label, id, hint, children }: { label: string; id: string; hint?: string; children: ReactNode }) {
   return (
     <View className="gap-2">
       <Label nativeID={id}>{label}</Label>
       {children}
+      {hint ? <Text className="text-sm text-muted-foreground">{hint}</Text> : null}
     </View>
   );
 }
+
 
 // Not a live region: save() announces the problem.
 export function Problem({ message }: { message: string }) {

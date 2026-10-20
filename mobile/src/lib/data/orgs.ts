@@ -58,7 +58,7 @@ export const ORGS: OrgData[] = [
         { family: 'PCI', leftPct: 15 },
         { family: 'TAVR', leftPct: 10 },
       ],
-      insight: 'Leakage to independent ablation and vascular centres is growing fastest; most of it starts at Mount Sinai West and the Harlem clinic.',
+      insight: 'More patients are going to independent ablation and vascular centres than anywhere else outside the system; most start at Mount Sinai West and the Harlem clinic.',
     },
   },
   {
@@ -228,13 +228,13 @@ export const ORGS: OrgData[] = [
     assigned: false,
     executives: [],
     procedures: null,
-    proceduresUnavailable: 'This clinic does not bill procedures in your cardiovascular code group.',
+    proceduresUnavailable: 'This clinic doesn’t do the cardiovascular procedures in this sample.',
     diagnoses: [
       { name: 'Chronic kidney disease, stage 3–5', code: 'N18.3–N18.5', series: series(1800, 0.04) },
       { name: 'Cardiorenal syndrome', code: 'I13.0', series: series(140, 0.18) },
     ],
     leakage: null,
-    leakageUnavailable: 'Leakage is reported for facilities that perform procedures in your code group.',
+    leakageUnavailable: 'Patients leaving are counted only where the cardiovascular procedures in this sample are done.',
   },
   {
     id: 'harlem',

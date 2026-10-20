@@ -31,6 +31,7 @@ export function QuestionChips({ questions, onPick }: { questions: string[]; onPi
           onPress={() => onPick(q)}
           accessibilityRole="button"
           accessibilityHint="Asks this question"
+          hitSlop={4}
           className="min-h-10 max-w-full justify-center rounded-full border border-brand-line bg-brand-soft px-3 py-1.5 active:opacity-70"
         >
           <Text className="text-sm text-brand">{q}</Text>
@@ -64,6 +65,8 @@ export function ChatView({
   const turns = chat.turns(chatKey);
   const { top } = useSafeAreaInsets();
   const scrollRef = useRef<ScrollViewInstance>(null);
+  // The question last scrolled to, so a new answer opens at its start rather than its end.
+  const shown = useRef<string | null>(null);
   const [reading, setReading] = useState<string | null>(null);
   const visits = useVisitSheets();
   const profileHref = useProfileHref();
@@ -109,12 +112,19 @@ export function ChatView({
         contentContainerClassName="gap-4 px-4 pb-6"
         contentContainerStyle={{ paddingTop: (inset ? top : 0) + 16 }}
         keyboardShouldPersistTaps="handled"
-        onContentSizeChange={() => turns.length && scrollRef.current?.scrollToEnd({ animated: true })}
       >
         {header}
         {turns.length
           ? turns.map((turn, i) => (
-              <View key={turn.id} className="gap-3">
+              <View
+                key={turn.id}
+                className="gap-3"
+                onLayout={(e) => {
+                  if (i !== turns.length - 1 || shown.current === turn.id) return;
+                  shown.current = turn.id;
+                  scrollRef.current?.scrollTo({ y: Math.max(0, e.nativeEvent.layout.y - 8), animated: true });
+                }}
+              >
                 <Question turn={turn} />
                 <AnswerView
                   turn={turn}
@@ -333,7 +343,8 @@ function Composer({
   const side = listening ? (big ? null : 'mic') : text.trim() ? 'send' : voice && !big ? 'mic' : null;
 
   return (
-    <View className="gap-2 border-t border-border bg-background px-4 py-2">
+    // Room at the bottom for the Ask button, which rises out of the tab bar below.
+    <View className="gap-2 border-t border-border bg-background px-4 pb-6 pt-2">
       {big && voice ? (
         <View className="items-center gap-2 py-3">
           <Pressable

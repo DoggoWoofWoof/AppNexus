@@ -1,29 +1,32 @@
-// Reminders on the phone: a heads-up 15 minutes before each visit today that has
-// a fixed time, and at 17:30 a nudge for visits that have passed and aren't logged.
+// Reminders on the phone: a heads-up 15 minutes before each visit that has a
+// fixed time, and at 17:30 a nudge for visits that aren't logged by then, today
+// and on the next working day, so a plan made tonight still reminds tomorrow.
 // remindersFor and reminderChanges decide what should be scheduled, with no phone
 // calls, so they can be tested; syncReminders brings the phone in step. Only the
 // phone imports this (components/reminders.native.tsx); the web build has none.
+//
+// A reminder can show on a locked phone, so it never carries what the rep typed
+// (a goal or a follow-up might name a patient): just who, when and where.
 
 import * as Notifications from 'expo-notifications';
 
-import { buildBrief } from './brief';
-import { getEntity, shortName } from './data';
+import { getEntity, getOrg, shortName } from './data';
 import { fromIso, plural, toMinutes } from './format';
-import { isOnSite } from './plan';
-import type { PlanItem } from './types';
+import { END_OF_DAY, isOnSite, notLogged } from './plan';
+import type { PlanItem, ReminderSetting } from './types';
 import type { Context } from './workspace';
 
+export { END_OF_DAY };
 export const HEADS_UP_MINUTES = 15;
-export const END_OF_DAY = '17:30';
 /** Android shows reminders in this channel; iOS ignores it. */
 export const CHANNEL = 'visits';
 
 // Every reminder the app schedules starts with this, so it never touches anyone else's.
 const PREFIX = 'fieldpro-';
-const UNLOGGED_ID = `${PREFIX}not-logged`;
+const UNLOGGED = `${PREFIX}not-logged-`;
 
 export interface Reminder {
-  /** One per visit, and one for the end of the day, so a change replaces the old reminder. */
+  /** One per visit, and one per day for the end of the day, so a change replaces the old reminder. */
   id: string;
   /** When it shows, in milliseconds. */
   at: number;
@@ -42,7 +45,7 @@ export interface Scheduled {
 /** Everything a reminder shows, so any change to it reschedules it. */
 export const signature = (r: Reminder): string => [r.at, r.title, r.body, r.href].join('|');
 
-export const isHeadsUp = (r: Reminder): boolean => r.id !== UNLOGGED_ID;
+export const isHeadsUp = (r: Reminder): boolean => !r.id.startsWith(UNLOGGED);
 
 /** A time on a day, in milliseconds. */
 function at(day: string, minutes: number): number {
@@ -51,12 +54,12 @@ function at(day: string, minutes: number): number {
   return d.getTime();
 }
 
-/** One plain line from the visit's prep: the goal, or what was promised when the goal is a follow-up. */
-export function prepLine(targetId: string, ctx: Context): string {
-  const who = getEntity(targetId);
-  if (!who) return '';
-  const brief = buildBrief(who, ctx);
-  return brief.goalDue ? `You promised: ${brief.goal}` : brief.goal;
+/** What the heads-up says under the title: nothing the rep typed, as it can show on a locked phone. */
+function headsUpBody(item: PlanItem, day: string, ctx: Context): string {
+  // A follow-up for them due by the visit, whether or not it's the visit's goal.
+  const promised = ctx.openFollowUps().some((f) => f.targetId === item.targetId && f.due <= day);
+  const asked = item.booking === 'requested' ? 'Not confirmed yet. ' : '';
+  return `${asked}${promised ? 'Something you promised is due. ' : ''}Tap for what to bring and talk about.`;
 }
 
 /** "Dr. Patel", "Dr. Patel and Dr. Lee", "Dr. Patel, Dr. Lee and Mount Sinai West". */
@@ -65,30 +68,37 @@ function names(items: PlanItem[]): string {
   return all.length > 1 ? `${all.slice(0, -1).join(', ')} and ${all[all.length - 1]}` : (all[0] ?? '');
 }
 
-/** The reminders today's plan needs from now on. Times that have gone are left out. */
-export function remindersFor(ctx: Context, now: Date): Reminder[] {
-  const day = ctx.todayIso;
+/**
+ * The reminders the plan needs from now on, today and on the next working day.
+ * Times that have gone are left out. With 'end-of-day' only the 17:30 one is
+ * kept, and with 'off' there are none.
+ */
+export function remindersFor(ctx: Context, now: Date, setting: ReminderSetting = 'all'): Reminder[] {
+  if (setting === 'off') return [];
   const later = (time: number) => time > now.getTime();
-  // Today flags the same visits as "Not logged yet": a fixed time and still only planned.
-  const timed = ctx.dayPlan(day).filter((i) => i.status === 'planned' && i.mode === 'timed' && !!i.time);
   const out: Reminder[] = [];
-  for (const item of timed) {
-    const who = getEntity(item.targetId);
-    const time = at(day, toMinutes(item.time!) - HEADS_UP_MINUTES);
-    if (!who || !later(time)) continue;
-    out.push({
-      id: `${PREFIX}visit-${item.id}`,
-      at: time,
-      title: `${who.name} at ${item.time}${isOnSite(item) ? '' : ` · ${item.type}`}`,
-      body: prepLine(who.id, ctx),
-      href: `/today/target/${who.id}`,
-    });
-  }
-  // Visits over by 17:30 that aren't logged now; logging one before then reschedules this.
-  const endOfDay = at(day, toMinutes(END_OF_DAY));
-  const unlogged = timed.filter((i) => toMinutes(i.time!) + i.duration <= toMinutes(END_OF_DAY));
-  if (unlogged.length && later(endOfDay)) {
-    out.push({ id: UNLOGGED_ID, at: endOfDay, title: `${plural(unlogged.length, 'visit')} not logged yet`, body: `Tap to log ${names(unlogged)}.`, href: '/today' });
+  for (const { iso: day } of ctx.planDays()) {
+    const planned = ctx.dayPlan(day).filter((i) => i.status === 'planned');
+    for (const item of planned) {
+      const who = getEntity(item.targetId);
+      if (setting !== 'all' || !who || item.mode !== 'timed' || !item.time) continue;
+      const time = at(day, toMinutes(item.time) - HEADS_UP_MINUTES);
+      if (!later(time)) continue;
+      const where = isOnSite(item) ? getOrg(item.siteId)?.name : item.type;
+      out.push({
+        id: `${PREFIX}visit-${item.id}`,
+        at: time,
+        title: `${who.name} at ${item.time}${where ? ` · ${where}` : ''}`,
+        body: headsUpBody(item, day, ctx),
+        href: `/today/target/${who.id}`,
+      });
+    }
+    // Today flags the same visits as "Not logged yet": over by 17:30, or "Any time". Logging one reschedules this.
+    const endOfDay = at(day, toMinutes(END_OF_DAY));
+    const unlogged = planned.filter((i) => notLogged(i, toMinutes(END_OF_DAY)));
+    if (unlogged.length && later(endOfDay)) {
+      out.push({ id: `${UNLOGGED}${day}`, at: endOfDay, title: `${plural(unlogged.length, 'visit')} not logged yet`, body: `Tap to log ${names(unlogged)}.`, href: '/today' });
+    }
   }
   return out;
 }

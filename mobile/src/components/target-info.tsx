@@ -141,7 +141,7 @@ export function TargetInfo({ entity, brief }: { entity: Entity; brief: Brief }) 
         <Block title="Last time" more={details('activity')}>
           {last ? (
             <View className="gap-1">
-              <Text className="text-sm text-muted-foreground">{`${relativeDayLower(last.date, ctx.today).replace(/^./, (c) => c.toUpperCase())} · ${last.type} · ${last.author === 'You' ? 'you' : last.author}`}</Text>
+              <Text className="text-sm text-muted-foreground">{`${relativeDayLower(last.date, ctx.today).replace(/^./, (c) => c.toUpperCase())} · ${last.type} · ${last.author === 'You' ? 'you' : last.author}${last.local ? ' · on this phone, not sent yet' : ''}`}</Text>
               {last.note ? (
                 <Text className="text-base leading-6" numberOfLines={3}>
                   {last.note}

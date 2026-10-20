@@ -1,21 +1,24 @@
-// On a computer or an iPad the web build shows the app inside a phone, like the
+// On a computer the web build shows the app inside a phone or an iPad, like the
 // prototype in demo/, rather than stretched across the window. The page loads the
 // app again in a frame the size of the device, so the app lays itself out as it
-// would on one. On a phone the app just runs. Native builds use the .native file.
+// would on one. On a phone or a tablet the app just runs, full screen. Native
+// builds use the .native file.
 
 import { SourceSerif4_600SemiBold, useFonts } from '@expo-google-fonts/source-serif-4';
 import { useEffect, useState } from 'react';
 
 /**
  * True for the page around the app: a window of its own, bigger than a phone
- * held either way, as on a computer or an iPad. Inside the frame the app is in an
- * iframe, so this is false there. `?frame=off` shows the app on its own.
+ * held either way, worked with a mouse, as on a computer. A touch screen, such as
+ * a real iPad, gets the app itself. Inside the frame the app is in an iframe, so
+ * this is false there. `?frame=off` shows the app on its own.
  */
 export const IN_PREVIEW_FRAME =
   typeof window !== 'undefined' &&
   window.self === window.top &&
   window.innerWidth >= 600 &&
   window.innerHeight >= 480 &&
+  !window.matchMedia?.('(pointer: coarse)').matches &&
   new URLSearchParams(window.location.search).get('frame') !== 'off';
 
 const VIEWS = [

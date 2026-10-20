@@ -49,7 +49,7 @@ export function VolumesPanel({
       tabs={[
         { id: 'procedures', label: 'Procedures' },
         { id: 'diagnoses', label: 'Diagnoses' },
-        ...(leakage ? [{ id: 'leakage' as const, label: 'Leakage' }] : []),
+        ...(leakage ? [{ id: 'leakage' as const, label: 'Patients leaving' }] : []),
       ]}
     >
       <TabsContent value="procedures" className="gap-5">
@@ -72,7 +72,7 @@ function Volumes({ entity, mode }: { entity: Entity; mode: Exclude<VolumeMode, '
   const labels = lastQuarters(FIGURES_END);
   const noun = mode === 'procedures' ? 'Procedures' : 'Patients';
 
-  if (!rows) return <Unavailable title="Procedure volumes unavailable" body={entity.proceduresUnavailable ?? 'No procedure data in your code group.'} />;
+  if (!rows) return <Unavailable title="Procedure volumes unavailable" body={entity.proceduresUnavailable ?? 'No procedures in this sample.'} />;
   if (!rows.length) return <EmptyState icon={ChartColumn} title={`No ${noun.toLowerCase()} in this period`} />;
 
   const total = addSeries(rows.map((r) => r.series));

@@ -125,6 +125,8 @@ export interface PlanItem {
   type: VisitType;
   goal: string;
   status: 'planned' | 'done' | 'cancelled';
+  /** What the log said happened, once it's done: "Met", or "Attempted" when they weren't in. */
+  outcome?: string;
   isNew?: boolean;
   /** A booked time stays requested until the office agrees to it. */
   booking?: 'requested' | 'confirmed';
@@ -144,6 +146,8 @@ export interface FreeSlot {
   name: string;
   targetId: string;
   itemId: string;
+  /** Freed because the visit moved to another time, rather than being cancelled. */
+  moved?: boolean;
 }
 
 export type SignalId = 'followup' | 'leakage' | 'rising' | 'unseen';
@@ -199,8 +203,12 @@ export interface StartPoint {
 /** How the app looks: like the phone, or always light or dark. */
 export type Appearance = 'system' | 'light' | 'dark';
 
+/** Which reminders the phone gives: all of them, only the end-of-day one for visits not logged, or none. */
+export type ReminderSetting = 'all' | 'end-of-day' | 'off';
+
 export interface Prefs {
   /** Which of the sample START_POINTS the day starts from. */
   start: string;
   appearance: Appearance;
+  reminders: ReminderSetting;
 }

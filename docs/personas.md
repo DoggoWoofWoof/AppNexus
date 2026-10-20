@@ -84,16 +84,53 @@ On 19 October 2026 ten fictional reps reviewed the Expo app in `mobile/`, lookin
 
 Some findings were wrong when checked against the code: "+ Add" and Save already show a toast with Undo, "Can't make it" only opens Targets when a slot is freed, and the menu is on Today, Targets and Ask.
 
+## Third check: the same ten, on reminders, You, the week and the phone frame
+
+On 20 October 2026 the same ten reps went over what had been added since: reminders, the You page, "Summarise my week", editing the day, keeping work on the phone, clearer figures and the phone and iPad frame. Every finding below was checked against the code, and each one held up.
+
+| Raised by | What was wrong | What changed |
+| --- | --- | --- |
+| Ravi, Jess, Ben, Danielle, Leila, Gloria | Left open overnight, the app stayed on yesterday. | At midnight, and whenever the app comes back to the front, it moves on to the new day as a fresh launch would, keeping the rep's work. |
+| Leila, Jess, Danielle, Gloria | Reminders only covered today, so a visit planned tonight for tomorrow got none. | Reminders cover today and the next working day. |
+| Ravi, Jess | "Any time" stops were never flagged as not logged, so a day built with "Pick 5" never was. | From 17:30 an "Any time" stop still open says "Not logged yet", and the 17:30 reminder counts it. Today checks the time every minute. |
+| Ravi | A visit from an earlier day couldn't be logged against the plan. | A bar on Today lists visits from the last seven days that were never logged, each with Log (dated that day) and "Didn't happen". |
+| Jess | "Tomorrow" on a Friday was Saturday. | Today switches to the next working day: "Tomorrow", or "Monday" on a Friday. Reminders, Targets, Saved and Ask say the same. |
+| Jess, Tomás | "Pick 5" ignored the weekday, and could pick people already seen today for tomorrow. | Suggestions are people who work that weekday, and anyone planned or seen today waits for another day. Distances and directions use where they are that day. |
+| Leila, Ben, Gloria, Omar | Edit put a red Remove on booked visits and cancelled ones, and stayed on after switching tabs. | In Edit a visit with a time offers "Can't make it" (move or cancel), since someone is expecting the rep. Only an "Any time" stop can be removed. Edit closes when the rep leaves the screen. |
+| Leila | Moving a visit lost its time without a word, a freed time stayed up after it had gone, and a freed time could be filled twice. | A moved visit's old time is offered like a cancelled one ("14:00 is free. The visit with Dr. Lee moved."). Freed times leave Today once they've gone or someone else is in them, and filling one says why it can't when it can't. |
+| Kwame | A meeting at an account left the doctors who were there still planned. "Who was there" missed some of them. | Logging a meeting marks done the visits of the doctors ticked as there. The list puts doctors planned there today first. A note of the same kind on the same day logs a planned visit too, but a call doesn't stand for a visit. |
+| Ravi, Kwame | "Not in" looked the same as a visit done. | Today and someone's page say "Not in", and the week counts it on its own. |
+| Nadia, Ravi, Omar, Kwame, Jess | The week counted a moved visit twice, counted cancelled and later-today visits as missed, and said "Dr. Rossi cancelled", blaming the doctor. Next week's picks couldn't be opened, and Listen and the saved copy skipped rows. | "2 of 3 visits logged": only visits due so far count. "Dr. Rossi: visit cancelled (Fri)". A move shows where the visit is counted ("Thu, moved from Wed"). Each pick for next week is its own row that opens the person, with when they're usually free. Listen and the saved copy read every row. |
+| Ben | A half-written note for a visit that later moved was thrown away. An old save was wiped with no copy. A failed write was never tried again. | The note stays, as a draft for the person. An old save is copied aside before the sample starts again, and the rep is told. A failed write is tried again with the next change. "Last time" says when a note is only on this phone. |
+| Omar | A reminder showed the goal or follow-up the rep typed, which could name a patient, on a locked phone. Android could back the data up to the cloud. | Reminders say only who, when and where: "Dr. Maya Patel at 10:00 · Mount Sinai Hospital", then "Something you promised is due" or "Not confirmed yet". Android shows them as private on the lock screen, and the app turns off Android backup. Follow-up boxes say to keep patient details out. |
+| Danielle, Gloria, Leila | One "Not now", or a tap outside the question, turned reminders off for good, with nowhere to turn them back on. | You has a Reminders row: all, "17:30 only" or off. Only a real answer counts, and turning them on asks the phone again or opens Settings. |
+| Nadia | "12 mo" and "YoY" were still on someone's page, the year compared with was never named, and Dr. Patel's insight said 18% where her figure is 17%. | "12 months" and "on last year", with the year named where figures are compared ("Compared with Oct 2024 to Sep 2025"). The insight says 17%. |
+| Tomás | "Leakage", "code group" and CPT codes were still outside "All details". | Plain words: "Patients leaving", "See where they go", "None in this sample", and no codes in Ask. |
+| Tomás | Dr. Patel was planned at Mount Sinai West on a Tuesday, when she works at Mount Sinai Hospital. | The sample puts her and Dr. Morgan where they are that day. |
+| Gloria | The Ask button covered the bottom of Ask's text box and the "Add" bar in Targets. The question chips were small. Choices on You wrapped at large text. A long answer opened at its end. | Both have room for the button. The chips' touch area is 44pt. Choices stack at large text. A new answer opens at its start. |
+| Kwame | A real iPad got the phone frame, and the map was small. | A touch screen gets the app itself, full screen. Today's map grows with the screen and says where the route starts and that lines are straight, not roads. |
+| Danielle | Reminders and Today's rows didn't say where, Android's Directions dropped a pin instead of a route, Listen on someone's page said the promise twice, and "Read my report for this week" opened Saved. | The site is on reminders and on each row. Directions on Android opens Google Maps with the route. Listen says the promise once, and the question opens the week. |
+
+Left as they are, on purpose: a tap on the 17:30 reminder opens Today, which flags every visit still to log, rather than one person's log; and someone's page keeps "Log visit" as its big button before the visit, with Directions and Call just under it.
+
 ## Still missing, in order
 
 **Before reps rely on it**
 
 - Send what's on the phone when there's signal, and mark each record "Sent". Until there's a server, notes say "On this phone · not sent yet" (Ben, Omar).
 - Speech to text on the phone. Listening only works in a browser for now, so on a phone the rep types (Danielle).
+- Delete or correct a note the rep wrote, with a reason kept (Omar).
+
+**Decisions before showing it outside the team**
+
+- The sample uses real Mount Sinai facility names with fictional people. A fictional health system would remove any doubt (Omar).
+- Sample NPIs should be numbers that can't belong to anyone, by failing the real check digit (Omar).
 
 **Planning and trust, on the sample data**
 
 - Dates and plain words on the full profile behind "All details" too: its Network figures still say "12 mo", and it still uses "Leakage", "In system" and "Out of system" (Nadia, Tomás).
+- The main and dev previews share the browser's storage, so work done in one shows in the other.
+
 
 **With the backend**
 

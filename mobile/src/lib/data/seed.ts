@@ -7,6 +7,8 @@ import type { FollowUp, Interaction, PlanItem, StartPoint } from '../types';
 // months to the end of September 2026, plus the twelve before for comparison.
 // Notes, follow-ups and the plan move with today instead. Every figure says so.
 export const DATA_PERIOD = 'Sample data, Oct 2025 to Sep 2026';
+/** The twelve months the figures are compared with: "on last year" means these. */
+export const PRIOR_PERIOD = 'Oct 2024 to Sep 2025';
 /** The day after the figures end, so charts label the same quarters as DATA_PERIOD. */
 export const FIGURES_END = new Date(2026, 9, 1);
 
@@ -61,11 +63,14 @@ export function seedWorkspace(today: Date) {
   ];
 
   const today0 = day(0);
+  // Where Dr. Patel and Dr. Morgan work today (lib/data/hcps.ts), so the plan matches their days.
+  const mayaSite = today.getDay() === 2 ? 'msh' : 'msw';
+  const alexSite = today.getDay() === 5 ? 'msh' : 'msw';
   const plans: Record<string, PlanItem[]> = {
     [today0]: [
-      { id: 'v-maya', targetId: 'maya', siteId: 'msw', mode: 'timed', time: '10:00', duration: 30, type: 'In-person visit', goal: 'Bring the procedure mix vs. peers report.', status: 'planned', booking: 'confirmed', via: 'Rosa Diaz, scheduler' },
+      { id: 'v-maya', targetId: 'maya', siteId: mayaSite, mode: 'timed', time: '10:00', duration: 30, type: 'In-person visit', goal: 'Bring the procedure mix vs. peers report.', status: 'planned', booking: 'confirmed', via: 'Rosa Diaz, scheduler' },
       { id: 'v-jordan', targetId: 'jordan', siteId: 'msm', mode: 'timed', time: '14:00', duration: 30, type: 'In-person visit', goal: 'Confirm a date for the fellows lunch-and-learn.', status: 'planned', booking: 'requested', via: 'Email' },
-      { id: 'v-alex', targetId: 'alex', siteId: 'msw', mode: 'flexible', time: null, duration: 15, type: 'Phone call', goal: 'Ask about ablation referrals leaving the system.', status: 'planned' },
+      { id: 'v-alex', targetId: 'alex', siteId: alexSite, mode: 'flexible', time: null, duration: 15, type: 'Phone call', goal: 'Ask about ablation referrals leaving the system.', status: 'planned' },
     ],
     // Earlier this week: one visit logged after it moved a day, one meeting logged,
     // one cancelled and one never logged, for "Summarise my week".

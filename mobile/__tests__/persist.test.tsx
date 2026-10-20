@@ -6,7 +6,7 @@ import { act, renderHook, waitFor } from '@testing-library/react-native';
 import type { ReactNode } from 'react';
 
 import { addDays, isoDate, startOfDay } from '@/lib/format';
-import { draftKey, restoreDrafts, restoreWorkspace, WORKSPACE_KEY, type DeviceStorage, type LogDraft } from '@/lib/persist';
+import { BACKUP_KEY, draftKey, laterWriter, restoreDrafts, restoreWorkspace, WORKSPACE_KEY, type DeviceStorage, type LogDraft } from '@/lib/persist';
 import { useWorkspace, WorkspaceProvider } from '@/lib/store';
 import { cancelVisit, findItem, freshWorkspace, noteRecords, visitDone, withRecords } from '@/lib/workspace';
 
@@ -105,6 +105,54 @@ describe('after a reload', () => {
     await view.unmount();
     expect(items.get(WORKSPACE_KEY)).toBe('kept from before');
   });
+
+  test('what an older version kept is put aside before the sample starts again, and the rep is told', async () => {
+    const older = JSON.stringify({ ...withRecords(freshWorkspace(today), {}), version: 1 });
+    const items = new Map([[WORKSPACE_KEY, older]]);
+    const view = await renderStore(memoryStorage(items));
+    expect(view.result.current.notice?.message).toMatch(/from an older version, so the sample started again\. A copy is kept on the phone\.$/);
+    expect(items.get(BACKUP_KEY)).toBe(older);
+    expect(view.result.current.ws.pristine).toBe(true);
+  });
+
+  test('nothing kept is no news: no notice and no copy', async () => {
+    const items = new Map<string, string>();
+    const view = await renderStore(memoryStorage(items));
+    expect(view.result.current.notice).toBeNull();
+    expect(items.has(BACKUP_KEY)).toBe(false);
+  });
+});
+
+describe('writing to the phone', () => {
+  test('a write that fails is tried again with the next flush, unless something newer is waiting', async () => {
+    const items = new Map<string, string>();
+    let fail = true;
+    const storage = {
+      getItem: async (key: string) => items.get(key) ?? null,
+      setItem: async (key: string, value: string) => {
+        if (fail) throw new Error('full');
+        items.set(key, value);
+      },
+    };
+    let errors = 0;
+    const writer = laterWriter(storage, 'k', 1000, () => errors++);
+    writer.write({ n: 1 });
+    writer.flush();
+    await waitFor(() => expect(errors).toBe(1));
+    expect(items.has('k')).toBe(false);
+    fail = false;
+    writer.flush();
+    await waitFor(() => expect(items.get('k')).toBe('{"n":1}'));
+
+    fail = true;
+    writer.write({ n: 2 });
+    writer.flush();
+    writer.write({ n: 3 });
+    await waitFor(() => expect(errors).toBe(2));
+    fail = false;
+    writer.flush();
+    await waitFor(() => expect(items.get('k')).toBe('{"n":3}'));
+  });
 });
 
 describe('a workspace kept from an earlier day', () => {
@@ -155,15 +203,28 @@ describe('what can’t be used starts from the sample', () => {
     expect(restoreWorkspace(JSON.stringify(older), today).saved).toEqual([]);
   });
 
-  test('a draft for a visit that has since been logged or dropped is let go', () => {
+  test('a draft for a visit since logged is let go; one for a visit moved or dropped stays with the person', () => {
+    const mayaKey = draftKey('maya', { day: todayIso, id: 'v-maya' });
     const drafts = {
-      [draftKey('maya', { day: todayIso, id: 'v-maya' })]: draft(),
+      [mayaKey]: draft(),
       [draftKey('jordan', { day: todayIso, id: 'v-gone' })]: draft({ targetId: 'jordan', visit: { day: todayIso, id: 'v-gone' } }),
       [draftKey('alex')]: draft({ targetId: 'alex', visit: undefined }),
     };
     const ws = freshWorkspace(today);
-    expect(Object.keys(restoreDrafts(JSON.stringify(drafts), ws))).toEqual([draftKey('maya', { day: todayIso, id: 'v-maya' }), 'alex']);
-    expect(Object.keys(restoreDrafts(JSON.stringify(drafts), visitDone(ws, todayIso, 'v-maya')))).toEqual(['alex']);
+    const kept = restoreDrafts(JSON.stringify(drafts), ws);
+    expect(Object.keys(kept)).toEqual(['alex', mayaKey, 'jordan']);
+    expect(kept.jordan).toEqual({ targetId: 'jordan', outcome: 'Met', note: 'She wants the peer report by Fri', there: [] });
+    expect(Object.keys(restoreDrafts(JSON.stringify(drafts), visitDone(ws, todayIso, 'v-maya')))).toEqual(['alex', 'jordan']);
+    // Cancelled: the words stay, as a draft for the person.
+    expect(restoreDrafts(JSON.stringify(drafts), cancelVisit(ws, todayIso, 'v-maya', 'Clinic ran late', todayIso)).maya?.note).toBe('She wants the peer report by Fri');
     expect(restoreDrafts('not json', ws)).toEqual({});
+  });
+
+  test('a person’s own draft isn’t written over by one from a visit that went', () => {
+    const drafts = {
+      [draftKey('jordan')]: draft({ targetId: 'jordan', visit: undefined, note: 'Their own' }),
+      [draftKey('jordan', { day: todayIso, id: 'v-gone' })]: draft({ targetId: 'jordan', visit: { day: todayIso, id: 'v-gone' }, note: 'From the visit' }),
+    };
+    expect(restoreDrafts(JSON.stringify(drafts), freshWorkspace(today)).jordan?.note).toBe('Their own');
   });
 });

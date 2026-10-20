@@ -51,6 +51,18 @@ export function conflicts(items: PlanItem[] = []): [PlanItem, PlanItem][] {
 
 export const endTime = (item: PlanItem): string => fromMinutes(startOf(item) + item.duration);
 
+/** When the working day is over: an "Any time" stop not logged by then is flagged, and the phone reminds the rep. */
+export const END_OF_DAY = '17:30';
+
+/**
+ * Whether a planned visit should have been logged by now: one with a fixed time
+ * once it's over, an "Any time" stop from the end of the day.
+ */
+export function notLogged(item: PlanItem, minutesNow: number): boolean {
+  if (item.status !== 'planned') return false;
+  return minutesNow >= (item.mode === 'timed' && item.time ? startOf(item) + item.duration : toMinutes(END_OF_DAY));
+}
+
 /** A new plan item for a target; flexible by default so nothing is double-booked. */
 export function newItem(target: Target, siteId: string): PlanItem {
   return {

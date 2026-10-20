@@ -19,15 +19,10 @@ import { canListen, canSpeak, speak, stopSpeaking } from '@/lib/voice';
 
 export const telUrl = (phone: string): string => `tel:${phone.replace(/[^\d+]/g, '')}`;
 
-/** Opens the phone's own maps app with the route there; the browser gets Google Maps. */
+/** Opens the phone's own maps app with the route there; Android and the browser get Google Maps' directions. */
 export function directionsUrl([lon, lat]: LonLat, label: string): string {
   const name = encodeURIComponent(label);
-  return (
-    Platform.select({
-      ios: `https://maps.apple.com/?daddr=${lat},${lon}&q=${name}`,
-      android: `geo:${lat},${lon}?q=${lat},${lon}(${name})`,
-    }) ?? `https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}`
-  );
+  return Platform.OS === 'ios' ? `https://maps.apple.com/?daddr=${lat},${lon}&q=${name}` : `https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}`;
 }
 
 function Action({ icon, label, hint, on = false, onPress }: { icon: LucideIcon; label: string; hint: string; on?: boolean; onPress: () => void }) {

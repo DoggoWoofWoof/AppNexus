@@ -34,9 +34,9 @@ export default function Targets() {
   // Select: the people ticked to add in one go, or null when not selecting.
   const [picked, setPicked] = useState<string[] | null>(null);
   const day = ctx.ws.selection.day;
-  const dayWord = day === ctx.todayIso ? 'today' : 'tomorrow';
+  const dayWord = ctx.dayWord(day);
   const free = ctx.filling;
-  const others = ctx.freeSlotsOn(day).filter((s) => s.itemId !== free?.itemId);
+  const others = ctx.freeSlotsOn(day, new Date()).filter((s) => s.itemId !== free?.itemId);
   const applied = free ? { ...filters, sort: 'distance' as const, planned: 'unplanned' as const } : filters;
   const found = ctx.search(applied);
   // While filling a time, whoever is usually seeing people then comes first, still nearest first.
@@ -159,7 +159,9 @@ export default function Targets() {
         </Dialog>
       </Screen>
       {picking ? (
-        <View className="absolute inset-x-0 bottom-0 border-t border-border bg-background px-4 py-3">
+        // Room at the bottom for the Ask button, which rises out of the tab bar below.
+        <View className="absolute inset-x-0 bottom-0 border-t border-border bg-background px-4 pb-7 pt-3">
+
           <Button size="lg" className="rounded-xl" disabled={!picking.length} onPress={addPicked}>
             <Text className="text-lg">{picking.length ? `Add ${picking.length} to ${dayWord}` : 'Pick people to add'}</Text>
           </Button>

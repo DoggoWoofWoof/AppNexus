@@ -1,5 +1,5 @@
 // Saved, from the menu: visit prep for anyone you've asked about or are seeing
-// today or tomorrow, then the answers you kept from Ask as reports.
+// today or the next working day, then the answers you kept from Ask as reports.
 
 import { router } from 'expo-router';
 import { ChevronRight, FileText } from 'lucide-react-native';
@@ -54,7 +54,8 @@ export default function Saved() {
             );
           })
         ) : (
-          <Text className="text-muted-foreground">Nothing planned for today or tomorrow, and you haven’t asked about anyone yet.</Text>
+          <Text className="text-muted-foreground">{`Nothing planned for today or ${ctx.dayWord(ctx.planDays()[1].iso)}, and you haven’t asked about anyone yet.`}</Text>
+
         )}
       </Section>
 

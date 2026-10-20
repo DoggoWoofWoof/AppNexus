@@ -22,7 +22,7 @@ const fact = (a: ReturnType<typeof week>, title: string) => a.rows.find((r) => r
 
 describe('summarise my week', () => {
   test('understands plain ways of asking, and leaves other "this week" questions alone', () => {
-    for (const q of ['Summarise my week', 'Summarize my week', 'my week', 'How was my week?', 'What did I do this week?', 'Weekly report', 'Week summary', 'Give me a recap of the week', 'Update for my manager']) {
+    for (const q of ['Summarise my week', 'Summarize my week', 'my week', 'How was my week?', 'What did I do this week?', 'Weekly report', 'Week summary', 'Give me a recap of the week', 'Update for my manager', 'Read my report for this week']) {
       expect([q, detectIntent(q)]).toEqual([q, 'week']);
     }
     expect(detectIntent('What follow-ups are due this week?')).toBe('followups');
@@ -36,13 +36,24 @@ describe('summarise my week', () => {
     expect(chips).toContain('Summarise my week');
   });
 
-  test('counts the sample week: visits done against planned, what changed, notes, follow-ups and accounts', () => {
+  test('counts the sample week: visits logged of those due so far, what changed, notes, follow-ups and accounts', () => {
     const a = week();
     expect(a).toMatchObject({ intent: 'week', subject: null, about: null, facts: true, title: 'Your week to 19 Oct' });
-    expect(a.summary).toBe('Your week: 2 of 7 planned visits done, 3 more today. 2 notes logged, 1 follow-up late.');
-    expect(a.rows.map((r) => r.title)).toEqual(['Visits done', 'Cancelled, moved or not seen', 'Notes logged', 'Follow-ups open', 'Accounts covered', 'See next week']);
-    expect(fact(a, 'Visits done')).toMatchObject({ figure: '2 of 7', sub: 'Dr. Okafor (Thu) and Mount Sinai Hospital (Fri)' });
-    expect(fact(a, 'Cancelled, moved or not seen')).toMatchObject({ figure: '3', sub: 'Dr. Rossi cancelled (Fri) · Dr. Okafor moved from Wed to Thu · Dr. Raman not seen (Wed)' });
+    // Today's three are still to come, and a cancelled visit wasn't due.
+    expect(a.summary).toBe('Your week: 2 of 3 visits logged, 3 more today. 2 notes logged, 1 follow-up late.');
+    expect(a.rows.map((r) => r.title)).toEqual([
+      'Visits logged',
+      'Cancelled, moved or not logged',
+      'Notes logged',
+      'Follow-ups open',
+      'Accounts covered',
+      'Next week: Dr. Raman',
+      'Next week: Mount Sinai Morningside',
+      'Next week: Mount Sinai Harlem Health Center',
+    ]);
+    // A visit that was moved and then done says so where it's counted, not as a change.
+    expect(fact(a, 'Visits logged')).toMatchObject({ figure: '2 of 3', sub: 'Dr. Okafor (Thu, moved from Wed) and Mount Sinai Hospital (Fri)' });
+    expect(fact(a, 'Cancelled, moved or not logged')).toMatchObject({ figure: '2', sub: 'Dr. Rossi: visit cancelled (Fri) · Dr. Raman not logged (Wed)', tone: 'warn' });
     // A teammate's note isn't the rep's own.
     expect(fact(a, 'Notes logged')).toMatchObject({ figure: '2', sub: 'Dr. Okafor and Mount Sinai Hospital' });
     expect(fact(a, 'Follow-ups open')).toMatchObject({ figure: '4, 1 late', sub: '“Call about ablation referrals leaving the system” for Dr. Morgan, 2 days late', tone: 'warn' });
@@ -51,12 +62,18 @@ describe('summarise my week', () => {
     expect(a.scope).toEqual(['13 to 19 Oct', 'Your plan and notes', SAMPLE]);
   });
 
-  test('suggests two or three for next week with the app’s own reasons, skipping anyone seen or already planned', () => {
+  test('suggests two or three for next week, one row each, with the app’s own reasons and when they’re usually free', () => {
     const a = week();
-    const sub = fact(a, 'See next week')!.sub!;
-    expect(sub).toMatch(/: (patients going elsewhere|busier than last year|no visit in 30\+ days|no contact yet)/);
-    for (const seenOrPlanned of ['Dr. Okafor', 'Dr. Patel', 'Dr. Lee', 'Dr. Morgan']) expect(sub).not.toContain(seenOrPlanned);
-    expect(sub.split(/, | and /).length).toBeGreaterThanOrEqual(2);
+    const picks = a.rows.filter((r) => r.title.startsWith('Next week: '));
+    expect(picks.length).toBeGreaterThanOrEqual(2);
+    expect(picks.length).toBeLessThanOrEqual(3);
+    for (const pick of picks) {
+      expect(pick.id).toBeTruthy();
+      expect(pick.sub).toMatch(/^(Patients going elsewhere|Busier than last year|No visit in 30\+ days|No contact yet).* · Usually /);
+    }
+    // Anyone seen this week or already planned is left out.
+    for (const seenOrPlanned of ['Dr. Okafor', 'Dr. Patel', 'Dr. Lee', 'Dr. Morgan', 'Mount Sinai Hospital']) expect(picks.map((p) => p.title)).not.toContain(`Next week: ${seenOrPlanned}`);
+    expect(picks[0]).toMatchObject({ id: 'priya', sub: 'Patients going elsewhere and busier than last year · Usually Tue/Thu 12:30–13:30' });
     expect(a.doThis).toMatchObject({ label: 'Open Dr. Raman', link: { kind: 'profile', id: 'priya' } });
     expect(a.doThis?.text).toBe('Next week, start with Dr. Raman: patients going elsewhere and busier than last year.');
   });
@@ -67,10 +84,17 @@ describe('summarise my week', () => {
     next = bookVisit(next, { targetId: 'jordan', slot: { day: tomorrow, time: '09:00', siteId: 'msm' }, confirmed: true, from: { day: todayIso, id: 'v-jordan' } });
     expect(next.plans[tomorrow].find((i) => i.targetId === 'jordan')?.movedFrom).toEqual({ day: todayIso, time: '14:00' });
     const a = week(next);
-    expect(a.summary).toBe('Your week: 2 of 7 planned visits done, 1 more today. 2 notes logged, 1 follow-up late.');
-    expect(fact(a, 'Cancelled, moved or not seen')?.sub).toBe(
-      'Dr. Rossi cancelled (Fri) · Dr. Patel cancelled (Mon) · Dr. Okafor moved from Wed to Thu · Dr. Lee moved from Mon to Tue 20 Oct · Dr. Raman not seen (Wed)',
-    );
+    expect(a.summary).toBe('Your week: 2 of 3 visits logged, 1 more today. 2 notes logged, 1 follow-up late.');
+    expect(fact(a, 'Cancelled, moved or not logged')).toMatchObject({
+      figure: '4',
+      sub: 'Dr. Rossi: visit cancelled (Fri) · Dr. Patel: visit cancelled (Mon) · Dr. Lee moved from Mon to Tue 20 Oct · Dr. Raman not logged (Wed)',
+    });
+  });
+
+  test('a visit logged as not in counts as logged, and says so', () => {
+    const notIn = { ...ws, plans: { ...ws.plans, '2026-10-16': ws.plans['2026-10-16'].map((i) => (i.id === 'v-msh-past' ? { ...i, outcome: 'Attempted' } : i)) } };
+    const a = week(notIn);
+    expect(a.summary).toBe('Your week: 2 of 3 visits logged (1 not in), 3 more today. 2 notes logged, 1 follow-up late.');
   });
 
   test('is about the rep’s week even in a person’s own chat', () => {
@@ -98,10 +122,18 @@ describe('the week as a saved report', () => {
 
     const doc = reportDoc(report, today);
     expect(doc).toMatchObject({ kind: 'report', when: 'Saved today' });
-    expect(doc.sections[0].lines.map((l) => l.label)).toEqual(['Visits done', 'Cancelled, moved or not seen', 'Notes logged', 'Follow-ups open', 'Accounts covered', 'See next week']);
+    expect(doc.sections[0].lines.map((l) => l.label).slice(0, 6)).toEqual([
+      'Visits logged',
+      'Cancelled, moved or not logged',
+      'Notes logged',
+      'Follow-ups open',
+      'Accounts covered',
+      'Next week: Dr. Raman',
+    ]);
     const lines = docText(doc, new Date(2026, 9, 19, 17, 30)).split('\n');
     expect(lines.slice(0, 5)).toEqual(['Your week to 19 Oct', 'Saved today', '', 'Asked: Summarise my week', report.summary]);
-    expect(lines).toContain('- Visits done: Dr. Okafor (Thu) and Mount Sinai Hospital (Fri) (2 of 7)');
+    expect(lines).toContain('- Visits logged: Dr. Okafor (Thu, moved from Wed) and Mount Sinai Hospital (Fri) (2 of 3)');
+
     expect(lines.slice(-2)).toEqual(['13 to 19 Oct · Your plan and notes · Sample data', 'From Field Pro, 19 Oct 2026, 17:30. For internal use: check it before it goes outside the company.']);
   });
 });

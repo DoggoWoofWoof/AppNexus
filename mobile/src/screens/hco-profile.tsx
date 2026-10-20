@@ -109,7 +109,7 @@ function Profile({ org, section }: { org: Org; section?: string }) {
             entity={org}
             mode={volumeMode}
             onModeChange={setVolumeMode}
-            leakage={org.leakage ? <Leakage org={org} /> : <Unavailable title="Leakage not reported for this site" body={org.leakageUnavailable} />}
+            leakage={org.leakage ? <Leakage org={org} /> : <Unavailable title="Patients leaving not counted here" body={org.leakageUnavailable} />}
           />
         </TabsContent>
         <TabsContent value="network" className="gap-5">
@@ -160,7 +160,7 @@ function Overview({ org, onShowVolumes, onShowFollowUps }: { org: Org; onShowVol
         )}
       </Disclosure>
 
-      <ComingLater title="More on the web platform" items={['Map of this facility', 'Leakage report (PDF)']} />
+      <ComingLater title="More on the web platform" items={['Map of this facility', 'Patients leaving report (PDF)']} />
       <SampleNote />
     </>
   );
@@ -179,7 +179,8 @@ function Leakage({ org }: { org: Org }) {
 
   return (
     <>
-      <Section title="Leakage summary" sub={`${l.scope} · ${DATA_PERIOD}`}>
+      <Section title="Patients leaving" sub={`${l.scope} · ${DATA_PERIOD}`}>
+
         <Text>
           <Text className="font-serif text-num">{formatNumber(l.patients)}</Text>
           <Text className="text-muted-foreground"> patients</Text>

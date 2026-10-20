@@ -48,7 +48,7 @@ export const HCPS: HcpData[] = [
       { hcpId: 'sam', type: 'Heart team', detail: 'Weekly structural heart conference' },
     ],
     leakageRisk: true,
-    insight: 'PCI volume is up about 18% year on year, but 11 complex PCI patients were sent to Hudson Heart Institute.',
+    insight: 'PCI volume is up about 17% on last year, but 11 complex PCI patients were sent to Hudson Heart Institute.',
     webSections: WEB_SECTIONS,
   },
   {
@@ -320,7 +320,7 @@ export const HCPS: HcpData[] = [
     contact: { phone: '(212) 555-0909', email: 'hannah.cohen@example.org', preferred: null, assistant: null },
     affiliations: [{ orgId: 'kidney', role: 'Attending Nephrologist', share: 100, days: 'Mon–Fri' }],
     procedures: null,
-    proceduresUnavailable: 'No procedures in your cardiovascular code group for this specialty.',
+    proceduresUnavailable: 'This specialty doesn’t do the cardiovascular procedures in this sample.',
     diagnoses: [
       { name: 'Chronic kidney disease, stage 3–5', code: 'N18.3–N18.5', series: series(300, 0.04) },
       { name: 'Cardiorenal syndrome', code: 'I13.0', series: series(24, 0.2) },
@@ -350,7 +350,7 @@ export const HCPS: HcpData[] = [
     contact: { phone: '(212) 555-1001', email: 'marcus.bell@example.org', preferred: 'Lunch hour, 12–1', assistant: null, windows: [{ days: 'Mon–Fri', from: '12:00', to: '13:00' }] },
     affiliations: [{ orgId: 'harlem', role: 'Primary care physician', share: 100, days: 'Mon–Fri' }],
     procedures: null,
-    proceduresUnavailable: 'No procedures in your cardiovascular code group for this specialty.',
+    proceduresUnavailable: 'This specialty doesn’t do the cardiovascular procedures in this sample.',
     diagnoses: [
       { name: 'Hypertension', code: 'I10', series: series(1400, 0.02) },
       { name: 'Coronary artery disease', code: 'I25.10', series: series(260, 0.03) },

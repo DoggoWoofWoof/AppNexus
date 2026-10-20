@@ -5,8 +5,8 @@ import { createContext, useContext, useEffect, useMemo, useRef, useState, type R
 import { AppState } from 'react-native';
 
 import { getEntity } from './data';
-import { formatDate, isoDate, plural, startOfDay } from './format';
-import { DRAFTS_KEY, laterWriter, loadKept, WORKSPACE_KEY, type DeviceStorage, type Kept, type LogDraft } from './persist';
+import { addDays, formatDate, isoDate, plural, startOfDay } from './format';
+import { DRAFTS_KEY, laterWriter, loadKept, restoreDrafts, restoreWorkspace, WORKSPACE_KEY, type DeviceStorage, type Kept, type LogDraft } from './persist';
 import { withPrefs } from './prefs';
 import type { Prefs, SavedReport, Workspace } from './types';
 import {
@@ -21,6 +21,7 @@ import {
   completeFollowUp,
   confirmBooking,
   fillSlot,
+  fillSlotError,
   findItem,
   followUpError,
   followUpRecord,
@@ -34,7 +35,7 @@ import {
   restoreVisit,
   saveReport,
   setVisitTime,
-  visitDone,
+  visitsLogged,
   visitTimeError,
   withRecords,
   type BookingDraft,
@@ -65,7 +66,7 @@ type Store = Context & {
   restoreVisit: (day: string, id: string) => void;
   /** Chooses which free slot Targets fills. */
   chooseSlot: (slotId: string) => void;
-  /** Puts someone in a free slot as a requested visit, if they can usually be seen then. */
+  /** Puts someone in a free slot as a requested visit, if they can usually be seen then. Says why not otherwise. */
   fillSlot: (slotId: string, targetId: string) => void;
   /** Stops offering a free slot. */
   leaveFree: (slotId: string) => void;
@@ -110,6 +111,7 @@ const saveFailed = (): Notice => ({ id: Date.now(), message: 'Couldn’t save on
 
 type ProviderProps = {
   children: ReactNode;
+  /** The day to show. Without it the app follows the clock, and moves on to the next day at midnight. */
   today?: Date;
   /** The clock, so tests can say what time it is. */
   now?: () => Date;
@@ -118,7 +120,7 @@ type ProviderProps = {
 };
 
 export function WorkspaceProvider({ children, today: initialDay, now = systemClock, storage = null }: ProviderProps) {
-  const [today] = useState(() => initialDay ?? startOfDay());
+  const [today] = useState(() => initialDay ?? startOfDay(now()));
   const [kept, setKept] = useState<Kept | null>(() => (storage ? null : { ws: freshWorkspace(today), drafts: {}, readable: true }));
   useEffect(() => {
     if (!storage) return;
@@ -134,17 +136,37 @@ export function WorkspaceProvider({ children, today: initialDay, now = systemClo
   // Nothing shows until it has loaded, so nothing done in the meantime is lost.
   if (!kept) return null;
   return (
-    <LoadedWorkspace kept={kept} today={today} now={now} storage={kept.readable ? storage : null}>
+    <LoadedWorkspace kept={kept} firstDay={today} followClock={!initialDay} now={now} storage={kept.readable ? storage : null}>
       {children}
     </LoadedWorkspace>
   );
 }
 
-function LoadedWorkspace({ children, kept, today, now, storage }: { children: ReactNode; kept: Kept; today: Date; now: () => Date; storage: DeviceStorage | null }) {
+const firstNotice = (kept: Kept): Notice | null =>
+  !kept.readable
+    ? { id: Date.now(), message: 'Couldn’t open what’s saved on this phone, so changes won’t be kept.', canUndo: false }
+    : kept.replaced
+      ? { id: Date.now(), message: 'What was on this phone was from an older version, so the sample started again. A copy is kept on the phone.', canUndo: false }
+      : null;
+
+function LoadedWorkspace({
+  children,
+  kept,
+  firstDay,
+  followClock,
+  now,
+  storage,
+}: {
+  children: ReactNode;
+  kept: Kept;
+  firstDay: Date;
+  followClock: boolean;
+  now: () => Date;
+  storage: DeviceStorage | null;
+}) {
+  const [today, setToday] = useState(firstDay);
   const [ws, setWs] = useState(kept.ws);
-  const [notice, setNotice] = useState<Notice | null>(() =>
-    kept.readable ? null : { id: Date.now(), message: 'Couldn’t open what’s saved on this phone, so changes won’t be kept.', canUndo: false },
-  );
+  const [notice, setNotice] = useState<Notice | null>(() => firstNotice(kept));
   const drafts = useRef(kept.drafts);
   // Writes to the phone, a moment after the last change.
   const writers = useMemo(() => {
@@ -177,6 +199,32 @@ function LoadedWorkspace({ children, kept, today, now, storage }: { children: Re
     current.current = ws;
   }, [ws]);
 
+  // Open past midnight, or back the next day: the app moves on to the new day as
+  // a fresh launch would, keeping the rep's work. Undo can't reach back across it.
+  useEffect(() => {
+    if (!followClock) return;
+    const moveOn = () => {
+      const day = startOfDay(now());
+      if (isoDate(day) === isoDate(today)) return;
+      const next = restoreWorkspace(JSON.stringify(current.current), day);
+      drafts.current = restoreDrafts(JSON.stringify(drafts.current), next);
+      writers?.drafts.write(drafts.current);
+      before.current = null;
+      current.current = next;
+      setWs(next);
+      setNotice(null);
+      setToday(day);
+    };
+    const timer = setTimeout(moveOn, addDays(today, 1).getTime() - now().getTime() + 1000);
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') moveOn();
+    });
+    return () => {
+      clearTimeout(timer);
+      sub.remove();
+    };
+  }, [followClock, today, now, writers]);
+
   // The actions only need today, so they keep their identity as the workspace changes.
   const actions = useMemo(() => {
     const todayIso = isoDate(today);
@@ -198,10 +246,7 @@ function LoadedWorkspace({ children, kept, today, now, storage }: { children: Re
         const error = noteError(draft, todayIso);
         if (error) return error;
         const { interaction, followUp } = noteRecords(draft);
-        setWs((w) => {
-          const next = withRecords(w, { interactions: [interaction], followUps: followUp ? [followUp] : [] });
-          return draft.visit ? visitDone(next, draft.visit.day, draft.visit.id) : next;
-        });
+        setWs((w) => visitsLogged(withRecords(w, { interactions: [interaction], followUps: followUp ? [followUp] : [] }), draft));
         // There's no server yet, so say where it is rather than just "saved".
         const message = writers ? (draft.visit ? 'Visit logged · saved on this phone' : 'Note saved on this phone') : draft.visit ? 'Visit logged' : 'Note saved';
         setNotice({ id: Date.now(), message, canUndo: false });
@@ -226,9 +271,12 @@ function LoadedWorkspace({ children, kept, today, now, storage }: { children: Re
       chooseSlot: (slotId: string) => quietly(chooseSlot(current.current, slotId)),
       fillSlot: (slotId: string, targetId: string) => {
         const slot = current.current.freeSlots.find((s) => s.itemId === slotId);
-        const next = fillSlot(current.current, slotId, targetId);
-        if (!slot || next === current.current) return;
-        apply(next, `${getEntity(targetId)?.name} added at ${slot.time} · not confirmed yet`);
+        const error = fillSlotError(current.current, slotId, targetId, now());
+        if (!slot || error) {
+          setNotice({ id: Date.now(), message: error ?? 'That time is no longer free.', canUndo: false });
+          return;
+        }
+        apply(fillSlot(current.current, slotId, targetId, now()), `${getEntity(targetId)?.name} added at ${slot.time} · not confirmed yet`);
       },
       leaveFree: (slotId: string) => quietly(leaveFree(current.current, slotId)),
       moveStop: (day: string, id: string, direction: -1 | 1) => {
@@ -253,8 +301,10 @@ function LoadedWorkspace({ children, kept, today, now, storage }: { children: Re
         const error = bookingError(current.current, draft);
         if (error || !draft.slot) return error;
         const when = `${onDay(draft.slot.day)} at ${draft.slot.time}`;
-        apply(bookVisit(current.current, draft), draft.confirmed ? `Booked ${when}` : `Requested ${when} · mark it confirmed when they reply`);
+        // Nothing is sent: the rep asks the office themselves, and marks it confirmed when they agree.
+        apply(bookVisit(current.current, draft, todayIso, now()), draft.confirmed ? `Booked ${when}` : `Put in your plan ${when} · ask them, then mark it confirmed`);
         return null;
+
       },
       confirmBooking: (day: string, id: string) => {
         if (!findItem(current.current, day, id)) return;

@@ -16,7 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import { useVisitSheets } from '@/components/visit-sheets';
-import { clashesWith } from '@/lib/booking';
+import { clashesWith, siteOnDay } from '@/lib/booking';
 import { buildBrief } from '@/lib/brief';
 import { getEntity, shortName, signalMeaning, siteFor } from '@/lib/data';
 import { firstSentence, relativeDay } from '@/lib/format';
@@ -44,7 +44,8 @@ function Page({ entity }: { entity: Entity }) {
   const visit = ctx.nextVisit(entity.id);
   const visitToday = visit?.day === ctx.todayIso;
   const todayPlan = ctx.ws.plans[ctx.todayIso] ?? [];
-  const seenToday = todayPlan.some((i) => i.targetId === entity.id && i.status === 'done');
+  const loggedToday = todayPlan.find((i) => i.targetId === entity.id && i.status === 'done');
+  const seenToday = !!loggedToday;
   // Cancelled today and not planned again: it can go back, unless its time has been filled since.
   const cancelled = !visit && !seenToday ? todayPlan.find((i) => i.targetId === entity.id && i.status === 'cancelled') : undefined;
   const canRestore = !!cancelled && !(cancelled.mode === 'timed' && cancelled.time && clashesWith(todayPlan, cancelled.time, cancelled.duration, cancelled.id).length);
@@ -61,9 +62,10 @@ function Page({ entity }: { entity: Entity }) {
         ? 'Cancelled today'
         : '';
   const what = entity.kind === 'hcp' ? entity.specialty : entity.typeDetail;
-  const where = entity.kind === 'hcp' ? siteFor(entity, visit?.item.siteId).name : entity.city.replace(/ \d{5}$/, '');
+  // Where the visit is, or where they work today.
+  const siteId = visit?.item.siteId ?? siteOnDay(entity, ctx.today.getDay()) ?? undefined;
+  const where = entity.kind === 'hcp' ? siteFor(entity, siteId).name : entity.city.replace(/ \d{5}$/, '');
   const signals = ctx.signals(entity);
-
 
   return (
     <ScrollView className="flex-1 bg-background" contentContainerClassName="gap-4 px-4 pb-10 pt-4">
@@ -113,10 +115,13 @@ function Page({ entity }: { entity: Entity }) {
         </View>
       ) : null}
 
-      {seenToday && !visit ? (
+      {loggedToday && !visit ? (
         <View className="flex-row items-center gap-2 rounded-xl bg-success-soft p-4">
           <Icon as={CircleCheck} size={20} className="text-success" />
-          <Text className="flex-1 text-base font-semibold">Logged. Nice work.</Text>
+          <View className="flex-1 gap-0.5">
+            <Text className="text-base font-semibold">{loggedToday.outcome === 'Attempted' ? 'Logged as not in.' : 'Logged. Nice work.'}</Text>
+            <Text className="text-sm text-muted-foreground">On this phone · not sent yet</Text>
+          </View>
         </View>
       ) : null}
 
@@ -132,7 +137,7 @@ function Page({ entity }: { entity: Entity }) {
           </Button>
         ) : !visit && !seenToday ? (
           <Button size="lg" className="rounded-xl" onPress={() => ctx.addToPlan(entity.id, addDay)}>
-            <Text className="text-lg">{addDay === ctx.todayIso ? 'Add to today' : 'Add to tomorrow'}</Text>
+            <Text className="text-lg">{`Add to ${ctx.dayWord(addDay)}`}</Text>
           </Button>
         ) : null}
         {visit ? (
@@ -151,7 +156,7 @@ function Page({ entity }: { entity: Entity }) {
         )}
       </View>
 
-      <QuickActions entity={entity} siteId={visit?.item.siteId} />
+      <QuickActions entity={entity} siteId={siteId} />
 
       <View className="mt-2">
         <TargetInfo entity={entity} brief={brief} />

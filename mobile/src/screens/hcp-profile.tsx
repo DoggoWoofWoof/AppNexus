@@ -223,8 +223,8 @@ function Network({ hcp }: { hcp: Hcp }) {
 
       <Kpis
         items={[
-          { label: 'Referred in · 12 mo', value: formatNumber(r.inbound), sub: plural(inbound.length, 'source') },
-          { label: 'Referred out · 12 mo', value: formatNumber(r.outbound), sub: plural(outbound.length, 'destination') },
+          { label: 'Referred in · 12 months', value: formatNumber(r.inbound), sub: plural(inbound.length, 'source') },
+          { label: 'Referred out · 12 months', value: formatNumber(r.outbound), sub: plural(outbound.length, 'destination') },
           {
             label: 'Leaving the system',
             value: r.leavingPct != null ? `${r.leavingPct}%` : '—',

@@ -13,7 +13,7 @@ import { Dialog } from '@/components/ui/dialog';
 import { Icon } from '@/components/ui/icon';
 import { Textarea } from '@/components/ui/textarea';
 import { Text } from '@/components/ui/text';
-import { descendantsOf, hcpsAt, shortName } from '@/lib/data';
+import { descendantsOf, getEntity, hcpsAt, shortName } from '@/lib/data';
 import { draftKey } from '@/lib/persist';
 import { useWorkspace } from '@/lib/store';
 import type { Entity, VisitType } from '@/lib/types';
@@ -68,13 +68,18 @@ function LogForm({ target, visit, seen, onDone }: { target: Entity; visit?: Visi
   const start = seen ? 'Met' : '';
   const [outcome, setOutcome] = useState(seen ? start : (kept?.outcome ?? start));
   const [note, setNote] = useState(kept?.note ?? '');
-  // Who was in the room at an account: its busiest doctors and its executives.
+  // Who was in the room at an account: doctors planned there today first, then its
+  // busiest, and its executives. Ticking a doctor planned today logs their visit too.
+  const plannedHere = ctx.dayPlan(ctx.todayIso).filter((i) => i.status === 'planned' && i.siteId === target.id && i.targetId !== target.id);
+  const doctors = [...new Set([...plannedHere.map((i) => i.targetId), ...hcpsAt(target.id).map((h) => h.id)])].slice(0, Math.max(6, plannedHere.length));
   const people =
     target.kind === 'hco'
       ? [
-          ...hcpsAt(target.id)
-            .slice(0, 5)
-            .map((h) => ({ key: h.id, label: shortName(h), doctor: true })),
+          ...doctors.flatMap((id) => {
+            const h = getEntity(id);
+            return h ? [{ key: h.id, label: shortName(h), doctor: true }] : [];
+          }),
+
           ...[target, ...descendantsOf(target.id)]
             .flatMap((o) => o.executives)
             .slice(0, 3)
@@ -130,7 +135,8 @@ function LogForm({ target, visit, seen, onDone }: { target: Entity; visit?: Visi
       targetId: target.id,
       type,
       outcome,
-      date: ctx.todayIso,
+      // A visit from an earlier day is logged on the day it was planned.
+      date: visit && visit.day < ctx.todayIso ? visit.day : ctx.todayIso,
       note,
       attendees: people.filter((p) => p.doctor && there.includes(p.key)).map((p) => p.key),
       contacts: people.filter((p) => !p.doctor && there.includes(p.key)).map((p) => p.key),

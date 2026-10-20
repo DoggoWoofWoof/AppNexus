@@ -19,10 +19,10 @@ const LARGE_TEXT = 1.35;
 export const useLargeText = () => useWindowDimensions().fontScale > LARGE_TEXT;
 
 /**
- * A coloured change, e.g. "+12% YoY". Rising is good for volumes; pass
+ * A coloured change, e.g. "+12% on last year". Rising is good for volumes; pass
  * `upIsBad` where a rise is bad news, such as patients leaving.
  */
-export function Delta({ value, suffix = ' YoY', upIsBad = false }: { value: number | null; suffix?: string; upIsBad?: boolean }) {
+export function Delta({ value, suffix = ' on last year', upIsBad = false }: { value: number | null; suffix?: string; upIsBad?: boolean }) {
   if (value == null || Number.isNaN(value)) return null;
   const dir = value >= 1 ? 'up' : value <= -1 ? 'down' : 'flat';
   const good = dir === 'flat' ? null : (dir === 'up') !== upIsBad;

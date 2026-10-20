@@ -9,6 +9,8 @@ import { findItem, freshWorkspace, WORKSPACE_VERSION } from './workspace';
 // Not the prototype's key: the two share an address on GitHub Pages, and their shapes differ.
 export const WORKSPACE_KEY = 'fieldpro.app.workspace';
 export const DRAFTS_KEY = 'fieldpro.app.drafts';
+/** What was kept, when it couldn't be carried on from, so starting again loses nothing for good. */
+export const BACKUP_KEY = 'fieldpro.app.workspace.backup';
 
 /** Where things are kept. AsyncStorage in the app; a plain object in tests. */
 export interface DeviceStorage {
@@ -70,13 +72,31 @@ export function restoreWorkspace(raw: string | null, today: Date): Workspace {
   };
 }
 
-/** Drafts kept from last time, leaving out any for a visit that is no longer planned. */
+/** Whether kept text is a workspace this version can carry on from. */
+function usable(raw: string | null): boolean {
+  const kept = readJson(raw);
+  return isRecord(kept) && kept.version === WORKSPACE_VERSION;
+}
+
+/**
+ * Drafts kept from last time. One for a visit that has been logged is let go. One
+ * for a visit moved or cancelled since stays as a note about the person, unless
+ * they already have one.
+ */
 export function restoreDrafts(raw: string | null, ws: Workspace): Drafts {
   const kept = readJson(raw);
   if (!isRecord(kept)) return {};
-  return Object.fromEntries(
-    Object.entries(kept as Drafts).filter(([, d]) => !d.visit || findItem(ws, d.visit.day, d.visit.id)?.status === 'planned'),
-  );
+  const out: Drafts = {};
+  const entries = Object.entries(kept as Drafts);
+  for (const [key, d] of entries) if (!d.visit) out[key] = d;
+  for (const [key, d] of entries) {
+    if (!d.visit) continue;
+    const status = findItem(ws, d.visit.day, d.visit.id)?.status;
+    if (status === 'planned') out[key] = d;
+    // A visit logged since needs no draft.
+    else if (status !== 'done' && !out[d.targetId]) out[d.targetId] = { targetId: d.targetId, outcome: d.outcome, note: d.note, there: d.there };
+  }
+  return out;
 }
 
 export interface Kept {
@@ -84,6 +104,8 @@ export interface Kept {
   drafts: Drafts;
   /** False when storage couldn't be read, so nothing is written over what's there. */
   readable: boolean;
+  /** True when what was kept couldn't be carried on from, and a copy was put aside under BACKUP_KEY. */
+  replaced?: boolean;
 }
 
 /** What was kept on this phone, ready for today. */
@@ -91,7 +113,16 @@ export async function loadKept(storage: DeviceStorage, today: Date): Promise<Kep
   try {
     const [ws, drafts] = await Promise.all([storage.getItem(WORKSPACE_KEY), storage.getItem(DRAFTS_KEY)]);
     const restored = restoreWorkspace(ws, today);
-    return { ws: restored, drafts: restoreDrafts(drafts, restored), readable: true };
+    // From an older version, or unreadable: the sample starts again, and a copy is kept before it's written over.
+    const replaced = !!ws && !usable(ws);
+    if (replaced) {
+      try {
+        await storage.setItem(BACKUP_KEY, ws!);
+      } catch {
+        // The copy is a courtesy: starting again doesn't need it.
+      }
+    }
+    return { ws: restored, drafts: restoreDrafts(drafts, restored), readable: true, replaced };
   } catch {
     return { ws: freshWorkspace(today), drafts: {}, readable: false };
   }
@@ -100,6 +131,7 @@ export async function loadKept(storage: DeviceStorage, today: Date): Promise<Kep
 /**
  * Writes the latest value a moment after the last change, so typing doesn't write
  * on every key, or straight away on `flush`, such as when the app goes to the background.
+ * A write that fails is tried again with the next change or flush.
  */
 export function laterWriter(storage: DeviceStorage, key: string, delayMs: number, onError: () => void) {
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -107,14 +139,20 @@ export function laterWriter(storage: DeviceStorage, key: string, delayMs: number
   const flush = () => {
     clearTimeout(timer);
     if (!pending) return;
-    const { value } = pending;
+    const failed = pending;
     pending = null;
-    try {
-      storage.setItem(key, JSON.stringify(value)).catch(onError);
-    } catch {
+    const retry = () => {
+      // Unless something newer is already waiting to be written.
+      pending ??= failed;
       onError();
+    };
+    try {
+      storage.setItem(key, JSON.stringify(failed.value)).catch(retry);
+    } catch {
+      retry();
     }
   };
+
   return {
     write: (value: unknown) => {
       pending = { value };
