@@ -25,7 +25,7 @@ import {
   type Turn,
 } from '@/lib/chat';
 import { startOfDay } from '@/lib/format';
-import { CHATS_KEY, type DeviceStorage } from '@/lib/persist';
+import { CHATS_BACKUP_KEY, CHATS_KEY, type DeviceStorage } from '@/lib/persist';
 import { useWorkspace, WorkspaceProvider } from '@/lib/store';
 import { buildContext, freshWorkspace } from '@/lib/workspace';
 
@@ -218,7 +218,7 @@ describe('History in the app', () => {
     expect(result.current.chat.recentlyOpened()).toEqual([]);
   });
 
-  test('visit prep uses every question kept, but Saved only lists those asked about this week', async () => {
+  test('their page lists every question kept, but Saved only lists those asked about this week', async () => {
     const { storage } = memoryStorage(
       new Map([
         [
@@ -236,5 +236,37 @@ describe('History in the app', () => {
     expect(result.current.chat.talkedAbout()).toEqual(['jordan']);
     expect(result.current.chat.asked('maya').map((a) => a.question)).toEqual(['Where does she refer?']);
     expect(result.current.chat.conversations().map((c) => c.id)).toEqual(['c-new', 'c-old']);
+  });
+
+  test('chats that can’t be read are copied aside on the phone, and Ask starts again', async () => {
+    const unreadable = JSON.stringify({ version: 99, threads: {} });
+    const { storage, items } = memoryStorage(new Map([[CHATS_KEY, unreadable]]));
+    const { result } = await renderChat(storage);
+    expect(result.current.chat.conversations()).toEqual([]);
+    expect(items.get(CHATS_BACKUP_KEY)).toBe(unreadable);
+  });
+
+  test('an answer can be saved again once its report is removed from Saved', async () => {
+    const { result } = await renderChat();
+    await act(async () => {
+      await result.current.chat.ask(TERRITORY, 'Who should I see today?');
+    });
+    const [asked] = result.current.chat.turns(TERRITORY);
+    await act(() => result.current.chat.save(TERRITORY, asked.id));
+    const [report] = result.current.ws.ws.saved;
+    expect(result.current.chat.turns(TERRITORY)[0].savedId).toBe(report.id);
+    await act(() => result.current.ws.removeSaved(report.id));
+    expect(result.current.chat.turns(TERRITORY)[0].savedId).toBeUndefined();
+    await act(() => result.current.chat.save(TERRITORY, asked.id));
+    expect(result.current.ws.ws.saved).toHaveLength(1);
+  });
+
+  test('a question in someone’s chat that names another doctor is kept with that doctor', async () => {
+    const { result } = await renderChat();
+    await act(async () => {
+      await result.current.chat.ask('maya', 'Who refers to Dr. Okafor?');
+    });
+    expect(result.current.chat.talkedAbout()).toContain('okafor');
+    expect(result.current.chat.asked('okafor').map((a) => a.question)).toEqual(['Who refers to Dr. Okafor?']);
   });
 });

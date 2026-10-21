@@ -4,16 +4,19 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { AppState } from 'react-native';
 
+import { outsideWord, siteOnDay } from './booking';
 import { getEntity, shortName } from './data';
-import { addDays, formatDate, isoDate, plural, startOfDay } from './format';
+import { addDays, dayInWords, formatDate, fromIso, isoDate, minutesOfDay, plural, startOfDay, toMinutes } from './format';
 import { DRAFTS_KEY, laterWriter, loadKept, restoreDrafts, restoreWorkspace, WORKSPACE_KEY, type DeviceStorage, type Kept, type LogDraft } from './persist';
+import { END_OF_DAY, isOnSite } from './plan';
 import { withPrefs } from './prefs';
-import { withPrepAdded, withPrepEdit, type PrepAdd, type PrepEdit } from './prep';
-import type { PlanItem, Prefs, SavedReport, VisitType, Workspace } from './types';
+import { withPrepEdit, withSummaryText, type PrepEdit } from './prep';
+import type { Entity, PlanItem, Prefs, SavedReport, VisitType, Workspace } from './types';
 import {
   addAllToPlan,
   addPeople,
   addToPlan,
+  bookingDaysFrom,
   bookingError,
   bookVisit,
   buildContext,
@@ -30,8 +33,10 @@ import {
   freshWorkspace,
   leaveFree,
   moveStop,
+  moveDayFor,
   moveToDay,
   moveToDayError,
+  notDoneToday,
   noteError,
   noteRecords,
   removeSaved,
@@ -52,11 +57,13 @@ import {
   type NoteDraft,
 } from './workspace';
 
-/** A short message after a change, with Undo when the change can be taken back. */
+/** A short message after a change, with Undo when the change can be taken back, and at times another way to make it. */
 export interface Notice {
   id: number;
   message: string;
   canUndo: boolean;
+  /** The change made another way instead, such as on today after all. */
+  action?: { label: string; run: () => void };
 }
 
 type Store = Context & {
@@ -84,8 +91,15 @@ type Store = Context & {
   /** Books or reschedules a visit. Returns what's wrong instead when it can't be saved. */
   book: (draft: BookingDraft) => string | null;
   confirmBooking: (day: string, id: string) => void;
-  /** Adds someone to a day's plan (the selected day by default) at no fixed time, where it adds the least travel. `type` makes it a call. */
+  /**
+   * Adds someone to a day's plan (the selected day by default) at no fixed time, where
+   * it adds the least travel. `type` makes it a call. Adding to today once it's over
+   * puts them on the next working day (`addingTo`), with "Today instead"; on a day
+   * they aren't in, the toast says so, with a day they are in instead.
+   */
   addToPlan: (targetId: string, day?: string, type?: VisitType) => void;
+  /** The day adding to `day` puts people on: the next working day once today is over, after 17:30, unless the rep chose today this evening. */
+  addingTo: (day: string) => string;
   /** Puts the day's "Any time" visits in the order with the least driving, with Undo. */
   bestOrder: (day: string) => void;
   /** Puts an "Any time" stop at a place in the day as Today shows it (0 is next), with Undo. */
@@ -94,19 +108,24 @@ type Store = Context & {
   changeStop: (day: string, id: string, change: Partial<Pick<PlanItem, 'type' | 'duration'>>) => void;
   /** Moves an "Any time" visit to another day. Returns what's wrong instead when it can't. */
   moveToDay: (day: string, id: string, toDay: string) => string | null;
-  /** Adds several people to a day, nearest first. */
+  /**
+   * Once today is over, moves its visits not done (`notDoneToday`) to the next
+   * working day, or the next each can go, with one Undo.
+   */
+  moveNotDone: () => void;
+  /** Adds several people to a day, nearest first, as `addToPlan` does. */
   addAllToPlan: (targetIds: string[], day: string) => void;
-  /** Adds the people picked on Targets after the day's other stops, with one Undo. */
+  /** Adds the people picked on Targets after the day's other stops, with one Undo, as `addToPlan` does. */
   addPeople: (targetIds: string[], day: string) => void;
   /** Keeps an answer from Ask in the menu's Saved list. */
   saveReport: (report: SavedReport) => void;
   removeSaved: (id: string) => void;
   /** Changes the rep's own choices on the You page. Quietly, and Undo leaves them as they are. */
   setPrefs: (patch: Partial<Prefs>) => void;
-  /** Keeps the rep's own summary and goal for someone (their prep), with Undo. Both blank goes back to the one from the data. */
+  /** Keeps the rep's own words and goal for someone's Summary (their prep), with Undo. Both blank goes back to the one from the data. */
   editPrep: (id: string, edit: PrepEdit) => void;
-  /** Adds a goal and lines from Ask to someone's Summary, after the rep's own, with Undo. */
-  addToPrep: (id: string, add: PrepAdd) => void;
+  /** Puts words from Ask in someone's Summary in place of the rep's, keeping their goal, with Undo. */
+  keepSummary: (id: string, text: string) => void;
   /** A note started in the log sheet and closed before it was saved. */
   draftFor: (key: string) => LogDraft | null;
   /** Keeps a half-written note, or with null lets it go. */
@@ -212,6 +231,8 @@ function LoadedWorkspace({
   // The workspace before the last undoable change, and the latest one for the actions to read.
   const before = useRef<Workspace | null>(null);
   const current = useRef(ws);
+  // The day the rep said to keep adding to after 17:30, with Today instead.
+  const keptToday = useRef('');
   useEffect(() => {
     current.current = ws;
   }, [ws]);
@@ -245,25 +266,100 @@ function LoadedWorkspace({
   // The actions only need today, so they keep their identity as the workspace changes.
   const actions = useMemo(() => {
     const todayIso = isoDate(today);
-    const apply = (next: Workspace, message: string, canUndo = true) => {
-      before.current = canUndo ? current.current : null;
+    const days = bookingDaysFrom(today);
+    // Undo goes back to `from`: the workspace before this change, or before the one it replaces.
+    const apply = (next: Workspace, message: string, canUndo = true, action?: Notice['action'], from = current.current) => {
+      before.current = canUndo ? from : null;
       current.current = next;
       setWs(next);
-      setNotice({ id: Date.now(), message, canUndo });
+      setNotice({ id: Date.now(), message, canUndo, action });
+    };
+    // A note or follow-up written after a change: Undo would take it back too, so Undo goes.
+    const dropUndo = () => {
+      if (!before.current) return;
+      before.current = null;
+      setNotice((n) => (n?.canUndo ? null : n));
     };
     // A change that needs no toast, such as which free slot Targets is filling.
     const quietly = (next: Workspace) => {
       current.current = next;
       setWs(next);
     };
-    const onDay = (day: string) => (day === todayIso ? 'today' : `on ${formatDate(day)}`);
+    const onDay = (day: string) => {
+      const word = dayInWords(day, today);
+      return word === 'today' || word === 'tomorrow' ? word : `on ${word}`;
+    };
+    // After 17:30 today is over, so adding to it adds to the next working day, unless the rep chose today this evening.
+    const addingTo = (day: string) => {
+      const at = now();
+      const over = day === todayIso && isoDate(at) === todayIso && minutesOfDay(at) >= toMinutes(END_OF_DAY) && keptToday.current !== todayIso;
+      return over ? days[1] : day;
+    };
+    // What the toast says after adding to a day: who and where in the day, or how
+    // many, and anyone not in that day, with a better day for one person.
+    const saidAdded = (base: Workspace, next: Workspace, day: string, single?: Entity): { message: string; changed: boolean; better?: string | null } | null => {
+      const was = new Set((base.plans[day] ?? []).map((i) => i.id));
+      const added = (next.plans[day] ?? []).filter((i) => !was.has(i.id));
+      if (!added.length) return single ? { message: `${single.name} is already in your plan ${onDay(day)}`, changed: false } : null;
+      const weekday = fromIso(day).getDay();
+      const away = added.filter((i) => {
+        const who = getEntity(i.targetId);
+        return !!who && isOnSite(i) && !siteOnDay(who, weekday);
+      });
+      // An account isn't "in" or out: its offices are closed.
+      const closed = away.every((i) => getEntity(i.targetId)?.kind === 'hco');
+      const notIn = `${closed ? 'closed' : 'not in'} on ${formatDate(day, { weekday: 'long' })}s`;
+      if (added.length > 1) {
+        const note = away.length ? ` · ${away.length === 1 ? '1 is' : `${away.length} are`} ${notIn}` : '';
+        return { message: `${plural(added.length, 'visit')} added ${onDay(day)}${note}`, changed: true };
+      }
+      const who = getEntity(added[0].targetId);
+      if (!who) return null;
+      if (away.length) return { message: `${who.name} added ${onDay(day)}, but ${who.kind === 'hco' ? 'it’s' : 'they’re'} ${notIn}`, changed: true, better: moveDayFor(next, added[0], day, days) };
+      // Say where it went, as the map numbers the stops, so the rep needn't go and look.
+      const spot = stopNumber(next, day, who.id, now());
+      const where = !spot ? ' as a call' : spot.of < 2 ? '' : ` · stop ${spot.number}${spot.after ? `, after ${shortName(getEntity(spot.after.targetId) ?? who)}` : ', first'}`;
+      return { message: `${who.name} added ${onDay(day)}${where}${spot?.outside ? ` · ${outsideWord(who).toLowerCase()}` : ''}`, changed: true };
+    };
+    /**
+     * Adds to a day with `add` and says so, with one Undo. Once today is over it adds
+     * to the next working day and shows that day, with "Today instead"; someone not
+     * in that day gets a day they are in instead.
+     */
+    const addTo = (day: string, add: (ws: Workspace, day: string) => Workspace, single?: Entity) => {
+      const base = current.current;
+      const to = addingTo(day);
+      // The same add on another day, showing `shown`, with Undo back to before either.
+      const instead = (other: string, shown: string) => {
+        const from = { ...base, prefs: current.current.prefs, selection: { ...current.current.selection, day: shown } };
+        const again = add(from, other);
+        const said = saidAdded(from, again, other, single);
+        if (said) apply(again, said.message, said.changed, undefined, base);
+      };
+      const next = add(base, to);
+      const said = saidAdded(base, next, to, single);
+      if (!said) return;
+      if (to !== day) {
+        const run = () => {
+          keptToday.current = todayIso;
+          instead(day, day);
+        };
+        apply({ ...next, selection: { ...next.selection, day: to } }, `Today’s over: ${said.message}`, said.changed, { label: 'Today instead', run });
+        return;
+      }
+      const better = said.better;
+      const word = better && dayInWords(better, today);
+      const action = better && word ? { label: `${word.charAt(0).toUpperCase()}${word.slice(1)} instead`, run: () => instead(better, current.current.selection.day) } : undefined;
+      apply(next, said.message, said.changed, action);
+    };
 
     return {
       addNote: (draft: NoteDraft) => {
         const error = noteError(draft, todayIso);
         if (error) return error;
         const { interaction, followUp } = noteRecords(draft);
-        setWs((w) => visitsLogged(withRecords(w, { interactions: [interaction], followUps: followUp ? [followUp] : [] }), draft));
+        dropUndo();
+        setWs((w) => visitsLogged(withRecords(w, { interactions: [interaction], followUps: followUp ? [followUp] : [] }), draft, now()));
         // There's no server yet, so say where it is rather than just "saved".
         const message = writers ? (draft.visit ? 'Visit logged · saved on this phone' : 'Note saved on this phone') : draft.visit ? 'Visit logged' : 'Note saved';
         setNotice({ id: Date.now(), message, canUndo: false });
@@ -273,6 +369,7 @@ function LoadedWorkspace({
         const error = followUpError(draft);
         if (error) return error;
         const followUp = followUpRecord(draft);
+        dropUndo();
         setWs((w) => withRecords(w, { followUps: [followUp] }));
         return null;
       },
@@ -281,7 +378,7 @@ function LoadedWorkspace({
       cancelVisit: (day: string, id: string, reason: string) => {
         const next = cancelVisit(current.current, day, id, reason, todayIso, now());
         const freed = next.freeSlots.find((s) => s.itemId === id);
-        apply(next, freed ? `Visit cancelled · ${freed.time} is free` : 'Visit cancelled');
+        apply(next, reason === 'Didn’t happen' ? 'Marked as didn’t happen' : freed ? `Visit cancelled · ${freed.time} is free` : 'Visit cancelled');
         return !!freed;
       },
       restoreVisit: (day: string, id: string) => apply(restoreVisit(current.current, day, id), 'Visit restored', false),
@@ -293,7 +390,7 @@ function LoadedWorkspace({
           setNotice({ id: Date.now(), message: error ?? 'That time is no longer free.', canUndo: false });
           return;
         }
-        apply(fillSlot(current.current, slotId, targetId, now()), `${getEntity(targetId)?.name} added at ${slot.time} · not confirmed yet`);
+        apply(fillSlot(current.current, slotId, targetId, now()), `${getEntity(targetId)?.name} added ${onDay(slot.day)} at ${slot.time} · not confirmed yet`);
       },
       leaveFree: (slotId: string) => quietly(leaveFree(current.current, slotId)),
       setStopTime: (day: string, id: string, time: string) => {
@@ -323,16 +420,12 @@ function LoadedWorkspace({
       },
       addToPlan: (targetId: string, day = current.current.selection.day, type?: VisitType) => {
         const who = getEntity(targetId);
-        if (!who) return;
-        const next = addToPlan(current.current, day, targetId, now(), type);
-        // Say where it went, as the map numbers the stops, so the rep needn't go and look.
-        const spot = stopNumber(next, day, targetId, now());
-        const where = !spot ? ' as a call' : spot.of < 2 ? '' : ` · stop ${spot.number}${spot.after ? `, after ${shortName(getEntity(spot.after.targetId) ?? who)}` : ', first'}`;
-        apply(next, `${who.name} added ${onDay(day)}${where}`);
+        if (who) addTo(day, (ws, d) => addToPlan(ws, d, targetId, now(), type), who);
       },
+      addingTo,
       bestOrder: (day: string) => {
         const next = orderBest(current.current, day, now());
-        if (next !== current.current) apply(next, 'Stops put in the order with the least driving');
+        if (next !== current.current) apply(next, 'Stops put in the best order: little driving, in their usual times');
       },
       moveStop: (day: string, id: string, at: number) => {
         const next = moveStop(current.current, day, id, at, now());
@@ -341,7 +434,8 @@ function LoadedWorkspace({
         if (next === current.current || !who || !spot) return;
         // Say where it went, as a stop that can't fit before a visit with a time goes after it.
         const before = spot.after && getEntity(spot.after.targetId);
-        apply(next, spot.first ? `${who.name} is ${day === todayIso ? 'next' : 'first'}` : `${who.name} moved, after ${before ? shortName(before) : 'the stop before'}`);
+        const lead = day === todayIso ? spot.next : spot.first;
+        apply(next, lead ? `${who.name} is ${day === todayIso ? 'next' : 'first'}` : `${who.name} moved, after ${before ? shortName(before) : 'the stop before'}`);
       },
       changeStop: (day: string, id: string, change: Partial<Pick<PlanItem, 'type' | 'duration'>>) => {
         const who = getEntity(findItem(current.current, day, id)?.targetId ?? '');
@@ -353,20 +447,26 @@ function LoadedWorkspace({
         const error = moveToDayError(current.current, day, id, toDay);
         if (error) return error;
         const who = getEntity(findItem(current.current, day, id)?.targetId ?? '');
-        apply(moveToDay(current.current, day, id, toDay), `${who?.name ?? 'Visit'} moved to ${toDay === todayIso ? 'today' : formatDate(toDay, { weekday: 'long' })}`);
+        apply(moveToDay(current.current, day, id, toDay), `${who?.name ?? 'Visit'} moved to ${dayInWords(toDay, today)}`);
         return null;
       },
-      addAllToPlan: (targetIds: string[], day: string) => {
-        const next = addAllToPlan(current.current, day, targetIds, now());
-        const added = (next.plans[day]?.length ?? 0) - (current.current.plans[day]?.length ?? 0);
-        if (added) apply(next, `${plural(added, 'person', 'people')} added ${onDay(day)}`);
+      moveNotDone: () => {
+        const notDone = notDoneToday(current.current, todayIso, now(), days);
+        if (!notDone) return;
+        const { moves, to } = notDone;
+        const next = moves.reduce((w, m) => moveToDay(w, todayIso, m.item.id, m.to), current.current);
+        const first = getEntity(moves[0].item.targetId);
+        const what = moves.length === 1 && first ? first.name : plural(moves.length, 'visit');
+        // Any that went another day, as they aren't in that day or are planned then already.
+        const others = moves.filter((m) => m.to !== to);
+        const other = others.length === 1 ? getEntity(others[0].item.targetId) : null;
+        const away = !!other && others[0].to > to && isOnSite(others[0].item) && !siteOnDay(other, fromIso(to).getDay());
+        const why = !away ? '' : other.kind === 'hco' ? ', when it’s open' : ', when they’re in';
+        const elsewhere = other ? ` · ${shortName(other)} to ${dayInWords(others[0].to, today)}${why}` : others.length ? ` · ${others.length} to other days` : '';
+        apply(next, `${what} moved to ${dayInWords(to, today)}${elsewhere}`);
       },
-      addPeople: (targetIds: string[], day: string) => {
-        const next = addPeople(current.current, day, targetIds, now());
-        const added = (next.plans[day]?.length ?? 0) - (current.current.plans[day]?.length ?? 0);
-        const only = added === 1 ? getEntity(next.plans[day][next.plans[day].length - 1].targetId) : null;
-        if (added) apply(next, `${only ? only.name : plural(added, 'person', 'people')} added ${onDay(day)}`);
-      },
+      addAllToPlan: (targetIds: string[], day: string) => addTo(day, (ws, d) => addAllToPlan(ws, d, targetIds, now())),
+      addPeople: (targetIds: string[], day: string) => addTo(day, (ws, d) => addPeople(ws, d, targetIds, now())),
       saveReport: (report: SavedReport) => apply(saveReport(current.current, report), 'Saved. Find it in the menu.'),
       removeSaved: (id: string) => apply(removeSaved(current.current, id), 'Removed from Saved'),
       setPrefs: (patch: Partial<Prefs>) => quietly(withPrefs(current.current, patch)),
@@ -374,10 +474,10 @@ function LoadedWorkspace({
         const next = withPrepEdit(current.current, id, edit);
         if (next !== current.current) apply(next, writers ? 'Summary saved on this phone' : 'Summary saved');
       },
-      addToPrep: (id: string, add: PrepAdd) => {
-        const next = withPrepAdded(current.current, id, add);
-        if (next === current.current) setNotice({ id: Date.now(), message: 'That’s already in the summary', canUndo: false });
-        else apply(next, 'Added to the summary');
+      keepSummary: (id: string, text: string) => {
+        const next = withSummaryText(current.current, id, text);
+        if (next === current.current) setNotice({ id: Date.now(), message: 'That’s the summary already', canUndo: false });
+        else apply(next, writers ? 'Summary updated on this phone' : 'Summary updated');
       },
       // Drafts aren't part of the workspace, so typing doesn't redraw every screen.
       draftFor: (key: string) => drafts.current[key] ?? null,
@@ -389,8 +489,9 @@ function LoadedWorkspace({
       dismissNotice: () => setNotice(null),
       undo: () => {
         if (!before.current) return;
-        // Undo takes back the last change to the plan or notes, not a choice made on the You page since.
-        const back = { ...before.current, prefs: current.current.prefs };
+        // Undo takes back the last change to the plan or notes, not a choice made on the You page
+        // since, nor the day shown or the free time being filled.
+        const back = { ...before.current, prefs: current.current.prefs, selection: current.current.selection };
         current.current = back;
         setWs(back);
         before.current = null;
@@ -400,8 +501,8 @@ function LoadedWorkspace({
   }, [today, now, writers]);
 
   const store = useMemo<Store>(
-    () => ({ ...buildContext(ws, today), setWorkspace: setWs, notice, ...actions }),
-    [ws, today, notice, actions],
+    () => ({ ...buildContext(ws, today, now()), setWorkspace: setWs, notice, ...actions }),
+    [ws, today, now, notice, actions],
   );
   return <StoreContext.Provider value={store}>{children}</StoreContext.Provider>;
 }

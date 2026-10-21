@@ -20,7 +20,8 @@ import { useVisitSheets } from '@/components/visit-sheets';
 import { spoken, type Answer, type AnswerRow, type AskLink } from '@/lib/ask';
 import { useChat, whenLabel, type Turn } from '@/lib/chat';
 import { getEntity } from '@/lib/data';
-import { startOfDay } from '@/lib/format';
+import { sentence, startOfDay } from '@/lib/format';
+import { summaryText } from '@/lib/prep';
 import { prepId } from '@/lib/saved';
 import { useWorkspace } from '@/lib/store';
 import { cn } from '@/lib/utils';
@@ -50,7 +51,7 @@ export function QuestionChips({ questions, onPick }: { questions: string[]; onPi
  * A full-screen chat. `header` sits above the thread and `empty` shows until the
  * first question, with a big mic under it when the device can listen.
  * `listenOnOpen` starts the mic straight away, for the mic on a person's page.
- * `fromPrep` is a person's chat opened from their Summary, so "Add to summary" goes back there.
+ * `fromPrep` is a person's chat opened from their Summary, so "Use this summary" goes back there.
  */
 export function ChatView({
   chatKey,
@@ -150,8 +151,8 @@ export function ChatView({
 
 /**
  * Where an answer's next step and rows lead, opened in the tab that's showing the
- * chat. Render `sheets` for booking. `prepOf` is the person whose prep the chat
- * was opened from, so adding to it goes back there rather than opening it again.
+ * chat. Render `sheets` for booking. `prepOf` is the person whose Summary the chat
+ * was opened from, so "Use this summary" goes back there rather than opening it again.
  */
 export function useFollow(prepOf?: string) {
   const ctx = useWorkspace();
@@ -168,7 +169,9 @@ export function useFollow(prepOf?: string) {
       return;
     }
     if (link.kind === 'prep') {
-      ctx.addToPrep(link.id, { goal: link.goal, points: link.points });
+      // An answer from before the Summary was one paragraph adds its lines after the rep's words.
+      const text = link.text ?? [summaryText(ctx.ws, link.id) ?? '', ...(link.points ?? []).map(sentence)].join(' ');
+      ctx.keepSummary(link.id, text);
       if (link.id === prepOf) router.back();
       else router.push(docHref(prepId(link.id)));
       return;

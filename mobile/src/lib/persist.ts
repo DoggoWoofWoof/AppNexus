@@ -14,6 +14,8 @@ export const DRAFTS_KEY = 'fieldpro.app.drafts';
 export const BACKUP_KEY = 'fieldpro.app.workspace.backup';
 /** The Ask conversations and History (lib/chat.tsx). */
 export const CHATS_KEY = 'fieldpro.app.chats';
+/** The chats kept, when they couldn't be carried on from. */
+export const CHATS_BACKUP_KEY = 'fieldpro.app.chats.backup';
 
 /** Where things are kept. AsyncStorage in the app; a plain object in tests. */
 export interface DeviceStorage {

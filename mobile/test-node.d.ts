@@ -1,5 +1,6 @@
-// Just the bits of Node that clock-change.test.ts uses. The app has no Node types,
-// as it never runs in Node, and Node's own clash with React Native's.
+// Just the bits of Node that __tests__/clock-change.test.ts uses. The app has no
+// Node types, as it never runs in Node, and Node's own clash with React Native's.
+// It sits here because Jest takes every file in __tests__ for a test.
 
 declare module 'node:child_process' {
   export function execFileSync(

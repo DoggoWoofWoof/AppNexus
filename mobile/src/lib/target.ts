@@ -60,7 +60,7 @@ export interface VisitRow {
   time: string | null;
   type: string;
   outcome: VisitOutcome;
-  /** "Met" or "Not in" (for a call, "Talked" or "No answer"), "Cancelled", "Not logged yet" or "Planned". */
+  /** "Met" or "Not in" (for a call, "Talked" or "No answer"; for an account's meeting, "Didn’t meet"), "Cancelled", "Not logged yet" or "Planned". */
   label: string;
   /** Where a moved visit was first planned: "Moved from Thu 15 Oct". */
   moved: string | null;
@@ -80,7 +80,7 @@ const onSite = (type: string) => type === 'In-person visit' || type === 'Meeting
 
 function outcomeLabel(outcome: VisitOutcome, type: string): string {
   if (outcome === 'met') return isCall(type) ? 'Talked' : 'Met';
-  if (outcome === 'not-in') return isCall(type) ? 'No answer' : 'Not in';
+  if (outcome === 'not-in') return isCall(type) ? 'No answer' : type === 'Meeting' ? 'Didn’t meet' : 'Not in';
   if (outcome === 'cancelled') return 'Cancelled';
   return outcome === 'not-logged' ? 'Not logged yet' : 'Planned';
 }
@@ -290,7 +290,7 @@ export interface WayIn {
 const CONFIRMS: Record<Confirms, string> = {
   usually: 'Usually confirms a booked time.',
   sometimes: 'Sometimes confirms. Check the day before.',
-  rarely: 'Rarely confirms. Call that morning to check they’re in.',
+  rarely: 'Rarely confirms. Call that morning to check it’s still on.',
 };
 
 /** Who books, how they like to be asked, when, and whether they usually confirm. */

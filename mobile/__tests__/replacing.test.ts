@@ -122,7 +122,7 @@ describe('moving a visit to the next day', () => {
 
   test('a visit with a time, or one already planned there, says why it can’t', () => {
     const ws = freshWorkspace(today);
-    expect(moveToDayError(ws, todayIso, 'v-maya', tomorrowIso)).toMatch(/Move to another time/);
+    expect(moveToDayError(ws, todayIso, 'v-maya', tomorrowIso)).toMatch(/Change the time/);
     expect(moveToDay(ws, todayIso, 'v-maya', tomorrowIso)).toBe(ws);
     const twice = moveToDay(ws, todayIso, 'v-alex', tomorrowIso);
     const back = twice.plans[tomorrowIso].find((i) => i.targetId === 'alex')!;

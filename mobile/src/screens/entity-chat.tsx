@@ -1,6 +1,6 @@
 // Ask about one person or account, opened from their profile. Every question is
 // about them unless it names someone else, so "where do their patients go?" works.
-// Opened from their Summary (`from=prep`), "Add to summary" goes back there.
+// Opened from their Summary (`from=prep`), "Use this summary" goes back there.
 // Shared by every tab (see src/app/*/chat), like the profiles.
 
 import { Stack, useLocalSearchParams } from 'expo-router';

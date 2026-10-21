@@ -117,8 +117,9 @@ export function searchTargets(entities: Entity[], f: Filters, ctx: SearchContext
       return true;
     });
 
-  const bare = (r: SearchRow) => r.entity.name.replace(/^Dr\. /, '');
-  const byName = (a: SearchRow, b: SearchRow) => bare(a).localeCompare(bare(b));
+  // Doctors by surname, as the list shows them ("Dr. Lee"), then first name; accounts by name.
+  const sortName = (r: SearchRow) => (r.entity.kind === 'hcp' ? r.entity.name.replace(/^Dr\. /, '').replace(/^(\S+) (.+)$/, '$2 $1') : r.entity.name);
+  const byName = (a: SearchRow, b: SearchRow) => sortName(a).localeCompare(sortName(b));
   const sorters: Record<Filters['sort'], (a: SearchRow, b: SearchRow) => number> = {
     relevance: (a, b) => b.priority - a.priority || byName(a, b),
     distance: (a, b) => a.distance - b.distance || byName(a, b),

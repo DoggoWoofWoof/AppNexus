@@ -58,7 +58,7 @@ function MenuSheet({ due, onClose }: { due: number; onClose: () => void }) {
   const ctx = useWorkspace();
   const chat = useChat();
   const { bottom } = useSafeAreaInsets();
-  const saved = ctx.ws.saved.length + chat.talkedAbout().length;
+  const saved = ctx.ws.saved.length + ctx.summaryPeople(chat.talkedAbout()).length;
   const talks = chat.conversations().length;
   // History is on Ask, so Ask goes under it, for Back and for opening a chat there.
   const go = (href: Href, withAnchor = false) => {

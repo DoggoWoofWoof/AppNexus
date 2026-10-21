@@ -36,6 +36,7 @@ export default function Activity() {
   const [allFollowUps, setAllFollowUps] = useState(false);
   const [allNotes, setAllNotes] = useState(false);
   const open = ctx.openFollowUps();
+  const due = open.filter((f) => f.overdueBy >= 0).length;
   const followUps = allFollowUps ? open : open.slice(0, SHOWN_FOLLOW_UPS);
   const openPerson = (id: string) => {
     const who = getEntity(id);
@@ -51,7 +52,11 @@ export default function Activity() {
 
   return (
     <Screen inset>
-      <TabHeader title="Activity" sub={open.length ? plural(open.length, 'open follow-up') : 'No follow-ups open'} />
+      <TabHeader
+        title="Activity"
+        // The menu says how many are due, so this does too.
+        sub={open.length ? [plural(open.length, 'open follow-up'), due && `${due} due now`].filter(Boolean).join(' · ') : 'No follow-ups open'}
+      />
 
       {open.length ? (
         <Section title="Follow-ups">
@@ -111,7 +116,7 @@ export default function Activity() {
   );
 }
 
-const OUTCOME_TONE: Record<string, string> = { Met: 'text-success', Talked: 'text-success', 'Not in': 'text-warn', 'No answer': 'text-warn' };
+const OUTCOME_TONE: Record<string, string> = { Met: 'text-success', Talked: 'text-success', 'Not in': 'text-warn', 'Didn’t meet': 'text-warn', 'No answer': 'text-warn' };
 
 /** Who, when, what kind and how it went, and the start of the note. */
 function NoteRow({ interaction: i, onPress }: { interaction: Interaction; onPress: () => void }) {

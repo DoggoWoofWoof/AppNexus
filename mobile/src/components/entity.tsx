@@ -78,7 +78,7 @@ export function useDocHref() {
 
 /**
  * Ask about someone, opened from their page; `listen` starts the mic straight
- * away. `fromPrep` is for their Summary, so "Add to summary" goes back there.
+ * away. `fromPrep` is for their Summary, so "Use this summary" goes back there.
  */
 export function useChatHref() {
   const tab = useTab();

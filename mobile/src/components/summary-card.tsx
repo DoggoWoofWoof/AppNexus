@@ -1,8 +1,9 @@
-// The Summary at the top of someone's page: who they are, when they're in and how
-// it has gone, written from the data until the rep improves it, then the next step.
-// Once the rep has written their own or kept some from Ask (lib/prep.ts), theirs
-// shows instead. Tap for the full summary (the prep page, screens/saved-doc.tsx),
-// or improve it with the two buttons (components/prep-actions.tsx).
+// The Summary at the top of someone's page, as one paragraph: who they are, when
+// they're in and how it has gone, written from the data each time so it stays up
+// to date, then the rep's own words or Ask's (lib/prep.ts), or why now until they
+// have some (summaryParagraph in lib/brief.ts). Then the next step. Tap for the
+// full summary (screens/saved-doc.tsx), or improve it with the two buttons
+// (components/prep-actions.tsx).
 
 import { router } from 'expo-router';
 import { ChevronRight, MessageCircle, Pencil } from 'lucide-react-native';
@@ -13,20 +14,16 @@ import { useSummaryActions } from '@/components/prep-actions';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
-import { summaryOf, type Brief } from '@/lib/brief';
-import { firstSentence } from '@/lib/format';
-import { improvedSummary } from '@/lib/prep';
+import { summaryParagraph, type Brief } from '@/lib/brief';
+import { sentence } from '@/lib/format';
 import { prepId } from '@/lib/saved';
 import { useWorkspace } from '@/lib/store';
 import type { Entity } from '@/lib/types';
-
-const sentence = (text: string): string => (/[.!?]$/.test(text) ? text : `${text}.`);
 
 export function SummaryCard({ entity, brief }: { entity: Entity; brief: Brief }) {
   const ctx = useWorkspace();
   const docHref = useDocHref();
   const actions = useSummaryActions(entity, brief);
-  const summary = improvedSummary(ctx.ws, entity.id) ?? `${summaryOf(entity, ctx)} ${sentence(firstSentence(brief.insight))}`;
   return (
     <View className="gap-3 rounded-xl bg-brand-soft p-4">
       <Pressable
@@ -36,7 +33,7 @@ export function SummaryCard({ entity, brief }: { entity: Entity; brief: Brief })
         className="gap-2 active:opacity-80"
       >
         <Text variant="kicker">Summary</Text>
-        <Text className="text-base leading-6">{summary}</Text>
+        <Text className="text-base leading-6">{summaryParagraph(entity, ctx)}</Text>
         <Text className="text-base leading-6">
           <Text className="text-base font-semibold">Next: </Text>
           {sentence(brief.goal)}

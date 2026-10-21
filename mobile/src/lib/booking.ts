@@ -35,6 +35,9 @@ export function siteOnDay(entity: Entity, weekday: number): string | null {
 
 const OFFICE_HOURS: TimeWindow = { days: 'Mon–Fri', from: '09:00', to: '17:00' };
 
+/** Whether they go by office hours: an account, or a doctor whose own times aren't known. */
+export const keepsOfficeHours = (entity: Entity): boolean => !(entity.kind === 'hcp' && entity.contact.windows?.length);
+
 /** The times they prefer to be seen; office hours when nothing is recorded. */
 export const windowsFor = (entity: Entity): TimeWindow[] =>
   entity.kind === 'hcp' && entity.contact.windows?.length ? entity.contact.windows : [OFFICE_HOURS];
@@ -47,9 +50,9 @@ function dayWords(text: string): string {
   return run ? `${WEEKDAYS[days[0]]}–${WEEKDAYS[days[days.length - 1]]}` : days.map((d) => WEEKDAYS[d]).join('/');
 }
 
-/** When they can usually be seen, such as "Usually Tue/Thu 07:30–08:30". */
+/** When they can usually be seen: "Usually Tue/Thu 07:30–08:30", or "Office hours weekdays 09:00–17:00". */
 export const usualTimes = (entity: Entity): string =>
-  `Usually ${windowsFor(entity)
+  `${keepsOfficeHours(entity) ? 'Office hours' : 'Usually'} ${windowsFor(entity)
     .map((w) => `${dayWords(w.days)} ${w.from}–${w.to}`)
     .join(' or ')}`;
 
@@ -60,7 +63,20 @@ export const hoursOn = (entity: Entity, weekday: number): string =>
     .map((w) => `${w.from}–${w.to}`)
     .join(', ');
 
-const WEEKDAY_NAMES = ['Sundays', 'Mondays', 'Tuesdays', 'Wednesdays', 'Thursdays', 'Fridays', 'Saturdays'];
+/** "Not their usual time", or "Outside office hours" for an account or anyone else going by office hours. */
+export const outsideWord = (entity: Entity): string => (keepsOfficeHours(entity) ? 'Outside office hours' : 'Not their usual time');
+
+/** Said of a visit at a time that doesn't suit them: "Not their usual time · usually 08:00–11:00", or "Outside office hours · 09:00–17:00". */
+export function outsideTimes(entity: Entity, weekday: number): string {
+  const hours = hoursOn(entity, weekday);
+  if (!hours) return outsideWord(entity);
+  return `${outsideWord(entity)} · ${keepsOfficeHours(entity) ? hours : `usually ${hours}`}`;
+}
+
+export const WEEKDAY_NAMES = ['Sundays', 'Mondays', 'Tuesdays', 'Wednesdays', 'Thursdays', 'Fridays', 'Saturdays'];
+
+/** A weekday they can't be seen in person: "Not in on Tuesdays", or for an account "Closed on Saturdays". */
+export const notInOn = (entity: Entity, weekday: number): string => `${entity.kind === 'hco' ? 'Closed' : 'Not in'} on ${WEEKDAY_NAMES[weekday]}`;
 
 /**
  * Whether someone works that weekday, for Targets: their usual times then, or
@@ -69,7 +85,7 @@ const WEEKDAY_NAMES = ['Sundays', 'Mondays', 'Tuesdays', 'Wednesdays', 'Thursday
  */
 export function inOnDay(entity: Entity, day: string): { ok: true; hours: string } | { ok: false; why: string } {
   const weekday = fromIso(day).getDay();
-  if (!siteOnDay(entity, weekday)) return { ok: false, why: `Not in on ${WEEKDAY_NAMES[weekday]}` };
+  if (!siteOnDay(entity, weekday)) return { ok: false, why: notInOn(entity, weekday) };
   return { ok: true, hours: hoursOn(entity, weekday) };
 }
 

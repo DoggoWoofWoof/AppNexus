@@ -4,9 +4,10 @@
 
 import { describe, expect, test } from '@jest/globals';
 
-import { buildBrief, outcomeWord, speechFor, summaryOf } from '@/lib/brief';
+import { buildBrief, outcomeWord, speechFor, summaryOf, summaryParagraph } from '@/lib/brief';
 import { allEntities, getEntity } from '@/lib/data';
 import { startOfDay } from '@/lib/format';
+import { withPrepEdit } from '@/lib/prep';
 import { cardFor } from '@/lib/target';
 import type { Entity } from '@/lib/types';
 import { buildContext, freshWorkspace } from '@/lib/workspace';
@@ -43,13 +44,31 @@ describe('the Summary', () => {
     expect(speech).toContain(summaryOf(maya, ctx));
     expect(speech).toContain('Next time:');
   });
+
+  test('Listen reads the Summary as the card has it, and doesn’t say anything twice', () => {
+    const maya = entity('maya');
+    const brief = buildBrief(maya, ctx);
+    // Until the rep has words of their own, the Summary says why they matter now, so it's said once.
+    const plain = speechFor(maya, ctx, brief);
+    expect(plain).toContain(summaryParagraph(maya, ctx));
+    expect(plain.split(brief.insight)).toHaveLength(2);
+
+    // With their words, why now comes after the numbers, and a point their words make isn't said again.
+    const referrer = brief.points.find((p) => p.kind === 'referrer')!.text;
+    const own = buildContext(withPrepEdit(ctx.ws, 'maya', { goal: '', text: `Ask how the new fellow is settling in. ${referrer}` }), today);
+    const speech = speechFor(maya, own, buildBrief(maya, own));
+    expect(speech).toContain(`${summaryOf(maya, own)} Ask how the new fellow is settling in. ${referrer}`);
+    expect(speech.split(referrer)).toHaveLength(2);
+    expect(speech).toContain(brief.insight);
+  });
 });
 
 describe('outcomes in the log sheet’s words', () => {
-  test('a visit is Met or Not in, a call is Talked or No answer', () => {
+  test('a visit is Met or Not in, a meeting with an account Met or Didn’t meet, a call Talked or No answer', () => {
     expect(outcomeWord('Met', 'In-person visit')).toBe('Met');
     expect(outcomeWord('Attempted', 'In-person visit')).toBe('Not in');
-    expect(outcomeWord('Attempted', 'Meeting')).toBe('Not in');
+    expect(outcomeWord('Met', 'Meeting')).toBe('Met');
+    expect(outcomeWord('Attempted', 'Meeting')).toBe('Didn’t meet');
     expect(outcomeWord('Met', 'Phone call')).toBe('Talked');
     expect(outcomeWord('Attempted', 'Phone call')).toBe('No answer');
     expect(outcomeWord('Left message', 'Phone call')).toBe('Left message');

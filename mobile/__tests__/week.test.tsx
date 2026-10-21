@@ -69,7 +69,7 @@ describe('summarise my week', () => {
     expect(picks.length).toBeLessThanOrEqual(3);
     for (const pick of picks) {
       expect(pick.id).toBeTruthy();
-      expect(pick.sub).toMatch(/^(Patients going elsewhere|Busier than last year|No visit in 30\+ days|No contact yet).* · Usually /);
+      expect(pick.sub).toMatch(/^(Patients going elsewhere|Busier than last year|No visit in 30\+ days|No contact yet).* · (Usually|Office hours) /);
     }
     // Anyone seen this week or already planned is left out.
     for (const seenOrPlanned of ['Dr. Okafor', 'Dr. Patel', 'Dr. Lee', 'Dr. Morgan', 'Mount Sinai Hospital']) expect(picks.map((p) => p.title)).not.toContain(`Next week: ${seenOrPlanned}`);

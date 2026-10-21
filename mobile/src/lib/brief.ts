@@ -5,7 +5,7 @@
 import { usualTimes } from './booking';
 import { destination, getEntity, getOrg, hcpsAt, openFollowUps, parentOf, patientsLost, procedureTotal, procedureYoy, proceduresOf, referredOut, siteFor } from './data';
 import { DATA_PERIOD } from './data/seed';
-import { daysBetween, firstSentence, formatDate, formatNumber, fromIso, isoDate, plural, relativeDay, relativeDayLower, sum, yoy } from './format';
+import { daysBetween, firstSentence, formatDate, formatNumber, fromIso, isoDate, plural, relativeDay, relativeDayLower, says, sentence, sum, yoy } from './format';
 import { endTime, isOnSite } from './plan';
 import type { Entity, FollowUp, PlanItem } from './types';
 import type { Context } from './workspace';
@@ -21,6 +21,11 @@ export interface Figure {
 /** What a talking point is about, so the screen can give it an icon. */
 export type PointKind = 'promise' | 'lastNote' | 'leak' | 'up' | 'down' | 'referrer' | 'contact';
 
+export interface BriefPoint {
+  kind: PointKind;
+  text: string;
+}
+
 export interface Brief {
   /** The next planned visit, today or later. */
   visit: { item: PlanItem; day: string } | null;
@@ -30,7 +35,7 @@ export interface Brief {
   /** When the goal is an open follow-up, when it's due: "due today", "overdue by 2 days". */
   goalDue: string | null;
   insight: string;
-  points: { kind: PointKind; text: string }[];
+  points: BriefPoint[];
   /** Volume, leakage and last contact. */
   figures: Figure[];
   /** Open follow-ups, soonest due first. */
@@ -157,17 +162,22 @@ export function buildBrief(entity: Entity, ctx: Context): Brief {
   };
 }
 
-/** A logged outcome in the log sheet's words: "Met" or "Not in" after a visit, "Talked" or "No answer" after a call. */
+/**
+ * A logged outcome in the log sheet's words: "Met" or "Not in" after a visit,
+ * "Talked" or "No answer" after a call, and "Met" or "Didn’t meet" after a
+ * meeting with an account, which isn't "in" or out.
+ */
 export function outcomeWord(outcome: string, type: string): string {
   const call = type === 'Phone call' || type === 'Video call';
-  if (outcome === 'Attempted') return call ? 'No answer' : 'Not in';
+  if (outcome === 'Attempted') return call ? 'No answer' : type === 'Meeting' ? 'Didn’t meet' : 'Not in';
   return outcome === 'Met' && call ? 'Talked' : outcome;
 }
 
 /**
- * A few plain sentences on who someone is, for the Summary at the top of their
- * page until the rep improves it: where they work and when they're in, the last
- * contact, and follow-ups owed. The numbers sit in the figures under it.
+ * A few plain sentences on who someone is, at the start of their Summary: where
+ * they work and when they're in, the last contact, and follow-ups owed. Written
+ * from the data each time, so it stays up to date; the rep's own words go after
+ * it (summaryParagraph). The numbers sit in the figures under it.
  */
 export function summaryOf(entity: Entity, ctx: Context): string {
   const todayIso = isoDate(ctx.today);
@@ -197,17 +207,33 @@ export function summaryOf(entity: Entity, ctx: Context): string {
   return [who, seen, owed].filter(Boolean).join(' ');
 }
 
-/** What Listen reads on someone's page: who they are, the summary, the numbers that matter and what to bring up. */
-export function speechFor(entity: Entity, ctx: Context, brief: Brief, summary = summaryOf(entity, ctx)): string {
+/**
+ * Someone's Summary as one paragraph: the facts written from the data each time
+ * (summaryOf), then the rep's own words, written by them or kept from Ask
+ * (lib/prep.ts), or why they matter now until they have some.
+ */
+export const summaryParagraph = (entity: Entity, ctx: Context): string =>
+  `${summaryOf(entity, ctx)} ${ctx.ws.prep?.[entity.id]?.text || sentence(insightFor(entity))}`;
+
+/** The talking points someone's Summary doesn't say already. */
+export const pointsBesides = (brief: Pick<Brief, 'points'>, summary: string): BriefPoint[] => brief.points.filter((p) => !says(summary, p.text));
+
+/**
+ * What Listen reads on someone's page: who they are, the Summary as the card has
+ * it, the numbers that matter, why now if the Summary doesn't say it, and what to
+ * bring up that it doesn't say already.
+ */
+export function speechFor(entity: Entity, ctx: Context, brief: Brief): string {
   const [volume] = brief.figures;
   const trend = volume.delta != null ? `, ${volume.delta >= 0 ? 'up' : 'down'} ${Math.abs(Math.round(volume.delta))}% on last year` : '';
+  const summary = summaryParagraph(entity, ctx);
   return [
     `${entity.name}.`,
     summary,
     volume.value !== '—' ? `${volume.value} procedures in the last 12 months${trend}.` : '',
-    brief.insight,
+    says(summary, brief.insight) ? '' : brief.insight,
     `Next time: ${brief.goal.replace(/[.!?]?$/, '.')}`,
-    ...brief.points.filter((p) => p.kind !== 'up' && p.kind !== 'down').map((p) => p.text),
+    ...pointsBesides(brief, summary).filter((p) => p.kind !== 'up' && p.kind !== 'down').map((p) => p.text),
   ]
     .filter(Boolean)
     .join(' ');

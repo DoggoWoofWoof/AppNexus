@@ -4,7 +4,9 @@
 // others a ⋯ that opens "Change visit" right here, like tapping an event in a
 // phone's calendar. "Any time" stops have dots to drag them into another order.
 // Above the day, one "Still to do" card holds what's left from before: visits
-// earlier in the week never logged, and follow-ups due.
+// earlier in the week never logged, and follow-ups due. From 17:30 the day is
+// over: one banner says how many visits weren't done and moves them all to
+// tomorrow, with Undo, and those visits stop showing a time for today.
 // "Add a visit" opens Targets, where + puts someone in the plan where it adds the
 // least driving. Each stop has a time, "About 10:45" for an "Any time" one, worked
 // out from the drive between stops and their usual times. The drive to each stop
@@ -29,23 +31,28 @@ import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import { useVisitSheets } from '@/components/visit-sheets';
 import { getEntity, getOrg, shortName } from '@/lib/data';
-import { formatDate, formatMinutes, fromMinutes, plural } from '@/lib/format';
-import { fixedStops, isOnSite, notLogged, type Clash, type Stop } from '@/lib/plan';
+import { formatDate, formatMinutes, fromMinutes, listJoin, plural, toMinutes } from '@/lib/format';
+import { outcomeWord } from '@/lib/brief';
+import { END_OF_DAY, fixedStops, isOnSite, notLogged, type Clash, type Stop } from '@/lib/plan';
 import { useWorkspace } from '@/lib/store';
 import type { Entity, PlanItem } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
 /** Minutes since midnight, to tell which of today's visits have already happened. */
-const minutesNow = (now = new Date()): number => now.getHours() * 60 + now.getMinutes();
+const minutesNow = (now: Date): number => now.getHours() * 60 + now.getMinutes();
 
-/** Minutes since midnight, kept up to date, so a visit is flagged when its time passes with the app open. */
-function useMinutesNow(): number {
-  const [now, setNow] = useState(minutesNow);
+/**
+ * The time now, read again every minute, so a visit is flagged when its time
+ * passes with the app open. The screen reads it once each time it's drawn, so
+ * everything on it goes by the same time, such as at 17:30.
+ */
+function useClock(): Date {
+  const [, tick] = useState(0);
   useEffect(() => {
-    const timer = setInterval(() => setNow(minutesNow()), 60_000);
+    const timer = setInterval(() => tick((n) => n + 1), 60_000);
     return () => clearInterval(timer);
   }, []);
-  return now;
+  return new Date();
 }
 
 export default function Today() {
@@ -58,23 +65,34 @@ export default function Today() {
   // The day is shared with Targets, so + there adds to the day shown here.
   const day = ctx.ws.selection.day === nextDay.iso ? nextDay.iso : today.iso;
   const isToday = day === today.iso;
-  const now = useMinutesNow();
-  const plan = ctx.dayPlan(day, new Date());
+  const clock = useClock();
+  const now = minutesNow(clock);
+  const plan = ctx.dayPlan(day, clock);
   const active = plan.filter((i) => i.status !== 'cancelled');
   // When each stop is and the drive to it, from the order and their usual times.
-  const schedule = ctx.daySchedule(day, new Date());
+  const schedule = ctx.daySchedule(day, clock);
   const stopOf = new Map(schedule.stops.map((s) => [s.item.id, s]));
   // Visits with a time too close to get between, said on the later one.
   const clashOf = new Map(schedule.clashes.map((c) => [c.later.id, c]));
   // A visit with a time is due a log once it's over; an "Any time" one from 17:30.
   const unlogged = (i: PlanItem): boolean => isToday && notLogged(i, now);
+  // From 17:30 today is over.
+  const dayOver = isToday && now >= toMinutes(END_OF_DAY);
   const next = isToday ? active.find((i) => i.status === 'planned' && !unlogged(i)) : undefined;
-  // When to set off for the next stop today, or the first one on another day.
-  const going = isToday ? next : active.find((i) => i.status === 'planned');
+  // Once the day is over, the visits not done, to move on in one go (`notDoneToday` in lib/workspace.ts).
+  const notDone = isToday ? ctx.notDoneToday(clock) : null;
+  const notDoneNames = listJoin((notDone?.moves ?? []).flatMap((m) => {
+    const who = getEntity(m.item.targetId);
+    return who ? [shortName(who)] : [];
+  }));
+  // When to set off for the next visit in person still to come: past any call, and
+  // past a visit going on now. Today an "Any time" one starts as soon as it can, so
+  // a time within the next few minutes is "Leave now" rather than one that creeps on.
+  const going = active.find((i) => i.status === 'planned' && isOnSite(i) && (!isToday || (!unlogged(i) && (stopOf.get(i.id)?.start ?? 0) > now)));
   const goingStop = going && stopOf.get(going.id);
-  const leaveAt = goingStop && goingStop.travel > 0 && (!isToday || goingStop.start > now) ? goingStop.start - goingStop.travel : null;
-  const leave = leaveAt == null ? '' : isToday && leaveAt <= now ? 'Leave now' : `Leave by ${fromMinutes(leaveAt)}`;
-  const free = ctx.freeSlotsOn(day, new Date());
+  const leaveAt = goingStop && goingStop.travel > 0 ? goingStop.start - goingStop.travel : null;
+  const leave = leaveAt == null ? '' : isToday && leaveAt < now + 5 ? 'Leave now' : `Leave by ${fromMinutes(leaveAt)}`;
+  const free = ctx.freeSlotsOn(day, clock);
   const earlier = isToday
     ? ctx.unloggedBefore().flatMap((e) => {
         const who = getEntity(e.item.targetId);
@@ -85,7 +103,11 @@ export default function Today() {
   const late = due.filter((f) => f.overdueBy > 0).length;
   const done = active.filter((i) => i.status === 'done').length;
   const driving = schedule.stops.reduce((total, s) => total + s.travel, 0);
-  const finish = active.some((i) => i.status === 'planned') ? Math.max(...schedule.stops.map((s) => s.end)) : null;
+  // When the day should finish, while anything is still to come.
+  const toCome = schedule.stops.filter((s) => s.item.status === 'planned' && !unlogged(s.item));
+  const finish = toCome.length ? Math.max(...toCome.map((s) => s.end)) : null;
+  // Best order only changes "Any time" stops still to come; once the day is over there are none.
+  const anyTimeToCome = active.some((i) => i.status === 'planned' && i.mode !== 'timed' && !unlogged(i));
   const summary = [
     plural(active.length, 'stop'),
     done ? `${done} done` : '',
@@ -106,19 +128,27 @@ export default function Today() {
     const who = getEntity(item.targetId);
     if (who) openLog(who, { day: on, id: item.id, type: item.type }, on === today.iso ? {} : { title: `Log ${formatDate(on)}` });
   };
-  const pickFive = () => ctx.addAllToPlan(ctx.suggestions(day, 5).map((s) => s.entity.id), day);
+  // Picked for the day they'll go on, which is the next working day once today is over.
+  const pickFive = () => ctx.addAllToPlan(ctx.suggestions(ctx.addingTo(day), 5).map((s) => s.entity.id), day);
 
   // Dragging an "Any time" stop by its dots: which one, where it was, where it
   // would land, and how far the stops it passes move to make room.
-  const [drag, setDrag] = useState<{ id: string; from: number; to: number; room: number } | null>(null);
+  const [held, setDrag] = useState<{ id: string; from: number; to: number; room: number } | null>(null);
   // Made once: the web has no useAnimatedValue.
   const [dragY] = useState(() => new Animated.Value(0));
   // How tall each stop is, with the drive line above it, to tell where a dragged one
   // would land. Where they are is worked out from the order, as the web doesn't say
   // when one only moves.
   const heights = useRef(new Map<string, number>());
-  const movable = (i: PlanItem) => i.status === 'planned' && i.mode !== 'timed' && !unlogged(i);
-  const handles = active.length > 1 && active.some(movable);
+  // An "Any time" stop still to do, with somewhere else in the day it could go.
+  const movable = (i: PlanItem) => {
+    if (i.status !== 'planned' || i.mode === 'timed' || unlogged(i)) return false;
+    const others = active.filter((o) => o !== i);
+    return others.length > fixedStops(others, isToday ? now : null);
+  };
+  const handles = active.some(movable);
+  // A stop that can't be dragged any more mid-drag, such as when its time passes, is let go.
+  const drag = held && active.some((i) => i.id === held.id && movable(i)) ? held : null;
   const middles = (): Map<string, number> => {
     let y = 0;
     return new Map(
@@ -193,6 +223,17 @@ export default function Today() {
           <Text className="text-brand">{isToday ? nextDay.label : 'Today'}</Text>
         </Button>
       </View>
+
+      {/* Once the day is over, the visits not done move on in one go, with Undo. One
+          done but not logged still has its own Log button below. */}
+      {notDone ? (
+        <View className="flex-row items-center gap-3 rounded-xl bg-brand-soft py-2 pl-4 pr-2">
+          <Text className="flex-1 text-base font-semibold">{`${plural(notDone.moves.length, 'visit')} not done today`}</Text>
+          <Button size="sm" className="rounded-lg" onPress={() => ctx.moveNotDone()} accessibilityLabel={`Move ${notDoneNames} to ${ctx.dayWord(notDone.to)}`}>
+            <Text>{`Move ${notDone.moves.length === 1 ? 'it' : 'them'} to ${ctx.dayWord(notDone.to)}`}</Text>
+          </Button>
+        </View>
+      ) : null}
 
       {/* What's left from before, in one quiet card so the day stays the main thing:
           visits never logged (log them on their day, or say they didn't happen), then follow-ups due. */}
@@ -289,10 +330,15 @@ export default function Today() {
         <View className="gap-2 web:select-none">
           <View className="flex-row items-center gap-2">
             <Text className="flex-1 text-sm text-muted-foreground" accessibilityLiveRegion="polite">
-              {summary}
+              {active.length ? summary : 'All cancelled'}
             </Text>
-            {ctx.bestOrderHelps(day, new Date()) ? (
-              <Button size="sm" variant="ghost" onPress={() => ctx.bestOrder(day)} accessibilityLabel="Put the Any time stops in the order with the least driving">
+            {anyTimeToCome && ctx.bestOrderHelps(day, clock) ? (
+              <Button
+                size="sm"
+                variant="ghost"
+                onPress={() => ctx.bestOrder(day)}
+                accessibilityLabel="Put the Any time stops in the best order: little driving, in their usual times"
+              >
                 <Text className="text-brand">Best order</Text>
               </Button>
             ) : null}
@@ -300,8 +346,9 @@ export default function Today() {
           {plan.map((item) => {
             const stop = stopOf.get(item.id);
             const clash = clashOf.get(item.id);
-            // Said on the stop itself: an "Any time" one put outside their usual times, or late.
-            const warnings = stop && item.status === 'planned' ? [stop.outside && 'Not their usual time', stop.late && 'After 17:30'].filter((w): w is string => !!w) : [];
+            // Said on a stop still to come, with a better day or time: a day they aren't in, outside their usual times, or late.
+            const warnings =
+              stop && item.status === 'planned' && !unlogged(item) ? [ctx.timeWarning(item, day, stop.outside), stop.late && 'After 17:30'].filter((w): w is string => !!w) : [];
             const index = active.indexOf(item);
             const lifted = drag?.id === item.id;
             const by = shift(index);
@@ -354,10 +401,13 @@ export default function Today() {
             <Text className="text-sm text-muted-foreground">{`${handles ? 'Drag the dots to change the order. ' : ''}Tap ⋯ to change or cancel a visit.`}</Text>
           ) : null}
         </View>
-      ) : (
+      ) : null}
+      {/* With nothing left to do, as when every visit was cancelled, the app can pick again.
+          Once today is over it says so, and what it picks goes on the next working day. */}
+      {active.length ? null : (
         <View className="items-center gap-3 py-8">
           <View className="items-center gap-1">
-            <Text className="text-lg font-semibold">Nothing planned yet</Text>
+            <Text className="text-lg font-semibold">{dayOver ? 'Nothing left today' : plan.length ? 'Nothing left planned' : 'Nothing planned yet'}</Text>
             <Text className="text-center text-muted-foreground">Pick who to see, or let the app pick the five most worth seeing.</Text>
           </View>
           <Button variant="outline" className="rounded-xl" onPress={pickFive}>
@@ -369,12 +419,12 @@ export default function Today() {
 
       <Button
         size="lg"
-        variant={plan.length ? 'outline' : 'default'}
+        variant={active.length ? 'outline' : 'default'}
         className="rounded-xl"
         onPress={() => router.navigate('/targets')}
       >
-        <Icon as={Plus} size={20} className={plan.length ? undefined : 'text-primary-foreground'} />
-        <Text className="text-lg">{plan.length ? 'Add a visit' : 'Choose who to see'}</Text>
+        <Icon as={Plus} size={20} className={active.length ? undefined : 'text-primary-foreground'} />
+        <Text className="text-lg">{active.length ? 'Add a visit' : 'Choose who to see'}</Text>
       </Button>
       {sheet}
       {visits.sheets}
@@ -384,9 +434,13 @@ export default function Today() {
 
 /** What's wrong with two visits with a time, in words. */
 function clashText(clash: Clash): string {
-  const before = getEntity(clash.earlier.targetId);
-  const name = before ? shortName(before) : 'the visit before';
-  return clash.kind === 'overlap' ? `Overlaps the visit with ${name}` : `Too tight: ${clash.need} min drive from ${name}, only ${clash.free} min between`;
+  const nameOf = (item: PlanItem | null, otherwise: string) => {
+    const who = item && getEntity(item.targetId);
+    return who ? shortName(who) : otherwise;
+  };
+  if (clash.kind === 'overlap') return `Overlaps the visit with ${nameOf(clash.earlier, 'the visit before')}`;
+  // The drive is from the last place visited, which isn't a call in between.
+  return `Too tight: ${clash.need} min drive from ${nameOf(clash.from, 'where you start')}, only ${clash.free} min between`;
 }
 
 /** The drive to a stop, on a line between it and the one before, like directions in a maps app. */
@@ -490,10 +544,11 @@ function StopRow({
   if (!who) return null;
   const cancelled = item.status === 'cancelled';
   const done = item.status === 'done';
-  // An "Any time" stop still to do says about when, from the drive and their usual times.
-  const when = item.mode === 'timed' && item.time ? item.time : stop && item.status === 'planned' ? `About ${fromMinutes(stop.start)}` : 'Any time';
+  // An "Any time" stop still to come says about when, from the drive and their usual
+  // times. Once the day is over that time has gone, so it's just "Any time" again.
+  const when = item.mode === 'timed' && item.time ? item.time : stop && item.status === 'planned' && !unlogged ? `About ${fromMinutes(stop.start)}` : 'Any time';
   const unconfirmed = !done && !cancelled && !unlogged && item.booking === 'requested';
-  const status = done ? (item.outcome === 'Attempted' ? 'Not in' : 'Done') : cancelled ? 'Cancelled' : unlogged ? 'Not logged yet' : next ? 'Next' : '';
+  const status = done ? (item.outcome === 'Attempted' ? outcomeWord('Attempted', item.type) : 'Done') : cancelled ? 'Cancelled' : unlogged ? 'Not logged yet' : next ? 'Next' : '';
   // Where to go for a visit, or how for a call.
   const how = isOnSite(item) ? (getOrg(item.siteId)?.name ?? '') : item.type;
   const sub = [when, how, status, unconfirmed && 'Not confirmed yet'].filter(Boolean).join(' · ');

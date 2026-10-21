@@ -1,5 +1,5 @@
 // Improving someone's Summary (called prep inside the app): Edit keeps the rep's
-// own summary and goal (lib/prep.ts), and Ask helps write or improve it. Used by
+// own words and goal (lib/prep.ts), and Ask writes or improves the words. Used by
 // the Summary card on someone's page (components/summary-card.tsx) and the full
 // Summary (screens/saved-doc.tsx).
 
@@ -12,16 +12,18 @@ import { Field, Footer, SheetBody, SheetContent } from '@/components/note-sheet'
 import { FinePrint } from '@/components/profile';
 import { Dialog } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Text } from '@/components/ui/text';
 import { Textarea } from '@/components/ui/textarea';
-import { buildBrief, summaryOf, type Brief } from '@/lib/brief';
+import { buildBrief, insightFor, summaryOf, type Brief } from '@/lib/brief';
 import { useChat } from '@/lib/chat';
-import { GOAL_MAX, goalWithoutYours, IMPROVE_PREP, isThinPrep, MAX_POINTS, POINT_MAX, prepEdit, START_PREP } from '@/lib/prep';
+import { sentence } from '@/lib/format';
+import { GOAL_MAX, goalWithoutYours, IMPROVE_PREP, isThinPrep, prepEdit, START_PREP, TEXT_MAX } from '@/lib/prep';
 import { useWorkspace } from '@/lib/store';
 import type { Entity } from '@/lib/types';
 
 /**
  * Asks a question in someone's own Ask and opens it there, with the answer on
- * its way. With `fromSummary`, "Add to summary" then goes back to where it came from.
+ * its way. With `fromSummary`, "Use this summary" then goes back to where it came from.
  */
 export function useAskAboutPrep() {
   const chat = useChat();
@@ -39,10 +41,9 @@ export function useAskAboutPrep() {
  */
 export function useSummaryActions(entity: Entity, brief?: Brief) {
   const ctx = useWorkspace();
-  const chat = useChat();
   const ask = useAskAboutPrep();
   const { openEdit, sheet } = usePrepSheet();
-  const thin = isThinPrep(brief ?? buildBrief(entity, ctx), prepEdit(ctx.ws, entity.id), chat.asked(entity.id));
+  const thin = isThinPrep(brief ?? buildBrief(entity, ctx), prepEdit(ctx.ws, entity.id));
   return {
     thin,
     improveLabel: thin ? 'Write a summary with Ask' : 'Improve with Ask',
@@ -70,15 +71,18 @@ export function usePrepSheet() {
   };
 }
 
-/** The rep's own summary, one point to a line, and goal. Both empty goes back to the ones written from the data. */
+/**
+ * The rep's own words in the Summary, after the facts from the data, and their
+ * goal. Both empty goes back to the ones written from the data.
+ */
 function PrepForm({ entity, onDone }: { entity: Entity; onDone: () => void }) {
   const ctx = useWorkspace();
   const own = prepEdit(ctx.ws, entity.id);
-  const [summary, setSummary] = useState(own?.points.join('\n') ?? '');
+  const [text, setText] = useState(own?.text ?? '');
   const [goal, setGoal] = useState(own?.goal ?? '');
 
   const save = () => {
-    ctx.editPrep(entity.id, { goal, points: summary.split('\n') });
+    ctx.editPrep(entity.id, { goal, text });
     AccessibilityInfo.announceForAccessibility('Summary saved');
     onDone();
   };
@@ -86,14 +90,19 @@ function PrepForm({ entity, onDone }: { entity: Entity; onDone: () => void }) {
   return (
     <>
       <SheetBody>
-        <Field label="Summary" id="prep-summary" hint="One point on each line. Leave it empty to use the one in grey. Keep patient details out.">
+        <Field
+          label="Summary"
+          id="prep-summary"
+          hint="It starts with the facts above, which keep themselves up to date. Write the rest as you’d tell a colleague, or leave it empty to use the words in grey. Keep patient details out."
+        >
+          <Text className="rounded-lg bg-muted px-3 py-2 text-sm leading-5">{summaryOf(entity, ctx)}</Text>
           <Textarea
-            value={summary}
-            onChangeText={setSummary}
-            maxLength={MAX_POINTS * POINT_MAX}
+            value={text}
+            onChangeText={setText}
+            maxLength={TEXT_MAX}
             numberOfLines={Platform.select({ web: 6, native: 8 })}
             className="min-h-36"
-            placeholder={summaryOf(entity, ctx)}
+            placeholder={sentence(insightFor(entity))}
             accessibilityLabel="Summary"
             aria-labelledby="prep-summary"
           />
@@ -108,7 +117,7 @@ function PrepForm({ entity, onDone }: { entity: Entity; onDone: () => void }) {
             aria-labelledby="prep-goal"
           />
         </Field>
-        <FinePrint>Kept on this phone. The rest of the full summary is written from the data and keeps itself up to date.</FinePrint>
+        <FinePrint>What you write is kept on this phone. The facts, and the rest of the full summary, keep themselves up to date.</FinePrint>
       </SheetBody>
       <Footer onCancel={onDone} onSave={save} saveLabel="Save summary" error={null} />
     </>

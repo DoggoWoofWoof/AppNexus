@@ -1,15 +1,16 @@
 // What the menu's Saved list holds: the Summary of anyone the rep is seeing or
 // has asked about, and reports kept from Ask. A Summary (called prep inside the
-// app) is rebuilt every time from the data, the plan and the rep's questions and
-// words, so it is never out of date. A report is a snapshot of one answer, so it
-// keeps the figures as they were when saved.
+// app) is one working copy, rebuilt every time from the data and the plan with the
+// rep's own words in it, so it is never out of date. What they asked stays in the
+// chat. A report is a snapshot of one answer, so it keeps the figures as they were
+// when saved.
 
 import { SAMPLE, type Answer, type Intent } from './ask';
-import { buildBrief, summaryOf, visitWhen } from './brief';
+import { buildBrief, pointsBesides, summaryParagraph, visitWhen } from './brief';
 import { getEntity, shortName } from './data';
 import { DATA_PERIOD } from './data/seed';
-import { daysBetween, formatDate, fromIso, fromMinutes, isoDate, plural, relativeDayLower, uid } from './format';
-import { prepEdit, samePoint } from './prep';
+import { daysBetween, formatDate, fromIso, fromMinutes, isoDate, plural, relativeDayLower, says, uid } from './format';
+import { prepEdit } from './prep';
 import type { Entity, SavedReport } from './types';
 import type { Context } from './workspace';
 
@@ -49,29 +50,19 @@ export const prepId = (entityId: string): string => `prep-${entityId}`;
 export const prepTarget = (id: string): string | null => (id.startsWith('prep-') ? id.slice(5) : null);
 
 /**
- * Someone's full Summary: the summary itself, the goal, why now, the talking
- * points, what the rep asked about them in Ask and anything still owed. The
- * newest questions come first. The rep's own summary and goal (lib/prep.ts)
- * take the place of the ones written from the data, and a talking point they've
- * already written isn't said twice.
+ * Someone's full Summary: the paragraph from their page (summaryParagraph), the
+ * goal, why now, the talking points and anything still owed, each as the data and
+ * plan have it now. The rep's goal (lib/prep.ts) takes the place of the one
+ * written from the data, and nothing the paragraph says is said twice.
  */
-export function buildPrep(entity: Entity, ctx: Context, asked: Asked[] = []): Doc {
+export function buildPrep(entity: Entity, ctx: Context): Doc {
   const brief = buildBrief(entity, ctx);
   const own = prepEdit(ctx.ws, entity.id);
-  const sections: Doc['sections'] = [];
-  sections.push({ title: 'Summary', lines: own?.points.length ? own.points.map((text) => ({ text })) : [{ text: summaryOf(entity, ctx) }] });
-  sections.push({ title: 'Why now', lines: [{ text: brief.insight }] });
-  const points = brief.points.filter((p) => !own?.points.some((mine) => samePoint(mine, p.text)));
+  const summary = summaryParagraph(entity, ctx);
+  const sections: Doc['sections'] = [{ title: 'Summary', lines: [{ text: summary }] }];
+  if (!says(summary, brief.insight)) sections.push({ title: 'Why now', lines: [{ text: brief.insight }] });
+  const points = pointsBesides(brief, summary);
   if (points.length) sections.push({ title: 'Talking points', lines: points.map((p) => ({ text: p.text })) });
-  if (asked.length) {
-    sections.push({
-      title: 'From your questions',
-      lines: [...asked]
-        .sort((a, b) => b.at - a.at)
-        .slice(0, 5)
-        .map((a) => ({ label: `You asked: ${a.question}`, text: a.answer })),
-    });
-  }
   // The soonest follow-up is already the goal when nothing else was set, or the first talking point.
   const said = brief.goalDue || brief.points.some((p) => p.kind === 'promise');
   const owed = said ? brief.followUps.slice(1) : brief.followUps;
@@ -93,7 +84,7 @@ export function buildPrep(entity: Entity, ctx: Context, asked: Asked[] = []): Do
     when: brief.visit ? visitWhen(brief.visit, entity, ctx.today) : 'No visit planned yet',
     summary: `${own?.goal ? 'Your goal' : brief.goalSuggested ? 'Suggested goal' : 'Goal'}: ${brief.goal}${brief.goalDue ? ` (${brief.goalDue})` : ''}`,
     sections,
-    scope: [DATA_PERIOD, ...(asked.length ? [`${plural(asked.length, 'question')} you asked`] : []), ...(own ? ['Your own words, kept on this phone'] : [])],
+    scope: [DATA_PERIOD, ...(own ? ['Your own words, kept on this phone'] : [])],
   };
 }
 
@@ -116,7 +107,7 @@ const TITLES: Partial<Record<Intent, string>> = {
   people: 'Top doctors',
   points: 'Talking points',
   brief: 'Brief',
-  prep: 'Ideas for the summary',
+  prep: 'A better summary',
 };
 
 /** A name for a saved answer, such as "Where patients go · Mount Sinai West" or "Your week to 19 Oct". */

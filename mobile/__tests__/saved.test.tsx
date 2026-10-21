@@ -6,6 +6,7 @@ import { act, renderHook } from '@testing-library/react-native';
 import type { ReactNode } from 'react';
 
 import { answer } from '@/lib/ask';
+import { insightFor } from '@/lib/brief';
 import { ChatProvider, TERRITORY, useChat } from '@/lib/chat';
 import { getEntity } from '@/lib/data';
 import { DATA_PERIOD } from '@/lib/data/seed';
@@ -21,7 +22,7 @@ const ctx = buildContext(freshWorkspace(today), today);
 const entity = (id: string) => getEntity(id) as Entity;
 
 describe('visit prep', () => {
-  test('has the goal, why now and talking points, and finds its way back to the person', () => {
+  test('has the goal, the Summary with why now in it, and talking points, and finds its way back to the person', () => {
     const doc = buildPrep(entity('maya'), ctx);
     expect(prepTarget(doc.id)).toBe('maya');
     expect(prepTarget(prepId('msw'))).toBe('msw');
@@ -29,18 +30,15 @@ describe('visit prep', () => {
     expect(doc).toMatchObject({ kind: 'prep', title: 'Summary for Dr. Patel', about: 'maya' });
     expect(doc.summary).toMatch(/^Goal: Bring the procedure mix vs\. peers report/);
     expect(doc.when).toMatch(/^Today, .* · 10:00–10:30 · /);
-    expect(doc.sections.map((s) => s.title)).toEqual(expect.arrayContaining(['Why now', 'Talking points']));
+    expect(doc.sections.map((s) => s.title)).toEqual(expect.arrayContaining(['Summary', 'Talking points']));
+    expect(doc.sections[0].lines[0].text).toContain(insightFor(entity('maya')));
     expect(doc.scope).toEqual([DATA_PERIOD]);
   });
 
-  test('adds what the rep asked, newest first', () => {
-    const doc = buildPrep(entity('maya'), ctx, [
-      { question: 'Where does she refer?', answer: 'Mostly to Hudson Heart Institute.', at: 1 },
-      { question: 'When is she free?', answer: 'Tuesday and Thursday mornings.', at: 2 },
-    ]);
-    const asked = doc.sections.find((s) => s.title === 'From your questions');
-    expect(asked?.lines.map((l) => l.label)).toEqual(['You asked: When is she free?', 'You asked: Where does she refer?']);
-    expect(doc.scope).toEqual([DATA_PERIOD, '2 questions you asked']);
+  test('is one working copy, without a list of what the rep asked, which stays in the chat', () => {
+    const doc = buildPrep(entity('maya'), ctx);
+    expect(doc.sections.map((s) => s.title).filter((t) => !['Summary', 'Why now', 'Talking points', 'Still to do'].includes(t))).toEqual([]);
+    expect(doc.sections.flatMap((s) => s.lines).some((l) => l.label)).toBe(false);
   });
 
   test('someone with nothing planned gets a suggested goal', () => {

@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Text } from '@/components/ui/text';
-import { bookingRoute, dayGrid, siteOnDay, usualTimes } from '@/lib/booking';
+import { bookingRoute, dayGrid, keepsOfficeHours, siteOnDay, usualTimes, WEEKDAY_NAMES } from '@/lib/booking';
 import { getEntity, shortName, siteFor } from '@/lib/data';
 import { formatDate, fromIso, relativeDay, toMinutes } from '@/lib/format';
 import { isOnSite } from '@/lib/plan';
@@ -28,7 +28,6 @@ type Visit = { day: string; id: string; item: PlanItem };
 /** What the time is for: booking someone, moving a visit, or a time for an "Any time" stop. */
 export type TimeFor = { kind: 'book' } | { kind: 'move'; from: Visit } | { kind: 'set'; day: string; item: PlanItem };
 
-const WEEKDAY_NAMES = ['Sundays', 'Mondays', 'Tuesdays', 'Wednesdays', 'Thursdays', 'Fridays', 'Saturdays'];
 
 export function TimeForm({ target, mode, onCancel, onSaved }: { target: Entity; mode: TimeFor; onCancel: () => void; onSaved: (message: string) => void }) {
   const ctx = useWorkspace();
@@ -77,7 +76,14 @@ export function TimeForm({ target, mode, onCancel, onSaved }: { target: Entity; 
     setError(null);
   };
 
+  // The visit's own day and time, chosen again: nothing to change.
+  const unchanged = mode.kind === 'move' && day === mode.from.day && time === mode.from.item.time;
+
   const save = () => {
+    if (unchanged) {
+      onCancel();
+      return;
+    }
     const problem = !time
       ? 'Choose a time.'
       : mode.kind === 'set'
@@ -119,7 +125,15 @@ export function TimeForm({ target, mode, onCancel, onSaved }: { target: Entity; 
     ...grid.visits.map((v) => `${v.time} ${who(v)}${away(v) ? `, ${away(v)} min away` : ''}`),
     ...grid.anyTime.map((v) => `${who(v)} (any time)`),
   ].join(' · ');
-  const saveLabel = !time ? (booking ? 'Request' : 'Set time') : mode.kind === 'set' ? `Set ${time}` : `${confirmed ? 'Book' : 'Request'} ${dayLabel(day)} ${time}`;
+  const saveLabel = !time
+    ? booking
+      ? 'Request'
+      : 'Set time'
+    : unchanged
+      ? `Keep ${time}`
+      : mode.kind === 'set'
+        ? `Set ${time}`
+        : `${confirmed ? 'Book' : 'Request'} ${dayLabel(day)} ${time}`;
 
   return (
     <SheetContent title={title} target={target} sub={sub}>
@@ -132,8 +146,8 @@ export function TimeForm({ target, mode, onCancel, onSaved }: { target: Entity; 
         {days.length > 1 ? <Choices label="Day" value={day} onChange={chooseDay} options={days.map((d) => ({ value: d, label: dayLabel(d) }))} /> : null}
 
         <View className="gap-3">
-          {notIn ? <Text className="text-sm text-warn">{`${shortName(target)} isn’t usually in on ${WEEKDAY_NAMES[fromIso(day).getDay()]}.`}</Text> : null}
-          {usual.length ? <Times label="Their usual times" times={usual} value={time} onChange={choose} /> : null}
+          {notIn ? <Text className="text-sm text-warn">{`${shortName(target)} ${target.kind === 'hco' ? 'is closed' : 'isn’t usually in'} on ${WEEKDAY_NAMES[fromIso(day).getDay()]}.`}</Text> : null}
+          {usual.length ? <Times label={keepsOfficeHours(target) ? 'Office hours' : 'Their usual times'} times={usual} value={time} onChange={choose} /> : null}
           {other.length && otherOpen ? <Times label={usual.length ? 'Other free times' : 'Free times'} times={other} value={time} onChange={choose} /> : null}
           {other.length && !otherOpen ? (
             <Button variant="ghost" className="self-start px-0" onPress={() => setShowOther(true)}>

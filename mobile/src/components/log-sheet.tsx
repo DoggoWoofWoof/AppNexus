@@ -14,6 +14,7 @@ import { Icon } from '@/components/ui/icon';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Text } from '@/components/ui/text';
+import { outcomeWord } from '@/lib/brief';
 import { descendantsOf, getEntity, hcpsAt, shortName } from '@/lib/data';
 import { addDays, isoDate } from '@/lib/format';
 import { draftKey } from '@/lib/persist';
@@ -28,6 +29,8 @@ type Options = {
   title?: string;
   /** Already seen today, so only the note is asked for. */
   seen?: boolean;
+  /** How they were seen, for a note with no visit. */
+  type?: VisitType;
 };
 
 /** The log sheet. Render `sheet` once on the screen that opens it. `onNotIn` follows a visit logged as not in. */
@@ -45,6 +48,7 @@ export function useLogSheet({ onNotIn }: { onNotIn?: (target: Entity, visit: Vis
               target={open.target}
               visit={open.visit}
               seen={!!open.options.seen}
+              type={open.options.type}
               onDone={(outcome) => {
                 const { target, visit } = open;
                 close();
@@ -58,20 +62,25 @@ export function useLogSheet({ onNotIn }: { onNotIn?: (target: Entity, visit: Vis
   };
 }
 
-function LogForm({ target, visit, seen, onDone }: { target: Entity; visit?: Visit; seen: boolean; onDone: (outcome: string) => void }) {
+function LogForm({
+  target,
+  visit,
+  seen,
+  type: seenAs,
+  onDone,
+}: {
+  target: Entity;
+  visit?: Visit;
+  seen: boolean;
+  type?: VisitType;
+  onDone: (outcome: string) => void;
+}) {
   const ctx = useWorkspace();
   const inPersonType: VisitType = target.kind === 'hco' ? 'Meeting' : 'In-person visit';
-  const [type, setType] = useState<VisitType>(visit?.type ?? inPersonType);
+  const [type, setType] = useState<VisitType>(visit?.type ?? seenAs ?? inPersonType);
   const inPerson = type === 'In-person visit' || type === 'Meeting';
-  const choices = inPerson
-    ? [
-        { value: 'Met', label: 'Met' },
-        { value: 'Attempted', label: 'Not in' },
-      ]
-    : [
-        { value: 'Met', label: 'Talked' },
-        { value: 'Attempted', label: 'No answer' },
-      ];
+  // "Met" or "Not in" (a meeting with an account: "Didn’t meet"), "Talked" or "No answer" for a call.
+  const choices = ['Met', 'Attempted'].map((value) => ({ value, label: outcomeWord(value, type) }));
   // A note closed before it was saved comes back, for this person and visit.
   const key = draftKey(target.id, visit);
   const [kept] = useState(() => ctx.draftFor(key));

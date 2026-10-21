@@ -103,13 +103,17 @@ export const isOnSite = (item: PlanItem): boolean => item.type === 'In-person vi
 /**
  * How many stops at the start of the route stay where they are when stops are
  * placed or reordered: up to the last one logged, or, today, the last one whose
- * time has started. Nothing is put before a visit that has already happened.
+ * time has started. Nothing is put before a visit that has already happened. A
+ * visit with a time logged before it was due, such as when they were met early,
+ * doesn't hold back the stops before it.
  */
 export function fixedStops(route: PlanItem[], minutesNow: number | null): number {
   let fixed = 0;
   route.forEach((item, i) => {
-    const started = minutesNow != null && item.mode === 'timed' && item.time != null && startOf(item) <= minutesNow;
-    if (item.status !== 'planned' || started) fixed = i + 1;
+    const timed = item.mode === 'timed' && item.time != null;
+    const started = minutesNow != null && timed && startOf(item) <= minutesNow;
+    const early = minutesNow != null && timed && !started;
+    if ((item.status !== 'planned' && !early) || started) fixed = i + 1;
   });
   return fixed;
 }
@@ -144,6 +148,8 @@ export interface Clash {
   kind: 'overlap' | 'travel';
   earlier: PlanItem;
   later: PlanItem;
+  /** Where the drive is from: the last visit in person before it, or null from the start of the day. */
+  from: PlanItem | null;
   /** Minutes needed to get there, and free between them. */
   need: number;
   free: number;
@@ -179,19 +185,23 @@ export function scheduleDay(items: PlanItem[], { coordsOf, start, windowsOf = ()
   const clashes: Clash[] = [];
   let last: Stop | null = null;
   let here = start;
+  let hereItem: PlanItem | null = null;
   const kmTo = (from: LonLat, item: PlanItem) => (isOnSite(item) ? haversineKm(from, coordsOf(item)) : 0);
   const put = (item: PlanItem, at: number, km: number, outside = false) => {
     const stop: Stop = { item, start: at, end: at + item.duration, travel: travelMinutes(km), km, outside, late: !hasTime(item) && at + item.duration > dayEnd };
     stops.push(stop);
     if (!last || stop.end >= last.end) last = stop;
-    if (isOnSite(item)) here = coordsOf(item);
+    if (isOnSite(item)) {
+      here = coordsOf(item);
+      hereItem = item;
+    }
   };
   const putTimed = (item: PlanItem) => {
     const at = startOf(item);
     const km = kmTo(here, item);
     const need = travelMinutes(km);
     if (last && last.end + need > at) {
-      clashes.push({ kind: last.end > at ? 'overlap' : 'travel', earlier: last.item, later: item, need, free: Math.max(0, at - last.end) });
+      clashes.push({ kind: last.end > at ? 'overlap' : 'travel', earlier: last.item, later: item, from: hereItem, need, free: Math.max(0, at - last.end) });
     }
     put(item, at, km);
   };

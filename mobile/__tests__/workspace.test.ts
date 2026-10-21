@@ -33,8 +33,10 @@ describe('search', () => {
     expect(search({ planned: 'unplanned' }).every((r) => !r.planned)).toBe(true);
     const near = search({ sort: 'distance' }).map((r) => r.distance);
     expect(near).toEqual([...near].sort((a, b) => a - b));
-    const names = search({ sort: 'name' }).map((r) => r.entity.name.replace(/^Dr\. /, ''));
-    expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b)));
+    // Doctors by surname, as the list shows them.
+    const surnames = search({ sort: 'name' }).map((r) => r.entity.name.split(' ').pop()!);
+    expect(surnames).toEqual([...surnames].sort((a, b) => a.localeCompare(b)));
+    expect(surnames.slice(0, 3)).toEqual(['Bell', 'Cohen', 'Lee']);
   });
 
   test('the filter count ignores the search text and People/Accounts tab', () => {

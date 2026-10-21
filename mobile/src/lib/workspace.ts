@@ -2,11 +2,11 @@
 // ask of it. For now it is the sample, seeded relative to today and kept on the
 // phone (lib/persist.ts); sync comes with the real services.
 
-import { availability, bookingRoute, clashesWith, hoursOn, parseDays, siteOnDay, suggestSlots, windowsFor, type Availability, type Slot } from './booking';
+import { availability, bookingRoute, clashesWith, hoursOn, inOnDay, outsideTimes, parseDays, siteOnDay, suggestSlots, windowsFor, type Availability, type Slot } from './booking';
 import { allEntities, getEntity, getOrg, lastInteraction, priorityOf, signalsFor, siteFor } from './data';
 import { seedWorkspace } from './data/seed';
-import { addDays, daysBetween, formatDate, fromIso, haversineKm, isoDate, toMinutes, uid } from './format';
-import { activeItems, addTargets, bestOrder, fixedStops, isOnSite, placeStops, routeOrder, scheduleDay, timeStop, travelMinutes, type ScheduleOptions } from './plan';
+import { addDays, dayInWords, daysBetween, formatDate, fromIso, haversineKm, isoDate, toMinutes, uid } from './format';
+import { activeItems, addTargets, bestOrder, END_OF_DAY, fixedStops, isOnSite, notLogged, placeStops, routeOrder, scheduleDay, timeStop, travelMinutes, type ScheduleOptions } from './plan';
 import { DEFAULT_PREFS, startPoint } from './prefs';
 import { searchTargets, type Filters, type SearchContext } from './search';
 import type { Entity, FollowUp, FreeSlot, Hcp, Interaction, PlanItem, SavedReport, Signal, VisitType, Workspace } from './types';
@@ -38,8 +38,17 @@ export const haystack = (e: Entity): string =>
 export const newestFirst = (a: Interaction, b: Interaction): number =>
   b.date.localeCompare(a.date) || (b.createdAt ?? 0) - (a.createdAt ?? 0);
 
+/** Today and the next four working days: the days the rep plans and books. */
+export function bookingDaysFrom(today: Date): string[] {
+  const days: string[] = [];
+  for (let d = today; days.length < 5; d = addDays(d, 1)) {
+    if (!days.length || (d.getDay() !== 0 && d.getDay() !== 6)) days.push(isoDate(d));
+  }
+  return days;
+}
+
 /** Everything screens derive from the workspace for a given day. */
-export function buildContext(ws: Workspace, today: Date) {
+export function buildContext(ws: Workspace, today: Date, now?: Date) {
   const todayIso = isoDate(today);
   const entities = allEntities();
   const signalCache = new Map<string, Signal[]>();
@@ -52,7 +61,7 @@ export function buildContext(ws: Workspace, today: Date) {
 
   // While a free slot is being filled, distances are from that visit's site to
   // where each person works that day, and the person who cancelled isn't offered back.
-  const filling = fillingSlot(ws);
+  const filling = fillingSlot(ws, now);
   const fillDay = filling ? fromIso(filling.day).getDay() : 0;
   const start = startPoint(ws);
   const origin = (filling && getOrg(filling.siteId)?.coords) || start.coords;
@@ -69,11 +78,7 @@ export function buildContext(ws: Workspace, today: Date) {
     haystack,
   };
 
-  // Today and the next four working days: the days the rep plans and books.
-  const bookingDays: string[] = [];
-  for (let d = today; bookingDays.length < 5; d = addDays(d, 1)) {
-    if (!bookingDays.length || (d.getDay() !== 0 && d.getDay() !== 6)) bookingDays.push(isoDate(d));
-  }
+  const bookingDays = bookingDaysFrom(today);
   // The day after today that Today plans: tomorrow, or Monday from a Friday.
   const nextDay = bookingDays[1];
   const nextLabel = daysBetween(today, fromIso(nextDay)) === 1 ? 'Tomorrow' : formatDate(nextDay, { weekday: 'long' });
@@ -95,8 +100,8 @@ export function buildContext(ws: Workspace, today: Date) {
       { iso: todayIso, label: 'Today' },
       { iso: nextDay, label: nextLabel },
     ],
-    /** A plan day mid-sentence: "today", "tomorrow", or "Monday" on a Friday. */
-    dayWord: (day: string): string => (day === todayIso ? 'today' : day === nextDay ? (nextLabel === 'Tomorrow' ? 'tomorrow' : nextLabel) : formatDate(day)),
+    /** A day mid-sentence: "today", "tomorrow", "Monday" on a Friday, or "Thursday" in the coming week. */
+    dayWord: (day: string): string => dayInWords(day, today),
     /** The day's visits in the order they happen (`scheduleDay` in plan.ts), cancelled ones last. */
     dayPlan: (day: string, now?: Date): PlanItem[] => {
       const items = ws.plans[day] ?? [];
@@ -121,6 +126,25 @@ export function buildContext(ws: Workspace, today: Date) {
       }
       return null;
     },
+    /**
+     * How someone was logged today, from the plan or a note such as a chance
+     * meeting: met counts over not in, as they were seen in the end. Null when
+     * nothing was logged with them today. At someone else's meeting they were met in person.
+     */
+    loggedToday: (id: string): { met: boolean; type: VisitType } | null => {
+      const logs = [
+        ...(ws.plans[todayIso] ?? []).filter((i) => i.targetId === id && i.status === 'done').map((i) => ({ met: i.outcome !== 'Attempted', type: i.type })),
+        ...ws.interactions
+          .filter((i) => !i.deleted && i.date === todayIso && (i.targetId === id || i.attendees.includes(id)) && (i.outcome === 'Met' || i.outcome === 'Attempted'))
+          .map((i) => ({ met: i.outcome === 'Met', type: (i.targetId === id ? i.type : 'In-person visit') as VisitType })),
+      ];
+      return logs.find((l) => l.met) ?? logs[0] ?? null;
+    },
+    /** Who Saved has a Summary for: anyone asked about (`talked`, newest first), then anyone still to see today or on the next working day. */
+    summaryPeople: (talked: string[]): Entity[] =>
+      [...new Set([...talked, ...[todayIso, nextDay].flatMap((d) => dayOrder(ws, d).filter((i) => i.status === 'planned').map((i) => i.targetId))])]
+        .map((id) => getEntity(id))
+        .filter((e): e is Entity => !!e),
     lastInteraction: (id: string) => lastInteraction(id, ws),
     /** Notes about a target or that it attended, newest first. */
     interactionsFor: (id: string): Interaction[] =>
@@ -133,13 +157,40 @@ export function buildContext(ws: Workspace, today: Date) {
      * Times freed by cancelled visits on a day, soonest first, leaving out any now
      * taken by another visit and, given the time, any that have gone.
      */
-    freeSlotsOn: (day: string, now?: Date): FreeSlot[] =>
-      ws.freeSlots.filter((s) => s.day === day && !clashesWith(ws.plans[day], s.time, s.duration).length && !(now && hasGone(day, s.time, now))),
+    freeSlotsOn: (day: string, now?: Date): FreeSlot[] => ws.freeSlots.filter((s) => s.day === day && stillFree(ws, s, now)),
     /** The free slot Targets is filling, if any. */
     filling,
     /** Whether someone can be seen in the slot being filled, and where; null when nothing is being filled. */
     fitsSlot: (e: Entity): Availability | null => (filling ? availability(e, filling.day, filling.time, filling.duration) : null),
     bookingDays,
+    /** The day to move a visit to (`moveDayFor`): the next working day they can be seen, and in, for a visit in person. */
+    moveDayFor: (item: PlanItem, day: string): string | null => moveDayFor(ws, item, day, bookingDays),
+    /** Once today is over, its visits not done and where each would go (`notDoneToday`), for "Move them to tomorrow". */
+    notDoneToday: (now: Date): NotDone | null => notDoneToday(ws, todayIso, now, bookingDays),
+    /**
+     * What's wrong with when a visit still to do is, for Today to say on it with a
+     * better choice: in person on a day they aren't in ("Not in on Wednesdays · try
+     * Thursday"), or outside their usual times ("Not their usual time · usually
+     * 08:00–11:00"; for an account, "Outside office hours · 09:00–17:00"). `outside`
+     * is the day's own word on an "Any time" stop. A booked visit was agreed with
+     * them, so it's never wrong.
+     */
+    timeWarning: (item: PlanItem, day: string, outside: boolean): string | null => {
+      const who = getEntity(item.targetId);
+      if (!who || item.status !== 'planned' || (item.mode === 'timed' && item.booking)) return null;
+      const there = inOnDay(who, day);
+      if (isOnSite(item) && !there.ok) {
+        const better = moveDayFor(ws, item, day, bookingDays);
+        return better ? `${there.why} · try ${dayInWords(better, today)}` : there.why;
+      }
+      const weekday = fromIso(day).getDay();
+      const hours = hoursOn(who, weekday);
+      // A time the rep set themselves is checked against their usual times that day, if they have any.
+      const at = item.mode === 'timed' && item.time ? toMinutes(item.time) : null;
+      const wrong =
+        at == null ? outside : !!hours && !windowsFor(who).some((w) => parseDays(w.days).has(weekday) && toMinutes(w.from) <= at && at + item.duration <= toMinutes(w.to));
+      return wrong ? outsideTimes(who, weekday) : null;
+    },
     /**
      * Times to offer when booking someone, skipping days they're already planned
      * (apart from `from`, the visit being moved) and the next half hour.
@@ -286,6 +337,9 @@ export interface DraftError {
 /** Whether a time on a day has already started. */
 const hasGone = (day: string, time: string, now: Date): boolean => fromIso(day).getTime() + toMinutes(time) * 60_000 <= now.getTime();
 
+/** Whether a freed time is still free: not taken by another visit since, and, given the time, still to come. */
+const stillFree = (ws: Workspace, s: FreeSlot, now?: Date): boolean => !clashesWith(ws.plans[s.day], s.time, s.duration).length && !(now && hasGone(s.day, s.time, now));
+
 const isDay = (iso: string): boolean => /^\d{4}-\d{2}-\d{2}$/.test(iso) && isoDate(fromIso(iso)) === iso;
 
 /** Why a note can't be saved yet, or null when it can. */
@@ -429,11 +483,14 @@ export function addPeople(ws: Workspace, day: string, targetIds: string[], now?:
 /** Adds someone to a day's plan at no fixed time, where it adds the least travel, unless they're already in it. */
 export const addToPlan = (ws: Workspace, day: string, targetId: string, now?: Date, type?: VisitType): Workspace => addPeople(ws, day, [targetId], now, type);
 
-/** Where someone is in the day, as the map numbers the stops that need travel, and who comes before them. Null for a call. */
-export function stopNumber(ws: Workspace, day: string, targetId: string, now?: Date): { number: number; of: number; after: PlanItem | null } | null {
-  const stops = dayOrder(ws, day, now).filter(isOnSite);
-  const index = stops.findIndex((i) => i.targetId === targetId);
-  return index < 0 ? null : { number: index + 1, of: stops.length, after: stops[index - 1] ?? null };
+/**
+ * Where someone is in the day, as the map numbers the stops that need travel, who
+ * comes before them, and whether it's outside their usual times. Null for a call.
+ */
+export function stopNumber(ws: Workspace, day: string, targetId: string, now?: Date): { number: number; of: number; after: PlanItem | null; outside: boolean } | null {
+  const stops = scheduleDay(ws.plans[day] ?? [], scheduleFor(ws, day, now)).stops.filter((s) => isOnSite(s.item));
+  const index = stops.findIndex((s) => s.item.targetId === targetId);
+  return index < 0 ? null : { number: index + 1, of: stops.length, after: stops[index - 1]?.item ?? null, outside: stops[index].outside };
 }
 
 /** The day's "Any time" visits in the order with the least driving, in their usual times (`bestOrder` in plan.ts). Visits with a time keep it. */
@@ -460,30 +517,60 @@ export function moveStop(ws: Workspace, day: string, id: string, at: number, now
 }
 
 /** Where a stop is in the day as Today shows it: whether it's the first still to do, and the stop before it. */
-export function placeOf(ws: Workspace, day: string, id: string, now?: Date): { first: boolean; after: PlanItem | null } | null {
+export function placeOf(ws: Workspace, day: string, id: string, now?: Date): { first: boolean; next: boolean; after: PlanItem | null } | null {
   const shown = dayOrder(ws, day, now);
   const k = shown.findIndex((i) => i.id === id);
   if (k < 0) return null;
-  return { first: fixedStops(shown.slice(0, k), minutesOn(day, now)) === k, after: shown[k - 1] ?? null };
+  const minutes = minutesOn(day, now);
+  // As Today's Next: the first still to do, past any whose time has gone unlogged.
+  const next = shown.find((i) => i.status === 'planned' && (minutes == null || !notLogged(i, minutes)));
+  return { first: fixedStops(shown.slice(0, k), minutes) === k, next: next?.id === id, after: shown[k - 1] ?? null };
 }
 
-/** Makes a visit in person or a phone call, or changes how long it takes. The day's times follow from it. */
+/**
+ * Makes a visit in person or a phone call, or changes how long it takes. The day's
+ * times follow from it. A call made a visit goes where they are that day, as the
+ * place a call was kept with may be from another day.
+ */
 export const changeStop = (ws: Workspace, day: string, id: string, change: Partial<Pick<PlanItem, 'type' | 'duration'>>): Workspace =>
-  withPlan(ws, day, (items) => items.map((i) => (i.id === id ? { ...i, ...change } : i)));
+  withPlan(ws, day, (items) =>
+    items.map((i) => {
+      if (i.id !== id) return i;
+      const next = { ...i, ...change };
+      const who = getEntity(i.targetId);
+      if (who && !isOnSite(i) && isOnSite(next)) next.siteId = siteOnDay(who, fromIso(day).getDay()) ?? siteFor(who, i.siteId).id;
+      return next;
+    }),
+  );
 
-/** Why an "Any time" visit can't move to another day, or null when it can. */
+/**
+ * The day to move a visit on `day` to: the first of `days` after it where they
+ * aren't planned already and, for a visit in person, are in. Null when none will do.
+ */
+export function moveDayFor(ws: Workspace, item: PlanItem, day: string, days: string[]): string | null {
+  const who = getEntity(item.targetId);
+  if (!who) return null;
+  return (
+    days.find(
+      (d) => d > day && (!isOnSite(item) || !!siteOnDay(who, fromIso(d).getDay())) && !activeItems(ws.plans[d]).some((i) => i.targetId === item.targetId),
+    ) ?? null
+  );
+}
+
+/** Why an "Any time" visit, or one at the rep's own time, can't move to another day, or null when it can. */
 export function moveToDayError(ws: Workspace, day: string, id: string, toDay: string): string | null {
   const item = findItem(ws, day, id);
   const who = getEntity(item?.targetId ?? '');
   if (!item || !who || item.status !== 'planned') return 'That visit is no longer planned.';
-  if (item.mode === 'timed') return 'A visit with a time moves with Move to another time.';
+  if (item.mode === 'timed' && item.booking) return 'A booked visit moves with Change the time.';
   if (activeItems(ws.plans[toDay]).some((i) => i.targetId === item.targetId)) return `${who.name} is already in your plan on ${formatDate(toDay)}.`;
   return null;
 }
 
 /**
  * Moves an "Any time" visit to another day, keeping its goal, where it adds the
- * least driving there. Where they work that day is used when it differs.
+ * least driving there. Where they work that day is used when it differs. One at a
+ * time the rep set themselves goes as "Any time", as that time may not suit the new day.
  */
 export function moveToDay(ws: Workspace, day: string, id: string, toDay: string): Workspace {
   if (moveToDayError(ws, day, id, toDay)) return ws;
@@ -492,12 +579,41 @@ export function moveToDay(ws: Workspace, day: string, id: string, toDay: string)
   const moved: PlanItem = {
     ...item,
     id: uid('v'),
-    siteId: isOnSite(item) ? (siteOnDay(who, fromIso(toDay).getDay()) ?? item.siteId) : item.siteId,
-    movedFrom: item.movedFrom ?? { day, time: null },
+    mode: 'flexible',
+    time: null,
+    siteId: siteOnDay(who, fromIso(toDay).getDay()) ?? item.siteId,
+    movedFrom: item.movedFrom ?? { day, time: item.time },
   };
   const plans = { ...ws.plans, [day]: ws.plans[day].filter((i) => i.id !== id) };
   plans[toDay] = placeStops([...(plans[toDay] ?? []), moved], [moved.id], stopCoords, startPoint(ws).coords, null, usualOn(toDay));
   return changed(ws, { plans });
+}
+
+/** Today's visits not done once the day is over, and where they'd go. */
+export interface NotDone {
+  /** Each visit and the day `moveToDay` would put it on, in the day's order. */
+  moves: { item: PlanItem; to: string }[];
+  /** The day most of them go to, the soonest of any that tie: the day "Move them to tomorrow" says. */
+  to: string;
+}
+
+/**
+ * Once today is over, from 17:30, its visits not done that can go to another day:
+ * not logged by now (`notLogged` in plan.ts), each to the next of `days` they can
+ * be seen, and in, for a visit in person (`moveDayFor`). A booked visit stays, as
+ * it moves with Change the time, and so does one with no day to go to. Null when none.
+ */
+export function notDoneToday(ws: Workspace, todayIso: string, now: Date, days: string[]): NotDone | null {
+  const minutes = minutesOn(todayIso, now);
+  if (minutes == null || minutes < toMinutes(END_OF_DAY)) return null;
+  const moves = dayOrder(ws, todayIso, now).flatMap((item) => {
+    const booked = item.mode === 'timed' && !!item.booking;
+    const to = notLogged(item, minutes) && !booked ? moveDayFor(ws, item, todayIso, days) : null;
+    return to ? [{ item, to }] : [];
+  });
+  const count = (day: string) => moves.filter((m) => m.to === day).length;
+  const to = [...new Set(moves.map((m) => m.to))].sort((a, b) => count(b) - count(a) || a.localeCompare(b))[0];
+  return to ? { moves, to } : null;
 }
 
 /** Adds several people to a day at no fixed time, then puts the day's "Any time" stops in the best order. */
@@ -536,10 +652,14 @@ function freedSlot(item: PlanItem, day: string, todayIso: string, now?: Date): F
   return { day, time: item.time, duration: item.duration, siteId: siteFor(target, item.siteId).id, name: target.name, targetId: target.id, itemId: item.id };
 }
 
-/** Offers a freed time to someone nearby. Targets fills the newest first; the others wait in the list. */
+/**
+ * Offers a freed time to someone nearby. Targets fills the newest first; the
+ * others wait in the list. The day shown stays as it is: Find someone or See
+ * everyone goes to the time's day.
+ */
 const offerSlot = (ws: Workspace, slot: FreeSlot): Workspace => ({
   ...ws,
-  selection: { ...ws.selection, day: slot.day, slot: slot.itemId },
+  selection: { ...ws.selection, slot: slot.itemId },
   freeSlots: [...ws.freeSlots.filter((s) => s.itemId !== slot.itemId), slot].sort((a, b) => a.day.localeCompare(b.day) || a.time.localeCompare(b.time)),
 });
 
@@ -564,9 +684,9 @@ export function restoreVisit(ws: Workspace, day: string, id: string): Workspace 
 /** Leaves a free slot free, so it's no longer offered. Slots are known by the cancelled visit's id. */
 export const leaveFree = (ws: Workspace, slotId: string): Workspace => ({ ...ws, freeSlots: ws.freeSlots.filter((s) => s.itemId !== slotId) });
 
-/** The free slot Targets fills: the one chosen on the day shown, or that day's first. */
-export function fillingSlot(ws: Workspace): FreeSlot | null {
-  const onDay = ws.freeSlots.filter((s) => s.day === ws.selection.day);
+/** The free slot Targets fills: the one chosen on the day shown, or that day's first, while it's still free. */
+export function fillingSlot(ws: Workspace, now?: Date): FreeSlot | null {
+  const onDay = ws.freeSlots.filter((s) => s.day === ws.selection.day && stillFree(ws, s, now));
   return onDay.find((s) => s.itemId === ws.selection.slot) ?? onDay[0] ?? null;
 }
 
@@ -586,7 +706,7 @@ export function fillSlotError(ws: Workspace, slotId: string, targetId: string, n
   if (clash) return `${slot.time} is taken now, by ${getEntity(clash.targetId)?.name}.`;
   if (activeItems(ws.plans[slot.day]).some((i) => i.targetId === targetId)) return `${entity.name} is already in your plan that day.`;
   const fit = availability(entity, slot.day, slot.time, slot.duration);
-  return fit.ok ? null : `${entity.name} isn’t usually free then. ${fit.why}.`;
+  return fit.ok ? null : `${entity.name} ${entity.kind === 'hco' ? 'isn’t open for visits' : 'isn’t usually free'} then. ${fit.why}.`;
 }
 
 /**
@@ -694,14 +814,28 @@ export const visitDone = (ws: Workspace, day: string, id: string, outcome?: stri
  * on-site one with anyone ticked as there. A message isn't a visit, so it only
  * covers the visit it was logged from, and a call doesn't stand for a visit.
  */
-export function visitsLogged(ws: Workspace, d: NoteDraft): Workspace {
+export function visitsLogged(ws: Workspace, d: NoteDraft, now?: Date): Workspace {
   const day = d.visit?.day ?? d.date;
   const met = d.outcome === 'Met' || d.outcome === 'Attempted';
   const there = new Set(met ? (d.attendees ?? []) : []);
   const covers = (i: PlanItem) =>
     i.id === d.visit?.id || (met && ((i.targetId === d.targetId && i.type === d.type) || (there.has(i.targetId) && isOnSite(i) && (d.type === 'In-person visit' || d.type === 'Meeting'))));
   const ids = (ws.plans[day] ?? []).filter((i) => i.status === 'planned' && covers(i)).map((i) => i.id);
-  return ids.reduce((w, id) => visitDone(w, day, id, d.outcome), ws);
+  return ids.reduce((w, id) => happenedNow(visitDone(w, day, id, d.outcome), day, id, now), ws);
+}
+
+/**
+ * An "Any time" stop logged today goes where it happened: after the visits that
+ * have, and before the ones still to come, so the day reads in the order it went.
+ */
+function happenedNow(ws: Workspace, day: string, id: string, now?: Date): Workspace {
+  const item = findItem(ws, day, id);
+  const minutes = minutesOn(day, now);
+  if (!item || item.mode === 'timed' || minutes == null) return ws;
+  const rest = dayOrder(ws, day, now).filter((i) => i.id !== id);
+  const k = fixedStops(rest, minutes);
+  const cancelled = (ws.plans[day] ?? []).filter((i) => i.status === 'cancelled');
+  return withPlan(ws, day, () => [...rest.slice(0, k), item, ...rest.slice(k), ...cancelled]);
 }
 
 

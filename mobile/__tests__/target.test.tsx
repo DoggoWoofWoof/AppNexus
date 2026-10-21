@@ -218,8 +218,13 @@ describe('How to get in', () => {
       confirms: 'Usually confirms a booked time.',
     });
     expect(howToGetIn(hcp('jordan')).books).toBe('They book their own time, by email');
-    expect(howToGetIn(hcp('priya'))).toMatchObject({ books: 'The front desk, on the office phone', confirms: 'Rarely confirms. Call that morning to check they’re in.' });
-    expect(howToGetIn(org('harlem'))).toMatchObject({ books: 'Carmen Reyes, Practice Administrator', reach: 'Carmen Reyes keeps the diary. Call, don’t email.' });
+    expect(howToGetIn(hcp('priya'))).toMatchObject({ books: 'The front desk, on the office phone', confirms: 'Rarely confirms. Call that morning to check it’s still on.' });
+    // An account keeps office hours, not a doctor's usual times.
+    expect(howToGetIn(org('harlem'))).toMatchObject({
+      books: 'Carmen Reyes, Practice Administrator',
+      reach: 'Carmen Reyes keeps the diary. Call, don’t email.',
+      best: 'Office hours weekdays 09:00–17:00',
+    });
   });
 
   test('without notes on them, it says only what the data knows', () => {

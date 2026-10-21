@@ -109,7 +109,8 @@ export default function History() {
       <Confirm
         open={clearing}
         title="Clear your history?"
-        body="Your conversations and the list of people you opened are taken off this phone. Saved reports, notes and your plan stay."
+        // Saved lists a Summary for anyone asked about, so those asked about only here go from it too.
+        body="Your conversations and the list of people you opened are taken off this phone, and Saved stops showing Summaries of people you only asked about. Saved reports, notes and your plan stay."
         action="Clear history"
         onConfirm={chat.forgetAll}
         onClose={() => setClearing(false)}

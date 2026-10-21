@@ -86,6 +86,24 @@ describe('the period the figures cover', () => {
   });
 });
 
+describe('what Ask says to thanks, and about a doctor it doesn’t know', () => {
+  test('thanks and hello get a reply, not a list of doctors', () => {
+    for (const q of ['Thanks!', 'thank you', 'Hello', 'Good morning']) {
+      expect(answer(q, ctx)).toMatchObject({ rows: [], subject: null, unknown: true });
+    }
+    expect(answer('Thanks!', ctx).summary).toMatch(/^You’re welcome/);
+  });
+
+  test('a doctor not in the data is said so, rather than answered about someone else', () => {
+    expect(answer('Where does Dr. Smith refer?', ctx)).toMatchObject({
+      summary: 'I can’t find Dr. Smith in your data. Check the spelling, or look them up in Targets.',
+      subject: null,
+      rows: [],
+    });
+    expect(answer('Where does Dr. Patel refer?', ctx).subject).toBe('maya');
+  });
+});
+
 describe('patients lost', () => {
   test('is the share leaving times the patients', () => {
     expect(patientsLost(getOrg('msh')!.leakage!)).toBe(1061); // 17% of 6,240

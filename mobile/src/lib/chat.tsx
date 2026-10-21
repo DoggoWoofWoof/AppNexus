@@ -17,7 +17,7 @@ import { AppState } from 'react-native';
 import { answer, SAMPLE, type Answer } from './ask';
 import { getEntity } from './data';
 import { addDays, daysBetween, firstSentence, formatDate, fromMinutes, startOfDay, uid } from './format';
-import { CHATS_KEY, laterWriter, type DeviceStorage } from './persist';
+import { CHATS_BACKUP_KEY, CHATS_KEY, laterWriter, type DeviceStorage } from './persist';
 import { reportFrom, type Asked } from './saved';
 import { useWorkspace } from './store';
 
@@ -145,6 +145,38 @@ export function restoreChats(raw: string | null, dayStart: number): Chats {
   return settleChats({ threads, past, opened: opened.slice(0, KEEP_OPENED) }, dayStart);
 }
 
+/** Whether kept text is chats this version can carry on from. */
+function chatsUsable(raw: string): boolean {
+  try {
+    const kept: unknown = JSON.parse(raw);
+    return isRecord(kept) && kept.version === CHATS_VERSION;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * The chats kept on this phone. When they can't be read at all, nothing is
+ * written, so a moment's trouble with storage doesn't wipe History; when they
+ * can't be carried on from, a copy is put aside first.
+ */
+async function loadChats(storage: DeviceStorage, today: Date): Promise<{ chats: Chats; readable: boolean }> {
+  let raw: string | null;
+  try {
+    raw = await storage.getItem(CHATS_KEY);
+  } catch {
+    return { chats: NO_CHATS, readable: false };
+  }
+  if (raw && !chatsUsable(raw)) {
+    try {
+      await storage.setItem(CHATS_BACKUP_KEY, raw);
+    } catch {
+      // The copy is a courtesy: starting again doesn't need it.
+    }
+  }
+  return { chats: restoreChats(raw, startOfDay(today).getTime()), readable: true };
+}
+
 interface ChatStore {
   turns: (key: string) => Turn[];
   /** Asks in a thread and resolves with the finished turn, so a spoken question can be answered aloud. */
@@ -191,19 +223,15 @@ type ProviderProps = {
 
 export function ChatProvider({ children, storage = null }: ProviderProps) {
   const { today } = useWorkspace();
-  const [kept, setKept] = useState<Chats | null>(() => (storage ? null : NO_CHATS));
+  const [kept, setKept] = useState<{ chats: Chats; readable: boolean } | null>(() => (storage ? null : { chats: NO_CHATS, readable: true }));
   // Once, on launch: a new day after that is handled by LoadedChats.
   const loading = !kept;
   useEffect(() => {
     if (!storage || !loading) return;
     let live = true;
-    storage
-      .getItem(CHATS_KEY)
-      .then((raw) => restoreChats(raw, startOfDay(today).getTime()))
-      .catch(() => NO_CHATS)
-      .then((chats) => {
-        if (live) setKept(chats);
-      });
+    loadChats(storage, today).then((loaded) => {
+      if (live) setKept(loaded);
+    });
     return () => {
       live = false;
     };
@@ -212,7 +240,7 @@ export function ChatProvider({ children, storage = null }: ProviderProps) {
   // Nothing shows until it has loaded, so a question asked in the meantime isn't lost.
   if (!kept) return null;
   return (
-    <LoadedChats kept={kept} storage={storage}>
+    <LoadedChats kept={kept.chats} storage={kept.readable ? storage : null}>
       {children}
     </LoadedChats>
   );
@@ -257,14 +285,19 @@ function LoadedChats({ children, kept, storage }: { children: ReactNode; kept: C
     setChats((c) => ({ ...c, opened: [{ id, at: Date.now() }, ...c.opened.filter((o) => o.id !== id)].slice(0, KEEP_OPENED) }));
   }, []);
 
+  // What's in Saved now. An answer whose report has gone since, by Undo or Remove, isn't saved any more and can be saved again.
+  const savedIds = useMemo(() => new Set(ctx.ws.saved.map((s) => s.id)), [ctx.ws.saved]);
+
   const store = useMemo<ChatStore>(() => {
+    const stillSaved = (t: Turn): Turn => (t.savedId && !savedIds.has(t.savedId) ? { ...t, savedId: undefined } : t);
+    const isSaved = (id: string | undefined) => !!id && latest.current.ctx.ws.saved.some((s) => s.id === id);
     const update = (key: string, change: (turns: Turn[]) => Turn[]) => setChats((c) => ({ ...c, threads: { ...c.threads, [key]: change(c.threads[key] ?? []) } }));
     const all = () => [
       ...Object.entries(threads).flatMap(([key, turns]) => turns.map((turn) => ({ key, turn }))),
       ...chats.past.flatMap((c) => c.turns.map((turn) => ({ key: c.key, turn }))),
     ];
-    /** Who a finished turn is about: the thread's person, or who the territory answer was about. */
-    const subjectOf = (key: string, turn: Turn) => (key === TERRITORY ? (turn.answer?.subject ?? null) : key);
+    /** Who a finished turn is about: who the answer was about, or else the thread's person. */
+    const subjectOf = (key: string, turn: Turn) => turn.answer?.subject ?? (key === TERRITORY ? null : key);
 
     const keep = (question: string, a: Answer) => {
       const report = reportFrom(question, a, latest.current.ctx.today);
@@ -273,7 +306,7 @@ function LoadedChats({ children, kept, storage }: { children: ReactNode; kept: C
     };
 
     return {
-      turns: (key) => threads[key] ?? [],
+      turns: (key) => (threads[key] ?? []).map(stillSaved),
       ask: async (key, question, via = 'typed') => {
         const id = uid('t');
         const at = Date.now();
@@ -291,9 +324,10 @@ function LoadedChats({ children, kept, storage }: { children: ReactNode; kept: C
         if (SAVE_ONLY.test(question)) {
           const target = [...previous].reverse().find((t) => t.answer && !t.answer.unknown && t.answer.intent !== 'saved');
           if (target?.answer) {
-            const report = target.savedId ? null : keep(target.question, target.answer);
+            const already = isSaved(target.savedId) ? target.savedId : undefined;
+            const report = already ? null : keep(target.question, target.answer);
             if (report) update(key, (turns) => turns.map((t) => (t.id === target.id ? { ...t, savedId: report.id } : t)));
-            result = savedReply(target.savedId ? 'That one’s already saved. It’s in the menu under Saved.' : `Saved “${report?.title}”. It’s in the menu under Saved.`, target.savedId ?? report?.id);
+            result = savedReply(already ? 'That one’s already saved. It’s in the menu under Saved.' : `Saved “${report?.title}”. It’s in the menu under Saved.`, already ?? report?.id);
           } else {
             result = savedReply('Ask me something first, then say “save that” to keep the answer.');
           }
@@ -308,7 +342,7 @@ function LoadedChats({ children, kept, storage }: { children: ReactNode; kept: C
       save: (where, turnId) => {
         const ended = chats.past.find((c) => c.id === where);
         const turn = (ended ? ended.turns : (threads[where] ?? [])).find((t) => t.id === turnId);
-        if (!turn?.answer || turn.savedId) return;
+        if (!turn?.answer || isSaved(turn.savedId)) return;
         const report = keep(turn.question, turn.answer);
         const mark = (turns: Turn[]) => turns.map((t) => (t.id === turnId ? { ...t, savedId: report.id } : t));
         if (ended) setChats((c) => ({ ...c, past: c.past.map((p) => (p.id === where ? { ...p, turns: mark(p.turns) } : p)) }));
@@ -323,7 +357,10 @@ function LoadedChats({ children, kept, storage }: { children: ReactNode; kept: C
           .map(([key, turns]) => item(key, key, true, turns));
         return [...going, ...chats.past.map((c) => item(c.id, c.key, false, c.turns))].sort((a, b) => b.at - a.at);
       },
-      conversation: (id) => chats.past.find((c) => c.id === id) ?? null,
+      conversation: (id) => {
+        const ended = chats.past.find((c) => c.id === id);
+        return ended ? { ...ended, turns: ended.turns.map(stillSaved) } : null;
+      },
       open: (id) => {
         const ended = chats.past.find((c) => c.id === id);
         if (!ended) return id;
@@ -351,7 +388,7 @@ function LoadedChats({ children, kept, storage }: { children: ReactNode; kept: C
           .filter(({ key, turn }) => turn.answer && !turn.answer.unknown && turn.answer.intent !== 'saved' && turn.answer.intent !== 'prep' && subjectOf(key, turn) === id)
           .map(({ turn }) => ({ question: turn.question, answer: firstSentence(turn.answer?.summary ?? ''), at: turn.at })),
     };
-  }, [threads, chats.past, chats.opened, opened, dayStart]);
+  }, [threads, chats.past, chats.opened, opened, dayStart, savedIds]);
 
   return <ChatContext.Provider value={store}>{children}</ChatContext.Provider>;
 }

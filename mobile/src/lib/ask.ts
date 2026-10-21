@@ -11,7 +11,7 @@ import { accountsByPatientsLost, allHcps, allOrgs, destination, getEntity, getOr
 import { DATA_PERIOD, PRIOR_PERIOD } from './data/seed';
 import { addSeries } from './data/series';
 import { usualTimes } from './booking';
-import { addDays, formatDate, formatKm, formatNumber, formatPct, haversineKm, isoDate, plural, relativeDay, relativeDayLower, sum } from './format';
+import { addDays, formatDate, formatKm, formatNumber, formatPct, haversineKm, isoDate, listJoin, plural, relativeDay, relativeDayLower, sum } from './format';
 import { PREP_QUESTION, prepAnswer } from './prep';
 import { DEFAULT_FILTERS } from './search';
 import type { Entity, PlanItem, Signal } from './types';
@@ -48,8 +48,11 @@ export type AskLink =
   | { kind: 'book'; id: string }
   | { kind: 'tab'; tab: 'activity' | 'today' | 'targets' | 'saved' }
   | { kind: 'saved'; id: string }
-  /** Adds a goal and lines to someone's Summary as the rep's own (lib/prep.ts). */
-  | { kind: 'prep'; id: string; goal?: string; points: string[] };
+  /**
+   * Puts Ask's words in someone's Summary (lib/prep.ts). An answer kept from
+   * before the Summary was one paragraph has `points` instead, added after the rep's words.
+   */
+  | { kind: 'prep'; id: string; text?: string; points?: string[] };
 
 export interface AnswerRow {
   /** The person or account the row opens. */
@@ -211,7 +214,6 @@ const refersBack = (q: string) =>
   /\b(she|he|they|her|his|their|them|it|its|there|here|this (account|doctor|hospital|one|person)|that (account|doctor|hospital|one|person)|same)\b/.test(q);
 const PEOPLE_WORDS = /\b(hcps?|doctors?|surgeons?|physicians?|people|cardiologists?|who)\b/;
 
-const listJoin = (items: string[]) => (items.length < 2 ? items.join('') : `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`);
 const PHRASES: Partial<Record<Signal['id'], (s: Signal) => string>> = {
   followup: (s) => (s.label.startsWith('Overdue') ? 'an overdue follow-up' : 'a follow-up due'),
   leakage: () => 'patients going elsewhere',
@@ -252,6 +254,21 @@ export function answer(question: string, ctx: Context, { about = null, scoped = 
   const intent = detectIntent(question, about, scoped);
   const named = findEntity(question);
   const q = normalise(question);
+  const chat = smallTalk(q);
+  if (chat) return { intent: 'search', about: null, subject: null, scope: [], summary: chat, rows: [], next: ['Who should I see today?', 'What’s on my plan today?'], unknown: true };
+  const stranger = named ? null : unknownDoctor(question);
+  if (stranger) {
+    return {
+      intent: 'search',
+      about: null,
+      subject: null,
+      scope: [SAMPLE],
+      summary: `I can’t find ${stranger} in your data. Check the spelling, or look them up in Targets.`,
+      rows: [],
+      next: ['Who should I see today?', 'Top doctors at Mount Sinai Hospital'],
+      unknown: true,
+    };
+  }
   // The week is the rep's own, even when asked in a person's chat.
   const entity = intent === 'week' ? null : (named ?? (about && (scoped || refersBack(q)) ? getEntity(about) : null));
   const { about: answerAbout, ...result } = BUILDERS[intent]({ question, q, entity, ctx, talkedAbout });
@@ -259,6 +276,20 @@ export function answer(question: string, ctx: Context, { about = null, scoped = 
 }
 
 type Built = Omit<Answer, 'intent' | 'about' | 'subject'> & { about?: string | null };
+
+/** A reply to thanks or a hello, which isn't a question about anyone; null for a question. */
+function smallTalk(q: string): string | null {
+  if (/^(thanks?( you)?( so much| a lot)?|thank you|ty|cheers|great thanks|ok thanks|perfect|got it|cool|great|nice|ok|okay)$/.test(q)) return 'You’re welcome. Ask me anything else about your day or your doctors.';
+  if (/^(hi|hello|hey|good (morning|afternoon|evening))( there)?$/.test(q)) return 'Hello. Ask about someone by name, or about your day.';
+  if (/^(bye|goodbye|see you|that s all|thats all|done)$/.test(q)) return 'Bye for now. Your conversation is kept in History.';
+  return null;
+}
+
+/** A doctor named in a question, as "Dr. Smith" or "Dr Jane Smith", whom the data doesn't have; null when none is named. */
+function unknownDoctor(question: string): string | null {
+  const m = /\b[Dd]r\.?\s+([A-Za-z][A-Za-z'’-]+(?:\s+[A-Z][A-Za-z'’-]+)?)/.exec(question);
+  return m ? `Dr. ${m[1].charAt(0).toUpperCase()}${m[1].slice(1)}` : null;
+}
 
 const row = (e: Entity, figure: string, sub?: string, tone?: AnswerRow['tone']): AnswerRow => ({ id: e.id, title: e.name, sub, figure, tone });
 
@@ -694,15 +725,16 @@ const BUILDERS: Record<Intent, (input: Input) => Built> = {
   /** Help with someone's Summary: a start, or what it doesn't say yet (lib/prep.ts). */
   prep({ entity, ctx, q }) {
     if (!entity) return { ...empty('Who is it for? Ask “Improve the summary for Dr. Patel”, or tap Improve with Ask on their Summary.'), scope: [SAMPLE], next: ['Who should I see today?', 'What’s on my plan today?'] };
-    return prepAnswer(entity, ctx, q);
+    return prepAnswer(entity, ctx);
   },
 
   /** What's in the menu's Saved list: summaries and reports. */
   saved({ entity, ctx, talkedAbout = [] }) {
-    const preps = (entity ? talkedAbout.filter((id) => id === entity.id) : talkedAbout).flatMap((id) => {
-      const e = getEntity(id);
-      return e ? [{ id: e.id, title: `Summary for ${e.name}`, sub: 'Summary', figure: '' }] : [];
-    });
+    // As the Saved list has them: anyone asked about, and anyone still to see today or next.
+    const preps = ctx
+      .summaryPeople(talkedAbout)
+      .filter((e) => !entity || e.id === entity.id)
+      .map((e) => ({ id: e.id, title: `Summary for ${e.name}`, sub: 'Summary', figure: '' }));
     const reports = ctx.ws.saved
       .filter((r) => !entity || r.about === entity.id)
       .map((r) => ({ title: r.title, sub: `Saved ${relativeDayLower(r.savedOn, ctx.today)}`, figure: '' }));
@@ -779,7 +811,7 @@ const BUILDERS: Record<Intent, (input: Input) => Built> = {
     const top = picks[0];
 
     const rows: AnswerRow[] = [
-      { title: 'Visits logged', figure: `${done.length} of ${due.length}`, sub: done.length ? listJoin(done.map((v) => `${name(v)} ${when(v, v.item.outcome === 'Attempted' ? 'not in' : '')}`)) : 'None logged yet' },
+      { title: 'Visits logged', figure: `${done.length} of ${due.length}`, sub: done.length ? listJoin(done.map((v) => `${name(v)} ${when(v, v.item.outcome === 'Attempted' ? outcomeWord('Attempted', v.item.type).toLowerCase() : '')}`)) : 'None logged yet' },
     ];
     if (changes.length) rows.push({ title: 'Cancelled, moved or not logged', figure: String(changes.length), sub: changes.join(' · '), tone: 'warn' });
     rows.push(

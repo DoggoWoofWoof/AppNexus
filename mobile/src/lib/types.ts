@@ -214,8 +214,8 @@ export interface Workspace {
 export interface PrepEdit {
   /** Their own goal, in place of the plan's or the suggested one. Empty for none. */
   goal: string;
-  /** Their own summary, a point to a line, shown in place of the one written from the data. */
-  points: string[];
+  /** Their own words in the Summary, written by them or kept from Ask: one paragraph, after the facts from the data. Empty for none. */
+  text: string;
 }
 
 /** A sample place the day starts from. */

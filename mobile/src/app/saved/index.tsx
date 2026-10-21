@@ -13,25 +13,13 @@ import { Screen, Section } from '@/components/screen';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import { useChat } from '@/lib/chat';
-import { getEntity } from '@/lib/data';
-import { plural } from '@/lib/format';
 import { buildPrep, reportDoc } from '@/lib/saved';
 import { useWorkspace } from '@/lib/store';
-import type { Entity } from '@/lib/types';
 
 export default function Saved() {
   const ctx = useWorkspace();
   const chat = useChat();
-  const talked = chat.talkedAbout();
-  const planned = ctx
-    .planDays()
-    .flatMap((d) => ctx.dayPlan(d.iso))
-    .filter((i) => i.status === 'planned')
-    .map((i) => i.targetId);
-  const preps = [...new Set([...talked, ...planned])]
-    .map((id) => getEntity(id))
-    .filter((e): e is Entity => !!e)
-    .map((entity) => ({ entity, doc: buildPrep(entity, ctx, chat.asked(entity.id)) }));
+  const preps = ctx.summaryPeople(chat.talkedAbout()).map((entity) => ({ entity, doc: buildPrep(entity, ctx) }));
   const reports = ctx.ws.saved.map((r) => reportDoc(r, ctx.today));
   const open = (id: string) => router.push({ pathname: '/saved/[id]', params: { id } });
 
@@ -41,18 +29,7 @@ export default function Saved() {
 
       <Section title="Summaries" sub="Who you’re seeing and who you asked about">
         {preps.length ? (
-          preps.map(({ entity, doc }) => {
-            const asked = chat.asked(entity.id).length;
-            return (
-              <Item
-                key={doc.id}
-                lead={<Avatar entity={entity} />}
-                title={doc.title}
-                sub={[doc.when, asked ? plural(asked, 'question') : ''].filter(Boolean).join(' · ')}
-                onPress={() => open(doc.id)}
-              />
-            );
-          })
+          preps.map(({ entity, doc }) => <Item key={doc.id} lead={<Avatar entity={entity} />} title={doc.title} sub={doc.when} onPress={() => open(doc.id)} />)
         ) : (
           <Text className="text-muted-foreground">{`Nothing planned for today or ${ctx.dayWord(ctx.planDays()[1].iso)}, and you haven’t asked about anyone yet.`}</Text>
 

@@ -1,7 +1,9 @@
 // The day as it goes: when a visit is due a log, the next working day, logging
 // covering the visits it was, moves and cancels freeing their times, filling a
 // freed time only when it still can be, visits from earlier in the week never
-// logged, and the app moving on to the new day at midnight.
+// logged, someone seen outside the plan, changing and moving a stop, the visits
+// not done once the day is over, Undo after a note, and the app moving on to the
+// new day at midnight.
 // The sample day is Tuesday 20 October 2026.
 
 import { describe, expect, jest, test } from '@jest/globals';
@@ -11,10 +13,28 @@ import type { ReactNode } from 'react';
 import { availability, siteOnDay } from '@/lib/booking';
 import { allEntities, getEntity } from '@/lib/data';
 import { addDays, isoDate, startOfDay } from '@/lib/format';
-import { notLogged } from '@/lib/plan';
+import { fixedStops, notLogged } from '@/lib/plan';
 import { useWorkspace, WorkspaceProvider } from '@/lib/store';
 import type { PlanItem, Workspace } from '@/lib/types';
-import { bookVisit, buildContext, cancelVisit, fillSlot, fillSlotError, findItem, freshWorkspace, setVisitTime, visitsLogged, type NoteDraft } from '@/lib/workspace';
+import {
+  addPeople,
+  bookVisit,
+  buildContext,
+  cancelVisit,
+  changeStop,
+  fillingSlot,
+  fillSlot,
+  fillSlotError,
+  findItem,
+  freshWorkspace,
+  moveToDay,
+  moveToDayError,
+  noteRecords,
+  setVisitTime,
+  visitsLogged,
+  withRecords,
+  type NoteDraft,
+} from '@/lib/workspace';
 
 const today = startOfDay(new Date(2026, 9, 20));
 const todayIso = isoDate(today);
@@ -58,7 +78,13 @@ describe('the next working day', () => {
     const friday = startOfDay(new Date(2026, 9, 23));
     const ctx = buildContext(freshWorkspace(friday), friday);
     expect(ctx.planDays()[1]).toEqual({ iso: '2026-10-26', label: 'Monday' });
-    expect([ctx.dayWord('2026-10-23'), ctx.dayWord('2026-10-26'), ctx.dayWord('2026-10-28')]).toEqual(['today', 'Monday', 'Wed 28 Oct']);
+    // The weekday in the coming week, and the date after that.
+    expect([ctx.dayWord('2026-10-23'), ctx.dayWord('2026-10-26'), ctx.dayWord('2026-10-28'), ctx.dayWord('2026-10-30')]).toEqual([
+      'today',
+      'Monday',
+      'Wednesday',
+      'Fri 30 Oct',
+    ]);
     expect(ctxOf(fresh()).dayWord(wedIso)).toBe('tomorrow');
   });
 
@@ -152,6 +178,145 @@ describe('visits from earlier in the week never logged', () => {
     expect(ctxOf(older).unloggedBefore().map(({ item }) => item.id)).toEqual(['v-raman-past']);
     expect(ctxOf(cancelVisit(ws, '2026-10-15', 'v-raman-past', 'Didn’t happen', todayIso)).unloggedBefore()).toEqual([]);
     expect(ctxOf(visitsLogged(ws, note({ targetId: 'priya', date: '2026-10-15', visit: { day: '2026-10-15', id: 'v-raman-past' } }))).unloggedBefore()).toEqual([]);
+  });
+});
+
+describe('seen outside the plan', () => {
+  const noted = (ws: Workspace, patch: Partial<NoteDraft>) => withRecords(ws, { interactions: [noteRecords(note(patch)).interaction] });
+
+  test('a note counts as logged today, met over not in, and a meeting at an account for the doctors there', () => {
+    expect(ctxOf(fresh()).loggedToday('okafor')).toBeNull();
+    let ws = noted(fresh(), { targetId: 'okafor', outcome: 'Attempted' });
+    expect(ctxOf(ws).loggedToday('okafor')).toEqual({ met: false, type: 'In-person visit' });
+    ws = noted(ws, { targetId: 'okafor', type: 'Phone call', outcome: 'Met' });
+    expect(ctxOf(ws).loggedToday('okafor')).toEqual({ met: true, type: 'Phone call' });
+    ws = noted(ws, { targetId: 'msh', type: 'Meeting', outcome: 'Met', attendees: ['sam'] });
+    expect(ctxOf(ws).loggedToday('sam')).toEqual({ met: true, type: 'In-person visit' });
+  });
+
+  test('a visit logged before its time doesn’t hold the stops before it in place', () => {
+    const [maya, alex] = ['v-maya', 'v-alex'].map((id) => findItem(fresh(), todayIso, id)!);
+    const route = [alex, { ...maya, status: 'done' as const }];
+    expect(fixedStops(route, 9 * 60)).toBe(0);
+    expect(fixedStops(route, 10 * 60)).toBe(2);
+  });
+
+  test('an "Any time" visit logged now shows after the stops already done', () => {
+    const ws = addPeople(fresh(), todayIso, ['kenji'], at(7, 0));
+    const kenji = ws.plans[todayIso].find((i) => i.targetId === 'kenji')!;
+    const logged = visitsLogged(ws, note({ targetId: 'kenji', visit: { day: todayIso, id: kenji.id } }), at(11, 30));
+    const order = ctxOf(logged).dayPlan(todayIso, at(11, 30)).map((i) => i.targetId);
+    expect(order.indexOf('kenji')).toBeGreaterThan(order.indexOf('maya'));
+    expect(order.indexOf('kenji')).toBeLessThan(order.indexOf('jordan'));
+  });
+});
+
+describe('changing and moving a stop', () => {
+  test('a call made a visit in person goes where they work that day', () => {
+    const alex = getEntity('alex')!;
+    const there = siteOnDay(alex, today.getDay());
+    const away = ['msh', 'msm', 'msw'].find((s) => s !== there)!;
+    const ws = { ...fresh(), plans: { [todayIso]: fresh().plans[todayIso].map((i) => (i.id === 'v-alex' ? { ...i, siteId: away } : i)) } };
+    expect(findItem(changeStop(ws, todayIso, 'v-alex', { type: 'In-person visit' }), todayIso, 'v-alex')?.siteId).toBe(there);
+  });
+
+  test('a time the rep set moves to another day as Any time; a booked visit moves with Change the time', () => {
+    const ws = setVisitTime(fresh(), todayIso, 'v-alex', '11:00');
+    expect(moveToDay(ws, todayIso, 'v-alex', wedIso).plans[wedIso]?.find((i) => i.targetId === 'alex')).toMatchObject({ mode: 'flexible', time: null });
+    expect(moveToDayError(fresh(), todayIso, 'v-maya', wedIso)).toBe('A booked visit moves with Change the time.');
+  });
+
+  test('Targets stops filling a freed time once it has gone', () => {
+    const ws = cancelVisit(fresh(), todayIso, 'v-maya', 'HCP unavailable', todayIso, at(8, 0));
+    expect(fillingSlot(ws, at(9, 0))?.itemId).toBe('v-maya');
+    expect(fillingSlot(ws, at(10, 15))).toBeNull();
+  });
+
+  test('too tight says the drive is from the last place visited, not a call in between', () => {
+    // A call at 10:30, after Dr. Patel's 10:00, then Dr. Lee across town at 10:45.
+    const ws = setVisitTime(setVisitTime(fresh(), todayIso, 'v-alex', '10:30'), todayIso, 'v-jordan', '10:45');
+    const clash = ctxOf(ws).daySchedule(todayIso).clashes.find((c) => c.later.id === 'v-jordan');
+    expect(clash).toMatchObject({ kind: 'travel', earlier: { id: 'v-alex' }, from: { id: 'v-maya' } });
+  });
+
+  test('Saved has a Summary for anyone asked about, then anyone still to see today or next', () => {
+    const ids = ctxOf(fresh())
+      .summaryPeople(['kenji', 'maya'])
+      .map((e) => e.id);
+    expect(ids.slice(0, 2)).toEqual(['kenji', 'maya']);
+    expect([...ids].sort()).toEqual(['alex', 'jordan', 'kenji', 'maya']);
+  });
+});
+
+describe('once the day is over', () => {
+  // Dr. Raman is in on Tuesdays but not on Wednesdays; Dr. Watanabe is in every weekday.
+  const thuIso = isoDate(addDays(today, 2));
+  const evening = (ws: Workspace) => addPeople(ws, todayIso, ['priya', 'kenji']);
+  const moves = (ws: Workspace, now = at(18, 0)) => ctxOf(ws).notDoneToday(now)?.moves.map((m) => `${m.item.targetId} ${m.to}`) ?? [];
+
+  test('from 17:30, the visits not logged that can move, each to the next day they can be seen', () => {
+    const ws = evening(fresh());
+    expect(ctxOf(ws).notDoneToday(at(17, 29))).toBeNull();
+    // Dr. Patel's and Dr. Lee's visits were booked, so they stay to be logged.
+    expect(moves(ws, at(17, 30)).sort()).toEqual([`alex ${wedIso}`, `kenji ${wedIso}`, `priya ${thuIso}`]);
+    expect(ctxOf(ws).notDoneToday(at(17, 30))?.to).toBe(wedIso);
+    // Not one logged, nor one at a time still to come this evening until it's over.
+    expect(moves(visitsLogged(ws, note({ targetId: 'kenji' })))).not.toContain(`kenji ${wedIso}`);
+    const late = setVisitTime(ws, todayIso, 'v-alex', '18:00');
+    expect(moves(late, at(18, 10))).not.toContain(`alex ${wedIso}`);
+    expect(moves(late, at(18, 15))).toContain(`alex ${wedIso}`);
+  });
+
+  async function renderEvening() {
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <WorkspaceProvider today={today} now={() => at(18, 0)}>
+        {children}
+      </WorkspaceProvider>
+    );
+    const { result } = await renderHook(() => useWorkspace(), { wrapper });
+    return result;
+  }
+
+  test('Move them to tomorrow moves them all with one Undo, and says where any went instead', async () => {
+    const store = await renderEvening();
+    const on = (id: string) => [todayIso, wedIso, thuIso].filter((d) => store.current.planItemFor(id, d));
+    await act(() => store.current.setWorkspace(evening));
+    await act(() => store.current.moveNotDone());
+    expect(store.current.notice).toMatchObject({ message: '3 visits moved to tomorrow · Dr. Raman to Thursday, when they’re in', canUndo: true });
+    expect(['alex', 'kenji', 'priya', 'maya', 'jordan'].map(on)).toEqual([[wedIso], [wedIso], [thuIso], [todayIso], [todayIso]]);
+    // They go as "Any time", and nothing is left to move.
+    expect(store.current.planItemFor('priya', thuIso)).toMatchObject({ mode: 'flexible', time: null });
+    expect(store.current.notDoneToday(at(18, 0))).toBeNull();
+    await act(() => store.current.undo());
+    expect(['alex', 'kenji', 'priya'].map(on)).toEqual([[todayIso], [todayIso], [todayIso]]);
+  });
+
+  test('one visit is said by name', async () => {
+    const store = await renderEvening();
+    await act(() => store.current.moveNotDone());
+    expect(store.current.notice?.message).toBe('Dr. Alex Morgan moved to tomorrow');
+  });
+});
+
+describe('Undo after a note', () => {
+  test('goes, so it can’t take the note back with the change before it', async () => {
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <WorkspaceProvider today={today} now={() => at(8, 0)}>
+        {children}
+      </WorkspaceProvider>
+    );
+    const { result } = await renderHook(() => useWorkspace(), { wrapper });
+    await act(() => {
+      result.current.cancelVisit(todayIso, 'v-alex', 'HCP unavailable');
+    });
+    expect(result.current.notice?.canUndo).toBe(true);
+    await act(() => {
+      result.current.addNote({ targetId: 'okafor', type: 'Phone call', outcome: 'Met', date: todayIso, note: 'Wants the trial data' });
+    });
+    expect(result.current.notice).toMatchObject({ message: 'Note saved', canUndo: false });
+    await act(() => result.current.undo());
+    expect(status(result.current.ws, 'v-alex')).toBe('cancelled');
+    expect(result.current.ws.interactions.some((i) => i.note === 'Wants the trial data')).toBe(true);
   });
 });
 

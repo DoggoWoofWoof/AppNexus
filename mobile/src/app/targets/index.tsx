@@ -27,8 +27,10 @@ import { useVisitSheets } from '@/components/visit-sheets';
 import { allHcps, allOrgs, getEntity, getOrg, shortName } from '@/lib/data';
 import { formatKm, plural } from '@/lib/format';
 import { inOnDay, type Availability } from '@/lib/booking';
+import { outcomeWord } from '@/lib/brief';
 import { activeFilterCount, DEFAULT_FILTERS, DISTANCES, insteadFilters, SIGNAL_FILTERS, SORTS, type Filters, type SearchRow } from '@/lib/search';
 import { useWorkspace } from '@/lib/store';
+import type { VisitType } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
 export default function Targets() {
@@ -57,7 +59,7 @@ export default function Targets() {
   // Whose visit it was isn't offered back, until the filters are cleared.
   const found = ctx.search(applied).filter((r) => !instead?.near || r.entity.id !== instead.except);
   const insteadOf = instead?.near && filters.near === instead.near ? getEntity(instead.except) : undefined;
-  // While filling a time, whoever is usually seeing people then comes first, still nearest first.
+  // While filling a time, whoever is usually free then comes first, still nearest first.
   const fits = new Map(found.map((r) => [r.entity.id, ctx.fitsSlot(r.entity)]));
   const canSee = found.filter((r) => fits.get(r.entity.id)?.ok);
   // Otherwise doctors who are in that day come first, unless sorted by name.
@@ -118,7 +120,7 @@ export default function Targets() {
           <View className="gap-2">
             <View className="flex-row items-center gap-2">
               <Text className="flex-1 text-base text-muted-foreground">
-                <Text className="text-base font-semibold">{`Free at ${free.time}`}</Text>
+                <Text className="text-base font-semibold">{`Free at ${free.time}${day === ctx.todayIso ? '' : `, ${dayWord}`}`}</Text>
                 {` · nearest to ${getOrg(free.siteId)?.name ?? 'the visit'}`}
               </Text>
               <Button size="icon" variant="ghost" onPress={() => ctx.leaveFree(free.itemId)} accessibilityLabel={`Leave ${free.time} free`}>
@@ -127,7 +129,7 @@ export default function Targets() {
             </View>
             {canSee.length ? null : (
               <Text className="text-sm text-muted-foreground" accessibilityLiveRegion="polite">
-                {`Nobody here is usually seeing people at ${free.time}. Try ${people ? 'accounts' : 'doctors'} in Filters, or leave it free.`}
+                {`Nobody here is usually free at ${free.time}. Try ${people ? 'accounts' : 'doctors'} in Filters, or leave it free.`}
               </Text>
             )}
             {/* Other times freed that day wait here, so filling one doesn't lose the rest. */}
@@ -176,6 +178,8 @@ export default function Targets() {
                 fit={fits.get(row.entity.id) ?? null}
                 inDay={inDay.get(row.entity.id) ?? null}
                 dayWord={dayWord}
+                warning={row.planned ? ctx.timeWarning(row.planned, day, false) : null}
+                logged={day === ctx.todayIso ? ctx.loggedToday(row.entity.id) : null}
                 onFill={() => fill(row.entity.id)}
                 onAdd={() => ctx.addToPlan(row.entity.id, day)}
                 onSetTime={() => row.planned && visits.openSetTime(row.entity, { day, id: row.planned.id, item: row.planned })}
@@ -240,18 +244,30 @@ function RowInfo({ row, when }: { row: SearchRow; when?: { text: string; tone: '
   );
 }
 
-/** "In 12:30–13:30", "Not in on Tuesdays" or, once planned, when. */
-function whenLine(row: SearchRow, inDay: InDay | null, dayWord: string): { text: string; tone: 'in' | 'out' | 'planned' } | null {
-  if (row.planned) return { text: `In your plan · ${row.planned.mode === 'timed' && row.planned.time ? row.planned.time : 'any time'}`, tone: 'planned' };
+type Logged = { met: boolean; type: VisitType } | null;
+
+/**
+ * "In 12:30–13:30", "Not in on Tuesdays", once planned when, or why it isn't a
+ * good day or time for them, and once logged today how it went: "Met today",
+ * "No answer today".
+ */
+function whenLine(row: SearchRow, inDay: InDay | null, dayWord: string, logged: Logged, warning: string | null): { text: string; tone: 'in' | 'out' | 'planned' } | null {
+  const { planned } = row;
+  if (planned?.status === 'planned') {
+    return warning ? { text: warning, tone: 'out' } : { text: `In your plan · ${planned.mode === 'timed' && planned.time ? planned.time : 'any time'}`, tone: 'planned' };
+  }
+  if (logged) return { text: `${outcomeWord(logged.met ? 'Met' : 'Attempted', logged.type)} today`, tone: logged.met ? 'planned' : 'out' };
+  if (planned) return { text: `Logged ${dayWord}`, tone: 'planned' };
   if (!inDay) return null;
   if (!inDay.ok) return { text: inDay.why, tone: 'out' };
   return inDay.hours ? { text: `In ${dayWord} ${inDay.hours}`, tone: 'in' } : { text: `In ${dayWord}`, tone: 'in' };
 }
 
-const Added = ({ name }: { name: string }) => (
-  <View className="min-h-9 flex-row items-center gap-1 px-2" accessibilityLabel={`${name} is in your plan`}>
-    <Icon as={Check} size={16} className="text-success" />
-    <Text className="text-sm text-success">Added</Text>
+/** In the plan: "Added", or "Logged" once the visit is logged, however it went. */
+const Added = ({ name, logged }: { name: string; logged: boolean }) => (
+  <View className="min-h-9 flex-row items-center gap-1 px-2" accessibilityLabel={logged ? `${name} is logged` : `${name} is in your plan`}>
+    <Icon as={Check} size={16} className={logged ? 'text-muted-foreground' : 'text-success'} />
+    <Text className={logged ? 'text-sm text-muted-foreground' : 'text-sm text-success'}>{logged ? 'Logged' : 'Added'}</Text>
   </View>
 );
 
@@ -261,6 +277,8 @@ function TargetRow({
   fit,
   inDay,
   dayWord,
+  warning,
+  logged,
   onFill,
   onAdd,
   onSetTime,
@@ -272,6 +290,10 @@ function TargetRow({
   /** Whether a doctor is in on the day being planned. */
   inDay: InDay | null;
   dayWord: string;
+  /** Once planned, why it isn't a good day or time for them, as Today says it. */
+  warning: string | null;
+  /** How they were logged today, when the day is today. */
+  logged: Logged;
   onFill: () => void;
   onAdd: () => void;
   onSetTime: () => void;
@@ -300,7 +322,7 @@ function TargetRow({
       </Button>
     );
   } else if (planned) {
-    action = <Added name={entity.name} />;
+    action = <Added name={entity.name} logged={planned.status === 'done'} />;
   } else {
     action = (
       <Button size="sm" variant="outline" className="rounded-lg" onPress={onAdd} accessibilityLabel={`Add ${entity.name} to your plan`}>
@@ -311,7 +333,7 @@ function TargetRow({
   return (
     <View className="min-h-16 flex-row items-center gap-2 rounded-xl border border-border bg-card py-2 pl-3 pr-2">
       <Pressable onPress={() => router.push(profileHref(entity))} accessibilityRole="link" className="flex-1 flex-row items-center gap-3 active:opacity-70">
-        <RowInfo row={row} when={freeTime ? null : whenLine(row, inDay, dayWord)} />
+        <RowInfo row={row} when={freeTime ? null : whenLine(row, inDay, dayWord, logged, warning)} />
       </Pressable>
       {action}
     </View>
@@ -331,7 +353,7 @@ function PickRow({ row, on, onToggle }: { row: SearchRow; on: boolean; onToggle:
       className={cn('min-h-16 flex-row items-center gap-3 rounded-xl border py-2 pl-3 pr-4', on ? 'border-primary bg-accent' : 'border-border bg-card')}
     >
       <RowInfo row={row} />
-      {planned ? <Added name={entity.name} /> : <Icon as={on ? SquareCheckBig : Square} size={22} className={on ? 'text-primary' : 'text-muted-foreground'} />}
+      {planned ? <Added name={entity.name} logged={planned.status === 'done'} /> : <Icon as={on ? SquareCheckBig : Square} size={22} className={on ? 'text-primary' : 'text-muted-foreground'} />}
     </Pressable>
   );
 }

@@ -7,9 +7,9 @@ import { describe, expect, test } from '@jest/globals';
 import { act, renderHook } from '@testing-library/react-native';
 import type { ReactNode } from 'react';
 
-import { availability, bookingRoute, parseDays, suggestSlots, usualTimes } from '@/lib/booking';
+import { availability, bookingRoute, inOnDay, parseDays, suggestSlots, usualTimes } from '@/lib/booking';
 import { getEntity } from '@/lib/data';
-import { addDays, formatDate, fromIso, isoDate, startOfDay } from '@/lib/format';
+import { addDays, fromIso, isoDate, startOfDay } from '@/lib/format';
 import { DEFAULT_FILTERS } from '@/lib/search';
 import { useWorkspace, WorkspaceProvider } from '@/lib/store';
 import type { Entity, Workspace } from '@/lib/types';
@@ -110,8 +110,9 @@ describe('who a free slot is offered to', () => {
     const wednesday = isoDate(addDays(today, 2));
     expect(availability(entity('priya'), wednesday, '12:30', 30).ok).toBe(false);
     expect(availability(entity('sam'), wednesday, '13:00', 30)).toEqual({ ok: true, siteId: 'msh' });
-    // Accounts keep office hours.
-    expect(usualTimes(entity('msw'))).toBe('Usually weekdays 09:00–17:00');
+    // Accounts keep office hours, and so does a doctor whose own times aren't known.
+    expect(usualTimes(entity('msw'))).toBe('Office hours weekdays 09:00–17:00');
+    expect(usualTimes(entity('hannah'))).toBe('Office hours weekdays 09:00–17:00');
   });
 
   test('Targets asks the same question of each row, and nobody else can be put in the slot', () => {
@@ -200,7 +201,7 @@ describe('changing a visit', () => {
     const next = moveStop(ws, todayIso, idOf(ws, 'hannah'), 0);
     // Dr. Watanabe no longer fits before Dr. Patel's 10:00, so comes after it.
     expect(order(next)).toEqual(['hannah', 'maya', 'kenji', 'jordan', 'alex']);
-    expect(placeOf(next, todayIso, idOf(ws, 'hannah'))).toEqual({ first: true, after: null });
+    expect(placeOf(next, todayIso, idOf(ws, 'hannah'))).toEqual({ first: true, next: true, after: null });
     // One that's next already, or has a time, stays where it is.
     expect(moveStop(ws, todayIso, idOf(ws, 'kenji'), 0)).toBe(ws);
     expect(moveStop(ws, todayIso, 'v-maya', 0)).toBe(ws);
@@ -315,10 +316,10 @@ describe('logging a planned visit', () => {
 });
 
 describe('store', () => {
-  async function renderStore() {
-    // Eight in the morning, before any of the day's visits.
+  async function renderStore(clock = new Date(2026, 9, 19, 8, 0)) {
+    // Eight in the morning unless said, before any of the day's visits.
     const wrapper = ({ children }: { children: ReactNode }) => (
-      <WorkspaceProvider today={today} now={() => new Date(2026, 9, 19, 8, 0)}>
+      <WorkspaceProvider today={today} now={() => clock}>
         {children}
       </WorkspaceProvider>
     );
@@ -349,7 +350,7 @@ describe('store', () => {
 
     await act(() => store.current.fillSlot('v-maya', 'kenji'));
     expect(store.current.ws.plans[todayIso].some((i) => i.targetId === 'kenji')).toBe(true);
-    expect(store.current.notice).toMatchObject({ message: 'Dr. Kenji Watanabe added at 10:00 · not confirmed yet', canUndo: true });
+    expect(store.current.notice).toMatchObject({ message: 'Dr. Kenji Watanabe added today at 10:00 · not confirmed yet', canUndo: true });
 
     await act(() => store.current.undo());
     expect(store.current.ws.plans[todayIso].some((i) => i.targetId === 'kenji')).toBe(false);
@@ -406,12 +407,106 @@ describe('store', () => {
     await act(() => store.current.addPeople(['kenji', 'hannah', 'jordan'], todayIso));
     // Each goes where it adds the least driving; Dr. Lee was already planned.
     expect(store.current.dayPlan(todayIso).map((i) => i.targetId)).toEqual(['kenji', 'maya', 'jordan', 'hannah', 'alex']);
-    expect(store.current.notice).toMatchObject({ message: '2 people added today', canUndo: true });
+    expect(store.current.notice).toMatchObject({ message: '2 visits added today', canUndo: true });
     await act(() => store.current.undo());
     expect(store.current.dayPlan(todayIso)).toHaveLength(3);
 
     await act(() => store.current.addPeople(['kenji'], tomorrowIso));
-    expect(store.current.notice?.message).toBe(`Dr. Kenji Watanabe added on ${formatDate(tomorrowIso)}`);
+    expect(store.current.notice?.message).toBe('Dr. Kenji Watanabe added tomorrow');
+  });
+
+  test('after 17:30 an add to today goes on the next working day, with Today instead', async () => {
+    const store = await renderStore(new Date(2026, 9, 19, 18, 0));
+    const planned = (id: string) => [todayIso, tomorrowIso].filter((d) => store.current.planItemFor(id, d));
+    expect(store.current.addingTo(todayIso)).toBe(tomorrowIso);
+    await act(() => store.current.addToPlan('kenji'));
+    expect(planned('kenji')).toEqual([tomorrowIso]);
+    // Today and Targets show the day they went on.
+    expect(store.current.ws.selection.day).toBe(tomorrowIso);
+    expect(store.current.notice).toMatchObject({ message: 'Today’s over: Dr. Kenji Watanabe added tomorrow', canUndo: true, action: { label: 'Today instead' } });
+
+    await act(() => store.current.notice?.action?.run());
+    expect(planned('kenji')).toEqual([todayIso]);
+    expect(store.current.ws.selection.day).toBe(todayIso);
+    expect(store.current.notice?.message).toMatch(/^Dr\. Kenji Watanabe added today/);
+    expect(store.current.notice?.action).toBeUndefined();
+    // Today stays the rep's choice for the evening.
+    expect(store.current.addingTo(todayIso)).toBe(todayIso);
+    await act(() => store.current.addToPlan('hannah'));
+    expect(planned('hannah')).toEqual([todayIso]);
+    await act(() => store.current.undo());
+    expect(planned('hannah')).toEqual([]);
+    expect(planned('kenji')).toEqual([todayIso]);
+  });
+
+  test('Undo after Today instead goes back to before the add', async () => {
+    const store = await renderStore(new Date(2026, 9, 19, 18, 0));
+    await act(() => store.current.addPeople(['kenji', 'hannah'], todayIso));
+    expect(store.current.notice?.message).toBe('Today’s over: 2 visits added tomorrow');
+    await act(() => store.current.notice?.action?.run());
+    expect(store.current.planItemFor('kenji', todayIso)).not.toBeNull();
+    await act(() => store.current.undo());
+    expect(['kenji', 'hannah'].flatMap((id) => [todayIso, tomorrowIso].map((d) => store.current.planItemFor(id, d))).every((i) => i === null)).toBe(true);
+  });
+
+  test('someone added on a day they aren’t in is said so, with a day they are in instead', async () => {
+    const store = await renderStore();
+    const wedIso = isoDate(addDays(today, 2));
+    const thuIso = isoDate(addDays(today, 3));
+    // Dr. Raman works Monday, Tuesday, Thursday and Friday.
+    await act(() => store.current.addToPlan('priya', wedIso));
+    expect(store.current.notice).toMatchObject({
+      message: 'Dr. Priya Raman added on Wednesday, but they’re not in on Wednesdays',
+      action: { label: 'Thursday instead' },
+    });
+    const item = store.current.planItemFor('priya', wedIso)!;
+    expect(store.current.timeWarning(item, wedIso, true)).toBe('Not in on Wednesdays · try Thursday');
+    expect(store.current.moveDayFor(item, wedIso)).toBe(thuIso);
+
+    await act(() => store.current.notice?.action?.run());
+    expect(store.current.planItemFor('priya', wedIso)).toBeNull();
+    expect(store.current.planItemFor('priya', thuIso)).not.toBeNull();
+    expect(store.current.notice?.message).toBe('Dr. Priya Raman added on Thursday');
+    // The day shown stays as it was.
+    expect(store.current.ws.selection.day).toBe(todayIso);
+    await act(() => store.current.undo());
+    expect([wedIso, thuIso].map((d) => store.current.planItemFor('priya', d))).toEqual([null, null]);
+
+    await act(() => store.current.addPeople(['priya', 'kenji'], wedIso));
+    expect(store.current.notice).toMatchObject({ message: '2 visits added on Wednesday · 1 is not in on Wednesdays', action: undefined });
+  });
+
+  test('a stop at a time that doesn’t suit them says when does', async () => {
+    const store = await renderStore();
+    const wedIso = isoDate(addDays(today, 2));
+    // A time the rep set outside Dr. Watanabe's Monday mornings.
+    await act(() => store.current.addToPlan('kenji', todayIso));
+    const kenji = store.current.planItemFor('kenji', todayIso)!;
+    await act(() => {
+      store.current.setStopTime(todayIso, kenji.id, '15:00');
+    });
+    expect(store.current.timeWarning(store.current.planItemFor('kenji', todayIso)!, todayIso, false)).toBe('Not their usual time · usually 08:00–11:00');
+    // A visit booked with them was agreed, so it's fine.
+    expect(store.current.timeWarning(findItem(store.current.ws, todayIso, 'v-maya')!, todayIso, false)).toBeNull();
+    // A call can be made on a day they aren't in.
+    await act(() => store.current.addToPlan('priya', wedIso, 'Phone call'));
+    expect(store.current.timeWarning(store.current.planItemFor('priya', wedIso)!, wedIso, false)).toBeNull();
+  });
+
+  test('an account is spoken of as a place: office hours, and closed rather than not in', async () => {
+    const store = await renderStore();
+    // A meeting the rep set before Mount Sinai Hospital's offices open.
+    await act(() => store.current.addToPlan('msh', todayIso));
+    const msh = store.current.planItemFor('msh', todayIso)!;
+    await act(() => {
+      store.current.setStopTime(todayIso, msh.id, '08:30');
+    });
+    expect(store.current.timeWarning(store.current.planItemFor('msh', todayIso)!, todayIso, false)).toBe('Outside office hours · 09:00–17:00');
+    // Its offices are closed at the weekend.
+    const saturday = isoDate(addDays(today, 5));
+    expect(inOnDay(entity('msh'), saturday)).toEqual({ ok: false, why: 'Closed on Saturdays' });
+    await act(() => store.current.addToPlan('harlem', saturday));
+    expect(store.current.notice?.message).toBe('Mount Sinai Harlem Health Center added on Saturday, but it’s closed on Saturdays');
   });
 
   test('two cancels give two free slots, each filled or left on its own', async () => {

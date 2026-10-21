@@ -12,7 +12,6 @@ import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import { buildBrief, speechFor } from '@/lib/brief';
 import { shortName, siteFor } from '@/lib/data';
-import { improvedSummary } from '@/lib/prep';
 import { useWorkspace } from '@/lib/store';
 import type { Entity, LonLat } from '@/lib/types';
 import { canListen, canSpeak, speak, stopSpeaking } from '@/lib/voice';
@@ -58,8 +57,7 @@ export function QuickActions({ entity, siteId }: { entity: Entity; siteId?: stri
       return;
     }
     setReading(true);
-    // The rep's own summary, when they've written one, is what Listen reads.
-    speak(speechFor(entity, ctx, buildBrief(entity, ctx), improvedSummary(ctx.ws, entity.id) ?? undefined), { onEnd: () => setReading(false) });
+    speak(speechFor(entity, ctx, buildBrief(entity, ctx)), { onEnd: () => setReading(false) });
   };
 
   return (

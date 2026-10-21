@@ -49,6 +49,14 @@ export function relativeDay(iso: string, today: Date): string {
   return formatDate(iso, { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
+/** A day mid-sentence: "today", "tomorrow", its weekday in the coming week ("Friday"), or else "Thu, 29 Oct". */
+export function dayInWords(iso: string, today: Date): string {
+  const diff = daysBetween(today, fromIso(iso));
+  if (diff === 0) return 'today';
+  if (diff === 1) return 'tomorrow';
+  return diff > 1 && diff < 7 ? formatDate(iso, { weekday: 'long' }) : formatDate(iso);
+}
+
 /** relativeDay mid-sentence: "due today", "due in 3 days", but "due 26 Oct 2026". */
 export function relativeDayLower(iso: string, today: Date): string {
   const day = relativeDay(iso, today);
@@ -61,6 +69,9 @@ export function greeting(now = new Date()): string {
   if (h < 17) return 'Good afternoon';
   return 'Good evening';
 }
+
+/** Minutes since midnight on a clock. */
+export const minutesOfDay = (date: Date): number => date.getHours() * 60 + date.getMinutes();
 
 /** Minutes since midnight for "HH:MM". */
 export const toMinutes = (time: string): number => {
@@ -130,3 +141,33 @@ export function firstSentence(text: string): string {
   }
   return text.trim();
 }
+
+/** The sentences in a text, keeping "Dr. Lee" and the like in one piece. */
+export function sentencesOf(text: string): string[] {
+  const out: string[] = [];
+  for (let rest = text.trim(); rest; ) {
+    const first = firstSentence(rest);
+    out.push(first);
+    rest = rest.slice(first.length).trim();
+  }
+  return out;
+}
+
+/** Text as a sentence: with a full stop, unless it ends in one, a question mark or an exclamation mark. */
+export const sentence = (text: string): string => (/[.!?]$/.test(text) ? text : `${text}.`);
+
+export const lowerFirst = (text: string): string => text.charAt(0).toLowerCase() + text.slice(1);
+
+const wordsOf = (text: string) => text.toLowerCase().replace(/[^a-z0-9%]+/g, ' ').trim();
+
+/** Two lines say the same thing, whatever the case, spacing or full stop. */
+export const samePoint = (a: string, b: string): boolean => wordsOf(a) === wordsOf(b);
+
+/** A text says something already, word for word, whatever the case, spacing or full stops. */
+export function says(text: string, part: string): boolean {
+  const words = wordsOf(part);
+  return !!words && ` ${wordsOf(text)} `.includes(` ${words} `);
+}
+
+/** "A", "A and B", or "A, B and C". */
+export const listJoin = (items: string[]): string => (items.length < 2 ? items.join('') : `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`);
