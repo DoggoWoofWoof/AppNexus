@@ -50,11 +50,14 @@ function dayWords(text: string): string {
   return run ? `${WEEKDAYS[days[0]]}–${WEEKDAYS[days[days.length - 1]]}` : days.map((d) => WEEKDAYS[d]).join('/');
 }
 
-/** When they can usually be seen: "Usually Tue/Thu 07:30–08:30", or "Office hours weekdays 09:00–17:00". */
-export const usualTimes = (entity: Entity): string =>
-  `${keepsOfficeHours(entity) ? 'Office hours' : 'Usually'} ${windowsFor(entity)
+/** Their usual days and times: "Tue/Thu 07:30–08:30", or "weekdays 09:00–17:00" for office hours. */
+const daysAndTimes = (entity: Entity): string =>
+  windowsFor(entity)
     .map((w) => `${dayWords(w.days)} ${w.from}–${w.to}`)
-    .join(' or ')}`;
+    .join(' or ');
+
+/** When they can usually be seen: "Usually Tue/Thu 07:30–08:30", or "Office hours weekdays 09:00–17:00". */
+export const usualTimes = (entity: Entity): string => `${keepsOfficeHours(entity) ? 'Office hours' : 'Usually'} ${daysAndTimes(entity)}`;
 
 /** Their usual times on a weekday, such as "07:30–08:30", or "" when they have none that day. */
 export const hoursOn = (entity: Entity, weekday: number): string =>
@@ -63,13 +66,29 @@ export const hoursOn = (entity: Entity, weekday: number): string =>
     .map((w) => `${w.from}–${w.to}`)
     .join(', ');
 
+/**
+ * Whether a weekday is one of their usual days, with some of their usual times.
+ * Someone with usual times on other days but none on this one doesn't usually see
+ * people then, even if they're in. Anyone without usual times of their own, going
+ * by office hours, has no usual days, so any day they're in will do.
+ */
+export function usualDay(entity: Entity, weekday: number): boolean {
+  if (keepsOfficeHours(entity)) return true;
+  const days = windowsFor(entity).map((w) => parseDays(w.days));
+  return days.some((d) => d.has(weekday)) || days.every((d) => !d.size);
+}
+
 /** "Not their usual time", or "Outside office hours" for an account or anyone else going by office hours. */
 export const outsideWord = (entity: Entity): string => (keepsOfficeHours(entity) ? 'Outside office hours' : 'Not their usual time');
 
-/** Said of a visit at a time that doesn't suit them: "Not their usual time · usually 08:00–11:00", or "Outside office hours · 09:00–17:00". */
+/**
+ * Said of a visit at a time that doesn't suit them: "Not their usual time · usually
+ * 08:00–11:00", or "Outside office hours · 09:00–17:00". On a day with none of
+ * their usual times it gives them all, with their days: "Not their usual time ·
+ * usually Fri 13:00–16:00".
+ */
 export function outsideTimes(entity: Entity, weekday: number): string {
-  const hours = hoursOn(entity, weekday);
-  if (!hours) return outsideWord(entity);
+  const hours = hoursOn(entity, weekday) || daysAndTimes(entity);
   return `${outsideWord(entity)} · ${keepsOfficeHours(entity) ? hours : `usually ${hours}`}`;
 }
 
@@ -80,13 +99,15 @@ export const notInOn = (entity: Entity, weekday: number): string => `${entity.ki
 
 /**
  * Whether someone works that weekday, for Targets: their usual times then, or
- * "Not in on Tuesdays". It goes by their usual days only; nobody can tell from
- * here whether they've gone home.
+ * "Not in on Tuesdays". On a day they're in but don't usually see people,
+ * `outside` says when they do, as Today does: "Not their usual time · usually Fri
+ * 13:00–16:00". It goes by their usual days only; nobody can tell from here
+ * whether they've gone home.
  */
-export function inOnDay(entity: Entity, day: string): { ok: true; hours: string } | { ok: false; why: string } {
+export function inOnDay(entity: Entity, day: string): { ok: true; hours: string; outside: string | null } | { ok: false; why: string } {
   const weekday = fromIso(day).getDay();
   if (!siteOnDay(entity, weekday)) return { ok: false, why: notInOn(entity, weekday) };
-  return { ok: true, hours: hoursOn(entity, weekday) };
+  return { ok: true, hours: hoursOn(entity, weekday), outside: usualDay(entity, weekday) ? null : outsideTimes(entity, weekday) };
 }
 
 /** Where they can be seen at a time, or why not: they need to be on site that day and inside one of their usual times. */

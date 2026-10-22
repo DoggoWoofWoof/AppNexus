@@ -1,8 +1,10 @@
 // Targets: who to see, best first. Search, one Filters button for everything
 // else, and + on each row to put them in the day's plan. Each doctor says whether
 // they're usually in that day ("In 12:30–13:30" or "Not in on Tuesdays"), and
-// those who are come first. Someone already planned at any time gets "Set a
-// time". Select picks several to add in one go, with one Undo.
+// those who are come first. Someone in that day who doesn't usually see people
+// then says when they do ("Not their usual time · usually Fri 13:00–16:00").
+// Someone already planned at any time gets "Set a time". Select picks several
+// to add in one go, with one Undo.
 // "See everyone" after a cancel or "Not in" opens it with the filters that sheet
 // goes by (in that day, not planned, nearest to the visit first), shown in
 // Filters to change. Filling a freed time, it shows "+ 11:00" for people usually
@@ -247,9 +249,10 @@ function RowInfo({ row, when }: { row: SearchRow; when?: { text: string; tone: '
 type Logged = { met: boolean; type: VisitType } | null;
 
 /**
- * "In 12:30–13:30", "Not in on Tuesdays", once planned when, or why it isn't a
- * good day or time for them, and once logged today how it went: "Met today",
- * "No answer today".
+ * "In 12:30–13:30", "Not in on Tuesdays", or on a day they're in but don't
+ * usually see people, "Not their usual time · usually Fri 13:00–16:00". Once
+ * planned when, or why it isn't a good day or time for them, and once logged
+ * today how it went: "Met today", "No answer today".
  */
 function whenLine(row: SearchRow, inDay: InDay | null, dayWord: string, logged: Logged, warning: string | null): { text: string; tone: 'in' | 'out' | 'planned' } | null {
   const { planned } = row;
@@ -260,6 +263,7 @@ function whenLine(row: SearchRow, inDay: InDay | null, dayWord: string, logged: 
   if (planned) return { text: `Logged ${dayWord}`, tone: 'planned' };
   if (!inDay) return null;
   if (!inDay.ok) return { text: inDay.why, tone: 'out' };
+  if (inDay.outside) return { text: inDay.outside, tone: 'out' };
   return inDay.hours ? { text: `In ${dayWord} ${inDay.hours}`, tone: 'in' } : { text: `In ${dayWord}`, tone: 'in' };
 }
 

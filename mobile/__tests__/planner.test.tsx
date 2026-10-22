@@ -411,8 +411,9 @@ describe('store', () => {
     await act(() => store.current.undo());
     expect(store.current.dayPlan(todayIso)).toHaveLength(3);
 
+    // Dr. Watanabe sees people on Mondays only, so the message says Tuesday isn't one of their usual days.
     await act(() => store.current.addPeople(['kenji'], tomorrowIso));
-    expect(store.current.notice?.message).toBe('Dr. Kenji Watanabe added tomorrow');
+    expect(store.current.notice?.message).toBe('Dr. Kenji Watanabe added tomorrow · not their usual time');
   });
 
   test('after 17:30 an add to today goes on the next working day, with Today instead', async () => {
@@ -423,7 +424,8 @@ describe('store', () => {
     expect(planned('kenji')).toEqual([tomorrowIso]);
     // Today and Targets show the day they went on.
     expect(store.current.ws.selection.day).toBe(tomorrowIso);
-    expect(store.current.notice).toMatchObject({ message: 'Today’s over: Dr. Kenji Watanabe added tomorrow', canUndo: true, action: { label: 'Today instead' } });
+    // Tuesday isn't one of Dr. Watanabe's usual days, so the message says so too.
+    expect(store.current.notice).toMatchObject({ message: 'Today’s over: Dr. Kenji Watanabe added tomorrow · not their usual time', canUndo: true, action: { label: 'Today instead' } });
 
     await act(() => store.current.notice?.action?.run());
     expect(planned('kenji')).toEqual([todayIso]);

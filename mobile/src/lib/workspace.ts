@@ -2,7 +2,7 @@
 // ask of it. For now it is the sample, seeded relative to today and kept on the
 // phone (lib/persist.ts); sync comes with the real services.
 
-import { availability, bookingRoute, clashesWith, hoursOn, inOnDay, outsideTimes, parseDays, siteOnDay, suggestSlots, windowsFor, type Availability, type Slot } from './booking';
+import { availability, bookingRoute, clashesWith, hoursOn, inOnDay, outsideTimes, parseDays, siteOnDay, suggestSlots, usualDay, windowsFor, type Availability, type Slot } from './booking';
 import { allEntities, getEntity, getOrg, lastInteraction, priorityOf, signalsFor, siteFor } from './data';
 import { seedWorkspace } from './data/seed';
 import { addDays, dayInWords, daysBetween, formatDate, fromIso, haversineKm, isoDate, toMinutes, uid } from './format';
@@ -79,6 +79,15 @@ export function buildContext(ws: Workspace, today: Date, now?: Date) {
   };
 
   const bookingDays = bookingDaysFrom(today);
+  // The day to move a visit to (`moveDayFor`). One in person on a day they're in but
+  // don't usually see people goes to one of their usual days, not just the next day.
+  const betterDay = (item: PlanItem, day: string): string | null => {
+    const who = getEntity(item.targetId);
+    if (!who) return null;
+    const there = inOnDay(who, day);
+    const usualOnly = isOnSite(item) && there.ok && !!there.outside;
+    return moveDayFor(ws, item, day, usualOnly ? bookingDays.filter((d) => usualDay(who, fromIso(d).getDay())) : bookingDays);
+  };
   // The day after today that Today plans: tomorrow, or Monday from a Friday.
   const nextDay = bookingDays[1];
   const nextLabel = daysBetween(today, fromIso(nextDay)) === 1 ? 'Tomorrow' : formatDate(nextDay, { weekday: 'long' });
@@ -163,25 +172,31 @@ export function buildContext(ws: Workspace, today: Date, now?: Date) {
     /** Whether someone can be seen in the slot being filled, and where; null when nothing is being filled. */
     fitsSlot: (e: Entity): Availability | null => (filling ? availability(e, filling.day, filling.time, filling.duration) : null),
     bookingDays,
-    /** The day to move a visit to (`moveDayFor`): the next working day they can be seen, and in, for a visit in person. */
-    moveDayFor: (item: PlanItem, day: string): string | null => moveDayFor(ws, item, day, bookingDays),
+    /**
+     * The day to move a visit to (`moveDayFor`): the next working day they can be seen, and in, for a visit in person.
+     * On a day they're in but don't usually see people, the next of their usual days.
+     */
+    moveDayFor: betterDay,
     /** Once today is over, its visits not done and where each would go (`notDoneToday`), for "Move them to tomorrow". */
     notDoneToday: (now: Date): NotDone | null => notDoneToday(ws, todayIso, now, bookingDays),
     /**
      * What's wrong with when a visit still to do is, for Today to say on it with a
      * better choice: in person on a day they aren't in ("Not in on Wednesdays · try
-     * Thursday"), or outside their usual times ("Not their usual time · usually
-     * 08:00–11:00"; for an account, "Outside office hours · 09:00–17:00"). `outside`
-     * is the day's own word on an "Any time" stop. A booked visit was agreed with
-     * them, so it's never wrong.
+     * Thursday"), or are in but don't usually see people ("Not their usual time ·
+     * usually Fri 13:00–16:00 · try tomorrow"), or outside their usual times ("Not
+     * their usual time · usually 08:00–11:00"; for an account, "Outside office hours
+     * · 09:00–17:00"). `outside` is the day's own word on an "Any time" stop. A
+     * booked visit was agreed with them, so it's never wrong.
      */
     timeWarning: (item: PlanItem, day: string, outside: boolean): string | null => {
       const who = getEntity(item.targetId);
       if (!who || item.status !== 'planned' || (item.mode === 'timed' && item.booking)) return null;
       const there = inOnDay(who, day);
-      if (isOnSite(item) && !there.ok) {
-        const better = moveDayFor(ws, item, day, bookingDays);
-        return better ? `${there.why} · try ${dayInWords(better, today)}` : there.why;
+      // In person, the day itself can be wrong, whatever the time.
+      const wrongDay = !isOnSite(item) ? null : there.ok ? there.outside : there.why;
+      if (wrongDay) {
+        const better = betterDay(item, day);
+        return better ? `${wrongDay} · try ${dayInWords(better, today)}` : wrongDay;
       }
       const weekday = fromIso(day).getDay();
       const hours = hoursOn(who, weekday);
@@ -432,16 +447,18 @@ const stopCoords = (i: PlanItem) => (getOrg(i.siteId) ?? siteFor(getEntity(i.tar
 const minutesOn = (day: string, now?: Date): number | null => (now && isoDate(now) === day ? now.getHours() * 60 + now.getMinutes() : null);
 
 /**
- * Their usual times on a day in minutes, for working out the day: none for a
- * visit in person on a day they aren't in, and no limit on a day they're in but
- * have no usual times, as any time then is as good as another.
+ * Their usual times on a day in minutes, for working out the day. A visit in
+ * person has none on a day they aren't in, or on a day that isn't one of their
+ * usual days (`usualDay` in booking.ts), so it's outside them at any time. A day
+ * with none has no limit for a call, or for someone without usual times of their
+ * own, as any time then is as good as another.
  */
 const usualOn = (day: string) => {
   const weekday = fromIso(day).getDay();
   return (item: PlanItem): [number, number][] | null => {
     const who = getEntity(item.targetId);
     if (!who) return null;
-    if (isOnSite(item) && !siteOnDay(who, weekday)) return [];
+    if (isOnSite(item) && (!siteOnDay(who, weekday) || !usualDay(who, weekday))) return [];
     const windows = windowsFor(who)
       .filter((w) => parseDays(w.days).has(weekday))
       .map((w): [number, number] => [toMinutes(w.from), toMinutes(w.to)]);
