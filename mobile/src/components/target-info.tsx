@@ -17,15 +17,15 @@ import { BarRow, Delta, StackBar } from '@/components/charts';
 import { Avatar, Tag, useChatHref, useProfileHref } from '@/components/entity';
 import { FinePrint } from '@/components/profile';
 import { AllVolumes } from '@/components/volumes';
-import { telUrl } from '@/components/quick-actions';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import type { Brief, Figure } from '@/lib/brief';
 import { TERRITORY, useChat, whenLabel } from '@/lib/chat';
-import { childrenOf, descendantsOf, destination, diagnosesOf, getEntity, getOrg, hcpsAt, parentOf, proceduresOf, procedureTotal, shortName, topReferrersOut } from '@/lib/data';
+import { childrenOf, descendantsOf, destination, diagnosesOf, getEntity, getOrg, hcpsAt, parentOf, proceduresOf, procedureTotal, shortName, testsOf, topReferrersOut } from '@/lib/data';
 import { DATA_PERIOD } from '@/lib/data/seed';
 import { daysBetween, formatDate, formatKm, formatNumber, fromIso, relativeDayLower, sum, yoy } from '@/lib/format';
+import { telUrl } from '@/lib/links';
 import { useWorkspace } from '@/lib/store';
 import { askedBefore, howToGetIn, promiseDue, siteThatDay, similarNearby, visitsSoFar, whoTheyReferTo, type AskedWhere, type CardId, type VisitOutcome } from '@/lib/target';
 import type { Entity, Hcp, Org } from '@/lib/types';
@@ -156,8 +156,9 @@ export function TargetInfo({ entity, brief, cards, onBook }: { entity: Entity; b
   const byCount = (rows: { name: string; series: number[] }[]) =>
     rows.map((r) => ({ name: r.name, count: sum(r.series.slice(-4)), growth: yoy(r.series) })).sort((a, b) => b.count - a.count);
   const procedures = byCount((proceduresOf(entity) ?? []).map((r) => ({ name: r.family, series: r.series })));
-  // Someone without the procedures in this sample still has their diagnoses.
-  const top = procedures.length ? procedures : byCount(diagnosesOf(entity));
+  const tests = byCount(testsOf(entity).map((r) => ({ name: r.family, series: r.series })));
+  // Someone without the procedures in this sample still has their tests, or their diagnoses.
+  const top = procedures.length ? procedures : tests.length ? tests : byCount(diagnosesOf(entity));
   const maxTop = Math.max(...top.map((p) => p.count), 1);
   const volumesOpen = cards.isOpen('volumes');
   // Each figure opens the card that explains it.
@@ -179,7 +180,12 @@ export function TargetInfo({ entity, brief, cards, onBook }: { entity: Entity; b
       {entity.kind === 'hcp' ? <SimilarNearby hcp={entity} day={brief.visit?.day ?? ctx.ws.selection.day} /> : null}
 
       {top.length ? (
-        <Block title={procedures.length ? 'Top procedures · 12 months' : 'Diagnosed patients · 12 months'} id="volumes" cards={cards} canOpen>
+        <Block
+          title={procedures.length ? 'Top procedures · 12 months' : tests.length ? 'Echo and stress tests · 12 months' : 'Diagnosed patients · 12 months'}
+          id="volumes"
+          cards={cards}
+          canOpen
+        >
           {volumesOpen ? (
             <AllVolumes entity={entity} />
           ) : (
@@ -576,6 +582,16 @@ function OrgBlocks({ org, cards }: { org: Org; cards: Cards }) {
           {doctors.map((h) => (
             <PersonRow key={h.id} entity={h} sub={h.specialty} figure={procedureTotal(h) ? formatNumber(procedureTotal(h)) : undefined} />
           ))}
+          {/* Targets has them all, ranked by the procedures picked there, with phone, email and + Add. */}
+          <Pressable
+            onPress={() => router.navigate({ pathname: '/targets', params: { org: org.id, from: String(Date.now()) } })}
+            accessibilityRole="link"
+            hitSlop={8}
+            className="flex-row items-center gap-0.5 self-start active:opacity-70"
+          >
+            <Text className="text-sm font-semibold text-brand">{allDoctors.length > 1 ? `All ${allDoctors.length} in Targets` : 'Open in Targets'}</Text>
+            <Icon as={ChevronRight} size={14} className="text-brand" />
+          </Pressable>
         </Block>
       ) : null}
 

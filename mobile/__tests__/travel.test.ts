@@ -1,13 +1,14 @@
 // Travel times: a time for every stop and the drive to get there, "Any time"
 // stops never put where they clash, visits with a time that do clash said so,
-// and the time sheet leaving out times too close to drive between. The sample
-// day is Monday 19 October 2026.
+// the time sheet leaving out times too close to drive between, and the stops
+// handed to Google Maps in order. The sample day is Monday 19 October 2026.
 
 import { describe, expect, test } from '@jest/globals';
 
 import { dayGrid } from '@/lib/booking';
 import { getEntity } from '@/lib/data';
 import { isoDate, startOfDay } from '@/lib/format';
+import { routeUrl } from '@/lib/links';
 import { scheduleDay, travelMinutes, type ScheduleOptions } from '@/lib/plan';
 import type { Entity, LonLat, PlanItem } from '@/lib/types';
 import { buildContext, freshWorkspace } from '@/lib/workspace';
@@ -36,11 +37,15 @@ const plan = (items: PlanItem[], options: Partial<ScheduleOptions> = {}) => sche
 const times = (s: ReturnType<typeof scheduleDay>) => s.stops.map((x) => [x.item.id, x.start, x.travel]);
 
 describe('travel', () => {
-  test('5 minutes to park and 4 a km, rounded up to 5; nothing in the same building', () => {
+  test('5 minutes to park and 4 a km, 1.5 a km beyond 10, rounded up to 5; nothing in the same building', () => {
     expect(travelMinutes(0)).toBe(0);
     expect(travelMinutes(1.1)).toBe(10);
     expect(travelMinutes(2.5)).toBe(15);
     expect(travelMinutes(5)).toBe(25);
+    // Out of the city, as from Manhattan to Newark, the roads are faster.
+    expect(travelMinutes(12)).toBe(50);
+    expect(travelMinutes(20)).toBe(60);
+    expect(travelMinutes(30)).toBe(75);
   });
 });
 
@@ -197,5 +202,20 @@ describe('the sample day', () => {
   test('later today, the call isn’t put before now', () => {
     const s = ctx.daySchedule(isoDate(today), new Date(2026, 9, 19, 16, 40));
     expect(s.stops.find((x) => x.item.id === 'v-alex')?.start).toBe(hm(16, 40));
+  });
+});
+
+describe('Maps', () => {
+  test('the stops go in order, the last as where to end up, from wherever the phone is', () => {
+    const url = new URL(routeUrl([[-74.17, 40.74], [-74.04, 40.72], [-73.99, 40.69]]));
+    expect(url.origin + url.pathname).toBe('https://www.google.com/maps/dir/');
+    expect(url.searchParams.get('origin')).toBeNull();
+    expect(url.searchParams.get('destination')).toBe('40.69,-73.99');
+    expect(url.searchParams.get('waypoints')).toBe('40.74,-74.17|40.72,-74.04');
+    expect(url.searchParams.get('travelmode')).toBe('driving');
+  });
+
+  test('one stop has nothing on the way', () => {
+    expect(new URL(routeUrl([[-74.17, 40.74]])).searchParams.get('waypoints')).toBeNull();
   });
 });

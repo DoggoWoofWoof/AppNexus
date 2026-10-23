@@ -1,13 +1,17 @@
-// Lookups and derived facts over the sample HCPs and HCOs.
+// Lookups and derived facts over the sample HCPs and HCOs: the team's accounts
+// and doctors, the rest of the territory around them, and the territories next
+// door (data/territory.ts).
 
 import { daysBetween, fromIso, sum, yoy } from '../format';
 import type { DiagnosisRow, Entity, FollowUp, Hcp, Interaction, Leakage, Org, ProcedureRow, Signal, SignalId, Workspace } from '../types';
 import { HCPS } from './hcps';
 import { DESTINATIONS, ORGS } from './orgs';
-import { addSeries } from './series';
+import { addSeries, isTest } from './series';
+import { NEXT_DOOR_HCPS, NEXT_DOOR_ORGS, TERRITORY_HCPS, TERRITORY_ORGS } from './territory';
 
-const hcpById = new Map<string, Hcp>(HCPS.map((h) => [h.id, { ...h, kind: 'hcp' }]));
-const orgById = new Map<string, Org>(ORGS.map((o) => [o.id, { ...o, kind: 'hco' }]));
+// The team's own come first, so where two share a name Ask means one of them.
+const hcpById = new Map<string, Hcp>([...HCPS, ...TERRITORY_HCPS, ...NEXT_DOOR_HCPS].map((h) => [h.id, { ...h, kind: 'hcp' }]));
+const orgById = new Map<string, Org>([...ORGS, ...TERRITORY_ORGS, ...NEXT_DOOR_ORGS].map((o) => [o.id, { ...o, kind: 'hco' }]));
 
 export const getHcp = (id: string): Hcp | null => hcpById.get(id) ?? null;
 export const getOrg = (id: string): Org | null => orgById.get(id) ?? null;
@@ -43,6 +47,48 @@ export function systemOf(o: Org): Org {
   return current;
 }
 
+/** The states in the sample, for Targets' territory chip: the rep's own, then the two next door. */
+export const STATES: { id: string; label: string }[] = [
+  { id: 'NY', label: 'New York' },
+  { id: 'NJ', label: 'New Jersey' },
+  { id: 'CT', label: 'Connecticut' },
+  { id: 'PA', label: 'Pennsylvania' },
+];
+
+/** The rep's own territory, which Targets shows until another state is chosen. */
+export const YOUR_STATES = ['NY', 'NJ'];
+
+/** The state an account is in, or a doctor's main place: "NY" from "New York, NY 10019". */
+export function stateOf(entity: Entity): string {
+  const where = entity.kind === 'hco' ? entity : primaryOrg(entity);
+  return /, ([A-Z]{2}) \d{5}$/.exec(where.city)?.[1] ?? '';
+}
+
+/** Whether someone is in the rep's own territory rather than next door. */
+export const inYourTerritory = (entity: Entity): boolean => YOUR_STATES.includes(stateOf(entity));
+
+let team: string[] | null = null;
+
+/**
+ * The team's list, which My targets starts as: the accounts assigned to the
+ * team, the facilities below them, and everyone who works at any of them.
+ */
+export function teamTargets(): string[] {
+  if (team) return team;
+  const orgs = new Set(allOrgs().filter((o) => o.assigned).flatMap((o) => [o.id, ...descendantsOf(o.id).map((d) => d.id)]));
+  team = [...orgs, ...allHcps().filter((h) => h.affiliations.some((a) => orgs.has(a.orgId))).map((h) => h.id)];
+  return team;
+}
+
+/**
+ * Whether a doctor works at an account or at a site below it, such as a health
+ * system's hospitals. An account is at itself and at the accounts above it.
+ */
+export function isAt(entity: Entity, orgId: string): boolean {
+  const ids = new Set([orgId, ...descendantsOf(orgId).map((o) => o.id)]);
+  return entity.kind === 'hcp' ? entity.affiliations.some((a) => ids.has(a.orgId)) : ids.has(entity.id);
+}
+
 /** HCPs affiliated with an org (or any facility below it), busiest first. */
 export function hcpsAt(orgId: string): Hcp[] {
   const ids = new Set([orgId, ...descendantsOf(orgId).map((o) => o.id)]);
@@ -60,10 +106,20 @@ function rollup<T extends { series: number[] }>(lists: (T[] | 'rollup' | null)[]
   return [...groups.values()].sort((a, b) => sum(b.series.slice(-4)) - sum(a.series.slice(-4)));
 }
 
-/** Procedure families for an entity; health systems roll up their facilities. */
-export function proceduresOf(entity: Entity): ProcedureRow[] | null {
+/** Every procedure and test row for an entity; health systems roll up their facilities. */
+function volumeRows(entity: Entity): ProcedureRow[] | null {
   if (entity.procedures !== 'rollup') return entity.procedures;
   return rollup(descendantsOf(entity.id).map((o) => o.procedures), 'family');
+}
+
+/** Procedure families for an entity, without echo and stress tests: none for someone who only does those. */
+export function proceduresOf(entity: Entity): ProcedureRow[] | null {
+  return volumeRows(entity)?.filter((r) => !isTest(r)) ?? null;
+}
+
+/** Echo and stress tests for an entity, counted apart from its procedures. */
+export function testsOf(entity: Entity): ProcedureRow[] {
+  return volumeRows(entity)?.filter(isTest) ?? [];
 }
 
 export function diagnosesOf(entity: Entity): DiagnosisRow[] {
@@ -71,7 +127,7 @@ export function diagnosesOf(entity: Entity): DiagnosisRow[] {
   return rollup(descendantsOf(entity.id).map((o) => o.diagnoses), 'name');
 }
 
-/** Procedures over the last four quarters. */
+/** Procedures over the last four quarters, without echo and stress tests. */
 export function procedureTotal(entity: Entity): number {
   const rows = proceduresOf(entity);
   return rows ? sum(rows.map((r) => sum(r.series.slice(-4)))) : 0;

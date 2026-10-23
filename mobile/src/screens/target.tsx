@@ -1,5 +1,5 @@
 // Someone's page, the one page for every doctor and account: who they are and
-// when, the Summary (where they work, when they're in, how it has gone and what to
+// when, with the star that keeps them in My targets, the Summary (where they work, when they're in, how it has gone and what to
 // do next, until the rep improves it), two big buttons for what to do now, then
 // Ask, Call, Directions and Listen, and short cards with everything else
 // (components/target-info.tsx), each opening in full where it is. A link from Ask
@@ -10,7 +10,7 @@ import { CircleCheck } from 'lucide-react-native';
 import { useRef } from 'react';
 import { ScrollView, View, type ScrollViewInstance } from 'react-native';
 
-import { Avatar } from '@/components/entity';
+import { Avatar, StarButton } from '@/components/entity';
 import { useLogSheet } from '@/components/log-sheet';
 import { NotFound, SampleNote } from '@/components/profile';
 import { QuickActions } from '@/components/quick-actions';
@@ -85,6 +85,7 @@ function Page({ entity, section }: { entity: Entity; section?: string }) {
           <Text className="text-base text-muted-foreground">{[what, when].filter(Boolean).join(' · ')}</Text>
           {visit && entity.kind === 'hcp' ? <Text className="text-sm text-muted-foreground">{siteFor(entity, visit.item.siteId).name}</Text> : null}
         </View>
+        <StarButton on={ctx.isTarget(entity.id)} name={entity.name} onPress={() => ctx.toggleTarget(entity.id)} />
       </View>
 
       <SummaryCard entity={entity} brief={brief} />

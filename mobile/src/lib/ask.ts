@@ -5,15 +5,21 @@
 //
 // A chat can be about one person or account (`about` with `scoped`), as on an
 // HCP's profile: every question is then about them unless it names someone else.
+//
+// A question that asks for a list, such as "cardiologists in NJ using Competitor A",
+// is read as Targets reads what's typed (lib/target-query.ts) and answered with the
+// same search: the first few here, and a link that opens all of them in Targets.
 
 import { buildBrief, outcomeWord, visitWhen } from './brief';
-import { accountsByPatientsLost, allHcps, allOrgs, destination, getEntity, getOrg, hcpsAt, patientsLost, primaryOrg, procedureTotal, procedureYoy, proceduresOf, referredOut, shortName, siteFor, topReferrersOut } from './data';
+import { accountsByPatientsLost, allHcps, allOrgs, destination, getEntity, getOrg, hcpsAt, patientsLost, primaryOrg, procedureYoy, proceduresOf, referredOut, shortName, siteFor, STATES, testsOf, topReferrersOut } from './data';
 import { DATA_PERIOD, PRIOR_PERIOD } from './data/seed';
 import { addSeries } from './data/series';
 import { usualTimes } from './booking';
+import { pickLabel } from './codes';
 import { addDays, formatDate, formatKm, formatNumber, formatPct, haversineKm, isoDate, listJoin, plural, relativeDay, relativeDayLower, sum } from './format';
 import { PREP_QUESTION, prepAnswer } from './prep';
-import { DEFAULT_FILTERS } from './search';
+import { DEFAULT_FILTERS, searchLink, SORTS, type Filters } from './search';
+import { describeSearch, readTargetQuery } from './target-query';
 import type { Entity, PlanItem, Signal } from './types';
 import type { Context } from './workspace';
 
@@ -27,6 +33,7 @@ export type Intent =
   | 'leakage'
   | 'decline'
   | 'growth'
+  | 'find'
   | 'trend'
   | 'where'
   | 'peers'
@@ -45,6 +52,8 @@ export type Intent =
 /** Where a row or the next step leads: a profile (at a section) or another tab. */
 export type AskLink =
   | { kind: 'profile'; id: string; section?: string }
+  /** A search to show in Targets, as `searchLink` in lib/search.ts writes it. */
+  | { kind: 'targets'; find: string }
   | { kind: 'book'; id: string }
   | { kind: 'tab'; tab: 'activity' | 'today' | 'targets' | 'saved' }
   | { kind: 'saved'; id: string }
@@ -101,7 +110,7 @@ export interface AskOptions {
 export const STARTERS = [
   { title: 'Plan the day', questions: ['Who should I see today?', 'What’s on my plan today?', 'Who is near Mount Sinai West?'] },
   { title: 'Before a visit', questions: ['Brief me on Dr. Maya Patel', 'Where does Dr. Alex Morgan refer patients?', 'Top doctors at Mount Sinai Hospital'] },
-  { title: 'Your territory', questions: ['Which accounts are growing the most?', 'What has declined?', 'Where am I losing the most volume?', 'What follow-ups are overdue?'] },
+  { title: 'Your territory', questions: ['Which accounts are growing the most?', 'What has declined?', 'Where am I losing the most volume?', 'What follow-ups are overdue?', 'Top doctors using competitor products'] },
   { title: 'End of the week', questions: ['Summarise my week'] },
 ];
 
@@ -152,6 +161,9 @@ function aliases(): [string, string][] {
   for (const o of allOrgs()) {
     out.push([normalise(o.name), o.id]);
     for (const a of EXTRA_ALIASES[o.id] ?? []) out.push([a, o.id]);
+    // The rest of the territory by the first part of its name: "Alderbrook" for Alderbrook Medical Center.
+    const short = normalise(o.name).replace(/ (medical center|hospital|heart institute|heart center|heart and vascular|vascular center|cardiology group|cardiology associates|cardiology)$/, '');
+    if (!EXTRA_ALIASES[o.id] && short !== normalise(o.name)) out.push([short, o.id]);
   }
   aliasIndex = out.sort((a, b) => b[0].length - a[0].length);
   return aliasIndex;
@@ -167,7 +179,7 @@ export function findEntity(question: string): Entity | null {
 }
 
 // Most specific first: "who refers to her" is inbound, not referrals.
-const INTENTS: [Intent, RegExp][] = [
+const INTENTS: [Intent, RegExp | ((question: string, q: string, about: string | null, scoped: boolean) => boolean)][] = [
   // The week before Saved, so "my report for this week" is the week, not the Saved list.
   ['week', /\b(my week|week(ly)? (summary|report|update|recap|review)|(summar\w*|recap|review|report on) (of )?(the|this|last) week|(this|last) week s (summary|report)|what (did|have) i (do|done|get done|achieve\w*)( [a-z]+)? (this|last) week|(report|summary|update|recap) for (the|this|last|my) week|(report|update) for my (manager|boss))\b/],
   // Before Saved and Brief, so "improve their summary" works on it rather than listing or reading it.
@@ -182,6 +194,9 @@ const INTENTS: [Intent, RegExp][] = [
   ['leakage', /\b(leak\w*|losing|lose|lost|leaving|left the system|out of (the )?system|where do (patients|cases)( [a-z ]+)? go)\b/],
   ['decline', /\b(declin\w*|drop\w*|down|fall\w*|fell|shrink\w*|decreas\w*|slow\w*|worse)\b/],
   ['growth', /\b(grow\w*|increas\w*|rising|rise|fastest|gain\w*|up the most)\b/],
+  // After growth, decline and patients lost, which answer with their own figures, and before the rest,
+  // so "which hospitals in NJ do TAVR?" is a list rather than where someone works.
+  ['find', (question, q, about, scoped) => !!searchAsked(question, q, about, scoped)],
   ['trend', /\b(trend\w*|volumes?|how busy|how many procedures)\b/],
   ['where', /\bwhere (does|do) (she|he|they) (work|practi[sc]e)\b|\b(which|what) (hospitals?|sites?|locations?)\b|\baffiliat\w*\b/],
   ['peers', /\b(work with|colleagues?|peers?|relationships?|co-?authors?|care teams?)\b/],
@@ -197,7 +212,7 @@ const INTENTS: [Intent, RegExp][] = [
 /** Which kind of question this is. */
 export function detectIntent(question: string, about: string | null = null, scoped = false): Intent {
   const q = normalise(question);
-  for (const [intent, pattern] of INTENTS) if (pattern.test(q)) return intent;
+  for (const [intent, pattern] of INTENTS) if (typeof pattern === 'function' ? pattern(question, q, about, scoped) : pattern.test(q)) return intent;
   if (findEntity(question) || (about && (scoped || refersBack(q)))) return 'brief';
   return 'search';
 }
@@ -213,6 +228,39 @@ export function looksLikeQuestion(text: string): boolean {
 const refersBack = (q: string) =>
   /\b(she|he|they|her|his|their|them|it|its|there|here|this (account|doctor|hospital|one|person)|that (account|doctor|hospital|one|person)|same)\b/.test(q);
 const PEOPLE_WORDS = /\b(hcps?|doctors?|surgeons?|physicians?|people|cardiologists?|who)\b/;
+
+/**
+ * The search a question asks for, read as Targets reads what's typed: "cardiologists
+ * in NJ using Competitor A", "top hospitals for TAVR". Null when it's about one
+ * doctor, about who's near an account, or names an account and nothing more, as
+ * "top doctors at Mount Sinai Hospital" does, which is who works there.
+ */
+function searchAsked(question: string, q: string, about: string | null, scoped: boolean): Partial<Filters> | null {
+  if (findEntity(question)?.kind === 'hcp') return null;
+  const { filters, understood } = readTargetQuery(question);
+  if (!understood || (filters.org && (filters.sort === 'distance' || filters.distance))) return null;
+  const narrows = Object.keys(filters).some((key) => !['query', 'kind', 'sort', 'org'].includes(key));
+  // "Top doctors" is the territory's, unless the chat is about an account, or it says "there".
+  const top = !filters.org && !!filters.kind && filters.sort === 'volume' && !(about && (scoped || refersBack(q)));
+  return narrows || top ? filters : null;
+}
+
+/**
+ * Who a question about growth, decline or patients lost is about, when it says:
+ * "which cardiologists in NJ are growing?" is New Jersey's cardiologists, found as
+ * Targets finds them, rather than your book. `said` is them in words. Null when
+ * the question doesn't narrow it, or names an account and nothing more.
+ */
+function narrowedTo(question: string, ctx: Context, only?: Filters['kind']): { pool: Entity[]; said: string } | null {
+  const { filters } = readTargetQuery(question);
+  // Growing or declining, and the order, are what's asked rather than who.
+  if (!Object.keys(filters).some((key) => !['query', 'kind', 'sort', 'signals', 'org'].includes(key))) return null;
+  const f: Filters = { ...DEFAULT_FILTERS, ...filters, query: '', signals: [], states: filters.states ?? [], codes: filters.codes ?? 'all' };
+  const kinds: Filters['kind'][] = only ? [only] : filters.kind ? [filters.kind] : filters.specialties?.length ? ['hcp'] : filters.orgTypes?.length ? ['hco'] : ['hco', 'hcp'];
+  const pool = kinds.flatMap((kind) => ctx.search({ ...f, kind }).map((r) => r.entity)).filter((e) => e.kind === 'hcp' || e.type !== 'Health system');
+  const said = describeSearch({ ...f, kind: kinds[0] }, ctx.dayWord(ctx.ws.selection.day));
+  return { pool, said: kinds.length > 1 ? `people and ${said}` : said };
+}
 
 const PHRASES: Partial<Record<Signal['id'], (s: Signal) => string>> = {
   followup: (s) => (s.label.startsWith('Overdue') ? 'an overdue follow-up' : 'a follow-up due'),
@@ -237,7 +285,15 @@ const totals = (e: Entity) => {
   const s = addSeries(rows.map((r) => r.series));
   return { prev: prev4(s), cur: last4(s), growth: procedureYoy(e) ?? 0 };
 };
-const accounts = () => allOrgs().filter((o) => o.type !== 'Health system' && proceduresOf(o)?.length);
+/** Why someone has no procedure figures: they only do echo and stress tests, or the sample has none for them. */
+const noProcedures = (e: Entity) =>
+  testsOf(e).length
+    ? `${e.name} does none of the procedures in this sample, only echo and stress tests.`
+    : `Procedure volumes aren’t available for ${e.name}. ${e.proceduresUnavailable ?? ''}`.trim();
+/** Accounts in My targets that do the sample's procedures. */
+const accounts = (ctx: Context) => allOrgs().filter((o) => ctx.isTarget(o.id) && o.type !== 'Health system' && proceduresOf(o)?.length);
+/** Doctors in My targets. */
+const doctors = (ctx: Context) => allHcps().filter((h) => ctx.isTarget(h.id));
 const detailOf = (e: Entity) => (e.kind === 'hcp' ? e.specialty : e.typeDetail);
 const open = (id: string, section?: string): AskLink => ({ kind: 'profile', id, section });
 
@@ -247,6 +303,8 @@ interface Input {
   entity: Entity | null;
   ctx: Context;
   talkedAbout?: string[];
+  /** For a list: the search, when it isn't the question's own words. */
+  filters?: Partial<Filters>;
 }
 
 /** Answers a question from the sample data and the rep's own activity. */
@@ -269,8 +327,9 @@ export function answer(question: string, ctx: Context, { about = null, scoped = 
       unknown: true,
     };
   }
-  // The week is the rep's own, even when asked in a person's chat.
-  const entity = intent === 'week' ? null : (named ?? (about && (scoped || refersBack(q)) ? getEntity(about) : null));
+  const subject = named ?? (about && (scoped || refersBack(q)) ? getEntity(about) : null);
+  // The week is the rep's own, even when asked in a person's chat, and a list is the territory's, or an account's.
+  const entity = intent === 'week' || (intent === 'find' && subject?.kind === 'hcp') ? null : subject;
   const { about: answerAbout, ...result } = BUILDERS[intent]({ question, q, entity, ctx, talkedAbout });
   return { intent, about: answerAbout !== undefined ? answerAbout : (entity?.id ?? null), subject: entity?.id ?? null, ...result };
 }
@@ -421,7 +480,7 @@ const BUILDERS: Record<Intent, (input: Input) => Built> = {
   mix({ entity }) {
     const e = entity ?? getOrg('msh-system')!;
     const rows = proceduresOf(e);
-    if (!rows) return empty(`Procedure volumes aren’t available for ${e.name}. ${e.proceduresUnavailable ?? ''}`.trim(), e.id);
+    if (!rows?.length) return empty(noProcedures(e), e.id);
     const total = sum(rows.map((r) => last4(r.series)));
     const sorted = [...rows].sort((a, b) => last4(b.series) - last4(a.series));
     return {
@@ -434,7 +493,7 @@ const BUILDERS: Record<Intent, (input: Input) => Built> = {
     };
   },
 
-  leakage({ entity, ctx }) {
+  leakage({ question, entity, ctx }) {
     if (entity?.kind === 'hco') {
       const l = entity.leakage;
       if (!l) return empty(`${entity.name} doesn’t report where its patients go. ${entity.leakageUnavailable ?? ''}`.trim(), entity.id);
@@ -453,13 +512,16 @@ const BUILDERS: Record<Intent, (input: Input) => Built> = {
       };
     }
     if (entity?.kind === 'hcp') return BUILDERS.referrals({ question: '', q: '', entity, ctx });
-    const ranked = accountsByPatientsLost();
+    // Accounts only: who loses patients is counted for an account, not a doctor.
+    const narrowed = narrowedTo(question, ctx, 'hco');
+    const ranked = accountsByPatientsLost().filter((r) => !narrowed || narrowed.pool.some((e) => e.id === r.org.id));
+    if (!ranked.length) return empty(`None of the ${narrowed?.said ?? 'accounts'} report where their patients go.`);
     const { org: top, leakage: topLeak } = ranked[0];
     const lost = sum(ranked.map((r) => r.lost));
     const referrer = topReferrersOut(top.id)[0];
     return {
-      scope: ['Patients who left the system', 'Most first', DATA_PERIOD],
-      summary: `${top.name} loses the most: ${formatNumber(ranked[0].lost)} patients, ${topLeak.leftPct}% of ${formatNumber(topLeak.patients)}. Across your accounts, about ${formatNumber(lost)} patients left the system.`,
+      scope: ['Patients who left the system', ...(narrowed ? [capitalise(narrowed.said)] : []), 'Most first', DATA_PERIOD],
+      summary: `${top.name} loses the most: ${formatNumber(ranked[0].lost)} patients, ${topLeak.leftPct}% of ${formatNumber(topLeak.patients)}. Across ${narrowed ? `the ${narrowed.said}` : 'your accounts'}, about ${formatNumber(lost)} patients left the system.`,
       rows: ranked.map(({ org, leakage: l, lost: n }) => row(org, formatNumber(n), `${l.leftPct}% of ${formatNumber(l.patients)} patients · worst for ${l.byFamily[0].family}`, l.leftPct >= 20 ? 'warn' : undefined)),
       doThis: referrer
         ? { text: `${referrer.hcp.name} works there and sends ${referrer.count} patients a year outside the system. Start there.`, label: `Open ${referrer.hcp.name}`, link: open(referrer.hcp.id, 'network') }
@@ -469,20 +531,21 @@ const BUILDERS: Record<Intent, (input: Input) => Built> = {
     };
   },
 
-  growth({ q, entity, ctx }) {
+  growth({ question, q, entity, ctx }) {
     const people = PEOPLE_WORDS.test(q);
     if (entity && !(entity.kind === 'hco' && people)) return BUILDERS.trend({ question: '', q, entity, ctx });
-    const pool: Entity[] = entity ? hcpsAt(entity.id) : people ? allHcps() : accounts();
+    const narrowed = narrowedTo(question, ctx);
+    const pool: Entity[] = narrowed?.pool ?? (entity ? hcpsAt(entity.id) : people ? doctors(ctx) : accounts(ctx));
     const ranked = pool
       .map((e) => ({ e, t: totals(e) }))
       .filter((r): r is { e: Entity; t: NonNullable<ReturnType<typeof totals>> } => !!r.t)
       .sort((a, b) => b.t.growth - a.t.growth);
-    if (!ranked.length) return empty('No procedure volumes to compare yet.');
+    if (!ranked.length) return empty(narrowed ? `No procedure volumes to compare for ${narrowed.said}.` : 'No procedure volumes to compare yet.');
     const top = ranked[0];
     const pick = ranked.slice(0, 3).find((r) => ctx.signals(r.e).some((s) => s.id === 'leakage' || s.id === 'unseen')) ?? top;
     const pickSignals = ctx.signals(pick.e).filter((s) => s.id !== 'rising');
     return {
-      scope: [VS_LAST_YEAR, entity?.kind === 'hco' ? `At ${entity.name}` : 'Your book', DATA_PERIOD],
+      scope: [VS_LAST_YEAR, narrowed ? capitalise(narrowed.said) : entity?.kind === 'hco' ? `At ${entity.name}` : 'Your book', DATA_PERIOD],
       summary: `${top.e.name} grew fastest: ${formatNumber(top.t.prev)} to ${formatNumber(top.t.cur)} procedures (${formatPct(top.t.growth)}).`,
       rows: ranked.slice(0, 5).map(({ e, t }) => row(e, formatPct(t.growth), `${detailOf(e)} · ${formatNumber(t.cur)} procedures`, t.growth >= 0 ? 'up' : 'down')),
       doThis: {
@@ -495,15 +558,16 @@ const BUILDERS: Record<Intent, (input: Input) => Built> = {
     };
   },
 
-  decline({ q, entity, ctx }) {
+  decline({ question, q, entity, ctx }) {
     const people = PEOPLE_WORDS.test(q);
     if (entity?.kind === 'hcp') return BUILDERS.trend({ question: '', q, entity, ctx });
-    const pool: Entity[] = entity?.kind === 'hco' ? hcpsAt(entity.id) : [...(people ? [] : accounts()), ...allHcps()];
+    const narrowed = narrowedTo(question, ctx);
+    const pool: Entity[] = narrowed?.pool ?? (entity?.kind === 'hco' ? hcpsAt(entity.id) : [...(people ? [] : accounts(ctx)), ...doctors(ctx)]);
     const ranked = pool
       .map((e) => ({ e, t: totals(e) }))
       .filter((r): r is { e: Entity; t: NonNullable<ReturnType<typeof totals>> } => !!r.t)
       .sort((a, b) => a.t.growth - b.t.growth);
-    if (!ranked.length) return empty('No procedure volumes to compare yet.');
+    if (!ranked.length) return empty(narrowed ? `No procedure volumes to compare for ${narrowed.said}.` : 'No procedure volumes to compare yet.');
     const down = ranked.filter((r) => r.t.growth < 0);
     if (!down.length) {
       const slow = ranked[0];
@@ -519,8 +583,8 @@ const BUILDERS: Record<Intent, (input: Input) => Built> = {
       .map((r) => ({ r, g: last4(r.series) - prev4(r.series) }))
       .sort((a, b) => a.g - b.g)[0].r;
     return {
-      scope: [VS_LAST_YEAR, entity?.kind === 'hco' ? `At ${entity.name}` : 'People and accounts', DATA_PERIOD],
-      summary: `${plural(down.length, 'target')} declined. The biggest drop is ${top.e.name}: ${formatNumber(top.t.prev)} to ${formatNumber(top.t.cur)} procedures (${formatPct(top.t.growth)}).`,
+      scope: [VS_LAST_YEAR, narrowed ? capitalise(narrowed.said) : entity?.kind === 'hco' ? `At ${entity.name}` : 'People and accounts', DATA_PERIOD],
+      summary: `${narrowed ? `${down.length} of the ${narrowed.said}` : plural(down.length, 'target')} declined. The biggest drop is ${top.e.name}: ${formatNumber(top.t.prev)} to ${formatNumber(top.t.cur)} procedures (${formatPct(top.t.growth)}).`,
       rows: down.slice(0, 5).map(({ e, t }) => row(e, formatPct(t.growth), `${detailOf(e)} · ${formatNumber(t.cur)} procedures`, 'down')),
       doThis: { text: `Most of ${possessive(top.e.name)} drop is in ${family.family.toLowerCase()}. Ask where those cases are going now.`, label: `Open ${top.e.name}`, link: open(top.e.id, 'volumes') },
       next: [top.e.kind === 'hcp' ? `Where does ${top.e.name} refer patients?` : `Where do patients at ${top.e.name} go?`, 'Which accounts are growing the most?', 'Where am I losing the most volume?'],
@@ -532,7 +596,7 @@ const BUILDERS: Record<Intent, (input: Input) => Built> = {
   trend({ entity, ctx }) {
     if (!entity) return BUILDERS.growth({ question: '', q: '', entity, ctx });
     const t = totals(entity);
-    if (!t) return empty(`Procedure volumes aren’t available for ${entity.name}. ${entity.proceduresUnavailable ?? ''}`.trim(), entity.id);
+    if (!t) return empty(noProcedures(entity), entity.id);
     const families = proceduresOf(entity)!
       .map((r) => ({ r, prev: prev4(r.series), cur: last4(r.series) }))
       .map((f) => ({ ...f, pct: f.prev ? ((f.cur - f.prev) / f.prev) * 100 : 0 }))
@@ -549,8 +613,8 @@ const BUILDERS: Record<Intent, (input: Input) => Built> = {
     };
   },
 
-  where({ entity, ctx }) {
-    if (entity?.kind !== 'hcp') return BUILDERS.people({ question: '', q: '', entity, ctx });
+  where({ question, q, entity, ctx }) {
+    if (entity?.kind !== 'hcp') return BUILDERS.people({ question, q, entity, ctx });
     const rows = [...entity.affiliations].sort((a, b) => b.share - a.share);
     const first = getOrg(rows[0].orgId)!;
     return {
@@ -565,8 +629,8 @@ const BUILDERS: Record<Intent, (input: Input) => Built> = {
     };
   },
 
-  peers({ entity, ctx }) {
-    if (entity?.kind !== 'hcp') return BUILDERS.people({ question: '', q: '', entity, ctx });
+  peers({ question, q, entity, ctx }) {
+    if (entity?.kind !== 'hcp') return BUILDERS.people({ question, q, entity, ctx });
     const rels = entity.relationships.flatMap((r) => {
       const peer = getEntity(r.hcpId);
       return peer ? [{ peer, r }] : [];
@@ -586,7 +650,7 @@ const BUILDERS: Record<Intent, (input: Input) => Built> = {
     const origin = place ? place.coords : ctx.start.coords;
     const label = place ? place.name : `${ctx.start.place} (your sample start point)`;
     const near = [...allHcps(), ...allOrgs()]
-      .filter((e) => (e.kind === 'hcp' || e.type !== 'Health system') && e.id !== place?.id && e.id !== entity?.id)
+      .filter((e) => ctx.isTarget(e.id) && (e.kind === 'hcp' || e.type !== 'Health system') && e.id !== place?.id && e.id !== entity?.id)
       .map((e) => ({ e, km: haversineKm(origin, siteFor(e).coords) }))
       .filter((r) => !ctx.planItemFor(r.e.id, ctx.todayIso))
       .sort((a, b) => a.km - b.km);
@@ -661,17 +725,64 @@ const BUILDERS: Record<Intent, (input: Input) => Built> = {
     };
   },
 
-  people({ entity }) {
-    const org = entity?.kind === 'hco' ? entity : entity ? primaryOrg(entity) : getOrg('msh-system')!;
-    const list = hcpsAt(org.id);
-    if (!list.length) return empty(`Nobody in your book practices at ${org.name}.`, org.id);
-    const top = list[0];
+  /** Who works at an account, or a doctor's main one, as Targets lists them there; without either, the list the question asks for. */
+  people({ question, q, entity, ctx }) {
+    const org = entity?.kind === 'hco' ? entity : entity ? primaryOrg(entity) : null;
+    return BUILDERS.find({ question, q, entity: org, ctx, filters: org ? { kind: 'hcp', org: org.id } : undefined });
+  },
+
+  /** A list, found as Targets finds it: the first few here, and all of them there, to narrow down or add to the day. */
+  find({ question, entity, ctx, filters }) {
+    const read = filters ?? readTargetQuery(question).filters;
+    const kind = read.kind ?? (read.orgTypes?.length ? 'hco' : 'hcp');
+    // "Which doctors there use a competitor?" is at the account the chat is about.
+    const org = read.org ?? (entity?.kind === 'hco' ? entity.id : '');
+    const asked: Filters = { ...DEFAULT_FILTERS, ...read, kind, org, states: read.states ?? [], codes: read.codes ?? 'all' };
+    // Words that aren't a name or a place, such as "lately", are left out rather than finding nobody.
+    const all = ctx.search(asked);
+    const left = !all.length && asked.query.trim() && ctx.search({ ...asked, query: '' }).length ? asked.query.trim() : '';
+    const f = left ? { ...asked, query: '' } : asked;
+    const found = left ? ctx.search(f) : all;
+    const dayWord = ctx.dayWord(ctx.ws.selection.day);
+    const link: AskLink = { kind: 'targets', find: searchLink(f) };
+    const where = f.org ? `At ${getOrg(f.org)?.name ?? 'that account'}` : f.states.length ? listJoin(STATES.filter((st) => f.states.includes(st.id)).map((st) => st.label)) : 'Your territory';
+    const scope = [where, f.codes === 'all' ? 'All procedures' : pickLabel(f.codes), DATA_PERIOD];
+    if (!found.length) {
+      return {
+        scope,
+        summary: `No ${describeSearch(f, dayWord)}.`,
+        rows: [],
+        doThis: { text: 'Take a filter off to see more.', label: 'Open in Targets', link },
+        next: ['Top doctors in my territory', 'Which accounts are growing the most?'],
+        about: org || null,
+      };
+    }
+    const top = found[0].entity;
+    const shown = found.slice(0, 6);
+    const lead =
+      f.sort === 'distance'
+        ? `Closest: ${top.name}, ${formatKm(found[0].distance)}.`
+        : f.sort === 'volume' && found[0].volume
+          ? `Most procedures: ${top.name}, ${formatNumber(found[0].volume.year)} in the last 12 months.`
+          : f.sort === 'relevance'
+            ? `First: ${top.name}${found[0].signals.length ? ` (${listJoin(found[0].signals.slice(0, 2).map((s) => s.label.toLowerCase()))})` : ''}.`
+            : '';
     return {
-      scope: [`At ${org.name}`, 'Procedures', DATA_PERIOD],
-      summary: procedureTotal(top) ? `${top.name} leads at ${org.name} with ${formatNumber(procedureTotal(top))} procedures in the last 12 months.` : `${list.length} people in your book work at ${org.name}.`,
-      rows: list.slice(0, 6).map((h) => row(h, procedureTotal(h) ? formatNumber(procedureTotal(h)) : 'Referrer', h.specialty)),
-      next: [`Brief me on ${top.name}`, `Where do patients at ${org.name} go?`],
-      about: org.id,
+      scope: [...scope.slice(0, 2), SORTS.find((s) => s.id === f.sort)?.label ?? '', DATA_PERIOD].filter(Boolean),
+      summary: [`${capitalise(describeSearch(f, dayWord, found.length))}.`, left ? `I left out “${left}”, as it isn’t a name or place I know.` : '', lead].filter(Boolean).join(' '),
+      rows: shown.map((r) =>
+        row(
+          r.entity,
+          f.sort === 'distance' ? formatKm(r.distance) : formatNumber(r.volume?.year ?? 0),
+          r.entity.kind === 'hcp' ? `${r.entity.specialty} · ${siteFor(r.entity).name}` : r.entity.typeDetail,
+        ),
+      ),
+      doThis:
+        found.length > shown.length
+          ? { text: `${formatNumber(found.length - shown.length)} more, with filters to narrow them down.`, label: `See all ${formatNumber(found.length)} in Targets`, link }
+          : { text: 'Narrow them down, or add them to your day.', label: 'Open in Targets', link },
+      next: [`Brief me on ${top.name}`, top.kind === 'hcp' ? `Where does ${top.name} refer patients?` : `Where do patients at ${top.name} go?`, 'Which accounts are growing the most?'],
+      about: top.id,
     };
   },
 
@@ -804,7 +915,7 @@ const BUILDERS: Record<Intent, (input: Input) => Built> = {
     const nextMonday = isoDate(addDays(ctx.today, (8 - ctx.today.getDay()) % 7 || 7));
     const seen = new Set([...done.map((v) => v.who.id), ...notes.flatMap((i) => [i.targetId, ...i.attendees])]);
     const picks = ctx
-      .suggestions(nextMonday, 50)
+      .suggestions(nextMonday, 50, false)
       .map((s) => ({ entity: s.entity, why: s.signals.filter((g) => g.id !== 'followup') }))
       .filter((s) => s.why.length && !seen.has(s.entity.id) && !ctx.nextVisit(s.entity.id))
       .slice(0, 3);

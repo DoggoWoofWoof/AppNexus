@@ -6,9 +6,9 @@ import { describe, expect, test } from '@jest/globals';
 
 import { answer, detectIntent, SAMPLE, type Intent } from '@/lib/ask';
 import { briefFigures } from '@/lib/brief';
-import { accountsByPatientsLost, allEntities, getEntity, getOrg, patientsLost, signalMeaning, signalsFor, topReferrersOut } from '@/lib/data';
+import { accountsByPatientsLost, allEntities, getEntity, getOrg, patientsLost, proceduresOf, signalMeaning, signalsFor, testsOf, topReferrersOut } from '@/lib/data';
 import { DATA_PERIOD, FIGURES_END } from '@/lib/data/seed';
-import { lastQuarters, startOfDay } from '@/lib/format';
+import { formatNumber, lastQuarters, startOfDay, sum } from '@/lib/format';
 import { buildPrep, docText, reportDoc, reportFrom } from '@/lib/saved';
 import { SIGNAL_FILTERS } from '@/lib/search';
 import type { Entity } from '@/lib/types';
@@ -30,6 +30,7 @@ const QUESTIONS: Record<Intent, string> = {
   leakage: 'Where am I losing the most volume?',
   decline: 'What has declined?',
   growth: 'Which accounts are growing the most?',
+  find: 'Top doctors using competitor products',
   trend: 'How is Dr. Patel trending?',
   where: 'Which hospitals does Dr. Patel work at?',
   peers: 'Who does Dr. Patel work with?',
@@ -43,11 +44,26 @@ const QUESTIONS: Record<Intent, string> = {
   prep: 'Help me prep for Dr. Patel',
   saved: 'What did I save?',
   week: 'Summarise my week',
-  search: 'interventional',
+  search: 'Hoboken',
 };
 
 // Answers built from volumes, referrals or leakage; the rest are about the rep's notes and plan.
-const FIGURES: Intent[] = ['inbound', 'referrals', 'mix', 'leakage', 'decline', 'growth', 'trend', 'where', 'suggest', 'people', 'points', 'brief', 'prep'];
+const FIGURES: Intent[] = ['inbound', 'referrals', 'mix', 'leakage', 'decline', 'growth', 'find', 'trend', 'where', 'suggest', 'people', 'points', 'brief', 'prep'];
+
+describe('echo and stress tests', () => {
+  test('aren’t procedures: someone doing only those has none, and their page and Ask say so', () => {
+    // Dr. Priya Raman, a general cardiologist, does only echo and stress tests.
+    const raman = entity('priya');
+    expect(proceduresOf(raman)).toEqual([]);
+    const tests = sum(testsOf(raman).map((r) => sum(r.series.slice(-4))));
+    expect(briefFigures(raman, ctx)[0]).toMatchObject({ label: 'Procedures · 12 months', value: '0', sub: `${formatNumber(tests)} tests` });
+    const none = 'Dr. Priya Raman does none of the procedures in this sample, only echo and stress tests.';
+    expect(answer('What is the procedure mix for Dr. Raman?', ctx).summary).toBe(none);
+    expect(answer('How is Dr. Raman trending?', ctx).summary).toBe(none);
+    // More tests than last year isn't "Busier than last year".
+    expect(signalsFor(raman, ws, today).map((s) => s.id)).not.toContain('rising');
+  });
+});
 
 describe('the period the figures cover', () => {
   test('is one constant, and the charts label the same quarters', () => {

@@ -52,6 +52,8 @@ export interface HcpData {
   leakageRisk: boolean;
   insight: string;
   webSections: string[];
+  /** Device makers whose products they use, by the sample's made-up names ("Competitor A"). */
+  competitors?: string[];
 }
 
 export interface Executive { id: string; name: string; title: string; role: string; phone: string; email: string }
@@ -92,6 +94,8 @@ export interface OrgData {
   diagnoses: DiagnosisRow[] | 'rollup';
   leakage: Leakage | null;
   leakageUnavailable?: string;
+  /** Device makers whose products it buys, by the sample's made-up names ("Competitor A"). */
+  competitors?: string[];
 }
 
 export type Hcp = HcpData & { kind: 'hcp' };
@@ -204,6 +208,11 @@ export interface Workspace {
   prefs: Prefs;
   /** The rep's own Summary and goal for someone (their prep), by their id. Workspaces kept before this have none. */
   prep?: Record<string, PrepEdit>;
+  /**
+   * My targets: the people and accounts the rep keeps, by id. Missing until the
+   * rep changes it, when it's the team's list (`teamTargets` in lib/data).
+   */
+  targets?: string[];
 }
 
 /**
@@ -237,4 +246,8 @@ export interface Prefs {
   start: string;
   appearance: Appearance;
   reminders: ReminderSetting;
+  /** The states Targets shows, such as ['NJ']; empty for all of them. */
+  states: string[];
+  /** The procedures Targets counts: a code group ('coronary'), one code ('92928'), or 'all'. */
+  codes: string;
 }

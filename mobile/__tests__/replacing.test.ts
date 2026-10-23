@@ -11,7 +11,7 @@ import { addDays, isoDate, startOfDay } from '@/lib/format';
 import { bestOrder, placeStops, scheduleDay } from '@/lib/plan';
 import { activeFilterCount, insteadFilters } from '@/lib/search';
 import type { Entity, LonLat, PlanItem } from '@/lib/types';
-import { addPeople, buildContext, freshWorkspace, moveToDay, moveToDayError, orderBest, stopNumber } from '@/lib/workspace';
+import { addPeople, buildContext, freshWorkspace, moveStop, moveToDay, moveToDayError, orderBest, stopNumber } from '@/lib/workspace';
 
 const today = startOfDay(new Date(2026, 9, 19));
 const todayIso = isoDate(today);
@@ -76,7 +76,22 @@ describe('placing stops', () => {
     const plan = buildContext(best, today).dayPlan(todayIso);
     expect(plan.find((i) => i.id === 'v-maya')?.time).toBe('10:00');
     expect(plan.find((i) => i.id === 'v-jordan')?.time).toBe('14:00');
-    expect(buildContext(best, today).bestOrderHelps(todayIso)).toBe(false);
+    expect(buildContext(best, today).bestOrderSaves(todayIso)).toBeNull();
+  });
+
+  test('Best order says how much less driving it would be', () => {
+    const ws = addPeople(freshWorkspace(today), todayIso, ['kenji', 'hannah', 'priya']);
+    // The "Any time" stops turned round, from the order with the least driving.
+    const anyTime = buildContext(ws, today)
+      .dayPlan(todayIso)
+      .filter((i) => i.mode !== 'timed')
+      .map((i) => i.id);
+    const turned = anyTime.reduce((w, id) => moveStop(w, todayIso, id, 0), ws);
+    const best = orderBest(turned, todayIso);
+    const driving = (w: typeof ws) => buildContext(w, today).daySchedule(todayIso).stops.reduce((total, s) => total + s.travel, 0);
+    expect(buildContext(turned, today).bestOrderSaves(todayIso)).toBe(10);
+    expect(driving(turned) - driving(best)).toBe(10);
+    expect(buildContext(best, today).bestOrderSaves(todayIso)).toBeNull();
   });
 
   test('stops are numbered as the map numbers them; a call has no number', () => {

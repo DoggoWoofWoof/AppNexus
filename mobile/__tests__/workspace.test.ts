@@ -3,8 +3,8 @@
 
 import { describe, expect, test } from '@jest/globals';
 
-import { allEntities, getEntity, signalsFor } from '@/lib/data';
-import { isoDate, startOfDay } from '@/lib/format';
+import { allEntities, getEntity, getOrg, signalsFor } from '@/lib/data';
+import { addDays, fromIso, isoDate, startOfDay } from '@/lib/format';
 import { activeFilterCount, DEFAULT_FILTERS, type Filters } from '@/lib/search';
 import { buildContext, freshWorkspace, WORKSPACE_VERSION } from '@/lib/workspace';
 
@@ -16,7 +16,12 @@ const search = (f: Partial<Filters>) => ctx.search({ ...DEFAULT_FILTERS, ...f })
 describe('search', () => {
   test('matches names, specialties and affiliated organizations', () => {
     expect(search({ query: 'okafor' }).map((r) => r.entity.id)).toEqual(['okafor']);
-    expect(search({ query: 'cardio' }).every((r) => r.entity.kind === 'hcp' && /cardio/i.test(r.entity.specialty))).toBe(true);
+    // A cardiologist, or someone at a cardiology practice.
+    const cardio = search({ query: 'cardio' });
+    expect(cardio.some((r) => r.entity.kind === 'hcp' && r.entity.specialty === 'Cardiology')).toBe(true);
+    expect(
+      cardio.every((r) => r.entity.kind === 'hcp' && (/cardio/i.test(r.entity.specialty) || r.entity.affiliations.some((a) => /cardio/i.test(getOrg(a.orgId)?.name ?? '')))),
+    ).toBe(true);
     const morningside = search({ query: 'morningside' });
     expect(morningside.length).toBeGreaterThan(0);
     expect(morningside.every((r) => r.entity.kind === 'hcp' && r.entity.affiliations.some((a) => a.orgId === 'msm'))).toBe(true);
@@ -36,7 +41,8 @@ describe('search', () => {
     // Doctors by surname, as the list shows them.
     const surnames = search({ sort: 'name' }).map((r) => r.entity.name.split(' ').pop()!);
     expect(surnames).toEqual([...surnames].sort((a, b) => a.localeCompare(b)));
-    expect(surnames.slice(0, 3)).toEqual(['Bell', 'Cohen', 'Lee']);
+    // The team's own come first by name among My targets.
+    expect(search({ sort: 'name', mine: true }).map((r) => r.entity.name.split(' ').pop()).slice(0, 3)).toEqual(['Bell', 'Cohen', 'Lee']);
   });
 
   test('the filter count ignores the search text and People/Accounts tab', () => {
@@ -49,6 +55,14 @@ describe('workspace', () => {
   test('the sample is seeded for today', () => {
     expect(ws).toMatchObject({ version: WORKSPACE_VERSION, seededOn: isoDate(today), pristine: true });
     expect(ctx.dayPlan(ctx.todayIso).length).toBeGreaterThan(0);
+  });
+
+  test('the sample visits and calls are on weekdays, whatever day it’s seeded', () => {
+    for (let d = 0; d < 7; d++) {
+      const day = addDays(startOfDay(new Date(2026, 9, 19)), d);
+      const weekend = freshWorkspace(day).interactions.filter((i) => [0, 6].includes(fromIso(i.date).getDay()));
+      expect(weekend.map((i) => `${i.id} on ${i.date}`)).toEqual([]);
+    }
   });
 
   test('every plan item, note and follow-up points at a real target', () => {

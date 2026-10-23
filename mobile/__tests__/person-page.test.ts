@@ -5,7 +5,7 @@
 import { describe, expect, test } from '@jest/globals';
 
 import { buildBrief, outcomeWord, speechFor, summaryOf, summaryParagraph } from '@/lib/brief';
-import { allEntities, getEntity } from '@/lib/data';
+import { allEntities, allOrgs, getEntity, hcpsAt, inYourTerritory } from '@/lib/data';
 import { startOfDay } from '@/lib/format';
 import { withPrepEdit } from '@/lib/prep';
 import { cardFor } from '@/lib/target';
@@ -24,9 +24,12 @@ describe('the Summary', () => {
     expect(summary).toMatch(/Last contact |You haven’t been in touch yet/);
   });
 
-  test('an account: what it is, where, and its doctors', () => {
+  test('an account: what it is, where, and its doctors, who the rep covers only in their own territory', () => {
     const org = allEntities().find((e) => e.kind === 'hco' && e.type !== 'Health system')!;
     expect(summaryOf(org, ctx).startsWith(org.kind === 'hco' ? org.typeDetail : '')).toBe(true);
+    const own = allOrgs().find((o) => inYourTerritory(o) && hcpsAt(o.id).length > 1)!;
+    expect(summaryOf(own, ctx)).toMatch(/ doctors you cover work here\./);
+    expect(summaryOf(entity('hollowmere'), ctx)).toMatch(/ doctors work here\./);
   });
 
   test('never says "Attempted", here or in the last-contact figure', () => {

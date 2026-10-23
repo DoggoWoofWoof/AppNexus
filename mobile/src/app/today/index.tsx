@@ -1,25 +1,29 @@
-// Today: the day, a map of the stops and one row per visit, each saying why
-// they're worth seeing. Tap a row for that person's page; a visit whose time has
-// gone, or an "Any time" one still open at 17:30, gets its own Log button, and the
-// others a ⋯ that opens "Change visit" right here, like tapping an event in a
-// phone's calendar. "Any time" stops have dots to drag them into another order.
-// Above the day, one "Still to do" card holds what's left from before: visits
-// earlier in the week never logged, and follow-ups due. From 17:30 the day is
-// over: one banner says how many visits weren't done and moves them all to
-// tomorrow, with Undo, and those visits stop showing a time for today.
-// "Add a visit" opens Targets, where + puts someone in the plan where it adds the
-// least driving. Each stop has a time, "About 10:45" for an "Any time" one, worked
-// out from the drive between stops and their usual times. The drive to each stop
-// is on a line between it and the one before, like directions in a maps app, and
-// the next one says when to leave; a line over the day says how much driving and
-// when it should finish. A freed time offers the three best people to see instead.
-// "Best order" (when it would help) puts the "Any time" stops in the order with the
-// least driving, with Undo.
+// Today: the day's visits first, in route order, one row each saying why they're
+// worth seeing, so the rep can go over who they're seeing at a glance. Tapping a
+// row opens their page, with the Summary, Log, Directions and Call at the top. A
+// visit whose time has gone, or an "Any time" one still open at 17:30, gets its
+// own Log button, and the others a ⋯ that opens "Change visit" right here, like
+// tapping an event in a phone's calendar. "Any time" stops have dots to drag them
+// into another order.
+// From 17:30 the day is over: a line under the visits says who wasn't seen (how
+// many, when there are more than three) and moves them all to tomorrow, with Undo,
+// and those visits stop showing a time for today. "Add a visit" opens Targets, where + puts someone in the plan where it
+// adds the least driving. The map comes after the visits, and what's left from
+// before (visits earlier in the week never logged, and follow-ups due) is one
+// "Still to do" line at the bottom that opens in place.
+// Each stop has a time, "About 10:45" for an "Any time" one, worked out from the
+// drive between stops and their usual times. The drive to each stop is on a line
+// between it and the one before, like directions in a maps app, and the next one
+// says when to leave; a line over the day says how much driving and when it should
+// finish. A freed time offers the three best people to see instead. "Save 12 min"
+// (Best order, when it would help) puts the "Any time" stops in the order with the
+// least driving, with Undo, and "Maps" opens the stops still to come in Google Maps,
+// in order, from wherever the phone is.
 
 import { router } from 'expo-router';
-import { Car, ChevronRight, CircleCheck, Ellipsis, GripVertical, ListTodo, Plus, Sparkles, X } from 'lucide-react-native';
+import { Car, ChevronDown, ChevronRight, ChevronUp, CircleCheck, Ellipsis, GripVertical, ListTodo, Navigation, Plus, Sparkles, X } from 'lucide-react-native';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { Animated, Pressable, useWindowDimensions, View } from 'react-native';
+import { Animated, Linking, Pressable, useWindowDimensions, View } from 'react-native';
 
 import { Avatar, useProfileHref } from '@/components/entity';
 import { useLogSheet } from '@/components/log-sheet';
@@ -32,6 +36,7 @@ import { Text } from '@/components/ui/text';
 import { useVisitSheets } from '@/components/visit-sheets';
 import { getEntity, getOrg, shortName } from '@/lib/data';
 import { formatDate, formatMinutes, fromMinutes, listJoin, plural, toMinutes } from '@/lib/format';
+import { routeUrl } from '@/lib/links';
 import { outcomeWord } from '@/lib/brief';
 import { END_OF_DAY, fixedStops, isOnSite, notLogged, type Clash, type Stop } from '@/lib/plan';
 import { useWorkspace } from '@/lib/store';
@@ -61,6 +66,7 @@ export default function Today() {
   const visits = useVisitSheets();
   const { openLog, sheet } = useLogSheet({ onNotIn: visits.openNotIn });
   const { width } = useWindowDimensions();
+  const narrow = useNarrow();
   const [today, nextDay] = ctx.planDays();
   // The day is shared with Targets, so + there adds to the day shown here.
   const day = ctx.ws.selection.day === nextDay.iso ? nextDay.iso : today.iso;
@@ -108,6 +114,7 @@ export default function Today() {
   const finish = toCome.length ? Math.max(...toCome.map((s) => s.end)) : null;
   // Best order only changes "Any time" stops still to come; once the day is over there are none.
   const anyTimeToCome = active.some((i) => i.status === 'planned' && i.mode !== 'timed' && !unlogged(i));
+  const saves = anyTimeToCome ? ctx.bestOrderSaves(day, clock) : null;
   const summary = [
     plural(active.length, 'stop'),
     done ? `${done} done` : '',
@@ -130,6 +137,9 @@ export default function Today() {
   };
   // Picked for the day they'll go on, which is the next working day once today is over.
   const pickFive = () => ctx.addAllToPlan(ctx.suggestions(ctx.addingTo(day), 5).map((s) => s.entity.id), day);
+  // Whether Still to do is open.
+  const [showLeft, setShowLeft] = useState(false);
+  const left = listJoin([earlier.length ? `${plural(earlier.length, 'visit')} to log` : '', due.length ? `${plural(due.length, 'follow-up')} due` : ''].filter(Boolean));
 
   // Dragging an "Any time" stop by its dots: which one, where it was, where it
   // would land, and how far the stops it passes move to make room.
@@ -192,6 +202,16 @@ export default function Today() {
 
   // Stops that need travel, numbered in route order.
   const onSite = active.filter(isOnSite);
+  // Where the visits still to come are, in order, for Maps: one stop for visits one
+  // after another in the same place, and four at most on a phone, as its browser takes no more.
+  const ahead = onSite
+    .filter((i) => i.status === 'planned' && !unlogged(i))
+    .filter((i, n, all) => n === 0 || i.siteId !== all[n - 1].siteId)
+    .flatMap((i) => {
+      const site = getOrg(i.siteId);
+      return site ? [site.coords] : [];
+    })
+    .slice(0, width < 768 ? 4 : 10);
   const pins: MapPin[] = onSite.flatMap((item, i) => {
     const site = getOrg(item.siteId);
     const who = getEntity(item.targetId);
@@ -207,123 +227,37 @@ export default function Today() {
     ];
   });
 
+  const otherDay = (
+    <Button
+      size="sm"
+      variant="ghost"
+      onPress={() => ctx.selectDay(isToday ? nextDay.iso : today.iso)}
+      accessibilityLabel={isToday ? `Show ${ctx.dayWord(nextDay.iso)}` : 'Back to today'}
+    >
+      <Text className="text-brand">{isToday ? nextDay.label : 'Today'}</Text>
+    </Button>
+  );
+
   return (
     <Screen inset scrollEnabled={!drag}>
-      <View className="flex-row items-center gap-2">
-        <MenuButton />
-        <Text variant="h1" className="flex-1">
-          {formatDate(day, { weekday: 'long' })}
-        </Text>
-        <Button
-          size="sm"
-          variant="ghost"
-          onPress={() => ctx.selectDay(isToday ? nextDay.iso : today.iso)}
-          accessibilityLabel={isToday ? `Show ${ctx.dayWord(nextDay.iso)}` : 'Back to today'}
-        >
-          <Text className="text-brand">{isToday ? nextDay.label : 'Today'}</Text>
-        </Button>
-      </View>
-
-      {/* Once the day is over, the visits not done move on in one go, with Undo. One
-          done but not logged still has its own Log button below. */}
-      {notDone ? (
-        <View className="flex-row items-center gap-3 rounded-xl bg-brand-soft py-2 pl-4 pr-2">
-          <Text className="flex-1 text-base font-semibold">{`${plural(notDone.moves.length, 'visit')} not done today`}</Text>
-          <Button size="sm" className="rounded-lg" onPress={() => ctx.moveNotDone()} accessibilityLabel={`Move ${notDoneNames} to ${ctx.dayWord(notDone.to)}`}>
-            <Text>{`Move ${notDone.moves.length === 1 ? 'it' : 'them'} to ${ctx.dayWord(notDone.to)}`}</Text>
-          </Button>
-        </View>
-      ) : null}
-
-      {/* What's left from before, in one quiet card so the day stays the main thing:
-          visits never logged (log them on their day, or say they didn't happen), then follow-ups due. */}
-      {earlier.length || due.length ? (
-        <View className="gap-2">
-          <Text className="text-sm text-muted-foreground">Still to do</Text>
-          <View className="rounded-xl border border-border bg-card">
-            {earlier.map(({ day: on, item, who }, i) => (
-              <View key={item.id} className={cn('gap-3 p-3', i > 0 && 'border-t border-border')}>
-                <View className="flex-row items-center gap-3">
-                  <Avatar entity={who} />
-                  <View className="flex-1 gap-0.5">
-                    <Text className="text-base font-semibold">{shortName(who)}</Text>
-                    <Text className="text-sm font-medium text-warn">{`Visit on ${formatDate(on)} · not logged yet`}</Text>
-                  </View>
-                </View>
-                <View className="flex-row gap-2">
-                  <Button className="flex-1 rounded-lg" onPress={() => log(item, on)} accessibilityLabel={`Log the visit with ${who.name} on ${formatDate(on)}`}>
-                    <Text>Log</Text>
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="flex-1 rounded-lg"
-                    onPress={() => ctx.cancelVisit(on, item.id, 'Didn’t happen')}
-                    accessibilityLabel={`The visit with ${who.name} on ${formatDate(on)} didn’t happen`}
-                  >
-                    <Text>Didn’t happen</Text>
-                  </Button>
-                </View>
-              </View>
-            ))}
-            {due.length ? (
-              <Pressable
-                onPress={() => router.navigate('/activity')}
-                accessibilityRole="link"
-                accessibilityHint="Opens Activity"
-                className={cn('min-h-16 flex-row items-center gap-3 rounded-xl p-3 active:bg-accent', earlier.length && 'rounded-t-none border-t border-border')}
-              >
-                <View className="h-10 w-10 items-center justify-center rounded-full bg-warn-soft">
-                  <Icon as={ListTodo} size={20} className="text-warn" />
-                </View>
-                <View className="flex-1 gap-0.5">
-                  <Text className="text-base font-semibold">{`${plural(due.length, 'follow-up')} due`}</Text>
-                  <Text className="text-sm text-muted-foreground">
-                    {[late && `${late} late`, due.length - late && `${due.length - late} due today`].filter(Boolean).join(' · ')}
-                  </Text>
-                </View>
-                <Text className="text-base text-brand">See them</Text>
-                <Icon as={ChevronRight} size={18} className="text-brand" />
-              </Pressable>
-            ) : null}
-          </View>
-        </View>
-      ) : null}
-
-      {/* One line per freed time, so a second cancel doesn't hide the first. */}
-      {free.map((slot) => (
-        <View key={slot.itemId} className="flex-row items-center gap-3 rounded-xl bg-brand-soft py-2 pl-4 pr-1">
-          <Text className="flex-1 text-base">
-            <Text className="text-base font-semibold">{`${slot.time} is free.`}</Text>
-            {` The visit with ${slot.name.replace(/^Dr\. \S+ /, 'Dr. ')} ${slot.moved ? 'moved' : 'was cancelled'}.`}
-          </Text>
-          <Button
-            size="sm"
-            className="rounded-lg"
-            onPress={() => visits.openFill({ day, siteId: slot.siteId, time: slot.time, duration: slot.duration, except: slot.targetId, slotId: slot.itemId })}
-            accessibilityLabel={`Find someone for ${slot.time}`}
-          >
-            <Text>Find someone</Text>
-          </Button>
-          <Button size="icon" variant="ghost" onPress={() => ctx.leaveFree(slot.itemId)} accessibilityLabel={`Leave ${slot.time} free`}>
-            <Icon as={X} size={18} className="text-muted-foreground" />
-          </Button>
-        </View>
-      ))}
-
-      {pins.length ? (
+      {/* At very large text the day's name has a line of its own, under the menu and the other day. */}
+      {narrow ? (
         <View className="gap-1">
-          <StopMap
-            pins={pins}
-            start={{ coords: ctx.start.coords, label: `${ctx.start.title}, ${ctx.start.place}` }}
-            route
-            onPinPress={open}
-            label={`Map of ${ctx.dayWord(day)}’s stops`}
-            // Taller on a wider screen, such as an iPad, up to the column's width.
-            height={Math.round(Math.min(360, Math.max(190, (Math.min(width, 720) - 32) * 0.55)))}
-          />
-          <Text className="text-sm text-muted-foreground">{`From ${ctx.start.title}, ${ctx.start.place} · straight lines, not roads`}</Text>
+          <View className="flex-row items-center justify-between gap-2">
+            <MenuButton />
+            {otherDay}
+          </View>
+          <Text variant="h1">{formatDate(day, { weekday: 'long' })}</Text>
         </View>
-      ) : null}
+      ) : (
+        <View className="flex-row items-center gap-2">
+          <MenuButton />
+          <Text variant="h1" className="flex-1">
+            {formatDate(day, { weekday: 'long' })}
+          </Text>
+          {otherDay}
+        </View>
+      )}
 
       {plan.length ? (
         // On the web a drag with the mouse would otherwise select the text it passes.
@@ -332,17 +266,48 @@ export default function Today() {
             <Text className="flex-1 text-sm text-muted-foreground" accessibilityLiveRegion="polite">
               {active.length ? summary : 'All cancelled'}
             </Text>
-            {anyTimeToCome && ctx.bestOrderHelps(day, clock) ? (
+            {saves != null ? (
               <Button
                 size="sm"
                 variant="ghost"
                 onPress={() => ctx.bestOrder(day)}
-                accessibilityLabel="Put the Any time stops in the best order: little driving, in their usual times"
+                accessibilityLabel={`Put the Any time stops in the best order: ${saves ? `${saves} min less driving` : 'little driving'}, in their usual times`}
               >
-                <Text className="text-brand">Best order</Text>
+                <Text className="text-brand">{saves ? `Save ${saves} min` : 'Best order'}</Text>
+              </Button>
+            ) : null}
+            {ahead.length ? (
+              <Button
+                size="sm"
+                variant="ghost"
+                onPress={() => void Linking.openURL(routeUrl(ahead))}
+                accessibilityLabel={`Open ${ahead.length === 1 ? 'the next stop' : `the next ${ahead.length} stops`} in Google Maps, in order`}
+              >
+                <Icon as={Navigation} size={16} className="text-brand" />
+                <Text className="text-brand">Maps</Text>
               </Button>
             ) : null}
           </View>
+          {/* One line per freed time, so a second cancel doesn't hide the first. */}
+          {free.map((slot) => (
+            <View key={slot.itemId} className="flex-row items-center gap-3 rounded-xl bg-brand-soft py-2 pl-4 pr-1">
+              <Text className="flex-1 text-base">
+                <Text className="text-base font-semibold">{`${slot.time} is free.`}</Text>
+                {` The visit with ${slot.name.replace(/^Dr\. \S+ /, 'Dr. ')} ${slot.moved ? 'moved' : 'was cancelled'}.`}
+              </Text>
+              <Button
+                size="sm"
+                className="rounded-lg"
+                onPress={() => visits.openFill({ day, siteId: slot.siteId, time: slot.time, duration: slot.duration, except: slot.targetId, slotId: slot.itemId })}
+                accessibilityLabel={`Find someone for ${slot.time}`}
+              >
+                <Text>Find someone</Text>
+              </Button>
+              <Button size="icon" variant="ghost" onPress={() => ctx.leaveFree(slot.itemId)} accessibilityLabel={`Leave ${slot.time} free`}>
+                <Icon as={X} size={18} className="text-muted-foreground" />
+              </Button>
+            </View>
+          ))}
           {plan.map((item) => {
             const stop = stopOf.get(item.id);
             const clash = clashOf.get(item.id);
@@ -397,8 +362,19 @@ export default function Today() {
               </Animated.View>
             );
           })}
+          {/* Once the day is over, the visits not done move on in one go, with Undo. One
+              done but not logged still has its own Log button above. */}
+          {notDone ? (
+            <View className="flex-row items-center gap-3 rounded-xl border border-border bg-card py-2 pl-4 pr-2">
+              {/* By name when there are a few, as the stops above them all say "Not logged yet". */}
+              <Text className="flex-1 text-base">{notDone.moves.length <= 3 ? `Not done today: ${notDoneNames}` : `${plural(notDone.moves.length, 'visit')} not done today`}</Text>
+              <Button size="sm" variant="outline" className="rounded-lg" onPress={() => ctx.moveNotDone()} accessibilityLabel={`Move ${notDoneNames} to ${ctx.dayWord(notDone.to)}`}>
+                <Text>{`Move ${notDone.moves.length === 1 ? 'it' : 'them'} to ${ctx.dayWord(notDone.to)}`}</Text>
+              </Button>
+            </View>
+          ) : null}
           {active.some((i) => i.status === 'planned' && !unlogged(i)) ? (
-            <Text className="text-sm text-muted-foreground">{`${handles ? 'Drag the dots to change the order. ' : ''}Tap ⋯ to change or cancel a visit.`}</Text>
+            <Text className="text-sm text-muted-foreground">{`${handles ? 'Drag the dots to change the order. ' : ''}Tap a visit for their page, and ⋯ to change or cancel it.`}</Text>
           ) : null}
         </View>
       ) : null}
@@ -426,6 +402,89 @@ export default function Today() {
         <Icon as={Plus} size={20} className={active.length ? undefined : 'text-primary-foreground'} />
         <Text className="text-lg">{active.length ? 'Add a visit' : 'Choose who to see'}</Text>
       </Button>
+
+      {pins.length ? (
+        <View className="gap-1">
+          <StopMap
+            pins={pins}
+            start={{ coords: ctx.start.coords, label: `${ctx.start.title}, ${ctx.start.place}` }}
+            route
+            onPinPress={open}
+            label={`Map of ${ctx.dayWord(day)}’s stops`}
+            // Taller on a wider screen, such as an iPad, up to the column's width.
+            height={Math.round(Math.min(360, Math.max(190, (Math.min(width, 720) - 32) * 0.55)))}
+          />
+          <Text className="text-sm text-muted-foreground">{`From ${ctx.start.title}, ${ctx.start.place} · straight lines, not roads`}</Text>
+        </View>
+      ) : null}
+
+      {/* What's left from before, under the day so the day comes first: one line that
+          opens to the visits never logged (log them on their day, or say they didn't
+          happen), then the follow-ups due. */}
+      {earlier.length || due.length ? (
+        <View className="gap-2">
+          <Pressable
+            onPress={() => setShowLeft((s) => !s)}
+            accessibilityRole="button"
+            accessibilityState={{ expanded: showLeft }}
+            className="min-h-11 flex-row items-center gap-2 active:opacity-70"
+          >
+            <Text className="flex-1 text-sm text-muted-foreground">
+              <Text className="text-sm font-semibold">Still to do</Text>
+              {` · ${left}`}
+            </Text>
+            <Icon as={showLeft ? ChevronUp : ChevronDown} size={18} className="text-muted-foreground" />
+          </Pressable>
+          {showLeft ? (
+            <View className="rounded-xl border border-border bg-card">
+              {earlier.map(({ day: on, item, who }, i) => (
+                <View key={item.id} className={cn('gap-3 p-3', i > 0 && 'border-t border-border')}>
+                  <View className="flex-row items-center gap-3">
+                    <Avatar entity={who} />
+                    <View className="flex-1 gap-0.5">
+                      <Text className="text-base font-semibold">{shortName(who)}</Text>
+                      <Text className="text-sm font-medium text-warn">{`Visit on ${formatDate(on)} · not logged yet`}</Text>
+                    </View>
+                  </View>
+                  <View className="flex-row gap-2">
+                    <Button className="flex-1 rounded-lg" onPress={() => log(item, on)} accessibilityLabel={`Log the visit with ${who.name} on ${formatDate(on)}`}>
+                      <Text>Log</Text>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="flex-1 rounded-lg"
+                      onPress={() => ctx.cancelVisit(on, item.id, 'Didn’t happen')}
+                      accessibilityLabel={`The visit with ${who.name} on ${formatDate(on)} didn’t happen`}
+                    >
+                      <Text>Didn’t happen</Text>
+                    </Button>
+                  </View>
+                </View>
+              ))}
+              {due.length ? (
+                <Pressable
+                  onPress={() => router.navigate('/activity')}
+                  accessibilityRole="link"
+                  accessibilityHint="Opens Activity"
+                  className={cn('min-h-16 flex-row items-center gap-3 rounded-xl p-3 active:bg-accent', earlier.length && 'rounded-t-none border-t border-border')}
+                >
+                  <View className="h-10 w-10 items-center justify-center rounded-full bg-warn-soft">
+                    <Icon as={ListTodo} size={20} className="text-warn" />
+                  </View>
+                  <View className="flex-1 gap-0.5">
+                    <Text className="text-base font-semibold">{`${plural(due.length, 'follow-up')} due`}</Text>
+                    <Text className="text-sm text-muted-foreground">
+                      {[late && `${late} late`, due.length - late && `${due.length - late} due today`].filter(Boolean).join(' · ')}
+                    </Text>
+                  </View>
+                  <Text className="text-base text-brand">See them</Text>
+                  <Icon as={ChevronRight} size={18} className="text-brand" />
+                </Pressable>
+              ) : null}
+            </View>
+          ) : null}
+        </View>
+      ) : null}
       {sheet}
       {visits.sheets}
     </Screen>
@@ -535,11 +594,13 @@ function StopRow({
   lifted: boolean;
   /** The dots to drag it by, null for a stop that can't move, or undefined when none in the day can. */
   handle: ReactNode | undefined;
+  /** Opens their page. */
   onPress: () => void;
   onLog: () => void;
   onChange: () => void;
 }) {
   const ctx = useWorkspace();
+  const narrow = useNarrow();
   const who = getEntity(item.targetId);
   if (!who) return null;
   const cancelled = item.status === 'cancelled';
@@ -549,62 +610,73 @@ function StopRow({
   const when = item.mode === 'timed' && item.time ? item.time : stop && item.status === 'planned' && !unlogged ? `About ${fromMinutes(stop.start)}` : 'Any time';
   const unconfirmed = !done && !cancelled && !unlogged && item.booking === 'requested';
   const status = done ? (item.outcome === 'Attempted' ? outcomeWord('Attempted', item.type) : 'Done') : cancelled ? 'Cancelled' : unlogged ? 'Not logged yet' : next ? 'Next' : '';
-  // Where to go for a visit, or how for a call.
-  const how = isOnSite(item) ? (getOrg(item.siteId)?.name ?? '') : item.type;
+  // Where to go for a visit, unless it's the account itself, or how for a call.
+  const how = isOnSite(item) ? (item.siteId === who.id ? '' : (getOrg(item.siteId)?.name ?? '')) : item.type;
   const sub = [when, how, status, unconfirmed && 'Not confirmed yet'].filter(Boolean).join(' · ');
   // Why they're worth seeing: the visit's own goal, or what makes them a priority.
   const why = done || cancelled ? '' : item.goal || ctx.signals(who)[0]?.label || '';
 
-  // The row opens their page; Log and ⋯ sit beside it rather than inside, as a button can't hold another.
+  // Log or ⋯, or a tick once it's done. At very large text it goes under the words,
+  // which would otherwise be a few letters to a line; "Done" is in the words then.
+  const action = done ? (
+    narrow ? null : (
+      <View className="min-h-11 min-w-11 items-center justify-center">
+        <Icon as={CircleCheck} size={22} className="text-success" />
+      </View>
+    )
+  ) : unlogged ? (
+    <Button size="sm" className={cn('rounded-lg', !narrow && 'mr-2')} onPress={onLog} accessibilityLabel={`Log the visit with ${who.name}`}>
+      <Text>Log</Text>
+    </Button>
+  ) : cancelled ? (
+    narrow ? null : <View className="min-h-11 min-w-11" />
+  ) : (
+    <Button size="icon" variant="ghost" className="rounded-lg" onPress={onChange} accessibilityLabel={`Change the visit with ${who.name}`}>
+      <Icon as={Ellipsis} size={22} className="text-foreground" />
+    </Button>
+  );
+
+  // Tapping the row opens their page; Log and ⋯ sit beside it rather than inside,
+  // as a button can't hold another. Orange is kept for what needs
+  // sorting out, such as a time not confirmed; a visit not logged has its Log button.
   return (
-    <View
-      className={cn(
-        'min-h-16 flex-row items-center gap-1 rounded-xl bg-card pr-1',
-        next || lifted ? 'border-2 border-primary' : 'border border-border',
-        lifted && 'shadow-lg',
-        cancelled && 'opacity-60',
-      )}
-    >
-      {handle === undefined ? null : (handle ?? <View className="w-9" />)}
-      <Pressable
-        onPress={onPress}
-        accessibilityRole="button"
-        accessibilityLabel={[who.name, sub, ...warnings, why].filter(Boolean).join(', ')}
-        className={cn('flex-1 flex-row items-center gap-3 rounded-xl py-3 active:bg-accent', handle === undefined && 'pl-3')}
-      >
-        <StopAvatar who={who} number={done ? 0 : number} next={next} />
-        <View className="flex-1 gap-0.5">
-          <Text className={cn('text-base font-semibold', cancelled && 'line-through')}>{shortName(who)}</Text>
-          <Text className={cn('text-sm', next ? 'font-medium text-brand' : unlogged || unconfirmed ? 'font-medium text-warn' : 'text-muted-foreground')}>{sub}</Text>
-          {warnings.map((w) => (
-            <Text key={w} className="text-sm font-medium text-warn">
-              {w}
-            </Text>
-          ))}
-          {why ? (
-            <Text className="text-sm text-muted-foreground" numberOfLines={1}>
-              {why}
-            </Text>
-          ) : null}
-        </View>
-      </Pressable>
-      {done ? (
-        <View className="min-h-11 min-w-11 items-center justify-center">
-          <Icon as={CircleCheck} size={22} className="text-success" />
-        </View>
-      ) : unlogged ? (
-        <Button size="sm" className="mr-2 rounded-lg" onPress={onLog} accessibilityLabel={`Log the visit with ${who.name}`}>
-          <Text>Log</Text>
-        </Button>
-      ) : cancelled ? (
-        <View className="min-h-11 min-w-11" />
-      ) : (
-        <Button size="icon" variant="ghost" className="rounded-lg" onPress={onChange} accessibilityLabel={`Change the visit with ${who.name}`}>
-          <Icon as={Ellipsis} size={22} className="text-foreground" />
-        </Button>
-      )}
+    <View className={cn('rounded-xl bg-card', next || lifted ? 'border-2 border-primary' : 'border border-border', lifted && 'shadow-lg', cancelled && 'opacity-60')}>
+      <View className="min-h-16 flex-row items-center gap-1 pr-1">
+        {handle === undefined ? null : (handle ?? <View className="w-9" />)}
+        <Pressable
+          onPress={onPress}
+          accessibilityRole="link"
+          accessibilityLabel={[who.name, sub, ...warnings, why].filter(Boolean).join(', ')}
+          accessibilityHint="Opens their page"
+          className={cn('flex-1 flex-row items-center gap-3 rounded-xl py-3 active:bg-accent', handle === undefined && 'pl-3')}
+        >
+          <StopAvatar who={who} number={done ? 0 : number} next={next} />
+          <View className="flex-1 gap-0.5">
+            <Text className={cn('text-base font-semibold', cancelled && 'line-through')}>{shortName(who)}</Text>
+            <Text className={cn('text-sm', next ? 'font-medium text-brand' : unconfirmed ? 'font-medium text-warn' : 'text-muted-foreground')}>{sub}</Text>
+            {warnings.map((w) => (
+              <Text key={w} className="text-sm font-medium text-warn">
+                {w}
+              </Text>
+            ))}
+            {why ? (
+              <Text className="text-sm text-muted-foreground" numberOfLines={1}>
+                {why}
+              </Text>
+            ) : null}
+          </View>
+        </Pressable>
+        {narrow ? null : action}
+      </View>
+      {narrow && action ? <View className="flex-row px-3 pb-3">{action}</View> : null}
     </View>
   );
+}
+
+/** True when the text is so large, or the screen so narrow, that a row's words would be squeezed beside its button. */
+function useNarrow() {
+  const { width, fontScale } = useWindowDimensions();
+  return width / fontScale < 300;
 }
 
 /** Their picture with the stop's number on the map, when it has one. */

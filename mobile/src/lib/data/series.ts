@@ -13,6 +13,19 @@ export function series(base: number, growthPerYear: number): Series {
   return SHAPE.map((wobble, i) => Math.max(0, Math.round(base * Math.pow(perQuarter, i) * (1 + wobble / 60))));
 }
 
+/**
+ * Echo and stress tests: tests rather than procedures. A general cardiologist
+ * reads hundreds a year, which would put them ahead of the doctors doing the
+ * procedures, so they're counted on their own everywhere (testsOf() in index.ts).
+ */
+export const TEST_CODES = ['93306', '93015'];
+
+/** Whether a volume row is a test: every code on it is one. */
+export function isTest(row: { code: string }): boolean {
+  const codes = row.code.match(/\d{5}/g) ?? [];
+  return codes.length > 0 && codes.every((c) => TEST_CODES.includes(c));
+}
+
 /** Element-wise sum of several series. */
 export function addSeries(list: Series[]): Series {
   return list.reduce((acc, s) => acc.map((v, i) => v + s[i]), new Array<number>(SHAPE.length).fill(0));

@@ -10,13 +10,17 @@ import { Text } from '@/components/ui/text';
 import { accountsByPatientsLost, allHcps, destination, getOrg, procedureTotal, procedureYoy } from '@/lib/data';
 import { DATA_PERIOD, REP } from '@/lib/data/seed';
 import { formatNumber, formatPct } from '@/lib/format';
+import { useWorkspace } from '@/lib/store';
 import type { Hcp } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
 export default function Insights() {
+  const ctx = useWorkspace();
   const system = getOrg('msh-system');
   const leakage = system?.leakage;
+  // Who is growing in My targets.
   const rising = allHcps()
+    .filter((h) => ctx.isTarget(h.id))
     .map((h) => ({ h, growth: procedureYoy(h) }))
     .filter((r): r is { h: Hcp; growth: number } => r.growth != null)
     .sort((a, b) => b.growth - a.growth);

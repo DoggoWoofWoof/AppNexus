@@ -3,7 +3,7 @@
 // sample data, not AI. Ported from demo/js/brief.js.
 
 import { usualTimes } from './booking';
-import { destination, getEntity, getOrg, hcpsAt, openFollowUps, parentOf, patientsLost, procedureTotal, procedureYoy, proceduresOf, referredOut, siteFor } from './data';
+import { destination, getEntity, getOrg, hcpsAt, inYourTerritory, openFollowUps, parentOf, patientsLost, procedureTotal, procedureYoy, proceduresOf, referredOut, siteFor, testsOf } from './data';
 import { DATA_PERIOD } from './data/seed';
 import { daysBetween, firstSentence, formatDate, formatNumber, fromIso, isoDate, plural, relativeDay, relativeDayLower, says, sentence, sum, yoy } from './format';
 import { endTime, isOnSite } from './plan';
@@ -63,9 +63,13 @@ export function insightFor(entity: Entity): string {
 /** Three headline figures: volume, leakage and last contact. */
 export function briefFigures(entity: Entity, ctx: Context): Figure[] {
   const last = ctx.lastInteraction(entity.id);
-  const volume: Figure = proceduresOf(entity)
+  // Someone who only does echo and stress tests does no procedures: "1,017 tests" says why.
+  const tests = sum(testsOf(entity).map((r) => sum(r.series.slice(-4))));
+  const volume: Figure = proceduresOf(entity)?.length
     ? { label: 'Procedures · 12 months', value: formatNumber(procedureTotal(entity)), delta: procedureYoy(entity) }
-    : { label: 'Procedures · 12 months', value: '—', sub: 'None in this sample' };
+    : tests
+      ? { label: 'Procedures · 12 months', value: '0', sub: `${formatNumber(tests)} tests` }
+      : { label: 'Procedures · 12 months', value: '—', sub: 'None in this sample' };
   let leak: Figure;
   if (entity.kind === 'hcp') {
     const out = entity.referrals.outbound;
@@ -194,7 +198,8 @@ export function summaryOf(entity: Entity, ctx: Context): string {
     const doctors = hcpsAt(entity.id).length;
     who = [
       `${entity.typeDetail} in ${entity.city.replace(/ \d{5}$/, '')}${parent ? `, part of ${parent.name}` : ''}.`,
-      doctors ? `${plural(doctors, 'doctor')} you cover ${doctors === 1 ? 'works' : 'work'} here.` : '',
+      // Next door, the rep doesn't cover them.
+      doctors ? `${plural(doctors, 'doctor')}${inYourTerritory(entity) ? ' you cover' : ''} ${doctors === 1 ? 'works' : 'work'} here.` : '',
     ]
       .filter(Boolean)
       .join(' ');

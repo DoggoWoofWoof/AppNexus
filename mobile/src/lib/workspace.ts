@@ -3,7 +3,8 @@
 // phone (lib/persist.ts); sync comes with the real services.
 
 import { availability, bookingRoute, clashesWith, hoursOn, inOnDay, outsideTimes, parseDays, siteOnDay, suggestSlots, usualDay, windowsFor, type Availability, type Slot } from './booking';
-import { allEntities, getEntity, getOrg, lastInteraction, priorityOf, signalsFor, siteFor } from './data';
+import { volumeIn } from './codes';
+import { allEntities, getEntity, getOrg, isAt, lastInteraction, priorityOf, signalsFor, siteFor, stateOf, teamTargets, YOUR_STATES } from './data';
 import { seedWorkspace } from './data/seed';
 import { addDays, dayInWords, daysBetween, formatDate, fromIso, haversineKm, isoDate, toMinutes, uid } from './format';
 import { activeItems, addTargets, bestOrder, END_OF_DAY, fixedStops, isOnSite, notLogged, placeStops, routeOrder, scheduleDay, timeStop, travelMinutes, type ScheduleOptions } from './plan';
@@ -28,9 +29,10 @@ export function freshWorkspace(today: Date): Workspace {
   };
 }
 
+/** What a search looks through: a doctor's name, specialty, NPI and where they work, by name and town. */
 export const haystack = (e: Entity): string =>
   (e.kind === 'hcp'
-    ? [e.name, e.specialty, e.npi, ...e.affiliations.map((a) => getOrg(a.orgId)?.name ?? '')]
+    ? [e.name, e.specialty, e.npi, ...e.affiliations.flatMap((a) => [getOrg(a.orgId)?.name ?? '', getOrg(a.orgId)?.city ?? ''])]
     : [e.name, e.type, e.typeDetail, e.address, e.city]
   ).join(' ');
 
@@ -69,12 +71,19 @@ export function buildContext(ws: Workspace, today: Date, now?: Date) {
   const weekday = filling ? fillDay : fromIso(ws.selection.day).getDay();
   const where = (e: Entity) => siteFor(e, siteOnDay(e, weekday) ?? undefined);
   const pool = filling ? entities.filter((e) => e.id !== filling.targetId) : entities;
+  // The rep's own book, which suggestions and Ask come from; Targets searches everyone.
+  const book = new Set(myTargets(ws));
   const searchContext: SearchContext = {
     signals,
     distance: (e, near) => haversineKm((near && getOrg(near)?.coords) || origin, where(e).coords),
     planned: (e) => planItemFor(e.id, ws.selection.day),
     priority: (e) => priorityOf(e, ws, today),
     inDay: (e) => !!siteOnDay(e, weekday),
+    mine: (e) => book.has(e.id),
+    volume: volumeIn,
+    state: stateOf,
+    home: YOUR_STATES,
+    isAt,
     haystack,
   };
 
@@ -104,6 +113,8 @@ export function buildContext(ws: Workspace, today: Date, now?: Date) {
     start,
     signals,
     planItemFor,
+    /** Whether someone is in My targets: the rep's own list, or the team's until they change it. */
+    isTarget: (id: string): boolean => book.has(id),
     /** Today and the next working day, which Today can switch to: "Tomorrow", or "Monday" on a Friday. */
     planDays: () => [
       { iso: todayIso, label: 'Today' },
@@ -219,17 +230,19 @@ export function buildContext(ws: Workspace, today: Date, now?: Date) {
         except: from?.id,
       }),
     /**
-     * Targets most worth seeing on a day, leaving out anyone in that day's plan, even
-     * if they cancelled, and on a weekday anyone not in that day. For a later day,
-     * anyone planned or seen today waits too.
+     * Those in My targets most worth seeing on a day, leaving out anyone in that day's
+     * plan, even if they cancelled, and on a weekday anyone not in that day, or in but
+     * not seeing people then, as the app would only pick someone to warn about. The
+     * week report passes `usual` false, as it's for any day that week and says when
+     * they see people. For a later day, anyone planned or seen today waits too.
      */
-    suggestions: (day: string, count: number) => {
+    suggestions: (day: string, count: number, usual = true) => {
       const planned = new Set((ws.plans[day] ?? []).map((i) => i.targetId));
       const weekday = fromIso(day).getDay();
       const workday = weekday !== 0 && weekday !== 6;
       return entities
-        .filter((e) => !planned.has(e.id) && (e.kind === 'hcp' || (e.type !== 'Health system' && e.assigned)))
-        .filter((e) => !workday || siteOnDay(e, weekday))
+        .filter((e) => book.has(e.id) && !planned.has(e.id) && (e.kind === 'hcp' || (e.type !== 'Health system' && e.assigned)))
+        .filter((e) => !workday || (siteOnDay(e, weekday) && (!usual || usualDay(e, weekday))))
         .filter((e) => day <= todayIso || !seenToday.has(e.id))
         .map((entity) => ({ entity, signals: signals(entity), priority: priorityOf(entity, ws, today) }))
         .sort((a, b) => b.priority - a.priority)
@@ -244,7 +257,7 @@ export function buildContext(ws: Workspace, today: Date, now?: Date) {
         .flatMap((day) => routeOrder(ws.plans[day]).filter((i) => i.status === 'planned').map((item) => ({ day, item })));
     },
     /**
-     * Who to see instead of a visit that won't happen, best first: doctors in that day,
+     * Who to see instead of a visit that won't happen, best first: doctors in My targets in that day,
      * not already in the plan, and for a fixed time usually seeing people then, or
      * otherwise with time still to come that day. How worth seeing they are counts,
      * less 8 points a km from where the visit was, so a close one beats a slightly better one across town.
@@ -256,7 +269,7 @@ export function buildContext(ws: Workspace, today: Date, now?: Date) {
       // Today, only someone still to be seen: a usual time that ends after now.
       const after = now && isoDate(now) === gap.day ? now.getHours() * 60 + now.getMinutes() + gap.duration : 0;
       return entities
-        .filter((e): e is Hcp => e.kind === 'hcp' && e.id !== gap.except && !planned.has(e.id))
+        .filter((e): e is Hcp => e.kind === 'hcp' && book.has(e.id) && e.id !== gap.except && !planned.has(e.id))
         .flatMap((entity) => {
           let siteId = siteOnDay(entity, weekday);
           if (!siteId) return [];
@@ -274,10 +287,16 @@ export function buildContext(ws: Workspace, today: Date, now?: Date) {
         .slice(0, count)
         .map(({ score: _score, ...standIn }) => standIn);
     },
-    /** Whether Best order would change the day: two or more "Any time" visits that could go in an order with less driving. */
-    bestOrderHelps: (day: string, now?: Date): boolean => {
-      const before = routeOrder(activeItems(ws.plans[day])).map((i) => i.id).join();
-      return before !== routeOrder(activeItems(orderBest(ws, day, now).plans[day])).map((i) => i.id).join();
+    /**
+     * What Best order would save, in minutes of driving: null when it wouldn't change
+     * the day, and 0 when it changes it only to see people in their usual times.
+     */
+    bestOrderSaves: (day: string, now?: Date): number | null => {
+      const best = orderBest(ws, day, now);
+      const order = (w: Workspace) => routeOrder(activeItems(w.plans[day])).map((i) => i.id).join();
+      if (order(best) === order(ws)) return null;
+      const driving = (w: Workspace) => scheduleDay(w.plans[day] ?? [], scheduleFor(w, day, now)).stops.reduce((total, s) => total + s.travel, 0);
+      return Math.max(0, driving(ws) - driving(best));
     },
     /** Open follow-ups, soonest due first, with how many days overdue (negative when upcoming). */
     openFollowUps: () =>
@@ -818,6 +837,20 @@ export const confirmBooking = (ws: Workspace, day: string, id: string): Workspac
 // ---- Saved reports --------------------------------------------------------
 
 export const saveReport = (ws: Workspace, report: SavedReport): Workspace => changed(ws, { saved: [report, ...ws.saved] });
+
+// ---- My targets -----------------------------------------------------------
+
+/** My targets: the rep's own list, or the team's until they change it. */
+export const myTargets = (ws: Pick<Workspace, 'targets'>): string[] => ws.targets ?? teamTargets();
+
+/** Puts someone on My targets, or takes them off. */
+export function withTarget(ws: Workspace, id: string, on: boolean): Workspace {
+  const rest = myTargets(ws).filter((t) => t !== id);
+  return changed(ws, { targets: on ? [...rest, id] : rest });
+}
+
+/** Puts several on My targets. */
+export const withTargets = (ws: Workspace, ids: string[]): Workspace => changed(ws, { targets: [...new Set([...myTargets(ws), ...ids])] });
 
 export const removeSaved = (ws: Workspace, id: string): Workspace => changed(ws, { saved: ws.saved.filter((r) => r.id !== id) });
 

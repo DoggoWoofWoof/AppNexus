@@ -29,6 +29,12 @@ export const START_POINTS: StartPoint[] = [
 
 export function seedWorkspace(today: Date) {
   const day = (offset: number) => isoDate(addDays(today, offset));
+  // A visit about `offset` days ago, on the Friday before when that's a weekend, as reps don't visit then.
+  const visitDay = (offset: number) => {
+    let d = addDays(today, offset);
+    while (d.getDay() === 0 || d.getDay() === 6) d = addDays(d, -1);
+    return isoDate(d);
+  };
   // The nth working day before today, so the sample week always has visits behind it.
   const workday = (n: number) => {
     let d = today;
@@ -53,16 +59,16 @@ export function seedWorkspace(today: Date) {
   const priyaTue = weekdayAgo(2, 125);
 
   const interactions: Interaction[] = [
-    { id: 'i-maya-1', targetId: 'maya', attendees: ['maya'], date: day(-12), type: 'In-person visit', outcome: 'Met', author: 'You', note: 'Reviewed her last quarter of PCI cases. She wants procedure mix against peer centres before the next cath lab meeting. Prefers a printed one-pager.' },
-    { id: 'i-maya-2', targetId: 'maya', attendees: ['maya'], date: day(-41), type: 'Phone call', outcome: 'Met', author: 'You', note: 'Confirmed the cath lab in-service. Asked about stock levels for the new guide catheter.' },
-    { id: 'i-jordan-1', targetId: 'jordan', attendees: ['jordan'], date: day(-25), type: 'In-person visit', outcome: 'Met', author: 'You', note: 'Walked through the AF referral pathway. Prefers email for materials and is open to a lunch-and-learn for fellows.' },
-    { id: 'i-alex-1', targetId: 'alex', attendees: ['alex'], date: day(-8), type: 'Email', outcome: 'Sent', author: 'You', note: 'Sent the ablation outcomes summary. No reply yet.' },
-    { id: 'i-okafor-1', targetId: 'okafor', attendees: ['okafor'], date: day(-5), type: 'In-person visit', outcome: 'Met', author: 'Jamie R. (teammate)', note: 'Heart team is evaluating TAVR sizing software and asked for clinical data.' },
-    { id: 'i-sam-1', targetId: 'sam', attendees: ['sam'], date: day(-60), type: 'In-person visit', outcome: 'Met', author: 'You', note: 'Introductory meeting. Interested in structural heart volume trends across the system.' },
-    { id: 'i-msw-1', targetId: 'msw', attendees: [], contacts: ['Dana Ortiz'], date: day(-15), type: 'Meeting', outcome: 'Met', author: 'You', note: 'Value analysis timing: next committee review in six weeks. They need a pricing proposal before then.' },
-    { id: 'i-msh-1', targetId: 'msh', attendees: ['sam', 'okafor'], date: day(-20), type: 'Meeting', outcome: 'Met', author: 'You', note: 'Joined the structural heart team meeting. Volume planning for next year includes a second hybrid OR.' },
-    { id: 'i-priya-1', targetId: 'priya', attendees: ['priya'], date: day(-95), type: 'In-person visit', outcome: 'Attempted', author: 'You', note: 'Clinic was running late. Left materials with the front desk.' },
-    { id: 'i-kenji-1', targetId: 'kenji', attendees: ['kenji'], date: day(-33), type: 'Phone call', outcome: 'Met', author: 'You', note: 'Discussed heart failure referral patterns to EP and device follow-up.' },
+    { id: 'i-maya-1', targetId: 'maya', attendees: ['maya'], date: visitDay(-12), type: 'In-person visit', outcome: 'Met', author: 'You', note: 'Reviewed her last quarter of PCI cases. She wants procedure mix against peer centres before the next cath lab meeting. Prefers a printed one-pager.' },
+    { id: 'i-maya-2', targetId: 'maya', attendees: ['maya'], date: visitDay(-41), type: 'Phone call', outcome: 'Met', author: 'You', note: 'Confirmed the cath lab in-service. Asked about stock levels for the new guide catheter.' },
+    { id: 'i-jordan-1', targetId: 'jordan', attendees: ['jordan'], date: visitDay(-25), type: 'In-person visit', outcome: 'Met', author: 'You', note: 'Walked through the AF referral pathway. Prefers email for materials and is open to a lunch-and-learn for fellows.' },
+    { id: 'i-alex-1', targetId: 'alex', attendees: ['alex'], date: visitDay(-8), type: 'Email', outcome: 'Sent', author: 'You', note: 'Sent the ablation outcomes summary. No reply yet.' },
+    { id: 'i-okafor-1', targetId: 'okafor', attendees: ['okafor'], date: visitDay(-5), type: 'In-person visit', outcome: 'Met', author: 'Jamie R. (teammate)', note: 'Heart team is evaluating TAVR sizing software and asked for clinical data.' },
+    { id: 'i-sam-1', targetId: 'sam', attendees: ['sam'], date: visitDay(-60), type: 'In-person visit', outcome: 'Met', author: 'You', note: 'Introductory meeting. Interested in structural heart volume trends across the system.' },
+    { id: 'i-msw-1', targetId: 'msw', attendees: [], contacts: ['Dana Ortiz'], date: visitDay(-15), type: 'Meeting', outcome: 'Met', author: 'You', note: 'Value analysis timing: next committee review in six weeks. They need a pricing proposal before then.' },
+    { id: 'i-msh-1', targetId: 'msh', attendees: ['sam', 'okafor'], date: visitDay(-20), type: 'Meeting', outcome: 'Met', author: 'You', note: 'Joined the structural heart team meeting. Volume planning for next year includes a second hybrid OR.' },
+    { id: 'i-priya-1', targetId: 'priya', attendees: ['priya'], date: visitDay(-95), type: 'In-person visit', outcome: 'Attempted', author: 'You', note: 'Clinic was running late. Left materials with the front desk.' },
+    { id: 'i-kenji-1', targetId: 'kenji', attendees: ['kenji'], date: visitDay(-33), type: 'Phone call', outcome: 'Met', author: 'You', note: 'Discussed heart failure referral patterns to EP and device follow-up.' },
     { id: 'i-okafor-2', targetId: 'okafor', attendees: ['okafor'], date: workday(2), type: 'In-person visit', outcome: 'Met', author: 'You', note: 'Brought the TAVR sizing data Jamie promised. He wants the heart team to see it before they choose.' },
     { id: 'i-msh-2', targetId: 'msh', attendees: [], date: workday(1), type: 'Meeting', outcome: 'Met', author: 'You', note: 'The second hybrid OR opens in spring. They asked for a training plan for the new team.' },
     { id: 'i-maya-3', targetId: 'maya', attendees: ['maya'], date: mayaTue, type: 'In-person visit', outcome: 'Met', author: 'You', note: 'Caught her before cases. She asked how her complex PCI numbers compare.' },

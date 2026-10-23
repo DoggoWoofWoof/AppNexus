@@ -5,24 +5,17 @@
 import { router } from 'expo-router';
 import { Mic, Navigation, Phone, Square, Volume2, type LucideIcon } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
-import { Linking, Platform, Pressable, View } from 'react-native';
+import { Linking, Pressable, View } from 'react-native';
 
 import { useChatHref } from '@/components/entity';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import { buildBrief, speechFor } from '@/lib/brief';
 import { shortName, siteFor } from '@/lib/data';
+import { directionsUrl, telUrl } from '@/lib/links';
 import { useWorkspace } from '@/lib/store';
-import type { Entity, LonLat } from '@/lib/types';
+import type { Entity } from '@/lib/types';
 import { canListen, canSpeak, speak, stopSpeaking } from '@/lib/voice';
-
-export const telUrl = (phone: string): string => `tel:${phone.replace(/[^\d+]/g, '')}`;
-
-/** Opens the phone's own maps app with the route there; Android and the browser get Google Maps' directions. */
-export function directionsUrl([lon, lat]: LonLat, label: string): string {
-  const name = encodeURIComponent(label);
-  return Platform.OS === 'ios' ? `https://maps.apple.com/?daddr=${lat},${lon}&q=${name}` : `https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}`;
-}
 
 function Action({ icon, label, hint, on = false, onPress }: { icon: LucideIcon; label: string; hint: string; on?: boolean; onPress: () => void }) {
   return (

@@ -1,5 +1,5 @@
-// Every procedure and diagnosis figure for someone, shown when the volumes card on
-// their page is opened in full. Tap a row for its quarters.
+// Every procedure, test and diagnosis figure for someone, shown when the volumes
+// card on their page is opened in full. Tap a row for its quarters.
 
 import { ChevronDown, ChevronUp } from 'lucide-react-native';
 import { useState } from 'react';
@@ -9,7 +9,7 @@ import { Bar, Delta, QuarterBars } from '@/components/charts';
 import { FinePrint } from '@/components/profile';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
-import { diagnosesOf, proceduresOf } from '@/lib/data';
+import { diagnosesOf, proceduresOf, testsOf } from '@/lib/data';
 import { DATA_PERIOD, FIGURES_END } from '@/lib/data/seed';
 import { addSeries } from '@/lib/data/series';
 import { formatNumber, lastQuarters, sum, yoy } from '@/lib/format';
@@ -17,9 +17,10 @@ import type { DiagnosisRow, Entity, ProcedureRow } from '@/lib/types';
 
 const last4 = (series: number[]) => sum(series.slice(-4));
 
-/** Procedures per quarter, then each procedure and each diagnosis, biggest first. */
+/** Procedures per quarter, then each procedure, echo and stress tests, and each diagnosis, biggest first. */
 export function AllVolumes({ entity }: { entity: Entity }) {
   const procedures = proceduresOf(entity) ?? [];
+  const tests = testsOf(entity);
   const diagnoses = diagnosesOf(entity);
   const labels = lastQuarters(FIGURES_END);
   return (
@@ -30,6 +31,12 @@ export function AllVolumes({ entity }: { entity: Entity }) {
         <Text className="text-sm text-muted-foreground">{entity.proceduresUnavailable ?? 'No procedures in this period.'}</Text>
       )}
       <Rows rows={procedures} labels={labels} />
+      {tests.length ? (
+        <>
+          <Text className="pt-1 text-sm font-semibold text-muted-foreground">Echo and stress tests</Text>
+          <Rows rows={tests} labels={labels} />
+        </>
+      ) : null}
       {diagnoses.length ? (
         <>
           <Text className="pt-1 text-sm font-semibold text-muted-foreground">Diagnosed patients</Text>

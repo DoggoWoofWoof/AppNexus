@@ -82,6 +82,16 @@ describe('a day they’re in but don’t usually see people', () => {
     expect(kenji.timeWarning(kenji.planItemFor('kenji', todayIso)!, todayIso, true)).toBe('Not their usual time · usually Mon 08:00–11:00 · try Monday');
   });
 
+  test('Pick 5 for me leaves out anyone who doesn’t see people that day', () => {
+    // Dr. Raman is in on Fridays but sees people on Tuesdays and Thursdays.
+    const ctx = buildContext(freshWorkspace(today), today);
+    const picks = ctx.suggestions(fridayIso, 5);
+    expect(picks.map((s) => s.entity.id)).not.toContain('priya');
+    expect(picks.every((s) => usualDay(s.entity, 5))).toBe(true);
+    // The week report is for any day that week, and says when they do.
+    expect(ctx.suggestions(fridayIso, 5, false).map((s) => s.entity.id)).toContain('priya');
+  });
+
   test('a call isn’t held to a day, as calls can be made on days they aren’t in', async () => {
     const store = await renderStore(at(15, 30));
     await act(() => store.current.addToPlan('elena', todayIso, 'Phone call'));

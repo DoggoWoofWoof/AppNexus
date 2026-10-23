@@ -19,10 +19,12 @@ import { Text } from '@/components/ui/text';
 import { useVisitSheets } from '@/components/visit-sheets';
 import { spoken, type Answer, type AnswerRow, type AskLink } from '@/lib/ask';
 import { useChat, whenLabel, type Turn } from '@/lib/chat';
+import { isCodePick } from '@/lib/codes';
 import { getEntity } from '@/lib/data';
 import { sentence, startOfDay } from '@/lib/format';
 import { summaryText } from '@/lib/prep';
 import { prepId } from '@/lib/saved';
+import { readSearchLink } from '@/lib/search';
 import { useWorkspace } from '@/lib/store';
 import { cn } from '@/lib/utils';
 import { canListen, canSpeak, listen, speak, stopSpeaking, VOICE_ERRORS, type Listening } from '@/lib/voice';
@@ -166,6 +168,14 @@ export function useFollow(prepOf?: string) {
     }
     if (link.kind === 'saved') {
       router.push(docHref(link.id));
+      return;
+    }
+    if (link.kind === 'targets') {
+      // The territory and procedures are kept with the rep's choices, so Targets is set to them first.
+      const asked = readSearchLink(link.find);
+      const codes = asked?.codes;
+      ctx.setPrefs({ states: asked?.states ?? [], codes: isCodePick(codes) ? codes : 'all' });
+      router.navigate({ pathname: '/targets', params: { find: link.find, from: String(Date.now()) } });
       return;
     }
     if (link.kind === 'prep') {

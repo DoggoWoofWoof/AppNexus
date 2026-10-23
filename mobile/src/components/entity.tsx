@@ -1,7 +1,7 @@
 // How people and accounts appear in lists: avatar, name, a subtitle and their signals.
 
 import { Link, type Href } from 'expo-router';
-import { ChevronRight } from 'lucide-react-native';
+import { ChevronRight, Star } from 'lucide-react-native';
 import type { ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
 
@@ -62,6 +62,20 @@ export function Avatar({ entity, size = 'md' }: { entity: { name: string; kind?:
  * is short: why see them, what to do and Ask. With a `section` the link goes to
  * all their details instead, at that tab ('details' for the first).
  */
+/** The star that keeps someone in My targets, filled in when they are. */
+export const StarButton = ({ on, name, onPress }: { on: boolean; name: string; onPress: () => void }) => (
+  <Pressable
+    onPress={onPress}
+    accessibilityRole="checkbox"
+    aria-checked={on}
+    accessibilityLabel={`${name} in My targets`}
+    hitSlop={4}
+    className="h-11 w-10 items-center justify-center rounded-lg active:bg-accent"
+  >
+    <Icon as={Star} size={20} className={on ? 'text-brand' : 'text-muted-foreground'} fill={on ? 'currentColor' : 'none'} />
+  </Pressable>
+);
+
 export function useProfileHref() {
   const tab = useTab();
   return (entity: Pick<Entity, 'id' | 'kind'>, section?: string): Href => ({

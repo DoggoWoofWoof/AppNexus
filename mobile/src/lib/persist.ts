@@ -2,6 +2,7 @@
 // launches. Nothing is sent anywhere: there is no server yet, so saved notes
 // say "On this phone · not sent yet" until sync comes with the real services.
 
+import { getEntity } from './data';
 import { restorePrefs } from './prefs';
 import { restorePrepEdits } from './prep';
 import type { Workspace } from './types';
@@ -65,7 +66,7 @@ export function restoreWorkspace(raw: string | null, today: Date): Workspace {
   if (kept.version !== WORKSPACE_VERSION) return { ...fresh, prefs };
   if (kept.pristine && kept.seededOn !== fresh.seededOn) return { ...fresh, prefs };
   // Anything added to the workspace since it was kept starts as it would in a new one.
-  const ws = { ...fresh, ...kept, prefs, prep: restorePrepEdits(kept.prep) } as Workspace;
+  const ws = { ...fresh, ...kept, prefs, prep: restorePrepEdits(kept.prep), targets: restoreTargets(kept.targets) } as Workspace;
   // A time freed on a day that has gone can't be filled now.
   const freeSlots = ws.freeSlots.filter((s) => s.day >= fresh.seededOn);
   const { slot, ...selection } = ws.selection;
@@ -75,6 +76,12 @@ export function restoreWorkspace(raw: string | null, today: Date): Workspace {
     freeSlots,
     selection: selection.day < fresh.seededOn ? fresh.selection : stillFree ? ws.selection : selection,
   };
+}
+
+/** My targets as kept, leaving out anyone no longer in the data; missing (the team's list) when it isn't a list. */
+function restoreTargets(kept: unknown): string[] | undefined {
+  if (!Array.isArray(kept)) return undefined;
+  return [...new Set(kept.filter((id): id is string => typeof id === 'string' && !!getEntity(id)))];
 }
 
 /** Whether kept text is a workspace this version can carry on from. */

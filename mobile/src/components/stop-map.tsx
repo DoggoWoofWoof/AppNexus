@@ -1,6 +1,8 @@
 // A small static map of Manhattan with numbered pins, after the prototype's
 // demo/js/map.js: public street and park outlines drawn as SVG, no tiles, no API
 // key and no live location. Pins sit on top as buttons so they're easy to tap.
+// The outlines are Manhattan's only, so with a pin anywhere else the map is
+// plain land with the pins and route on it, not pins out in the water.
 
 import { Check, Navigation } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
@@ -80,6 +82,23 @@ function pathFor(geometry: Geometry, project: (c: LonLat) => [number, number]): 
 const features = (layer: { features: unknown[] }) => layer.features as Feature[];
 const MAJOR = new Set(['primary', 'secondary']);
 
+/** Whether a place is on the land the map draws: Manhattan and its islands. */
+function onLand([x, y]: LonLat): boolean {
+  return features(geo.land).some((f) => {
+    const polygons =
+      f.geometry.type === 'Polygon' ? [f.geometry.coordinates as LonLat[][]] : f.geometry.type === 'MultiPolygon' ? (f.geometry.coordinates as LonLat[][][]) : [];
+    return polygons.some(([outer]) => {
+      let inside = false;
+      for (let i = 0, j = outer.length - 1; i < outer.length; j = i++) {
+        const [xi, yi] = outer[i];
+        const [xj, yj] = outer[j];
+        if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside;
+      }
+      return inside;
+    });
+  });
+}
+
 const PIN = {
   next: 'border-card bg-primary',
   planned: 'border-primary bg-card',
@@ -89,8 +108,9 @@ const PIN = {
 const PIN_TEXT = { next: 'text-primary-foreground', planned: 'text-primary', done: 'text-white', muted: 'text-muted-foreground' } as const;
 
 /**
- * Pins on a map of Manhattan. `route` joins the pins in order with a dashed line
- * from `start`. Tapping a pin calls `onPinPress` with its id.
+ * Pins on a map of Manhattan, or of land around it when one is elsewhere. `route`
+ * joins the pins in order with a dashed line from `start`. Tapping a pin calls
+ * `onPinPress` with its id.
  */
 export function StopMap({
   pins,
@@ -117,10 +137,13 @@ export function StopMap({
   const drawn = useMemo(() => {
     const coords = [...pins.map((p) => p.coords), ...(start ? [start.coords] : [])];
     const project = fit(coords.length ? coords : [[-73.97, 40.785]], W, H);
-    const join = (list: Feature[]) => list.map((f) => pathFor(f.geometry, project)).join('');
+    // Off the island there's land the map doesn't have, so it draws none of it.
+    const wide = coords.some((c) => !onLand(c));
+    const join = (list: Feature[]) => (wide ? '' : list.map((f) => pathFor(f.geometry, project)).join(''));
     const roads = features(geo.roads);
     const line = route && pins.length ? [...(start ? [start.coords] : []), ...pins.map((p) => p.coords)].map((c) => project(c).map((n) => n.toFixed(1)).join(',')).join(' ') : '';
     return {
+      wide,
       land: join(features(geo.land)),
       parks: join(features(geo.parks)),
       roads: join(roads.filter((f) => !MAJOR.has(f.properties.kind))),
@@ -139,17 +162,25 @@ export function StopMap({
     <View className="gap-1">
       <View
         className="overflow-hidden rounded-lg border border-border"
-        style={{ height, backgroundColor: color.water }}
+        style={{ height, backgroundColor: drawn.wide ? color.land : color.water }}
         onLayout={(e) => setWidth(e.nativeEvent.layout.width)}
         accessibilityLabel={label}
       >
         {width ? (
           <Svg width="100%" height="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" pointerEvents="none">
-            <Path d={drawn.land} fill={color.land} />
-            <Path d={drawn.parks} fill={color.park} />
+            {drawn.wide ? null : (
+              <>
+                <Path d={drawn.land} fill={color.land} />
+                <Path d={drawn.parks} fill={color.park} />
+              </>
+            )}
             <G fill="none" strokeLinecap="round" strokeLinejoin="round">
-              <Path d={drawn.roads} stroke={color.road} strokeWidth={0.7} />
-              <Path d={drawn.major} stroke={color.major} strokeWidth={1.4} />
+              {drawn.wide ? null : (
+                <>
+                  <Path d={drawn.roads} stroke={color.road} strokeWidth={0.7} />
+                  <Path d={drawn.major} stroke={color.major} strokeWidth={1.4} />
+                </>
+              )}
               {drawn.line ? <Polyline points={drawn.line} stroke={color.route} strokeWidth={2.25} strokeDasharray="6 5" /> : null}
             </G>
           </Svg>
@@ -186,13 +217,15 @@ export function StopMap({
             ))
           : null}
       </View>
-      <Text
-        className="self-end text-2xs text-muted-foreground"
-        onPress={() => void Linking.openURL('https://www.openstreetmap.org/copyright')}
-        accessibilityRole="link"
-      >
-        © OpenStreetMap contributors · NYC Open Data
-      </Text>
+      {drawn.wide ? null : (
+        <Text
+          className="self-end text-2xs text-muted-foreground"
+          onPress={() => void Linking.openURL('https://www.openstreetmap.org/copyright')}
+          accessibilityRole="link"
+        >
+          © OpenStreetMap contributors · NYC Open Data
+        </Text>
+      )}
     </View>
   );
 }

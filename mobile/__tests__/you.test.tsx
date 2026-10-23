@@ -92,7 +92,7 @@ describe('the choices are kept', () => {
     await first.unmount();
 
     const { result } = await renderStore(storage);
-    expect(result.current.ws.prefs).toEqual({ start: 'home', appearance: 'dark', reminders: 'all' });
+    expect(result.current.ws.prefs).toEqual({ ...DEFAULT_PREFS, start: 'home', appearance: 'dark' });
     expect(result.current.start.place).toBe('West 96th Street');
     expect(result.current.ws.pristine).toBe(true);
   });
@@ -101,15 +101,18 @@ describe('the choices are kept', () => {
     const kept = withPrefs(freshWorkspace(yesterday), { start: 'home', appearance: 'light' });
     const ws = restoreWorkspace(JSON.stringify(kept), today);
     expect(ws.seededOn).toBe(todayIso);
-    expect(ws.prefs).toEqual({ start: 'home', appearance: 'light', reminders: 'all' });
+    expect(ws.prefs).toEqual({ ...DEFAULT_PREFS, start: 'home', appearance: 'light' });
   });
 
   test('a place, look or reminder setting no longer offered goes back to the default', () => {
     expect(restorePrefs({ start: 'moon', appearance: 'neon', reminders: 'hourly' })).toEqual(DEFAULT_PREFS);
     // Kept before reminders could be chosen: they stay on.
-    expect(restorePrefs({ start: 'home', appearance: 'dark' })).toEqual({ start: 'home', appearance: 'dark', reminders: 'all' });
+    expect(restorePrefs({ start: 'home', appearance: 'dark' })).toEqual({ ...DEFAULT_PREFS, start: 'home', appearance: 'dark' });
     expect(restorePrefs({ start: 'home', appearance: 'dark', reminders: 'end-of-day' }).reminders).toBe('end-of-day');
     expect(restorePrefs(undefined)).toEqual(DEFAULT_PREFS);
+    // Targets' states and procedures: one no longer offered is left out, or goes back to all.
+    expect(restorePrefs({ states: ['NJ', 'CA', 7], codes: 'coronary' })).toMatchObject({ states: ['NJ'], codes: 'coronary' });
+    expect(restorePrefs({ states: 'NJ', codes: 'kidney' })).toMatchObject({ states: [], codes: 'all' });
     // A workspace kept before there were choices starts with the defaults.
     const { prefs: _prefs, ...older } = freshWorkspace(today);
     expect(restoreWorkspace(JSON.stringify({ ...older, pristine: false }), today).prefs).toEqual(DEFAULT_PREFS);
@@ -128,6 +131,6 @@ describe('the choices are kept', () => {
     const storage = memoryStorage();
     const { result } = await renderStore(storage);
     await act(() => result.current.setPrefs({ appearance: 'dark' }));
-    await waitFor(() => expect(JSON.parse(storage.items.get(WORKSPACE_KEY) ?? '{}').prefs).toEqual({ start: 'office', appearance: 'dark', reminders: 'all' }));
+    await waitFor(() => expect(JSON.parse(storage.items.get(WORKSPACE_KEY) ?? '{}').prefs).toEqual({ ...DEFAULT_PREFS, appearance: 'dark' }));
   });
 });

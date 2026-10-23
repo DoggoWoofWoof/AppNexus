@@ -8,7 +8,7 @@ import { ThemeProvider } from 'expo-router';
 import { Tabs } from 'expo-router/js-tabs';
 import { StatusBar } from 'expo-status-bar';
 import { House, MessageCircle, Target, type LucideIcon } from 'lucide-react-native';
-import { useColorScheme } from 'nativewind';
+import { colorScheme as appScheme, useColorScheme } from 'nativewind';
 import { useLayoutEffect } from 'react';
 import { Platform, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -91,9 +91,12 @@ function App() {
  */
 function FollowAppearance() {
   const choice = useWorkspace().ws.prefs.appearance;
-  const { colorScheme, setColorScheme } = useColorScheme();
+  const { colorScheme } = useColorScheme();
   // Layout effects, so a kept choice is in place before the first screen is drawn.
-  useLayoutEffect(() => setColorScheme(choice), [choice, setColorScheme]);
+  // The hook's own setter is new on every render, which would set the choice again
+  // with every change to the workspace and drop the `dark` class on web, so it's
+  // set only when the choice changes.
+  useLayoutEffect(() => appScheme.set(choice), [choice]);
   useLayoutEffect(() => {
     if (Platform.OS === 'web') document.documentElement.classList.toggle('dark', colorScheme === 'dark');
   }, [choice, colorScheme]);

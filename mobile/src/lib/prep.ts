@@ -11,7 +11,7 @@
 
 import type { Answer, AskLink } from './ask';
 import { buildBrief, summaryOf, visitWhen, type Brief, type PointKind } from './brief';
-import { getEntity, hcpsAt, procedureTotal, shortName } from './data';
+import { getEntity, hcpsAt, inYourTerritory, procedureTotal, shortName } from './data';
 import { DATA_PERIOD } from './data/seed';
 import { listJoin, lowerFirst, samePoint, says, sentence, sentencesOf, sum } from './format';
 import type { Entity, PrepEdit, Workspace } from './types';
@@ -163,7 +163,7 @@ export function summaryIdeas(entity: Entity, ctx: Context, brief: Brief = buildB
     if (condition) add(`Their patients most often have ${sentence(midSentence(condition.name))}`, 'their main condition');
   } else {
     const busiest = [...hcpsAt(entity.id)].sort((a, b) => procedureTotal(b) - procedureTotal(a))[0];
-    if (busiest) add(`${busiest.name} is the busiest doctor you cover here.`, 'their busiest doctor');
+    if (busiest) add(`${busiest.name} is the busiest doctor ${inYourTerritory(entity) ? 'you cover ' : ''}here.`, 'their busiest doctor');
     const family = entity.leakage?.byFamily[1];
     if (family) add(`${family.leftPct}% of ${family.family} patients leave the system too.`, 'where else patients go');
     const person = entity.executives.find((e) => !brief.points.some((p) => p.text.includes(e.name)));

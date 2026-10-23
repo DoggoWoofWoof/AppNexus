@@ -4,7 +4,7 @@
 import type { HcpData } from '../types';
 import { series } from './series';
 
-const WEB_SECTIONS: string[] = ['Publications', 'Clinical trials', 'Industry payments', 'Prescriptions', 'Payer mix', 'Conferences', 'Social media', 'SDOH'];
+export const WEB_SECTIONS: string[] = ['Publications', 'Clinical trials', 'Industry payments', 'Prescriptions', 'Payer mix', 'Conferences', 'Social media', 'SDOH'];
 
 export const HCPS: HcpData[] = [
   {
@@ -128,6 +128,7 @@ export const HCPS: HcpData[] = [
     leakageRisk: true,
     insight: '17 redo-ablation patients went to Hudson Heart Institute this year, the biggest single gap at Mount Sinai West.',
     webSections: WEB_SECTIONS,
+    competitors: ['Competitor B'],
   },
   {
     id: 'sam',
@@ -247,6 +248,7 @@ export const HCPS: HcpData[] = [
     leakageRisk: false,
     insight: 'Key opinion leader: 40+ publications and principal investigator on two structural heart trials.',
     webSections: WEB_SECTIONS,
+    competitors: ['Competitor A'],
   },
   {
     id: 'elena',
@@ -281,6 +283,7 @@ export const HCPS: HcpData[] = [
     leakageRisk: true,
     insight: 'Moving straightforward peripheral cases to Eastside Vascular Partners ASC.',
     webSections: WEB_SECTIONS,
+    competitors: ['Competitor A'],
   },
   {
     id: 'kenji',

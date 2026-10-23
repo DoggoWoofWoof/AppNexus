@@ -36,6 +36,7 @@ import {
   moveDayFor,
   moveToDay,
   moveToDayError,
+  myTargets,
   notDoneToday,
   noteError,
   noteRecords,
@@ -50,6 +51,8 @@ import {
   visitsLogged,
   visitTimeError,
   withRecords,
+  withTarget,
+  withTargets,
   type BookingDraft,
   type Context,
   type DraftError,
@@ -117,6 +120,10 @@ type Store = Context & {
   addAllToPlan: (targetIds: string[], day: string) => void;
   /** Adds the people picked on Targets after the day's other stops, with one Undo, as `addToPlan` does. */
   addPeople: (targetIds: string[], day: string) => void;
+  /** Puts someone on My targets, or takes them off, with Undo. */
+  toggleTarget: (id: string) => void;
+  /** Puts the people picked on Targets on My targets, with one Undo. */
+  addTargets: (ids: string[]) => void;
   /** Keeps an answer from Ask in the menu's Saved list. */
   saveReport: (report: SavedReport) => void;
   removeSaved: (id: string) => void;
@@ -425,7 +432,9 @@ function LoadedWorkspace({
       addingTo,
       bestOrder: (day: string) => {
         const next = orderBest(current.current, day, now());
-        if (next !== current.current) apply(next, 'Stops put in the best order: little driving, in their usual times');
+        if (next === current.current) return;
+        const saves = buildContext(current.current, today, now()).bestOrderSaves(day, now());
+        apply(next, saves ? `Stops put in the best order: ${saves} min less driving` : 'Stops put in the best order: little driving, in their usual times');
       },
       moveStop: (day: string, id: string, at: number) => {
         const next = moveStop(current.current, day, id, at, now());
@@ -467,6 +476,22 @@ function LoadedWorkspace({
       },
       addAllToPlan: (targetIds: string[], day: string) => addTo(day, (ws, d) => addAllToPlan(ws, d, targetIds, now())),
       addPeople: (targetIds: string[], day: string) => addTo(day, (ws, d) => addPeople(ws, d, targetIds, now())),
+      toggleTarget: (id: string) => {
+        const who = getEntity(id);
+        if (!who) return;
+        const on = !myTargets(current.current).includes(id);
+        apply(withTarget(current.current, id, on), `${who.name} ${on ? 'added to' : 'taken off'} My targets`);
+      },
+      addTargets: (ids: string[]) => {
+        const have = new Set(myTargets(current.current));
+        const adding = ids.filter((id) => !have.has(id) && getEntity(id));
+        if (!adding.length) {
+          setNotice({ id: Date.now(), message: ids.length === 1 ? 'Already in My targets' : 'They’re all in My targets already', canUndo: false });
+          return;
+        }
+        const one = adding.length === 1 ? getEntity(adding[0]) : null;
+        apply(withTargets(current.current, adding), `${one ? one.name : adding.length} added to My targets`);
+      },
       saveReport: (report: SavedReport) => apply(saveReport(current.current, report), 'Saved. Find it in the menu.'),
       removeSaved: (id: string) => apply(removeSaved(current.current, id), 'Removed from Saved'),
       setPrefs: (patch: Partial<Prefs>) => quietly(withPrefs(current.current, patch)),

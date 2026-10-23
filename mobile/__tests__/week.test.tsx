@@ -47,9 +47,9 @@ describe('summarise my week', () => {
       'Notes logged',
       'Follow-ups open',
       'Accounts covered',
-      'Next week: Dr. Raman',
       'Next week: Mount Sinai Morningside',
-      'Next week: Mount Sinai Harlem Health Center',
+      'Next week: Dr. Rossi',
+      'Next week: Dr. Raman',
     ]);
     // A visit that was moved and then done says so where it's counted, not as a change.
     expect(fact(a, 'Visits logged')).toMatchObject({ figure: '2 of 3', sub: 'Dr. Okafor (Thu, moved from Wed) and Mount Sinai Hospital (Fri)' });
@@ -73,9 +73,9 @@ describe('summarise my week', () => {
     }
     // Anyone seen this week or already planned is left out.
     for (const seenOrPlanned of ['Dr. Okafor', 'Dr. Patel', 'Dr. Lee', 'Dr. Morgan', 'Mount Sinai Hospital']) expect(picks.map((p) => p.title)).not.toContain(`Next week: ${seenOrPlanned}`);
-    expect(picks[0]).toMatchObject({ id: 'priya', sub: 'Patients going elsewhere and busier than last year · Usually Tue/Thu 12:30–13:30' });
-    expect(a.doThis).toMatchObject({ label: 'Open Dr. Raman', link: { kind: 'profile', id: 'priya' } });
-    expect(a.doThis?.text).toBe('Next week, start with Dr. Raman: patients going elsewhere and busier than last year.');
+    expect(picks[0]).toMatchObject({ id: 'msm', sub: 'Patients going elsewhere and no contact yet · Office hours weekdays 09:00–17:00' });
+    expect(a.doThis).toMatchObject({ label: 'Open Mount Sinai Morningside', link: { kind: 'profile', id: 'msm' } });
+    expect(a.doThis?.text).toBe('Next week, start with Mount Sinai Morningside: patients going elsewhere and no contact yet.');
   });
 
   test('picks up today’s changes: a cancelled visit, and one moved out to another day', () => {
@@ -128,7 +128,7 @@ describe('the week as a saved report', () => {
       'Notes logged',
       'Follow-ups open',
       'Accounts covered',
-      'Next week: Dr. Raman',
+      'Next week: Mount Sinai Morningside',
     ]);
     const lines = docText(doc, new Date(2026, 9, 19, 17, 30)).split('\n');
     expect(lines.slice(0, 5)).toEqual(['Your week to 19 Oct', 'Saved today', '', 'Asked: Summarise my week', report.summary]);

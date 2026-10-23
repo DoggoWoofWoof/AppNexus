@@ -62,7 +62,8 @@ describe('buildBrief', () => {
     const msw = buildBrief(entity('msw'), ctx);
     expect(msw.goal).toBe('Draft pricing proposal for value analysis');
     expect(msw.goalDue).toBe('due 29 Oct 2026');
-    expect(msw.points[0].text).toBe('Last time (15 days ago): Value analysis timing: next committee review in six weeks.');
+    // 15 days before is a Sunday, so the sample meeting was on the Friday before.
+    expect(msw.points[0].text).toBe('Last time (17 days ago): Value analysis timing: next committee review in six weeks.');
     expect(briefText(entity('msw'), msw, today)).toContain('Goal: Draft pricing proposal for value analysis (follow-up due 29 Oct 2026)');
   });
 

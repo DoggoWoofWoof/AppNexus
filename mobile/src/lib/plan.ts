@@ -122,11 +122,13 @@ export function fixedStops(route: PlanItem[], minutesNow: number | null): number
 export const DAY_START = '08:00';
 
 /**
- * About how many minutes it takes to drive from one place to another in the
- * city: 5 to park and walk in, and 4 a km, rounded up to 5. Distances are
- * straight lines, not roads, so it's a guess. Nothing within the same building.
+ * About how many minutes it takes to drive from one place to another: 5 to
+ * park and walk in, 4 a km for the first 10, in the city, and 1.5 a km beyond,
+ * on faster roads, rounded up to 5. Distances are straight lines, not roads, so
+ * it's a guess. Nothing within the same building.
  */
-export const travelMinutes = (km: number): number => (km < 0.05 ? 0 : Math.ceil((5 + km * 4) / 5) * 5);
+export const travelMinutes = (km: number): number =>
+  km < 0.05 ? 0 : Math.ceil((5 + Math.min(km, 10) * 4 + Math.max(0, km - 10) * 1.5) / 5) * 5;
 
 /** A stop in the day: when it is, and the drive to it from the last place the rep was. */
 export interface Stop {
