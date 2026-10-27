@@ -48,7 +48,7 @@ export function render(ctx) {
       `)}
       ${card(html`
         ${sectionHead('Top destinations outside the system', { sub: 'Fictional names · patients, last 12 months' })}
-        ${outside.map((d) => barRow({ label: destination(d.ref).name, sub: destination(d.ref).note, value: d.patients, max: maxOut, tone: 'orange', display: html`${formatNumber(d.patients)} ${d.trend ? html`<span class="delta delta-${d.trend > 0 ? 'up-bad' : 'down-good'}">${d.trend > 0 ? '+' : ''}${d.trend}%</span>` : ''}` }))}
+        ${outside.map((d) => barRow({ label: destination(d.ref).name, sub: destination(d.ref).note, value: d.patients, max: maxOut, tone: 'orange', display: html`${formatNumber(d.patients)} ${d.trend ? delta(d.trend, { suffix: '', upIsBad: true }) : ''}` }))}
         <p class="insight">${icon('lightbulb')}<span>${system.leakage.insight}</span></p>
       `)}
     </div>

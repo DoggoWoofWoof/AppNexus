@@ -9,7 +9,7 @@ import Svg, { Circle, Polyline } from 'react-native-svg';
 
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
-import { formatNumber, formatPct } from '@/lib/format';
+import { changeWords, formatNumber } from '@/lib/format';
 import { THEME } from '@/lib/theme';
 import { cn } from '@/lib/utils';
 
@@ -19,21 +19,36 @@ const LARGE_TEXT = 1.35;
 export const useLargeText = () => useWindowDimensions().fontScale > LARGE_TEXT;
 
 /**
- * A coloured change, e.g. "+12% on last year". Rising is good for volumes; pass
- * `upIsBad` where a rise is bad news, such as patients leaving.
+ * A change, the same wherever the app shows one: the zig-zag arrow and the
+ * percent, green going up and red going down, as "12% on last year". Rising is
+ * good for volumes; pass `upIsBad` where a rise is bad news, such as patients
+ * leaving. The arrow says which way, so the percent has no sign, and screen
+ * readers hear "up 12% on last year". Under 1% either way it's "0%" in grey, or
+ * nothing with `hideFlat`. `small` is for labels and tiles.
  */
-export function Delta({ value, suffix = ' on last year', upIsBad = false }: { value: number | null; suffix?: string; upIsBad?: boolean }) {
+export function Delta({
+  value,
+  suffix = ' on last year',
+  upIsBad = false,
+  small = false,
+  hideFlat = false,
+}: {
+  value: number | null;
+  suffix?: string;
+  upIsBad?: boolean;
+  small?: boolean;
+  hideFlat?: boolean;
+}) {
   if (value == null || Number.isNaN(value)) return null;
-  const dir = value >= 1 ? 'up' : value <= -1 ? 'down' : 'flat';
+  const pct = Math.round(value);
+  const dir = pct >= 1 ? 'up' : pct <= -1 ? 'down' : 'flat';
+  if (dir === 'flat' && hideFlat) return null;
   const good = dir === 'flat' ? null : (dir === 'up') !== upIsBad;
   const color = good == null ? 'text-muted-foreground' : good ? 'text-success' : 'text-danger';
   return (
-    <View className="flex-row items-center gap-1">
-      {dir !== 'flat' ? <Icon as={dir === 'up' ? TrendingUp : TrendingDown} size={14} className={color} /> : null}
-      <Text className={cn('font-mono text-xs', color)}>
-        {formatPct(value)}
-        {suffix}
-      </Text>
+    <View className="flex-row items-center gap-0.5" accessible accessibilityLabel={`${changeWords(pct)}${suffix}`}>
+      {dir !== 'flat' ? <Icon as={dir === 'up' ? TrendingUp : TrendingDown} size={small ? 11 : 13} className={color} /> : null}
+      <Text className={cn('font-mono', small ? 'text-2xs' : 'text-xs', color)}>{`${Math.abs(pct)}%${suffix}`}</Text>
     </View>
   );
 }

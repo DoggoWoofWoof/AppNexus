@@ -3,13 +3,14 @@
 
 import { View } from 'react-native';
 
+import { Delta } from '@/components/charts';
 import { EntityRow } from '@/components/entity';
 import { TabHeader } from '@/components/menu';
 import { Screen, Section } from '@/components/screen';
 import { Text } from '@/components/ui/text';
 import { accountsByPatientsLost, allHcps, destination, getOrg, procedureTotal, procedureYoy } from '@/lib/data';
 import { DATA_PERIOD, REP } from '@/lib/data/seed';
-import { formatNumber, formatPct } from '@/lib/format';
+import { formatNumber } from '@/lib/format';
 import { useWorkspace } from '@/lib/store';
 import type { Hcp } from '@/lib/types';
 import { cn } from '@/lib/utils';
@@ -32,11 +33,7 @@ export default function Insights() {
       <TabHeader title="Insights" sub={`${REP.team} · ${DATA_PERIOD}`} />
 
       <View className="flex-row flex-wrap gap-3">
-        <Kpi
-          label="Procedures in your territory"
-          value={system ? formatNumber(procedureTotal(system)) : '–'}
-          sub={systemYoy != null ? `${formatPct(systemYoy)} on last year` : undefined}
-        />
+        <Kpi label="Procedures in your territory" value={system ? formatNumber(procedureTotal(system)) : '–'} change={systemYoy} />
         <Kpi label="Patients leaving the system" value={leakage ? `${leakage.leftPct}%` : '–'} sub={leakage ? `of ${formatNumber(leakage.patients)} patients` : undefined} tone="text-signal-text" />
       </View>
 
@@ -77,7 +74,7 @@ export default function Insights() {
             trailing={
               <View className="items-end">
                 <Text className="font-mono text-sm">{formatNumber(procedureTotal(h))}</Text>
-                <Text className={cn('font-mono text-2xs', growth >= 0 ? 'text-success' : 'text-danger')}>{formatPct(growth)}</Text>
+                <Delta value={growth} suffix="" small />
               </View>
             }
           />
@@ -88,11 +85,13 @@ export default function Insights() {
   );
 }
 
-function Kpi({ label, value, sub, tone }: { label: string; value: string; sub?: string; tone?: string }) {
+/** A headline figure, with the change on last year as the trend arrow or a line under it. */
+function Kpi({ label, value, sub, change, tone }: { label: string; value: string; sub?: string; change?: number | null; tone?: string }) {
   return (
     <View className="min-w-40 flex-1 gap-1 rounded-lg border border-border bg-card p-4">
       <Text className="text-sm text-muted-foreground">{label}</Text>
       <Text className={cn('font-serif text-num', tone)}>{value}</Text>
+      {change != null ? <Delta value={change} /> : null}
       {sub ? <Text className="text-xs text-muted-foreground">{sub}</Text> : null}
     </View>
   );

@@ -99,7 +99,11 @@ export function lastQuarters(today, count = 8) {
 
 export const formatNumber = (n) => new Intl.NumberFormat('en-US').format(Math.round(n));
 
-export const formatPct = (n, digits = 0) => `${n > 0 ? '+' : ''}${n.toFixed(digits)}%`;
+/** A change in percent as words, as the trend arrow reads aloud: "up 12%", "down 3%", or "0%" under 1% either way. */
+export function changeWords(n) {
+  const pct = Math.round(n);
+  return pct >= 1 ? `up ${pct}%` : pct <= -1 ? `down ${-pct}%` : '0%';
+}
 
 export const sum = (values) => values.reduce((a, b) => a + b, 0);
 

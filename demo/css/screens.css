@@ -267,8 +267,6 @@ button.ask-row:hover { background: var(--surface-2); }
   font-variant-numeric: tabular-nums;
   text-align: right;
 }
-.tone-up { color: var(--success); }
-.tone-down { color: var(--danger); }
 .tone-warn { color: var(--orange-text); }
 
 .ask-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 11em), 1fr)); gap: 8px; }
@@ -284,8 +282,6 @@ button.ask-row:hover { background: var(--surface-2); }
 .ask-fact dt { color: var(--muted); font-size: var(--fs-xs); font-weight: 600; }
 .ask-fact dd { display: flex; flex-direction: column; gap: 2px; }
 .ask-fact-value { font-family: var(--font-serif); font-size: var(--fs-xl); font-weight: 600; line-height: 1.2; overflow-wrap: anywhere; }
-.ask-fact.tone-up .ask-fact-value { color: var(--success); }
-.ask-fact.tone-down .ask-fact-value { color: var(--danger); }
 .ask-fact.tone-warn .ask-fact-value { color: var(--orange-text); }
 .ask-fact[class*="tone-"] dt { color: var(--muted); }
 
@@ -400,6 +396,10 @@ button.ask-row:hover { background: var(--surface-2); }
 .brief-points { display: flex; flex-direction: column; gap: 10px; margin: 0; padding: 0; list-style: none; font-size: var(--fs-sm); }
 .brief-points > li { display: flex; align-items: flex-start; gap: 10px; }
 .brief-points .icon { flex: none; margin-top: 0.15em; color: var(--accent); }
+/* A change on last year is green going up and red going down, as everywhere. */
+.brief-points .icon.delta-up { color: var(--success); }
+.brief-points .icon.delta-down { color: var(--danger); }
+.brief-points .icon.delta-flat { color: var(--muted); }
 
 .volume-total { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px; }
 .volume-total > div:first-child { display: flex; flex-direction: column; gap: 4px; }

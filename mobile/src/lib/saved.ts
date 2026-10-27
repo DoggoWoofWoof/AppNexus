@@ -9,7 +9,7 @@ import { SAMPLE, type Answer, type Intent } from './ask';
 import { buildBrief, pointsBesides, summaryParagraph, visitWhen } from './brief';
 import { getEntity, shortName } from './data';
 import { DATA_PERIOD } from './data/seed';
-import { daysBetween, formatDate, fromIso, fromMinutes, isoDate, plural, relativeDayLower, says, uid } from './format';
+import { changeWords, daysBetween, formatDate, fromIso, fromMinutes, isoDate, plural, relativeDayLower, says, uid } from './format';
 import { prepEdit } from './prep';
 import type { Entity, SavedReport } from './types';
 import type { Context } from './workspace';
@@ -20,6 +20,8 @@ export interface DocLine {
   text: string;
   sub?: string;
   figure?: string;
+  /** The change on last year in percent, shown as the trend arrow, as in the answer it came from. */
+  change?: number;
   /** The person or account the line opens. */
   id?: string;
 }
@@ -127,7 +129,7 @@ export function reportFrom(question: string, a: Answer, today: Date, now = Date.
     savedOn: isoDate(today),
     createdAt: now,
     summary: a.summary,
-    rows: a.rows.map(({ title, sub, figure, id }) => ({ title, sub, figure, id })),
+    rows: a.rows.map(({ title, sub, figure, change, id }) => ({ title, sub, figure, change, id })),
     facts: a.facts,
     scope: a.scope,
   };
@@ -143,18 +145,30 @@ export function reportDoc(r: SavedReport, today: Date): Doc {
     question: r.question,
     summary: r.summary,
     sections: r.rows.length
-      ? [{ title: r.facts ? 'Details' : 'Figures', lines: r.rows.map((row) => (r.facts ? { label: row.title, text: row.sub ?? '', figure: row.figure, id: row.id } : { text: row.title, sub: row.sub, figure: row.figure, id: row.id })) }]
+      ? [
+          {
+            title: r.facts ? 'Details' : 'Figures',
+            lines: r.rows.map((row) =>
+              r.facts
+                ? { label: row.title, text: row.sub ?? '', figure: row.figure, change: row.change, id: row.id }
+                : { text: row.title, sub: row.sub, figure: row.figure, change: row.change, id: row.id },
+            ),
+          },
+        ]
       : [],
     scope: r.scope,
   };
 }
 
+/** A line's figure and its change as words, for reading aloud or as text: "1,240, up 12% on last year". */
+const figureWords = (l: DocLine): string => [l.figure, l.change != null ? `${changeWords(l.change)} on last year` : ''].filter(Boolean).join(', ');
+
 /** What Listen reads: the summary, then the first lines of each section, or every line of a report like the week, with its labels. */
 export function docSpeech(doc: Doc): string {
   const lines = doc.sections.flatMap((s) =>
     doc.kind === 'report' && s.lines.some((l) => l.label)
-      ? s.lines.map((l) => `${[l.label, l.figure].filter(Boolean).join(', ')}: ${l.text}`)
-      : s.lines.slice(0, 3).map((l) => [l.text, l.figure].filter(Boolean).join(', ')),
+      ? s.lines.map((l) => `${[l.label, figureWords(l)].filter(Boolean).join(', ')}: ${l.text}`)
+      : s.lines.slice(0, 3).map((l) => [l.text, figureWords(l)].filter(Boolean).join(', ')),
   );
   return [doc.title, doc.summary, ...lines].map((t) => t.replace(/[.\s]+$/, '')).join('. ') + '.';
 }
@@ -170,7 +184,7 @@ export function docText(doc: Doc, now = new Date()): string {
   if (doc.question) out.push(`Asked: ${doc.question}`);
   out.push(doc.summary);
   for (const s of doc.sections) {
-    out.push('', `${s.title}:`, ...s.lines.map((l) => `- ${l.label ? `${l.label}: ` : ''}${[l.text, l.figure ? `(${l.figure})` : ''].filter(Boolean).join(' ')}${l.sub ? ` — ${l.sub}` : ''}`));
+    out.push('', `${s.title}:`, ...s.lines.map((l) => `- ${l.label ? `${l.label}: ` : ''}${[l.text, figureWords(l) ? `(${figureWords(l)})` : ''].filter(Boolean).join(' ')}${l.sub ? ` — ${l.sub}` : ''}`));
   }
   out.push('', (doc.scope.some((s) => s.startsWith(SAMPLE)) ? doc.scope : [...doc.scope, DATA_PERIOD]).join(' · '));
   const made = `${formatDate(now, { day: 'numeric', month: 'short', year: 'numeric' })}, ${fromMinutes(now.getHours() * 60 + now.getMinutes())}`;

@@ -4,7 +4,7 @@
 import { startersFor } from '../ask.js';
 import { getEntity } from '../data/index.js';
 import { html } from '../format.js';
-import { button, icon } from '../ui.js';
+import { button, delta, icon } from '../ui.js';
 import { VOICE_ERRORS, canListen, canSpeak } from '../voice.js';
 
 export const title = () => 'Ask';
@@ -94,9 +94,11 @@ function answerView(turn, ctx, isLast) {
 function ranked(r, ctx) {
   const numbered = r.intent !== 'followups' && r.intent !== 'plan';
   return html`<ol class="ask-rows${numbered ? ' is-ranked' : ''}">${r.rows.map((row, i) => {
+    // A change on last year is the trend arrow, as everywhere: the figure when there's no other, else under the title.
+    const change = row.change != null ? delta(row.change, { suffix: row.figure ? ' on last year' : '' }) : '';
     const body = html`${numbered ? html`<span class="ask-rank" aria-hidden="true">${i + 1}</span>` : ''}
-      <span class="entity-main"><span class="row-title">${row.title}</span>${row.sub ? html`<span class="caption">${row.sub}</span>` : ''}</span>
-      ${row.figure ? html`<span class="ask-figure${row.tone ? ` tone-${row.tone}` : ''}">${row.figure}</span>` : ''}`;
+      <span class="entity-main"><span class="row-title">${row.title}</span>${row.sub ? html`<span class="caption">${row.sub}</span>` : ''}${row.figure ? change : ''}</span>
+      ${row.figure ? html`<span class="ask-figure${row.tone ? ` tone-${row.tone}` : ''}">${row.figure}</span>` : change ? html`<span class="ask-figure">${change}</span>` : ''}`;
     const entity = row.id ? getEntity(row.id) : null;
     const open = entity
       ? html`<button type="button" class="ask-row" data-action="openProfile" data-id="${row.id}"${row.tab ? html` data-tab="${row.tab}"` : ''}>${body}${icon('chevron-right')}</button>`
@@ -114,7 +116,7 @@ function selectToggle(entity, ctx) {
 }
 
 function facts(rows) {
-  return html`<dl class="ask-facts">${rows.map((f) => html`<div class="ask-fact${f.tone ? ` tone-${f.tone}` : ''}"><dt>${f.title}</dt><dd><span class="ask-fact-value">${f.figure}</span><span class="caption">${f.sub}</span></dd></div>`)}</dl>`;
+  return html`<dl class="ask-facts">${rows.map((f) => html`<div class="ask-fact${f.tone ? ` tone-${f.tone}` : ''}"><dt>${f.title}</dt><dd><span class="ask-fact-value">${f.figure}</span>${f.change != null ? delta(f.change) : ''}${f.sub ? html`<span class="caption">${f.sub}</span>` : ''}</dd></div>`)}</dl>`;
 }
 
 function doThis(d, ctx) {

@@ -1,7 +1,7 @@
 // Shared render helpers. Every helper returns an html`` fragment.
 
 import { ICONS } from './icons.js';
-import { esc, formatNumber, formatPct, html, initials, raw } from './format.js';
+import { esc, formatNumber, html, initials, raw } from './format.js';
 
 export function icon(name, { label, className = '' } = {}) {
   const body = ICONS[name];
@@ -52,12 +52,20 @@ export function kpis(items) {
   return html`<dl class="kpis">${items.map((k) => html`<div class="kpi${k.tone ? ` kpi-${k.tone}` : ''}"><dt>${k.label}</dt><dd><span class="kpi-value">${k.value}</span>${k.delta != null ? delta(k.delta) : ''}</dd>${k.sub ? html`<p class="kpi-sub">${k.sub}</p>` : ''}</div>`)}</dl>`;
 }
 
-/** A coloured year-over-year change, e.g. "+12%". */
-export function delta(value, { suffix = ' YoY' } = {}) {
+/**
+ * A change, the same wherever the site shows one, as in the app: the zig-zag
+ * arrow and the percent, green going up and red going down, as "12% on last
+ * year". Pass `upIsBad` where a rise is bad news, such as patients leaving. The
+ * arrow says which way, so the percent has no sign, and screen readers hear
+ * "up 12% on last year".
+ */
+export function delta(value, { suffix = ' on last year', upIsBad = false } = {}) {
   if (value == null || Number.isNaN(value)) return '';
-  const tone = value >= 1 ? 'up' : value <= -1 ? 'down' : 'flat';
-  const glyph = tone === 'up' ? icon('trending-up') : tone === 'down' ? icon('trending-down') : '';
-  return html`<span class="delta delta-${tone}">${glyph}${formatPct(value)}${suffix}</span>`;
+  const pct = Math.round(value);
+  const dir = pct >= 1 ? 'up' : pct <= -1 ? 'down' : 'flat';
+  const tone = dir === 'flat' || !upIsBad ? dir : dir === 'up' ? 'up-bad' : 'down-good';
+  const glyph = dir === 'flat' ? '' : html`${icon(`trending-${dir}`)}<span class="sr-only">${dir} </span>`;
+  return html`<span class="delta delta-${tone}">${glyph}${Math.abs(pct)}%${suffix}</span>`;
 }
 
 /** Inline SVG trend line for a short series. Decorative: values are always shown as text nearby. */

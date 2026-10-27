@@ -184,7 +184,7 @@ export interface SavedReport {
   savedOn: string;
   createdAt: number;
   summary: string;
-  rows: { title: string; sub?: string; figure: string; id?: string }[];
+  rows: { title: string; sub?: string; figure: string; change?: number; id?: string }[];
   /** True when rows are labelled facts rather than a ranked list. */
   facts?: boolean;
   scope: string[];

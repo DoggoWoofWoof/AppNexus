@@ -77,8 +77,5 @@ export function volumeIn(entity: Entity, pick: string): Volume | null {
   return { year, before, change: before ? ((year - before) / before) * 100 : null };
 }
 
-/** "86 a year ↑12%": a year's procedures and the change on the year before, when there is one. */
-export function volumeText(v: Volume): string {
-  const pct = v.change == null ? 0 : Math.round(v.change);
-  return `${formatNumber(v.year)} a year${pct > 0 ? ` ↑${pct}%` : pct < 0 ? ` ↓${-pct}%` : ''}`;
-}
+/** "86 a year": a year's procedures. The change on the year before goes beside it as the trend arrow (`Delta`). */
+export const volumeText = (v: Volume): string => `${formatNumber(v.year)} a year`;

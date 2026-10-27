@@ -5,9 +5,10 @@
 // do today, rose for a competitor's products and patients going elsewhere, green
 // for what's working.
 
-import { ClipboardCheck, TrendingDown, TrendingUp } from 'lucide-react-native';
+import { ClipboardCheck } from 'lucide-react-native';
 import { View } from 'react-native';
 
+import { Delta } from '@/components/charts';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import { dayReview, type ReviewBit, type StopLabel } from '@/lib/day-review';
@@ -68,12 +69,7 @@ export function StopLabels({ labels }: { labels: StopLabel[] }) {
       {labels.map((l) => (
         <View key={l.label} className={cn('max-w-full flex-row items-center gap-1 rounded-full px-2 py-0.5', LABELS[l.tone].box)}>
           <Text className={cn('text-2xs font-semibold', LABELS[l.tone].text)}>{l.label}</Text>
-          {l.change != null && Math.abs(l.change) >= 1 ? (
-            <View className="flex-row items-center gap-0.5">
-              <Icon as={l.change > 0 ? TrendingUp : TrendingDown} size={11} className={l.change > 0 ? 'text-success' : 'text-danger'} />
-              <Text className={cn('font-mono text-2xs', l.change > 0 ? 'text-success' : 'text-danger')}>{`${Math.abs(l.change)}%`}</Text>
-            </View>
-          ) : null}
+          {l.change != null ? <Delta value={l.change} suffix="" small hideFlat /> : null}
         </View>
       ))}
     </View>

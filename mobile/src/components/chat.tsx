@@ -12,6 +12,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View, type ScrollViewInstance } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { Delta } from '@/components/charts';
 import { useDocHref, useProfileHref } from '@/components/entity';
 import { useTab } from '@/components/tab-stack';
 import { Button } from '@/components/ui/button';
@@ -226,7 +227,7 @@ export function Question({ turn }: { turn: Turn }) {
   );
 }
 
-const TONE = { up: 'text-success', down: 'text-signal-text', warn: 'text-warn' } as const;
+const TONE = { warn: 'text-warn' } as const;
 
 export function AnswerView({
   turn,
@@ -302,6 +303,8 @@ export function AnswerView({
 }
 
 function Row({ row, facts, onOpen }: { row: AnswerRow; facts: boolean; onOpen: (id: string) => void }) {
+  // A change on last year is the trend arrow, as everywhere: the figure when there's no other, else under the title.
+  const change = row.change == null ? null : <Delta value={row.change} suffix={row.figure ? ' on last year' : ''} />;
   const body = (
     <View className="flex-row items-center gap-3 py-2">
       <View className="flex-1 gap-0.5">
@@ -316,8 +319,9 @@ function Row({ row, facts, onOpen }: { row: AnswerRow; facts: boolean; onOpen: (
             {row.sub ? <Text className="text-sm text-muted-foreground">{row.sub}</Text> : null}
           </>
         )}
+        {row.figure ? change : null}
       </View>
-      {row.figure ? <Text className={cn('font-mono text-sm', row.tone && TONE[row.tone])}>{row.figure}</Text> : null}
+      {row.figure ? <Text className={cn('font-mono text-sm', row.tone && TONE[row.tone])}>{row.figure}</Text> : change}
       {row.id ? <Icon as={ChevronRight} size={16} className="text-muted-foreground" /> : null}
     </View>
   );

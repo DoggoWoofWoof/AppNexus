@@ -6,7 +6,7 @@
 import { allHcps, allOrgs, destination, getEntity, getOrg, hcpsAt, primaryOrg, procedureTotal, procedureYoy, proceduresOf, siteFor } from './data/index.js';
 import { addSeries } from './data/series.js';
 import { REP } from './data/seed.js';
-import { daysBetween, formatKm, formatNumber, formatPct, fromIso, haversineKm, plural, relativeDay, sum } from './format.js';
+import { changeWords, daysBetween, formatKm, formatNumber, fromIso, haversineKm, plural, relativeDay, sum } from './format.js';
 import { activeItems, routeOrder } from './plan.js';
 
 /** Starter questions, grouped by the moment in a rep's day they help with. */
@@ -147,9 +147,9 @@ const BUILDERS = {
     const pickSignals = ctx.signals(pick.e).filter((s) => s.id !== 'rising');
     return {
       scope: ['Last 12 months vs the 12 before', entity?.kind === 'hco' ? `At ${entity.name}` : 'Your book', SAMPLE],
-      summary: `${top.e.name} grew fastest: ${formatNumber(top.t.prev)} to ${formatNumber(top.t.cur)} procedures (${formatPct(top.t.growth)}).`,
+      summary: `${top.e.name} grew fastest: ${formatNumber(top.t.prev)} to ${formatNumber(top.t.cur)} procedures (${changeWords(top.t.growth)}).`,
       columns: ['Name', 'Change'],
-      rows: ranked.slice(0, 5).map(({ e, t }) => row(e, formatPct(t.growth), `${e.kind === 'hcp' ? e.specialty : e.typeDetail} · ${formatNumber(t.cur)} procedures`, { tone: t.growth >= 0 ? 'up' : 'down', tab: 'volumes' })),
+      rows: ranked.slice(0, 5).map(({ e, t }) => row(e, '', `${e.kind === 'hcp' ? e.specialty : e.typeDetail} · ${formatNumber(t.cur)} procedures`, { change: t.growth, tab: 'volumes' })),
       doThis: {
         text: pickSignals.length ? `${pick.e.name} is growing, with ${reasons(pickSignals)}. Start there.` : `${pick.e.name} is growing fastest. Visit while volume is moving.`,
         label: `Open ${pick.e.name}`, action: 'openProfile', data: { id: pick.e.id, tab: 'volumes' }, add: pick.e.id,
@@ -169,9 +169,9 @@ const BUILDERS = {
       const slow = ranked[0];
       return {
         scope: ['Last 12 months vs the 12 before', SAMPLE],
-        summary: `Nothing declined. Slowest growth is ${slow.e.name} at ${formatPct(slow.t.growth)}.`,
+        summary: `Nothing declined. Slowest growth is ${slow.e.name}, ${changeWords(slow.t.growth)}.`,
         columns: ['Name', 'Change'],
-        rows: ranked.slice(0, 5).map(({ e, t }) => row(e, formatPct(t.growth), `${formatNumber(t.cur)} procedures`, { tone: 'up', tab: 'volumes' })),
+        rows: ranked.slice(0, 5).map(({ e, t }) => row(e, '', `${formatNumber(t.cur)} procedures`, { change: t.growth, tab: 'volumes' })),
         next: ['Which accounts are growing the most?', 'Where am I losing the most volume?'],
       };
     }
@@ -179,9 +179,9 @@ const BUILDERS = {
     const family = proceduresOf(top.e).map((r) => ({ r, g: (last4(r.series) - prev4(r.series)) })).sort((a, b) => a.g - b.g)[0].r;
     return {
       scope: ['Last 12 months vs the 12 before', entity?.kind === 'hco' ? `At ${entity.name}` : 'People and accounts', SAMPLE],
-      summary: `${plural(down.length, 'target')} declined. The biggest drop is ${top.e.name}: ${formatNumber(top.t.prev)} to ${formatNumber(top.t.cur)} procedures (${formatPct(top.t.growth)}).`,
+      summary: `${plural(down.length, 'target')} declined. The biggest drop is ${top.e.name}: ${formatNumber(top.t.prev)} to ${formatNumber(top.t.cur)} procedures (${changeWords(top.t.growth)}).`,
       columns: ['Name', 'Change'],
-      rows: down.slice(0, 5).map(({ e, t }) => row(e, formatPct(t.growth), `${e.kind === 'hcp' ? e.specialty : e.typeDetail} · ${formatNumber(t.cur)} procedures`, { tone: 'down', tab: 'volumes' })),
+      rows: down.slice(0, 5).map(({ e, t }) => row(e, '', `${e.kind === 'hcp' ? e.specialty : e.typeDetail} · ${formatNumber(t.cur)} procedures`, { change: t.growth, tab: 'volumes' })),
       doThis: {
         text: `Most of ${possessive(top.e.name)} drop is in ${family.family.toLowerCase()}. Ask where those cases are going now.`,
         label: `Open ${top.e.name}`, action: 'openProfile', data: { id: top.e.id, tab: 'volumes' }, add: top.e.id,
@@ -270,9 +270,9 @@ const BUILDERS = {
     const direction = t.growth >= 1 ? 'up' : t.growth <= -1 ? 'down' : 'flat';
     return {
       scope: ['Last 12 months vs the 12 before', SAMPLE],
-      summary: `${entity.name} is ${direction === 'flat' ? 'flat' : direction} on last year: ${formatNumber(t.prev)} to ${formatNumber(t.cur)} procedures (${formatPct(t.growth)}). The biggest change is ${mover.r.family} (${formatPct(mover.pct)}).`,
+      summary: `${entity.name} is ${direction === 'flat' ? 'flat' : direction} on last year: ${formatNumber(t.prev)} to ${formatNumber(t.cur)} procedures (${changeWords(t.growth)}). The biggest change is ${mover.r.family} (${changeWords(mover.pct)}).`,
       columns: ['Procedure', 'Change'],
-      rows: families.map((f) => ({ title: f.r.family, sub: `${f.r.code} · ${formatNumber(f.cur)} in the last 12 months`, figure: formatPct(f.pct), tone: f.pct >= 0 ? 'up' : 'down' })),
+      rows: families.map((f) => ({ title: f.r.family, sub: `${f.r.code} · ${formatNumber(f.cur)} in the last 12 months`, figure: '', change: f.pct })),
       doThis: { text: 'See the quarter-by-quarter trend before the visit.', label: 'Open volumes', action: 'openProfile', data: { id: entity.id, tab: 'volumes' }, add: entity.id },
       next: entity.kind === 'hcp'
         ? [`Where does ${entity.name} refer patients?`, `Brief me on ${entity.name}`, 'What has declined?']
@@ -291,7 +291,7 @@ const BUILDERS = {
       scope: ['Procedures', 'Last 12 months', SAMPLE],
       summary: `${sorted[0].family} is ${Math.round((last4(sorted[0].series) / total) * 100)}% of ${possessive(e.name)} ${formatNumber(total)} procedures in the last 12 months.`,
       columns: ['Procedure', 'Count'],
-      rows: sorted.map((r) => ({ title: r.family, sub: `${r.code} · ${formatPct(((last4(r.series) - prev4(r.series)) / (prev4(r.series) || 1)) * 100)} on last year`, figure: formatNumber(last4(r.series)) })),
+      rows: sorted.map((r) => ({ title: r.family, sub: r.code, figure: formatNumber(last4(r.series)), change: ((last4(r.series) - prev4(r.series)) / (prev4(r.series) || 1)) * 100 })),
       doThis: { text: 'Open the volumes tab for the quarter-by-quarter trend.', label: 'Open volumes', action: 'openProfile', data: { id: e.id, tab: 'volumes' }, add: e.id },
       next: [e.kind === 'hco' ? `Top doctors at ${e.name}` : `Brief me on ${e.name}`, 'Which accounts are growing the most?'],
       about: e.id,
@@ -409,7 +409,7 @@ const BUILDERS = {
     const facts = [
       { title: 'Last contact', figure: last ? relativeDay(last.date, ctx.today) : 'Never', sub: last ? `${last.type} · ${last.outcome}${last.note ? ` · “${last.note.slice(0, 70)}${last.note.length > 70 ? '…' : ''}”` : ''}` : 'No interactions logged yet' },
       { title: 'Open follow-ups', figure: String(open.length), sub: open[0] ? open[0].text : 'None', tone: open.length ? 'warn' : '' },
-      t ? { title: 'Procedures · 12 months', figure: formatNumber(t.cur), sub: `${formatPct(t.growth)} on last year`, tone: t.growth >= 0 ? 'up' : 'down' } : { title: 'Procedures', figure: '—', sub: 'Not in your code group' },
+      t ? { title: 'Procedures · 12 months', figure: formatNumber(t.cur), change: t.growth } : { title: 'Procedures', figure: '—', sub: 'Not in your code group' },
       entity.kind === 'hcp'
         ? { title: 'Referrals out of system', figure: String(sum(entity.referrals.outbound.filter((r) => r.ref).map((r) => r.count))), sub: 'Patients, last 12 months', tone: entity.leakageRisk ? 'warn' : '' }
         : { title: 'Patients leaving', figure: entity.leakage ? `${entity.leakage.leftPct}%` : '—', sub: entity.leakage ? `of ${formatNumber(entity.leakage.patients)} patients` : 'Not reported', tone: entity.leakage?.leftPct >= 20 ? 'warn' : '' },

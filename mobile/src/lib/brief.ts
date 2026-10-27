@@ -5,7 +5,7 @@
 import { usualTimes } from './booking';
 import { destination, getEntity, getOrg, hcpsAt, inYourTerritory, openFollowUps, parentOf, patientsLost, procedureTotal, procedureYoy, proceduresOf, referredOut, siteFor, testsOf } from './data';
 import { DATA_PERIOD } from './data/seed';
-import { daysBetween, firstSentence, formatDate, formatNumber, fromIso, isoDate, plural, relativeDay, relativeDayLower, says, sentence, sum, yoy } from './format';
+import { changeWords, daysBetween, firstSentence, formatDate, formatNumber, fromIso, isoDate, plural, relativeDay, relativeDayLower, says, sentence, sum, yoy } from './format';
 import { endTime, isOnSite } from './plan';
 import type { Entity, FollowUp, PlanItem } from './types';
 import type { Context } from './workspace';
@@ -258,7 +258,7 @@ export function briefText(entity: Entity, brief: Brief, today: Date): string {
   if (brief.visit) lines.push(visitWhen(brief.visit, entity, today));
   lines.push('', `Goal: ${brief.goal}${brief.goalDue ? ` (follow-up ${brief.goalDue})` : ''}`, `Why now: ${brief.insight}`);
   if (brief.points.length) lines.push('', 'Talking points:', ...brief.points.map((p) => `- ${p.text}`));
-  lines.push('', brief.figures.map((f) => `${f.label}: ${f.value}${f.delta != null ? ` (${f.delta >= 0 ? '+' : ''}${Math.round(f.delta)}% on last year)` : ''}`).join(' · '));
+  lines.push('', brief.figures.map((f) => `${f.label}: ${f.value}${f.delta != null ? ` (${changeWords(f.delta)} on last year)` : ''}`).join(' · '));
   lines.push('', `${DATA_PERIOD}.`);
   return lines.join('\n');
 }

@@ -1,29 +1,33 @@
 // The daily brief at the top of Today (lib/daily-brief.ts), open when the day
 // starts, to take in at a glance. A tile for each state of the territory and
-// next door says who to reach out to there and why: its busiest doctor beyond My
-// targets, a chip in the rep's own states when hardly anyone there is in My
-// targets, and a line when enough of a specialty there use a competitor's
-// products. A tile opens Targets on that state, with the competitor's and
-// specialty's chips when that's why. Then three doctors
-// worth adding to the day, each with why in a sentence, how much they do and the
-// driving a visit adds. "+ Add" puts them in the day as a visit where it adds the
-// least driving, as Build route on Targets does, and they show up in the day
-// below. Tapping them asks Ask why they're worth seeing. The people stay as they
-// were when it opened, so adding someone doesn't move the rows. Screen readers
-// hear each tile and person in a sentence or two.
+// next door says who to reach out to there and why: someone beyond My targets
+// using a competitor's products, or growing fast, a chip in the rep's own states
+// when hardly anyone there is in My targets, and a line on competitors' products
+// there. Then three doctors worth adding to the day, each with why in a sentence,
+// how much they do and the driving a visit adds, in the rep's own territory until
+// a tile is tapped, which picks that state for them, staying on Today; tapping it
+// again goes back. "Full list" beside them opens Targets on everyone there.
+// "+ Add" puts them in the day as a visit where it adds the least driving, as
+// Build route on Targets does, and they show up in the day below. Tapping them
+// asks Ask why they're worth seeing. The people for each state stay as they were
+// when it showed them, so adding someone, or looking at another state and coming
+// back, doesn't move the rows. Screen readers hear each tile and person in a
+// sentence or two.
 //
 // One colour for each kind of fact, as in Today's review and the labels on the
 // stops: rose for a competitor's products, green for what's working, and blue
-// only for what can be tapped. Once everyone in it is in the day, or the rep taps
-// Done or its heading, it folds to a line at the top saying what's left, beside
-// their faces, which opens it again. It folds too with Build route on Targets,
-// and opens again the next day. With nothing to show it isn't shown.
+// only for what can be tapped. A change on last year is the zig-zag arrow, as
+// everywhere in the app (`Delta`). Once everyone in it is in the day, or the rep
+// taps Done or its heading, it folds to a line at the top saying what's left,
+// beside their faces, which opens it again. It folds too with Build route on
+// Targets, and opens again the next day. With nothing to show it isn't shown.
 
 import { router } from 'expo-router';
-import { Car, Check, ChevronDown, ChevronRight, ChevronUp, Newspaper, TrendingDown, TrendingUp } from 'lucide-react-native';
+import { Car, Check, ChevronDown, ChevronRight, ChevronUp, Newspaper } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { Pressable, useWindowDimensions, View } from 'react-native';
 
+import { Delta } from '@/components/charts';
 import { Avatar, useChatHref } from '@/components/entity';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
@@ -54,42 +58,58 @@ const TILES: Record<BriefTerritory['tone'], { tile: string; face: string; line: 
   plain: { tile: 'border-border bg-background', face: '', line: 'border-border' },
 };
 
-/** The brief, the day shown and the day it adds to, and whether it's folded away. */
+/** The brief, the day shown and the day it adds to, whether it's folded away, and the state picked on a tile. */
 export interface BriefState {
   brief: Brief;
   day: string;
   /** The day + puts people in: the day shown, or once today is over the next working day. */
   on: string;
   folded: boolean;
+  /** The state whose tile was tapped, for who's worth adding there; null for the rep's own territory. */
+  picked: string | null;
+  pick: (state: string | null) => void;
 }
 
 /**
  * The brief for `day` as it is at `now`, Today's clock, so a visit on the way is
- * still to come; null with nothing to show. Who it suggested when it opened stays,
- * for this day and the territory and procedures chosen, so adding someone doesn't
- * move the rows.
+ * still to come; null with nothing to show. Its people are in the rep's own
+ * territory, or the state picked on a tile until the next day, never what
+ * Targets is showing, so looking around there doesn't change Today. Who it
+ * suggested stays, for each day, state and procedures, so adding someone or
+ * looking at another state doesn't move the rows.
  */
 export function useDailyBrief(day: string, now: Date): BriefState | null {
   const ctx = useWorkspace();
   // Once today is over, + puts people on the next working day, so the brief is for that day.
   const on = ctx.addingTo(day);
-  const chosen = ctx.ws.prefs;
-  const key = `${on}|${chosen.states.join(',')}|${chosen.codes}`;
-  const [kept, setKept] = useState<{ key: string; ids: string[] } | null>(null);
+  const { codes } = ctx.ws.prefs;
+  const [pickedOn, setPickedOn] = useState<{ day: string; state: string } | null>(null);
+  const picked = pickedOn?.day === ctx.todayIso ? pickedOn.state : null;
+  const key = `${on}|${picked ?? ''}|${codes}`;
+  const [kept, setKept] = useState<Record<string, string[]>>({});
   // Worked out again when the workspace changes, or each minute, as the brief looks at everyone.
   const minute = Math.floor(now.getTime() / 60_000);
   const brief = useMemo(
-    () => dailyBrief(ctx, on, chosen, kept?.key === key ? kept.ids : [], now),
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- `now` counts by the minute, and `chosen` is in `key`.
+    () => dailyBrief(ctx, on, { states: picked ? [picked] : [], codes }, kept[key] ?? [], now),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `now` counts by the minute, and `picked` and `codes` are in `key`.
     [ctx, on, key, kept, minute],
   );
-  if (kept?.key !== key) setKept({ key, ids: brief.people.map((p) => p.row.entity.id) });
+  if (!kept[key]) setKept({ ...kept, [key]: brief.people.map((p) => p.row.entity.id) });
+  // A state with nobody doing the procedures chosen has no tile, so it can't stay picked.
+  if (picked && !brief.territories.some((t) => t.state === picked)) setPickedOn(null);
   if (!brief.territories.length && !brief.people.length) return null;
-  return { brief, day, on, folded: ctx.ws.selection.briefFolded === ctx.todayIso };
+  return {
+    brief,
+    day,
+    on,
+    folded: ctx.ws.selection.briefFolded === ctx.todayIso,
+    picked,
+    pick: (state) => setPickedOn(state ? { day: ctx.todayIso, state } : null),
+  };
 }
 
 /** The brief (`useDailyBrief`): open, the states and who to add; folded, a line with their faces. */
-export function DailyBrief({ state: { brief, day, on, folded } }: { state: BriefState }) {
+export function DailyBrief({ state: { brief, day, on, folded, picked, pick } }: { state: BriefState }) {
   const ctx = useWorkspace();
   const chat = useChat();
   const chatHref = useChatHref();
@@ -112,11 +132,12 @@ export function DailyBrief({ state: { brief, day, on, folded } }: { state: Brief
     // Once everyone in it is in the day, it folds away and the day comes up.
     if (brief.people.every((p) => p.row.entity.id === id || ctx.planItemFor(p.row.entity.id, on))) ctx.foldBrief();
   };
-  /** Opens Targets on a state, as the territory chip there, with the competitor's chip when that's why to look. */
-  const open = (t: BriefTerritory) => {
-    ctx.setPrefs({ states: [t.state] });
-    seeOnTargets(t.find);
+  /** Opens Targets on everyone where the people are, the state picked or the rep's own territory, as its territory chip. */
+  const seeAll = () => {
+    ctx.setPrefs({ states: picked ? [picked] : [] });
+    seeOnTargets(brief.find);
   };
+  const place = brief.territories.find((t) => t.state === picked)?.name ?? 'your territory';
 
   return (
     <View className="rounded-xl border border-border bg-card">
@@ -143,17 +164,29 @@ export function DailyBrief({ state: { brief, day, on, folded } }: { state: Brief
       </Pressable>
       {folded ? null : (
         <View className="gap-3 px-3 pb-3">
-          <Territories territories={brief.territories} onOpen={open} />
-          {brief.people.length ? (
-            <View>
-              <Text variant="kicker" role="heading" className="pb-1.5">
+          <Territories territories={brief.territories} picked={picked} onPick={(t) => pick(picked === t.state ? null : t.state)} />
+          <View>
+            <View className="flex-row items-center gap-2 pb-1.5">
+              <Text variant="kicker" role="heading" className="flex-1">
                 {brief.heading}
               </Text>
-              {brief.people.map((person) => (
-                <PersonRow key={person.row.entity.id} person={person} day={on} when={when} onAdd={add} onAsk={askAbout} />
-              ))}
+              <Pressable
+                onPress={seeAll}
+                accessibilityRole="link"
+                accessibilityLabel={`Full list of everyone in ${place}, on Targets`}
+                hitSlop={8}
+                className="flex-row items-center gap-0.5 active:opacity-70"
+              >
+                <Text className="text-sm font-semibold text-brand">Full list</Text>
+                <Icon as={ChevronRight} size={14} className="text-brand" />
+              </Pressable>
             </View>
-          ) : null}
+            {brief.people.length ? (
+              brief.people.map((person) => <PersonRow key={person.row.entity.id} person={person} day={on} when={when} onAdd={add} onAsk={askAbout} />)
+            ) : (
+              <Text className="border-t border-border py-3 text-sm text-muted-foreground">{`No one ${picked ? 'there' : 'in your territory'} fits in ${when}.`}</Text>
+            )}
+          </View>
           {/* At very large text Done goes under the fine print, so it isn't squeezed. */}
           <View className={cn('gap-3', !narrow && 'flex-row items-center')}>
             <Text className={cn('text-xs text-muted-foreground', !narrow && 'flex-1')}>{`${brief.figures} Illustrative figures.`}</Text>
@@ -177,10 +210,19 @@ export function DailyBrief({ state: { brief, day, on, folded } }: { state: Brief
  * A tile for each state, the rep's own territory beside next door, two to a
  * row; one under the other at very large text, or when there's only one side.
  */
-function Territories({ territories, onOpen }: { territories: BriefTerritory[]; onOpen: (t: BriefTerritory) => void }) {
+function Territories({
+  territories,
+  picked,
+  onPick,
+}: {
+  territories: BriefTerritory[];
+  picked: string | null;
+  onPick: (t: BriefTerritory) => void;
+}) {
   const narrow = useNarrow();
   const yours = territories.filter((t) => t.yours);
   const nextDoor = territories.filter((t) => !t.yours);
+  const tile = (t: BriefTerritory) => <Tile key={t.state} territory={t} picked={t.state === picked} onPress={() => onPick(t)} />;
   if (narrow || !yours.length || !nextDoor.length) {
     return [
       { title: 'Your territory', tiles: yours },
@@ -191,9 +233,7 @@ function Territories({ territories, onOpen }: { territories: BriefTerritory[]; o
           <Text variant="kicker" role="heading">
             {side.title}
           </Text>
-          {side.tiles.map((t) => (
-            <Tile key={t.state} territory={t} onPress={() => onOpen(t)} />
-          ))}
+          {side.tiles.map(tile)}
         </View>
       ) : null,
     );
@@ -212,7 +252,7 @@ function Territories({ territories, onOpen }: { territories: BriefTerritory[]; o
       </View>
       {rows.map((row) => (
         <View key={row.map((t) => t?.state).join()} className="flex-row gap-2">
-          {row.map((t, i) => (t ? <Tile key={t.state} territory={t} onPress={() => onOpen(t)} /> : <View key={i} className="flex-1" />))}
+          {row.map((t, i) => (t ? tile(t) : <View key={i} className="flex-1" />))}
         </View>
       ))}
     </View>
@@ -221,39 +261,51 @@ function Territories({ territories, onOpen }: { territories: BriefTerritory[]; o
 
 /**
  * A state at a glance: in the rep's own, a chip when hardly anyone there is in My
- * targets; its busiest doctor beyond them, with how they rank and the trend; and
- * under a line, competitors' products there, who in rose when enough of a
- * specialty use the same one, or in bold how few use any. It opens Targets on it.
+ * targets; who to reach out to there first beyond them, with why in its colour
+ * and the trend; and under a line, competitors' products there, who in rose when
+ * enough of a specialty use the same one, or in bold how few use any. Tapping it
+ * picks it for who's worth adding below, with a tick in its corner where an empty
+ * ring was; tapping it again goes back to the rep's whole territory.
  */
-function Tile({ territory: t, onPress }: { territory: BriefTerritory; onPress: () => void }) {
+function Tile({ territory: t, picked, onPress }: { territory: BriefTerritory; picked: boolean; onPress: () => void }) {
   const tone = TILES[t.tone];
   return (
     <Pressable
       onPress={onPress}
-      accessibilityRole="link"
+      // One or none at a time, so a radio, though tapping it again unpicks it.
+      accessibilityRole="radio"
+      // Not accessibilityState: the web build only passes aria-checked on.
+      aria-checked={picked}
       accessibilityLabel={t.words}
-      accessibilityHint="Opens Targets"
-      className={cn('flex-1 gap-2 rounded-xl border p-2.5 active:opacity-70', tone.tile)}
+      accessibilityHint={picked ? 'Shows who’s worth adding in your whole territory' : 'Shows who’s worth adding there'}
+      // A thicker border when picked, with the padding a pixel less, so nothing moves.
+      className={cn('flex-1 gap-2 rounded-xl active:opacity-70', tone.tile, picked ? 'border-2 border-primary p-[9px]' : 'border p-2.5')}
     >
       <View className="flex-row items-center gap-1">
         <Text className="flex-1 text-sm font-semibold">{t.name}</Text>
-        <Icon as={ChevronRight} size={16} className="text-muted-foreground" />
+        {picked ? (
+          <View className="h-4 w-4 items-center justify-center rounded-full bg-primary">
+            <Icon as={Check} size={10} strokeWidth={4} className="text-primary-foreground" />
+          </View>
+        ) : (
+          <View className="h-4 w-4 rounded-full border-[1.5px] border-muted-foreground" />
+        )}
       </View>
       {t.gap ? (
         <View className="self-start rounded-full bg-card px-2 py-0.5">
           <Text className="text-2xs font-semibold text-brand">{t.gap}</Text>
         </View>
       ) : null}
-      {t.busiest ? (
+      {t.first ? (
         <View className="flex-row items-center gap-2">
-          <Avatar entity={t.busiest.row.entity} size="sm" className={tone.face} />
+          <Avatar entity={t.first.row.entity} size="sm" className={tone.face} />
           <View className="flex-1">
             <Text className="text-sm font-semibold" numberOfLines={1}>
-              {shortName(t.busiest.row.entity)}
+              {shortName(t.first.row.entity)}
             </Text>
-            <View className="flex-row items-center gap-1.5">
-              <Text className="text-2xs text-muted-foreground">{t.busiest.rank}</Text>
-              <Trend value={t.busiest.change} small />
+            <View className="flex-row flex-wrap items-center gap-x-1.5">
+              <Text className={cn('text-2xs font-semibold', t.first.competitor ? 'text-signal-text' : 'text-success')}>{t.first.why}</Text>
+              <Delta value={t.first.change} suffix="" small hideFlat />
             </View>
           </View>
         </View>
@@ -265,18 +317,6 @@ function Tile({ territory: t, onPress }: { territory: BriefTerritory; onPress: (
         </Text>
       </View>
     </Pressable>
-  );
-}
-
-/** The change on last year as an arrow and the percent, green going up and red going down; nothing when it's the same. */
-function Trend({ value, small = false }: { value: number; small?: boolean }) {
-  if (Math.abs(value) < 1) return null;
-  const color = value > 0 ? 'text-success' : 'text-danger';
-  return (
-    <View className="flex-row items-center gap-0.5">
-      <Icon as={value > 0 ? TrendingUp : TrendingDown} size={small ? 11 : 13} className={color} />
-      <Text className={cn('font-mono', small ? 'text-2xs' : 'text-xs', color)}>{`${Math.abs(value)}%`}</Text>
-    </View>
   );
 }
 
@@ -337,7 +377,7 @@ function PersonRow({
             <View className="flex-row flex-wrap items-center gap-x-3 gap-y-0.5" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
               <View className="flex-row items-center gap-1">
                 <Text className="text-xs text-muted-foreground">{person.figure}</Text>
-                <Trend value={person.change} />
+                <Delta value={person.change} suffix="" hideFlat />
               </View>
               {person.driving ? (
                 <View className="flex-row items-center gap-1">

@@ -64,7 +64,7 @@ export function whyCard(entity, ctx) {
       entity.contact.assistant && `Book through ${entity.contact.assistant}`,
     ].filter(Boolean).join(' · ')}</span></p>` : ''}
     <p class="next-goal">${icon('target')}<span><span class="kicker">${b.goalSuggested ? 'Suggested goal' : 'Goal'}</span> ${b.goal}</span></p>
-    ${b.points.length ? html`<ul class="brief-points" aria-label="Talking points">${b.points.map((p) => html`<li>${icon(p.icon)}<span>${p.text}</span></li>`)}</ul>` : ''}
+    ${b.points.length ? html`<ul class="brief-points" aria-label="Talking points">${b.points.map((p) => html`<li>${icon(p.icon, { className: p.trend ? `delta-${p.trend}` : '' })}<span>${p.text}</span></li>`)}</ul>` : ''}
     ${b.followUps.length ? html`<ul class="follow-list">${b.followUps.map((f) => followUpRow(f, ctx, { showTarget: false }))}</ul>` : ''}
   `, 'why-card');
 }
@@ -110,7 +110,7 @@ export function volumesPanel(entity, ctx) {
         return html`<li><details class="volume-row">
           <summary>
             <span class="volume-name"><span>${name}</span><span class="caption">${r.code}</span></span>
-            <span class="volume-figures"><span class="volume-value">${formatNumber(value)}</span>${delta(yoy(r.series))}</span>
+            <span class="volume-figures"><span class="volume-value">${formatNumber(value)}</span>${delta(yoy(r.series), { suffix: '' })}</span>
             <span class="volume-trend">${sparkline(r.series)}</span>
             <span class="bar bar-accent" style="--w:${Math.max(2, Math.round((value / max) * 100))}%"></span>
           </summary>

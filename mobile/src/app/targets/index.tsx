@@ -42,6 +42,7 @@ import { Fragment, useRef, useState, type ReactNode } from 'react';
 import { Linking, Pressable, ScrollView, useWindowDimensions, View, type ScrollViewInstance } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { Delta } from '@/components/charts';
 import { StarButton, useProfileHref } from '@/components/entity';
 import { MenuButton } from '@/components/menu';
 import { Choices, SheetBody } from '@/components/note-sheet';
@@ -535,9 +536,9 @@ function Chip({
 const TONE: Record<Signal['tone'], string> = { warn: 'text-warn', rose: 'text-signal-text', accent: 'text-brand', neutral: 'text-muted-foreground' };
 
 /**
- * Their name and specialty; their procedures a year and the change ("86 a year
- * ↑12%") and how far; why to see them and whose products they use; and with
- * `when`, whether they're in that day.
+ * Their name and specialty; their procedures a year with the change as the
+ * trend arrow, and how far; why to see them and whose products they use; and
+ * with `when`, whether they're in that day.
  */
 function RowInfo({ row, when }: { row: SearchRow; when?: { text: string; tone: 'in' | 'out' | 'planned' } | null }) {
   const { entity, volume } = row;
@@ -554,10 +555,19 @@ function RowInfo({ row, when }: { row: SearchRow; when?: { text: string; tone: '
       ) : (
         <Text className="text-base font-semibold">{entity.name}</Text>
       )}
-      <Text className="text-sm text-muted-foreground" numberOfLines={1}>
-        {volume ? <Text className="text-sm font-medium text-foreground">{volumeText(volume)}</Text> : entity.kind === 'hco' ? entity.typeDetail : null}
-        {volume || entity.kind === 'hco' ? ` · ${formatKm(row.distance)}` : formatKm(row.distance)}
-      </Text>
+      <View className="flex-row items-center gap-1.5">
+        {volume ? (
+          <>
+            <Text className="text-sm font-medium">{volumeText(volume)}</Text>
+            <Delta value={volume.change} suffix="" hideFlat />
+          </>
+        ) : entity.kind === 'hco' ? (
+          <Text className="shrink text-sm text-muted-foreground" numberOfLines={1}>
+            {entity.typeDetail}
+          </Text>
+        ) : null}
+        <Text className="text-sm text-muted-foreground">{volume || entity.kind === 'hco' ? `· ${formatKm(row.distance)}` : formatKm(row.distance)}</Text>
+      </View>
       {why || uses ? (
         // Two lines at most, so a competitor's name isn't cut off after a long reason.
         <Text className="text-sm" numberOfLines={2}>

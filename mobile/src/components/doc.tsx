@@ -5,6 +5,7 @@ import { Check, CircleAlert, Copy, Share2, Square, Volume2 } from 'lucide-react-
 import { useEffect, useState } from 'react';
 import { AccessibilityInfo, Platform, Pressable, Share, View } from 'react-native';
 
+import { Delta } from '@/components/charts';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
@@ -29,16 +30,21 @@ export function DocSections({ doc, onOpen }: { doc: Doc; onOpen?: (id: string) =
 }
 
 function Line({ line, onOpen }: { line: DocLine; onOpen?: (id: string) => void }) {
+  // A change on last year is the trend arrow, as in the answer: the figure when there's no other, else under the text.
+  const change = line.change == null ? null : <Delta value={line.change} suffix={line.figure ? ' on last year' : ''} />;
   const body = (
     <View className="flex-row items-start gap-3">
       <View className="flex-1 gap-0.5">
         {line.label ? <Text className="text-sm text-muted-foreground">{line.label}</Text> : null}
-        <Text className={cn('text-base leading-6', line.id && onOpen && 'font-semibold')} selectable={!line.id}>
-          {line.text}
-        </Text>
+        {line.text ? (
+          <Text className={cn('text-base leading-6', line.id && onOpen && 'font-semibold')} selectable={!line.id}>
+            {line.text}
+          </Text>
+        ) : null}
         {line.sub ? <Text className="text-sm text-muted-foreground">{line.sub}</Text> : null}
+        {line.figure ? change : null}
       </View>
-      {line.figure ? <Text className="font-mono text-sm">{line.figure}</Text> : null}
+      {line.figure ? <Text className="font-mono text-sm">{line.figure}</Text> : change}
     </View>
   );
   const id = line.id;

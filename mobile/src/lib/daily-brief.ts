@@ -1,24 +1,25 @@
 // The daily brief at the top of Today, where the app opens (components/daily-brief.tsx).
 // For each state of the territory and next door it says who to reach out to
-// there and why: its busiest doctor beyond My targets, in the rep's own states
-// when hardly anyone there is in My targets, and competitors' products there,
-// a pattern when enough of a specialty use the same one ("Most vascular surgeons
-// use Competitor A"), or how few of its biggest specialty use any ("None of its
-// 4 interventionalists use a competitor"). A state opens on Targets, which lists
-// everyone there. Then three doctors beyond
-// My targets worth adding to the day, two who use a competitor's products and one
-// growing fast, each with why in a sentence and the driving a visit adds. Its
-// figures are for the procedures chosen with the chip on Targets, and its people
-// for the territory chosen there too. The sample's figures are a fixed year, the
-// last four quarters against the four before. Fixed rules over the sample data, not AI.
+// there and why: the doctor beyond My targets with the best reason, someone
+// using a competitor's products, as there's business to win, else someone
+// growing fast; in the rep's own states when hardly anyone there is in My
+// targets; and competitors' products there, a pattern when enough of a specialty
+// use the same one ("Most vascular surgeons use Competitor A"), or how few of its
+// biggest specialty use any ("None of its 4 interventionalists use a competitor").
+// Then three doctors beyond My targets worth adding to the day, in the rep's own
+// territory or a state picked on its tile, two who use a competitor's products and
+// one growing fast, each with why in a sentence and the driving a visit adds, and
+// a link to everyone there on Targets. Its figures are for the procedures chosen
+// with the chip on Targets. The sample's figures are a fixed year, the last four
+// quarters against the four before. Fixed rules over the sample data, not AI.
 
 import { canSeeOn } from './booking';
 import { pickLabel } from './codes';
 import { getEntity, getOrg, shortName, stateOf, STATES, YOUR_STATES } from './data';
 import { FIGURES_YEAR } from './data/seed';
-import { daysBetween, formatNumber, fromIso, haversineKm, listJoin, lowerFirst, plural } from './format';
+import { daysBetween, formatMinutes, formatNumber, fromIso, haversineKm, listJoin, lowerFirst, plural } from './format';
 import { isOnSite, type Stop } from './plan';
-import { DEFAULT_FILTERS, searchLink, type Filters, type SearchRow } from './search';
+import { DEFAULT_FILTERS, searchLink, type SearchRow } from './search';
 import { specialists } from './specialties';
 import type { Context } from './workspace';
 
@@ -31,8 +32,13 @@ export interface BriefTerritory {
   yours: boolean;
   /** In the rep's own states, when hardly anyone there is in My targets: "None in My targets", "Only 2 in My targets". */
   gap: string;
-  /** Its busiest doctor beyond My targets, how they rank among everyone there ("Busiest", "3rd busiest"), and the change on last year in percent. */
-  busiest: { row: SearchRow; rank: string; change: number } | null;
+  /**
+   * Who to reach out to there first, beyond My targets, and why in a few words:
+   * someone using a competitor's products, "Uses Competitor B", else someone
+   * growing fast, "Growing fast", and of those, whoever gained the most
+   * procedures on last year. With that change in percent.
+   */
+  first: { row: SearchRow; why: string; competitor: boolean; change: number } | null;
   /**
    * Competitors' products there, who first, for the words in bold. A pattern when
    * enough of a specialty use the same one: "Most vascular surgeons" "use
@@ -47,8 +53,6 @@ export interface BriefTerritory {
   reason: string;
   /** All of it in a sentence or two, for screen readers. */
   words: string;
-  /** What Targets shows, as a search link: everyone there, or those the pattern counted when it's a competitor's. */
-  find: string;
 }
 
 /** A doctor beyond My targets worth adding to the day, and why. */
@@ -73,6 +77,8 @@ export interface DailyBrief {
   people: BriefPerson[];
   /** Over the people: "Worth adding today", and where, when it isn't the rep's whole territory. */
   heading: string;
+  /** Everyone where the people are, as a search link for Targets. */
+  find: string;
   /** Folded away, what's left, in a few words: "2 more to add today". Empty with nothing to say. */
   short: string;
   /** What its figures count, and when: "All procedures, Oct 2025 to Sep 2026, against the year before." */
@@ -96,18 +102,22 @@ const ON_THE_WAY = 20;
 const NEARBY = 45;
 /** Days after reaching someone before they're suggested again, as a reply or a visit may still come. */
 const RESTING = 14;
+/** This many years in practice or fewer is new in practice, when someone may still be settling on what to use. */
+const NEW_IN_PRACTICE = 5;
 
 const added = (r: SearchRow): number => (r.volume ? r.volume.year - r.volume.before : 0);
+/** Uses a competitor's products, so there's business to win. */
+const using = (r: SearchRow): boolean => !!r.entity.competitors?.length;
+/** Growing fast with no competitor's products. */
+const growing = (r: SearchRow): boolean => !using(r) && (r.volume?.change ?? 0) >= FAST;
 /** A yearly count in round numbers, as it's only about that: "690". */
 const about = (n: number): string => formatNumber(n < 100 ? Math.round(n / 5) * 5 : n < 1000 ? Math.round(n / 10) * 10 : Math.round(n / 100) * 100);
-const ordinal = (n: number): string => `${n}${n % 10 === 1 && n !== 11 ? 'st' : n % 10 === 2 && n !== 12 ? 'nd' : n % 10 === 3 && n !== 13 ? 'rd' : 'th'}`;
-/** "New York’s 3rd busiest", or "New York’s busiest". */
-const rankIn = (rank: number, state: string): string => `${state}’s ${rank === 1 ? '' : `${ordinal(rank)} `}busiest`;
 
 type BriefContext = Pick<Context, 'search' | 'planItemFor' | 'dayWord' | 'detour' | 'daySchedule' | 'lastInteraction' | 'today'>;
 
 /**
- * The brief for a day, from the territory and procedures chosen on Targets
+ * The brief for a day, with its people in the states given, or the rep's own
+ * territory with none, and its figures for the procedures chosen on Targets
  * (`chosen`). The people aren't in My targets or the day already, nor reached in
  * the last fortnight, and each can be seen that day in their usual times. Those
  * on the way come first, then those nearby, each the most gained on last year.
@@ -118,15 +128,13 @@ export function dailyBrief(ctx: BriefContext, day: string, chosen: { states: str
   const states = chosen.states.length ? chosen.states : YOUR_STATES;
   // One search for every state, as a search looks at everyone: the states and the people come from it.
   const everywhere = ctx.search({ ...DEFAULT_FILTERS, states: STATES.map((s) => s.id), codes: chosen.codes }).filter((r) => r.volume);
-  const territories = territoriesFor(everywhere, chosen.codes);
+  const territories = territoriesFor(everywhere);
 
   const recent = (id: string) => {
     const last = ctx.lastInteraction(id);
     return !!last && daysBetween(fromIso(last.date), ctx.today) < RESTING;
   };
   const fresh = (r: SearchRow) => !r.mine && !ctx.planItemFor(r.entity.id, day) && !recent(r.entity.id);
-  const using = (r: SearchRow) => !!r.entity.competitors?.length;
-  const growing = (r: SearchRow) => !using(r) && (r.volume?.change ?? 0) >= FAST;
   // What a visit adds to the day, worked out once each, and only for those in the running.
   const detours = new Map<string, ReturnType<BriefContext['detour']>>();
   const detourOf = (r: SearchRow) => {
@@ -155,11 +163,11 @@ export function dailyBrief(ctx: BriefContext, day: string, chosen: { states: str
   const visits = ctx.daySchedule(day, now).stops.filter((s) => isOnSite(s.item));
   // What else is said of each, so two of them don't read the same.
   const said = new Set<string>();
-  const people = chosenRows.map((row) => personFor(row, detourOf(row), visits, rankOf(row, everywhere), said));
+  const people = chosenRows.map((row) => personFor(row, detourOf(row), visits, said));
 
   const dayWord = ctx.dayWord(day);
   const when = dayWord === 'today' || dayWord === 'tomorrow' ? dayWord : `on ${dayWord}`;
-  // Where the people are, when the territory chosen isn't the rep's own.
+  // Where the people are, when it isn't the rep's own territory.
   const own = states.length === YOUR_STATES.length && states.every((s) => YOUR_STATES.includes(s));
   const where = own ? '' : ` in ${listJoin(STATES.filter((s) => states.includes(s.id)).map((s) => s.label))}`;
   // Who of them is in the day now, from here or anywhere else.
@@ -183,26 +191,21 @@ export function dailyBrief(ctx: BriefContext, day: string, chosen: { states: str
     territories,
     people,
     heading: `Worth adding ${when}${where}`,
+    find: searchLink({ ...DEFAULT_FILTERS, states: chosen.states, codes: chosen.codes }),
     short,
     figures: `${pickLabel(chosen.codes)}, ${FIGURES_YEAR}, against the year before.`,
     line: line.join(' '),
   };
 }
 
-/** How busy someone is in their state, among those doing the procedures chosen: 1 for the busiest. */
-function rankOf(row: SearchRow, everywhere: SearchRow[]): number {
-  const state = stateOf(row.entity);
-  return everywhere.filter((r) => stateOf(r.entity) === state && (r.volume?.year ?? 0) > (row.volume?.year ?? 0)).length + 1;
-}
-
 /**
  * Each state with doctors doing the procedures chosen: the rep's own first, then
  * those next door, and in each those with a reason to look first, then the biggest.
  */
-function territoriesFor(everywhere: SearchRow[], codes: string): BriefTerritory[] {
+function territoriesFor(everywhere: SearchRow[]): BriefTerritory[] {
   const all = STATES.flatMap((state) => {
     const rows = everywhere.filter((r) => stateOf(r.entity) === state.id);
-    return rows.length ? [{ count: rows.length, territory: territory(state, rows, { ...DEFAULT_FILTERS, states: [state.id], codes }) }] : [];
+    return rows.length ? [{ count: rows.length, territory: territory(state, rows) }] : [];
   });
   const ranked = (yours: boolean) =>
     all
@@ -212,14 +215,18 @@ function territoriesFor(everywhere: SearchRow[], codes: string): BriefTerritory[
   return [...ranked(true), ...ranked(false)];
 }
 
-/** A state at a glance: a gap in My targets in the rep's own, its busiest doctor beyond them, and competitors' products there. */
-function territory(state: { id: string; label: string }, rows: SearchRow[], filters: Filters): BriefTerritory {
+/** A state at a glance: a gap in My targets in the rep's own, who to reach out to there first and why, and competitors' products there. */
+function territory(state: { id: string; label: string }, rows: SearchRow[]): BriefTerritory {
   const yours = YOUR_STATES.includes(state.id);
   const mine = rows.filter((r) => r.mine).length;
   const gapped = yours && mine < rows.length * GAP;
-  const byVolume = [...rows].sort((a, b) => (b.volume?.year ?? 0) - (a.volume?.year ?? 0));
-  const top = byVolume.findIndex((r) => !r.mine);
-  const busiest = top < 0 ? null : { row: byVolume[top], rank: top ? `${ordinal(top + 1)} busiest` : 'Busiest', change: Math.round(byVolume[top].volume?.change ?? 0) };
+  // Someone using a competitor's products first, as there's business to win, else someone growing fast.
+  const beyond = rows.filter((r) => !r.mine);
+  const best = (reason: (r: SearchRow) => boolean) => beyond.filter(reason).sort((a, b) => added(b) - added(a))[0];
+  const top = best(using) ?? best(growing);
+  const first = top
+    ? { row: top, why: using(top) ? `Uses ${listJoin(top.entity.competitors ?? [])}` : 'Growing fast', competitor: using(top), change: Math.round(top.volume?.change ?? 0) }
+    : null;
   const summary = competitorsIn(rows);
   const used = summary.pattern;
   const tone = gapped ? 'gap' : used ? 'competitor' : 'plain';
@@ -227,14 +234,14 @@ function territory(state: { id: string; label: string }, rows: SearchRow[], filt
   const where = `${state.label}${yours ? '' : ', next door'}`;
   const trend = (change: number) => (change >= 1 ? `, up ${change}% on last year` : change <= -1 ? `, down ${-change}% on last year` : '');
   const gapWords = !gapped ? '' : mine ? `Only ${mine} of its ${plural(rows.length, 'doctor')} ${mine === 1 ? 'is' : 'are'} in My targets.` : `None of its ${plural(rows.length, 'doctor')} are in My targets.`;
-  // Ranked among everyone there, My targets too: "Dr. Castellano, the 3rd busiest there".
-  const busiestWords = busiest ? `Its busiest beyond My targets is ${busiest.row.entity.name}${top ? `, the ${busiest.rank} there` : ''}${trend(busiest.change)}.` : '';
+  // "Dr. Dorothy Baptiste uses Competitor B, up 15% on last year."
+  const firstWords = first ? `${first.row.entity.name} ${first.competitor ? lowerFirst(first.why) : 'is growing fast'}${trend(first.change)}.` : '';
   return {
     state: state.id,
     name: state.label,
     yours,
     gap: !gapped ? '' : mine ? `Only ${mine} in My targets` : 'None in My targets',
-    busiest,
+    first,
     summary: { lead: summary.lead, rest: summary.rest, pattern: !!used },
     tone,
     reason: gapped
@@ -245,8 +252,7 @@ function territory(state: { id: string; label: string }, rows: SearchRow[], filt
         ? `${summary.lead} in ${state.label} ${summary.rest}.`
         : '',
     // "Most vascular surgeons there use Competitor A.", or "None of its 4 interventionalists use a competitor."
-    words: [`${where}.`, gapWords, busiestWords, `${summary.lead}${used ? ' there' : ''} ${summary.rest}.`].filter(Boolean).join(' '),
-    find: searchLink(tone === 'competitor' && used ? { ...filters, competitors: [used.competitor], specialties: used.specialty ? [used.specialty] : [] } : filters),
+    words: [`${where}.`, gapWords, firstWords, `${summary.lead}${used ? ' there' : ''} ${summary.rest}.`].filter(Boolean).join(' '),
   };
 }
 
@@ -293,31 +299,31 @@ function competitorsIn(rows: SearchRow[]): { lead: string; rest: string; pattern
 /**
  * Why someone is worth adding, with how much they do and the driving a visit
  * adds: "Uses Competitor B", ", and is near your visit to Dr. Lee.", or for
- * someone growing fast, "Growing fast", ", and New York’s 3rd busiest." What
- * comes after "and" is the first of near the day's visits and high in the state
- * that's true and not already said of someone before (`said`); how fast they're
- * growing is in the figure under it.
+ * someone growing fast, "Growing fast", ", with no competitor yet." What comes
+ * after is the first reason more that's true and not already said of someone
+ * before (`said`): near the day's visits, new in practice, so still settling on
+ * what to use, or for someone growing fast, no competitor's products yet. How
+ * much they do and how fast they're growing are in the figure under it.
  */
-function personFor(row: SearchRow, detour: { minutes: number; stop: Stop } | null, visits: Stop[], rank: number, said: Set<string>): BriefPerson {
+function personFor(row: SearchRow, detour: { minutes: number; stop: Stop } | null, visits: Stop[], said: Set<string>): BriefPerson {
   const uses = row.entity.competitors ?? [];
-  const change = Math.round(row.volume?.change ?? 0);
-  const near = detour && detour.minutes <= ON_THE_WAY ? nearWords(detour, visits) : '';
-  const state = STATES.find((s) => s.id === stateOf(row.entity))?.label ?? '';
-  const ranked = rank <= 5 ? rankIn(rank, state) : '';
   const competitor = uses.length > 0;
+  const near = detour && detour.minutes <= ON_THE_WAY ? nearWords(detour, visits) : '';
+  const isNew = row.entity.kind === 'hcp' && row.entity.yearsInPractice <= NEW_IN_PRACTICE;
   const lead = competitor ? `Uses ${listJoin(uses)}` : 'Growing fast';
-  // After "Growing fast" the "is" goes: "Growing fast, and New York’s 3rd busiest."
-  const options = [near, ranked].filter(Boolean).map((o) => (competitor ? `is ${o}` : o));
-  const also = options.find((o) => !said.has(`${lead}, and ${o}`)) ?? '';
-  if (also) said.add(`${lead}, and ${also}`);
+  // After "Growing fast" the "is" goes: "Growing fast, and near your visit to Dr. Volkov."
+  const and = (words: string) => `, and ${competitor ? 'is ' : ''}${words}`;
+  const options = [near ? and(near) : '', isNew ? and('new in practice') : '', competitor ? '' : ', with no competitor yet'].filter(Boolean);
+  const also = options.find((o) => !said.has(`${lead}${o}`)) ?? '';
+  if (also) said.add(`${lead}${also}`);
   return {
     row,
     lead,
-    rest: also ? `, and ${also}.` : '.',
+    rest: `${also}.`,
     competitor,
     figure: `${about(row.volume?.year ?? 0)} a year`,
-    change,
-    driving: !detour ? '' : detour.minutes ? `${detour.minutes} min more driving` : 'No more driving',
+    change: Math.round(row.volume?.change ?? 0),
+    driving: !detour ? '' : detour.minutes ? `${formatMinutes(detour.minutes)} more driving` : 'No more driving',
   };
 }
 

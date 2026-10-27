@@ -3,7 +3,7 @@
 import { childrenOf, destination, getOrg, hcpsAt, parentOf, primaryAffiliation, procedureTotal, procedureYoy, systemOf, descendantsOf } from '../data/index.js';
 import { formatNumber, html } from '../format.js';
 import { mapView } from '../map.js';
-import { avatar, barRow, card, copyButton, details, emptyState, icon, kpis, panel, sectionHead, signalTags, soon, tabs, tag, unavailableState } from '../ui.js';
+import { avatar, barRow, card, copyButton, delta, details, emptyState, icon, kpis, panel, sectionHead, signalTags, soon, tabs, tag, unavailableState } from '../ui.js';
 import { activityPanel, profileActions, profileHeader, sampleNote, volumesPanel, whyCard } from './profile-parts.js';
 
 const TABS = [
@@ -157,7 +157,8 @@ function leakage(org) {
   if (!l) return unavailableState({ title: 'Leakage not reported for this site', body: org.leakageUnavailable });
   const max = Math.max(...l.destinations.map((d) => d.patients));
   const name = (d) => (d.orgId ? html`<button type="button" class="link" data-action="openProfile" data-id="${d.orgId}">${getOrg(d.orgId).name}</button> ${tag('In system', 'success')}` : html`${destination(d.ref).name} ${tag('Out of system', 'orange')}`);
-  const trend = (t) => (t ? html`<span class="delta delta-${t > 0 ? 'up-bad' : 'down-good'}">${t > 0 ? '+' : ''}${t}%</span>` : '');
+  // More patients going elsewhere is bad news, so up is red.
+  const trend = (t) => (t ? delta(t, { suffix: '', upIsBad: true }) : '');
   const kept = org.type === 'Health system' ? 'Kept in system' : org.leakage.keptPct ? 'Kept here' : null;
   return html`
     ${card(html`

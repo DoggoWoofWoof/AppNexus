@@ -19,7 +19,9 @@ test('every starter question gets a real answer', () => {
     assert.ok(!r.unknown, `${q} is understood`);
     assert.ok(r.summary && !BAD_TEXT.test(r.summary), `${q}: ${r.summary}`);
     for (const row of r.rows || []) {
-      assert.ok(!BAD_TEXT.test(`${row.title} ${row.sub} ${row.figure}`), `${q}: row ${row.title}`);
+      // What a row shows: a row with its change as the trend arrow may have no line under it.
+      assert.ok(!BAD_TEXT.test([row.title, row.sub ?? '', row.figure].join(' ')), `${q}: row ${row.title}`);
+      if (row.change != null) assert.ok(Number.isFinite(row.change), `${q}: row ${row.title} has a change`);
       if (row.id) assert.ok(getEntity(row.id), `${q}: row links to a real profile`);
     }
     if (r.doThis) assert.ok(r.doThis.label && r.doThis.action, `${q}: the next step is actionable`);

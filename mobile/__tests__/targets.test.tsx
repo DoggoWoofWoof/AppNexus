@@ -107,9 +107,10 @@ describe('procedures', () => {
     }
   });
 
-  test('read as "86 a year ↑12%"', () => {
-    expect(volumeText({ year: 86, before: 77, change: 11.7 })).toBe('86 a year ↑12%');
-    expect(volumeText({ year: 1240, before: 1300, change: -4.6 })).toBe('1,240 a year ↓5%');
+  // The change on the year before goes beside it as the trend arrow, as everywhere.
+  test('read as "86 a year"', () => {
+    expect(volumeText({ year: 86, before: 77, change: 11.7 })).toBe('86 a year');
+    expect(volumeText({ year: 1240, before: 1300, change: -4.6 })).toBe('1,240 a year');
     expect(volumeText({ year: 86, before: 86, change: 0.3 })).toBe('86 a year');
     expect(volumeText({ year: 4, before: 0, change: null })).toBe('4 a year');
   });

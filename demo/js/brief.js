@@ -3,7 +3,7 @@
 // data as the rest of it. Talking points are fixed rules over the data, not AI.
 
 import { destination, getEntity, openFollowUps, proceduresOf, procedureTotal, procedureYoy, siteFor } from './data/index.js';
-import { formatDate, formatNumber, relativeDay, sum, yoy } from './format.js';
+import { changeWords, formatDate, formatNumber, relativeDay, sum, yoy } from './format.js';
 import { endTime } from './plan.js';
 
 const firstSentence = (text) => (text.match(/^.*?[.!?](\s|$)/)?.[0] || text).trim();
@@ -73,7 +73,9 @@ export function buildBrief(entity, ctx) {
   }
   if (proc) {
     const dir = proc.growth >= 1 ? `up ${Math.round(proc.growth)}%` : proc.growth <= -1 ? `down ${Math.round(-proc.growth)}%` : 'flat';
-    points.push({ icon: proc.growth <= -1 ? 'trending-down' : 'trending-up', text: `${proc.name}: ${formatNumber(proc.count)} in 12 months, ${dir} on last year.` });
+    // The zig-zag arrow in green or red, as every change on the site is.
+    const trend = proc.growth >= 1 ? 'up' : proc.growth <= -1 ? 'down' : 'flat';
+    points.push({ icon: trend === 'down' ? 'trending-down' : 'trending-up', trend, text: `${proc.name}: ${formatNumber(proc.count)} in 12 months, ${dir} on last year.` });
   }
   if (points.length < 3 && entity.kind === 'hcp') {
     const source = entity.referrals.inbound.filter((r) => r.hcpId).sort((a, b) => b.count - a.count)[0];
@@ -109,7 +111,7 @@ export function briefText(entity, brief) {
   const lines = [`Visit brief: ${entity.name}`];
   if (brief.visit) lines.push(visitWhen(brief.visit, entity));
   lines.push('', `Goal: ${brief.goal}`, `Why now: ${brief.insight}`, '', 'Talking points:', ...brief.points.map((p) => `- ${p.text}`), '');
-  lines.push(brief.figures.map((f) => `${f.label}: ${f.value}${f.delta != null ? ` (${f.delta >= 0 ? '+' : ''}${Math.round(f.delta)}% YoY)` : ''}`).join(' · '));
+  lines.push(brief.figures.map((f) => `${f.label}: ${f.value}${f.delta != null ? ` (${changeWords(f.delta)} on last year)` : ''}`).join(' · '));
   lines.push('', 'Sample data.');
   return lines.join('\n');
 }
