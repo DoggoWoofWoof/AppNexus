@@ -11,6 +11,7 @@ import { createElement, type ReactNode } from 'react';
 import { useDailyBrief } from '@/components/daily-brief';
 import { dailyBrief } from '@/lib/daily-brief';
 import { isoDate, startOfDay } from '@/lib/format';
+import { travelMinutes } from '@/lib/plan';
 import { DEFAULT_FILTERS, readSearchLink, type SearchRow } from '@/lib/search';
 import { useWorkspace, WorkspaceProvider } from '@/lib/store';
 import type { Interaction, Workspace } from '@/lib/types';
@@ -33,8 +34,8 @@ const home = { states: [] as string[], codes: 'all' };
 
 const briefFor = (chosen = home, ws: Workspace = freshWorkspace(today), keep: string[] = [], on = day) => dailyBrief(buildContext(ws, today, now), on, chosen, keep, now);
 const ids = (brief: ReturnType<typeof dailyBrief>) => brief.people.map((p) => p.row.entity.id);
-/** Who of the brief comes first: Dr. Volkov, Dr. Adeleke and Dr. Kowalski. */
-const [VOLKOV, ADELEKE, KOWALSKI] = ['adaeze-volkov', 'callum-adeleke', 'gabriela-kowalski'];
+/** Who of the brief comes first: Dr. Volkov, Dr. Baptiste and Dr. Kowalski. */
+const [VOLKOV, BAPTISTE, KOWALSKI] = ['adaeze-volkov', 'dorothy-baptiste', 'gabriela-kowalski'];
 
 /** The fresh workspace with an email to someone on that day. */
 function emailed(id: string, date: string): Workspace {
@@ -55,26 +56,26 @@ describe('the territory at a glance', () => {
   test('a tile for each state, the rep’s own first, with who to reach out to there first and why, and why to look there', () => {
     const { territories } = briefFor();
     expect(territories.map((t) => [t.state, t.yours, t.tone, t.gap, t.first && [t.first.row.entity.name, t.first.why, t.first.change], t.summary])).toEqual([
-      ['NY', true, 'competitor', '', ['Dr. Dorothy Baptiste', 'Uses Competitor B', 15], { lead: 'Most vascular surgeons', rest: 'use Competitor A', pattern: true }],
+      ['NY', true, 'competitor', '', ['Dr. Adaeze Volkov', 'Uses Competitor B', 15], { lead: 'Most vascular surgeons', rest: 'use Competitor A', pattern: true }],
       ['NJ', true, 'gap', 'None in My targets', ['Dr. Naveen Schreiber', 'Uses Competitor A', 19], { lead: '4 of 9 cardiologists', rest: 'use Competitor A', pattern: true }],
       // Next door, no pattern: how few of the biggest specialty use a competitor.
       ['CT', false, 'plain', '', ['Dr. Nadim Sundberg', 'Uses Competitor B', 12], { lead: 'Only 1 of 8 interventionalists', rest: 'uses a competitor', pattern: false }],
-      ['PA', false, 'plain', '', ['Dr. Yuki Vaccaro', 'Uses Competitor B', 18], { lead: 'None of its 5 cardiologists', rest: 'use a competitor', pattern: false }],
+      ['PA', false, 'plain', '', ['Dr. Elliot Zubiri', 'Uses Competitor B', 13], { lead: 'None of its 5 cardiologists', rest: 'use a competitor', pattern: false }],
     ]);
     expect(territories.map((t) => t.reason)).toEqual(['Most vascular surgeons in New York use Competitor A.', 'Nobody in New Jersey is in My targets.', '', '']);
     // Screen readers hear each in a sentence or two.
     expect(territories.map((t) => t.words)).toEqual([
-      'New York. Dr. Dorothy Baptiste uses Competitor B, up 15% on last year. Most vascular surgeons there use Competitor A.',
+      'New York. Dr. Adaeze Volkov uses Competitor B, up 15% on last year. Most vascular surgeons there use Competitor A.',
       'New Jersey. None of its 45 doctors are in My targets. Dr. Naveen Schreiber uses Competitor A, up 19% on last year. 4 of 9 cardiologists there use Competitor A.',
       'Connecticut, next door. Dr. Nadim Sundberg uses Competitor B, up 12% on last year. Only 1 of 8 interventionalists uses a competitor.',
-      'Pennsylvania, next door. Dr. Yuki Vaccaro uses Competitor B, up 18% on last year. None of its 5 cardiologists use a competitor.',
+      'Pennsylvania, next door. Dr. Elliot Zubiri uses Competitor B, up 13% on last year. None of its 5 cardiologists use a competitor.',
     ]);
   });
 
-  test('who to reach out to first is for a reason, not size: someone using a competitor’s products, else someone growing fast, whoever gained most', () => {
+  test('who to reach out to first is for a reason, not size: someone using a competitor’s products, else someone growing fast, whoever’s most worth seeing', () => {
     for (const t of briefFor().territories) {
       const using = doctorsIn(t.state).filter((r) => !r.mine && r.entity.competitors?.length);
-      expect(gained(t.first!.row)).toBe(Math.max(...using.map(gained)));
+      expect(t.first!.row.priority).toBe(Math.max(...using.map((r) => r.priority)));
     }
     // With everyone in Connecticut using a competitor's products in My targets, it's whoever's growing fast.
     const starred = doctorsIn('CT')
@@ -83,8 +84,18 @@ describe('the territory at a glance', () => {
     const ct = briefFor(home, starred).territories.find((t) => t.state === 'CT')!;
     expect(ct.first).toMatchObject({ why: 'Growing fast', competitor: false });
     const growing = doctorsIn('CT', starred).filter((r) => !r.mine && (r.volume?.change ?? 0) >= 10);
-    expect(gained(ct.first!.row)).toBe(Math.max(...growing.map(gained)));
+    expect(ct.first!.row.priority).toBe(Math.max(...growing.map((r) => r.priority)));
     expect(ct.words).toMatch(/^Connecticut, next door\. Dr\. [^.]+ is growing fast, up \d+% on last year\. /);
+  });
+
+  test('the drive there counts, as nobody can be in two places at once', () => {
+    const pa = doctorsIn('PA');
+    const [zubiri, vaccaro] = ['elliot-zubiri', 'yuki-vaccaro'].map((id) => pa.find((r) => r.entity.id === id)!);
+    // Dr. Vaccaro gained more on last year, but is over 2 hours further away.
+    expect(gained(vaccaro)).toBeGreaterThan(gained(zubiri));
+    expect([travelMinutes(zubiri.distance), travelMinutes(vaccaro.distance)]).toEqual([225, 350]);
+    expect(briefFor().territories.find((t) => t.state === 'PA')?.first?.row.entity.name).toBe('Dr. Elliot Zubiri');
+    expect(ids(briefFor({ states: ['PA'], codes: 'all' })).slice(0, 2)).toEqual(['elliot-zubiri', 'yuki-vaccaro']);
   });
 
   test('Full list opens Targets on everyone where the people are: the rep’s own territory, or the state picked', () => {
@@ -107,6 +118,7 @@ describe('the territory at a glance', () => {
     const tavr = briefFor({ states: ['NJ'], codes: '33361' }).territories;
     expect(tavr.map((t) => [t.state, t.tone, t.gap, t.first?.row.entity.name, t.first?.why, `${t.summary.lead} ${t.summary.rest}`])).toEqual([
       ['NY', 'competitor', '', 'Dr. Zachary Madsen', 'Uses Competitor A', '3 of 8 interventionalists use Competitor A'],
+      // The busiest at TAVR there, with a competitor's products: the score counts the procedures chosen.
       ['NJ', 'gap', 'None in My targets', 'Dr. Benjamin Goldberg', 'Uses Competitor A', '2 of 5 cardiothoracic surgeons use a competitor'],
       // Fewer than 3 of any specialty, so everyone there.
       ['CT', 'plain', '', 'Dr. Nadim Sundberg', 'Uses Competitor B', '1 of 3 doctors uses a competitor'],
@@ -121,7 +133,7 @@ describe('who to add', () => {
     const { people } = briefFor();
     expect(people.map((p) => [p.row.entity.id, `${p.lead}${p.rest}`, p.competitor, p.figure, p.change, p.driving])).toEqual([
       [VOLKOV, 'Uses Competitor B.', true, '650 a year', 15, '35 min more driving'],
-      [ADELEKE, 'Uses Competitor B.', true, '620 a year', 10, '25 min more driving'],
+      [BAPTISTE, 'Uses Competitor B.', true, '690 a year', 15, '1 h more driving'],
       // How fast is in the figure, so the words say something else: there's business to win.
       [KOWALSKI, 'Growing fast, with no competitor yet.', false, '870 a year', 21, '30 min more driving'],
     ]);
@@ -131,31 +143,33 @@ describe('who to add', () => {
   test('once the day has a visit, those near it say so, with the driving they add', () => {
     const one = addToPlan(freshWorkspace(today), day, VOLKOV, now);
     // As they were when it opened, so the rows don't move.
-    const kept = briefFor(home, one, [VOLKOV, ADELEKE, KOWALSKI]).people;
+    const kept = briefFor(home, one, [VOLKOV, BAPTISTE, KOWALSKI]).people;
     expect(kept.map((p) => [p.row.entity.id, `${p.lead}${p.rest}`, p.driving])).toEqual([
       [VOLKOV, 'Uses Competitor B.', '35 min more driving'],
-      [ADELEKE, 'Uses Competitor B.', '40 min more driving'],
+      [BAPTISTE, 'Uses Competitor B.', '1 h 10 min more driving'],
       [KOWALSKI, 'Growing fast, and near your visit to Dr. Volkov.', '10 min more driving'],
     ]);
-    // Opened again, those on the way come first.
+    // Opened again, Dr. Volkov is in the day, and Dr. Kowalski, near that visit, adds less driving.
     const again = briefFor(home, one);
     expect(ids(again)).not.toContain(VOLKOV);
     expect(again.people.find((p) => p.row.entity.id === KOWALSKI)?.driving).toBe('10 min more driving');
   });
 
   test('leaves out anyone in My targets, in the day or reached in the last fortnight', () => {
-    expect(ids(briefFor(home, withTarget(freshWorkspace(today), ADELEKE, true)))).not.toContain(ADELEKE);
-    expect(ids(briefFor(home, addToPlan(freshWorkspace(today), day, ADELEKE, now)))).not.toContain(ADELEKE);
-    // Emailed 13 days ago, a reply may still come; after a fortnight they're back.
-    expect(ids(briefFor(home, emailed(VOLKOV, '2026-10-14')))).not.toContain(VOLKOV);
-    expect(ids(briefFor(home, emailed(VOLKOV, '2026-10-13')))).toContain(VOLKOV);
+    expect(ids(briefFor(home, withTarget(freshWorkspace(today), VOLKOV, true)))).not.toContain(VOLKOV);
+    expect(ids(briefFor(home, addToPlan(freshWorkspace(today), day, VOLKOV, now)))).not.toContain(VOLKOV);
+    // Emailed 13 days ago, a reply may still come; after a fortnight they're back, if
+    // lower, as the time since counts: in Connecticut, still first.
+    const ct = { states: ['CT'], codes: 'all' };
+    expect(ids(briefFor(ct, emailed('nadim-sundberg', '2026-10-14')))).not.toContain('nadim-sundberg');
+    expect(ids(briefFor(ct, emailed('nadim-sundberg', '2026-10-13')))[0]).toBe('nadim-sundberg');
   });
 
   test('in the state picked and for the procedures chosen', () => {
     expect(briefFor({ states: ['NJ'], codes: 'all' }).people.map((p) => [p.row.entity.name, `${p.lead}${p.rest}`])).toEqual([
+      ['Dr. Lucia Salazar', 'Uses Competitor B.'],
       ['Dr. Vincent Fujita', 'Uses Competitor A.'],
-      ['Dr. Ingrid Alvarado', 'Uses Competitor B.'],
-      ['Dr. Caroline Oliveira', 'Growing fast, with no competitor yet.'],
+      ['Dr. Paolo Moreau', 'Growing fast, with no competitor yet.'],
     ]);
     // Few do TAVR in New Jersey, and the figures are theirs.
     expect(briefFor({ states: ['NJ'], codes: '33361' }).people.map((p) => [p.row.entity.name, `${p.lead}${p.rest}`, p.figure])).toEqual([
@@ -163,7 +177,7 @@ describe('who to add', () => {
       ['Dr. Ayesha Esposito', 'Growing fast, with no competitor yet.', '50 a year'],
     ]);
     // Next door the driving can be long, in hours and minutes.
-    expect(briefFor({ states: ['PA'], codes: 'all' }).people[0].driving).toBe('5 h 50 min more driving');
+    expect(briefFor({ states: ['PA'], codes: 'all' }).people[0].driving).toBe('3 h 45 min more driving');
   });
 });
 
@@ -187,7 +201,7 @@ describe('the rest of the brief', () => {
     const one = briefFor(home, addToPlan(freshWorkspace(today), day, VOLKOV, now), shown);
     expect([one.short, one.line]).toEqual(['2 more to add today', `You added Dr. Volkov. 2 more doctors are worth adding today. ${why}`]);
     const all = briefFor(home, shown.reduce((ws, id) => addToPlan(ws, day, id, now), freshWorkspace(today)), shown);
-    expect([all.short, all.line]).toEqual(['All 3 added today', `You added Dr. Volkov, Dr. Adeleke and Dr. Kowalski. ${why}`]);
+    expect([all.short, all.line]).toEqual(['All 3 added today', `You added Dr. Volkov, Dr. Baptiste and Dr. Kowalski. ${why}`]);
   });
 });
 
@@ -206,7 +220,7 @@ describe('tapping a tile', () => {
     expect([state().picked, state().brief.heading]).toEqual([null, 'Worth adding today']);
     const yours = names();
     await act(async () => state().pick('CT'));
-    expect([state().picked, state().brief.heading, names()]).toEqual(['CT', 'Worth adding today in Connecticut', ['Dr. Nadim Sundberg', 'Dr. Brigitte Siddiqui', 'Dr. Nobuko Reinholt']]);
+    expect([state().picked, state().brief.heading, names()]).toEqual(['CT', 'Worth adding today in Connecticut', ['Dr. Nadim Sundberg', 'Dr. Kaveh Kariuki', 'Dr. Nobuko Reinholt']]);
     // Targets keeps its own chips: looking at another state there leaves Today as it was.
     await act(async () => view.result.current.ws.setPrefs({ states: ['PA'] }));
     expect(state().brief.heading).toBe('Worth adding today in Connecticut');

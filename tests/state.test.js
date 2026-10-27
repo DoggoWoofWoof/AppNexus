@@ -3,8 +3,10 @@ import { test } from 'node:test';
 
 import { ApiError, createApi } from '../demo/js/api.js';
 import { buildContext } from '../demo/js/app.js';
+import { priorityOf } from '../demo/js/data/index.js';
 import { addDays, isoDate, startOfDay } from '../demo/js/format.js';
 import { TABS, freshNav, loadNav, makeEntry, pop, push, saveNav, switchTab } from '../demo/js/nav.js';
+import { travelMinutes } from '../demo/js/plan.js';
 import { DEFAULT_FILTERS, activeFilterCount } from '../demo/js/search.js';
 import { STORE_KEY, freshWorkspace, loadWorkspace, saveWorkspace } from '../demo/js/store.js';
 
@@ -41,6 +43,14 @@ test('filters narrow the results and sorts order them', () => {
   assert.deepEqual(near, [...near].sort((a, b) => a - b));
   const names = search({ sort: 'name' }).map((r) => r.entity.name.replace(/^Dr\. /, ''));
   assert.deepEqual(names, [...names].sort((a, b) => a.localeCompare(b)));
+});
+
+test('relevance counts the drive there: a point off for every 5 minutes, as nobody can be in two places at once', () => {
+  const ranked = search({ sort: 'relevance' });
+  for (const r of ranked) assert.equal(r.priority, priorityOf(r.entity, ws, today) - travelMinutes(r.distance) / 5);
+  assert.ok(ranked.some((r) => travelMinutes(r.distance) > 0));
+  const scores = ranked.map((r) => r.priority);
+  assert.deepEqual(scores, [...scores].sort((a, b) => b - a));
 });
 
 test('the filter count ignores the search text and People/Accounts tab', () => {

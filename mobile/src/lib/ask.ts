@@ -719,7 +719,7 @@ const BUILDERS: Record<Intent, (input: Input) => Built> = {
     if (!picks.length) return empty('Everyone suggested is already planned for today.');
     const top = picks[0];
     return {
-      scope: ['Today', 'Follow-ups, figures and last contact', DATA_PERIOD],
+      scope: ['Today', 'Follow-ups, figures, competitor use, last contact and the drive there', DATA_PERIOD],
       summary: `Start with ${top.entity.name}: ${reasons(top.signals) || 'the highest volume in your book'}.`,
       rows: picks.map(({ entity: e, signals }) => row(e, '', signals.slice(0, 2).map((s) => s.label).join(' · ') || detailOf(e))),
       doThis: { text: `${top.entity.name} is the strongest case for a visit.`, label: `Open ${top.entity.name}`, link: open(top.entity.id) },

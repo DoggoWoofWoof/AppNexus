@@ -137,7 +137,7 @@ function followUpsCard(due, ctx) {
 function suggestions(ctx, day) {
   const picks = ctx.suggestions(day, 3);
   return card(html`
-    ${sectionHead('Who to see', { sub: 'Top of your Targets list: follow-ups, leakage and volume' })}
+    ${sectionHead('Who to see', { sub: 'Top of your Targets list: follow-ups, leakage, volume, last contact and the drive there' })}
     ${picks.length
       ? html`<ul class="entity-list">${picks.map(({ entity, signals }) => targetRow({ entity, signals, planned: null }, ctx, { showDistance: false }))}</ul>`
       : emptyState({ icon: 'sparkles', title: 'Everyone suggested is planned', body: 'Search Targets for more people and accounts.' })}

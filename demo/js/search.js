@@ -40,7 +40,8 @@ const normalise = (s) => String(s || '').toLowerCase().normalize('NFKD').replace
 
 /**
  * Filters and sorts entities. `ctx` supplies everything that depends on the
- * rep's workspace: { haystack, signals, distance, priority, planned }.
+ * rep's workspace: { haystack, signals, distance, priority, planned }, where
+ * priority takes how far away they are, as the drive there counts.
  * Returns rows of { entity, signals, distance, planned, priority }.
  */
 export function searchTargets(entities, f, ctx) {
@@ -49,13 +50,16 @@ export function searchTargets(entities, f, ctx) {
 
   const rows = entities
     .filter((e) => e.kind === f.kind)
-    .map((entity) => ({
-      entity,
-      signals: ctx.signals(entity),
-      distance: ctx.distance(entity),
-      planned: ctx.planned(entity),
-      priority: ctx.priority(entity),
-    }))
+    .map((entity) => {
+      const distance = ctx.distance(entity);
+      return {
+        entity,
+        signals: ctx.signals(entity),
+        distance,
+        planned: ctx.planned(entity),
+        priority: ctx.priority(entity, distance),
+      };
+    })
     .filter((row) => {
       const hay = normalise(ctx.haystack(row.entity));
       if (!tokens.every((t) => hay.includes(t))) return false;

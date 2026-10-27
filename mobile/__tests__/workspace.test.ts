@@ -3,9 +3,11 @@
 
 import { describe, expect, test } from '@jest/globals';
 
-import { allEntities, getEntity, getOrg, signalsFor } from '@/lib/data';
+import { allEntities, getEntity, getOrg, priorityOf, signalsFor } from '@/lib/data';
 import { addDays, fromIso, isoDate, startOfDay } from '@/lib/format';
+import { travelMinutes } from '@/lib/plan';
 import { activeFilterCount, DEFAULT_FILTERS, type Filters } from '@/lib/search';
+import type { Workspace } from '@/lib/types';
 import { buildContext, freshWorkspace, sampleWorkspace, WORKSPACE_VERSION } from '@/lib/workspace';
 
 const today = startOfDay(new Date());
@@ -43,6 +45,31 @@ describe('search', () => {
     expect(surnames).toEqual([...surnames].sort((a, b) => a.localeCompare(b)));
     // The team's own come first by name among My targets.
     expect(search({ sort: 'name', mine: true }).map((r) => r.entity.name.split(' ').pop()).slice(0, 3)).toEqual(['Bell', 'Cohen', 'Lee']);
+  });
+
+  test('relevance counts the drive there: a point off for every 5 minutes, as nobody can be in two places at once', () => {
+    const ranked = search({ sort: 'relevance', states: ['NY', 'NJ', 'CT', 'PA'] });
+    for (const r of ranked) expect(r.priority).toBeCloseTo(priorityOf(r.entity, ws, today) - travelMinutes(r.distance) / 5);
+    expect(ranked.some((r) => travelMinutes(r.distance) > 60)).toBe(true);
+    const scores = ranked.map((r) => r.priority);
+    expect(scores).toEqual([...scores].sort((a, b) => b - a));
+  });
+
+  test('relevance weighs how much they do, not percentages, and counts competitor use and time since last in touch', () => {
+    const score = (id: string, w: Workspace = ws) => priorityOf(getEntity(id)!, w, today);
+    // Dr. Adeyemi went from 8 a year to 10, 25% more; Dr. Mendoza does 385, if fewer than the year before.
+    expect(score('desmond-mendoza')).toBeGreaterThan(score('vikram-adeyemi') + 15);
+    // Using a competitor's products counts by what there is to win: nothing for someone doing no procedures.
+    const won = (id: string) => score(id) - priorityOf({ ...getEntity(id)!, competitors: [] }, ws, today);
+    expect(won('michael-fiore')).toBe(0);
+    expect(won('adaeze-volkov')).toBeGreaterThan(10);
+    // Someone seen yesterday can wait: the time since counts in full after a month.
+    const emailed = (date: string): Workspace => ({
+      ...ws,
+      interactions: [...ws.interactions, { id: 'i-mendoza', targetId: 'desmond-mendoza', attendees: [], date, type: 'Email', outcome: 'Sent', author: 'You', note: '' }],
+    });
+    expect(score('desmond-mendoza') - score('desmond-mendoza', emailed(isoDate(addDays(today, -1))))).toBeGreaterThan(20);
+    expect(score('desmond-mendoza', emailed(isoDate(addDays(today, -31))))).toBe(score('desmond-mendoza'));
   });
 
   test('the filter count ignores the search text and People/Accounts tab', () => {

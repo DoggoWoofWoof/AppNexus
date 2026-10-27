@@ -7,7 +7,7 @@ import { allHcps, allOrgs, getEntity, getOrg, lastInteraction, priorityOf, signa
 import { REP } from './data/seed.js';
 import { addDays, daysBetween, formatDate, fromIso, haversineKm, html, initials, isoDate, plural, startOfDay } from './format.js';
 import { TABS, currentEntry, freshNav, loadNav, makeEntry, pop, previousEntry, push, saveNav, switchTab } from './nav.js';
-import { activeItems, routeOrder } from './plan.js';
+import { activeItems, routeOrder, travelMinutes } from './plan.js';
 import { searchTargets } from './search.js';
 import { renderSheet } from './sheets.js';
 import { freshWorkspace, loadWorkspace, saveWorkspace } from './store.js';
@@ -90,18 +90,18 @@ export function buildContext({ ws, entry, today: day, now = () => new Date(), sh
         signals,
         distance: (e) => haversineKm(origin, siteFor(e).coords),
         planned: (e) => planItemFor(e.id, ws.selection.day),
-        priority: (e) => priorityOf(e, ws, day),
+        priority: (e, km) => priorityOf(e, ws, day, travelMinutes(km)),
         haystack: (e) => (e.kind === 'hcp'
           ? [e.name, e.specialty, e.npi, ...e.affiliations.map((a) => getOrg(a.orgId).name)]
           : [e.name, e.type, e.typeDetail, e.address, e.city]).join(' '),
       });
     },
-    /** The top of the Targets ranking for a day, leaving out anyone already planned, seen or cancelled that day. */
+    /** The top of the Targets ranking for a day, with the drive from the start, leaving out anyone already planned, seen or cancelled that day. */
     suggestions: (d, count) => {
       const planned = new Set((ws.plans[d] || []).map((i) => i.targetId));
       return entities
         .filter((e) => !planned.has(e.id) && e.type !== 'Health system' && (e.kind === 'hcp' || e.assigned))
-        .map((e) => ({ entity: e, signals: signals(e), priority: priorityOf(e, ws, day) }))
+        .map((e) => ({ entity: e, signals: signals(e), priority: priorityOf(e, ws, day, travelMinutes(haversineKm(REP.start.coords, siteFor(e).coords))) }))
         .sort((a, b) => b.priority - a.priority)
         .slice(0, count);
     },

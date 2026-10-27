@@ -2,16 +2,19 @@
 // For each state of the territory and next door it says who to reach out to
 // there and why: the doctor beyond My targets with the best reason, someone
 // using a competitor's products, as there's business to win, else someone
-// growing fast; in the rep's own states when hardly anyone there is in My
-// targets; and competitors' products there, a pattern when enough of a specialty
-// use the same one ("Most vascular surgeons use Competitor A"), or how few of its
-// biggest specialty use any ("None of its 4 interventionalists use a competitor").
+// growing fast, and of them the one most worth seeing with the drive there, by
+// the score Targets ranks by (`priorityOf` in lib/data); in the rep's own states
+// when hardly anyone there is in My targets; and competitors' products there, a
+// pattern when enough of a specialty use the same one ("Most vascular surgeons
+// use Competitor A"), or how few of its biggest specialty use any ("None of its 4
+// interventionalists use a competitor").
 // Then three doctors beyond My targets worth adding to the day, in the rep's own
 // territory or a state picked on its tile, two who use a competitor's products and
-// one growing fast, each with why in a sentence and the driving a visit adds, and
-// a link to everyone there on Targets. Its figures are for the procedures chosen
-// with the chip on Targets. The sample's figures are a fixed year, the last four
-// quarters against the four before. Fixed rules over the sample data, not AI.
+// one growing fast, by the same score with the driving a visit adds, each with why
+// in a sentence and that driving, and a link to everyone there on Targets. Its
+// figures are for the procedures chosen with the chip on Targets. The sample's
+// figures are a fixed year, the last four quarters against the four before. Fixed
+// rules over the sample data, not AI.
 
 import { canSeeOn } from './booking';
 import { pickLabel } from './codes';
@@ -35,8 +38,9 @@ export interface BriefTerritory {
   /**
    * Who to reach out to there first, beyond My targets, and why in a few words:
    * someone using a competitor's products, "Uses Competitor B", else someone
-   * growing fast, "Growing fast", and of those, whoever gained the most
-   * procedures on last year. With that change in percent.
+   * growing fast, "Growing fast", and of those, whoever is most worth seeing with
+   * the drive there from where the day starts (`priority` on the search row).
+   * With their change on last year in percent.
    */
   first: { row: SearchRow; why: string; competitor: boolean; change: number } | null;
   /**
@@ -73,7 +77,7 @@ export interface BriefPerson {
 export interface DailyBrief {
   /** The states of the rep's own territory, then those next door, each with why to look there first. */
   territories: BriefTerritory[];
-  /** Two who use a competitor's products and one of the fastest growing, each with a visit that fits the day. */
+  /** Two who use a competitor's products and one growing fast, each with a visit that fits the day. */
   people: BriefPerson[];
   /** Over the people: "Worth adding today", and where, when it isn't the rep's whole territory. */
   heading: string;
@@ -98,14 +102,11 @@ const ENOUGH = 3;
 const GAP = 0.1;
 /** The most minutes of driving a visit can add to the day and still be on the way. */
 const ON_THE_WAY = 20;
-/** Visits adding up to this many minutes of driving come before those further out. */
-const NEARBY = 45;
 /** Days after reaching someone before they're suggested again, as a reply or a visit may still come. */
 const RESTING = 14;
 /** This many years in practice or fewer is new in practice, when someone may still be settling on what to use. */
 const NEW_IN_PRACTICE = 5;
 
-const added = (r: SearchRow): number => (r.volume ? r.volume.year - r.volume.before : 0);
 /** Uses a competitor's products, so there's business to win. */
 const using = (r: SearchRow): boolean => !!r.entity.competitors?.length;
 /** Growing fast with no competitor's products. */
@@ -113,14 +114,16 @@ const growing = (r: SearchRow): boolean => !using(r) && (r.volume?.change ?? 0) 
 /** A yearly count in round numbers, as it's only about that: "690". */
 const about = (n: number): string => formatNumber(n < 100 ? Math.round(n / 5) * 5 : n < 1000 ? Math.round(n / 10) * 10 : Math.round(n / 100) * 100);
 
-type BriefContext = Pick<Context, 'search' | 'planItemFor' | 'dayWord' | 'detour' | 'daySchedule' | 'lastInteraction' | 'today'>;
+type BriefContext = Pick<Context, 'search' | 'priority' | 'planItemFor' | 'dayWord' | 'detour' | 'daySchedule' | 'lastInteraction' | 'today'>;
 
 /**
  * The brief for a day, with its people in the states given, or the rep's own
  * territory with none, and its figures for the procedures chosen on Targets
  * (`chosen`). The people aren't in My targets or the day already, nor reached in
- * the last fortnight, and each can be seen that day in their usual times. Those
- * on the way come first, then those nearby, each the most gained on last year.
+ * the last fortnight, and each can be seen that day in their usual times. Each
+ * comes in order of how worth seeing they are with the driving a visit adds, by
+ * the score Targets ranks by (`priorityOf` in lib/data), so someone near comes
+ * before someone a little more worth seeing a long drive away.
  * Given `keep`, the people are those, as they were, so adding someone on the
  * brief doesn't move the rows. `now` keeps a visit today after it.
  */
@@ -145,17 +148,11 @@ export function dailyBrief(ctx: BriefContext, day: string, chosen: { states: str
   const kept = keep.flatMap((id) => doctors.filter((r) => r.entity.id === id));
   let chosenRows = kept;
   if (!keep.length) {
-    const band = (r: SearchRow) => {
-      const minutes = detourOf(r)?.minutes ?? Infinity;
-      return minutes <= ON_THE_WAY ? 0 : minutes <= NEARBY ? 1 : 2;
-    };
-    const ranked = (rows: SearchRow[]) =>
-      rows
-        .filter((r) => detourOf(r))
-        .sort((a, b) => band(a) - band(b) || added(b) - added(a));
+    const worth = (r: SearchRow) => ctx.priority(r.entity, detourOf(r)?.minutes, r.volume);
+    const ranked = (rows: SearchRow[]) => rows.filter((r) => detourOf(r)).sort((a, b) => worth(b) - worth(a));
     const users = ranked(doctors.filter((r) => fresh(r) && using(r)));
     const risers = ranked(doctors.filter((r) => fresh(r) && growing(r)));
-    // Two who use a competitor and one of the fastest growing, each filling in when the other runs short.
+    // Two who use a competitor and one growing fast, each filling in when the other runs short.
     const fromUsing = Math.max(2, 3 - risers.length);
     chosenRows = [...users.slice(0, fromUsing), ...risers.slice(0, 3 - Math.min(fromUsing, users.length))];
   }
@@ -220,9 +217,10 @@ function territory(state: { id: string; label: string }, rows: SearchRow[]): Bri
   const yours = YOUR_STATES.includes(state.id);
   const mine = rows.filter((r) => r.mine).length;
   const gapped = yours && mine < rows.length * GAP;
-  // Someone using a competitor's products first, as there's business to win, else someone growing fast.
+  // Someone using a competitor's products first, as there's business to win, else someone growing fast,
+  // and of them the one most worth seeing with the drive there.
   const beyond = rows.filter((r) => !r.mine);
-  const best = (reason: (r: SearchRow) => boolean) => beyond.filter(reason).sort((a, b) => added(b) - added(a))[0];
+  const best = (reason: (r: SearchRow) => boolean) => beyond.filter(reason).sort((a, b) => b.priority - a.priority)[0];
   const top = best(using) ?? best(growing);
   const first = top
     ? { row: top, why: using(top) ? `Uses ${listJoin(top.entity.competitors ?? [])}` : 'Growing fast', competitor: using(top), change: Math.round(top.volume?.change ?? 0) }

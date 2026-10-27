@@ -155,7 +155,8 @@ export interface SearchContext {
   /** How far away they are, from `near` when it's set. */
   distance: (e: Entity, near: string) => number;
   planned: (e: Entity) => PlanItem | null;
-  priority: (e: Entity) => number;
+  /** How worth seeing they are, with the driving to them from `km` away and the procedures picked (`priorityOf` in lib/data). */
+  priority: (e: Entity, km: number, volume: Volume | null) => number;
   /** Whether they usually work on the day being planned. */
   inDay: (e: Entity) => boolean;
   /** Whether they're in My targets. */
@@ -175,6 +176,7 @@ export interface SearchRow {
   signals: Signal[];
   distance: number;
   planned: PlanItem | null;
+  /** How worth seeing they are, in the procedures picked, less the drive there from where `distance` is measured. */
   priority: number;
   /** Their procedures in the codes picked, or null when they do none. */
   volume: Volume | null;
@@ -195,15 +197,19 @@ export function searchTargets(entities: Entity[], f: Filters, ctx: SearchContext
 
   const rows = entities
     .filter((e) => e.kind === f.kind)
-    .map((entity) => ({
-      entity,
-      signals: ctx.signals(entity),
-      distance: ctx.distance(entity, f.near),
-      planned: ctx.planned(entity),
-      priority: ctx.priority(entity),
-      volume: ctx.volume(entity, f.codes),
-      mine: ctx.mine(entity),
-    }))
+    .map((entity) => {
+      const distance = ctx.distance(entity, f.near);
+      const volume = ctx.volume(entity, f.codes);
+      return {
+        entity,
+        signals: ctx.signals(entity),
+        distance,
+        planned: ctx.planned(entity),
+        priority: ctx.priority(entity, distance, volume),
+        volume,
+        mine: ctx.mine(entity),
+      };
+    })
     .filter((row) => {
       const hay = normalise(ctx.haystack(row.entity));
       if (!tokens.every((t) => hay.includes(t))) return false;

@@ -3,7 +3,7 @@
 // phone (lib/persist.ts); sync comes with the real services.
 
 import { availability, bookingRoute, clashesWith, hoursOn, inOnDay, outsideTimes, parseDays, siteOnDay, suggestSlots, usualDay, windowsFor, type Availability, type Slot } from './booking';
-import { volumeIn } from './codes';
+import { volumeIn, type Volume } from './codes';
 import { allEntities, getEntity, getOrg, isAt, lastInteraction, priorityOf, signalsFor, siteFor, stateOf, teamTargets, YOUR_STATES } from './data';
 import { sampleDay, seedWorkspace } from './data/seed';
 import { addDays, dayInWords, daysBetween, formatDate, fromIso, haversineKm, isoDate, toMinutes, uid } from './format';
@@ -86,7 +86,7 @@ export function buildContext(ws: Workspace, today: Date, now?: Date) {
     signals,
     distance: (e, near) => haversineKm((near && getOrg(near)?.coords) || origin, where(e).coords),
     planned: (e) => planItemFor(e.id, ws.selection.day),
-    priority: (e) => priorityOf(e, ws, today),
+    priority: (e, km, volume) => priorityOf(e, ws, today, travelMinutes(km), volume),
     inDay: (e) => !!siteOnDay(e, weekday),
     mine: (e) => book.has(e.id),
     volume: volumeIn,
@@ -121,6 +121,8 @@ export function buildContext(ws: Workspace, today: Date, now?: Date) {
     /** Where the day starts, chosen on the You page: Today's route and map, distances and Ask's "Who is near" start here. */
     start,
     signals,
+    /** How worth seeing someone is in the procedures picked (`volume`, all by default), less a point for every 5 minutes of `driving` to them (`priorityOf` in lib/data). */
+    priority: (e: Entity, driving = 0, volume?: Volume | null): number => priorityOf(e, ws, today, driving, volume),
     planItemFor,
     /** Whether someone is in My targets: the rep's own list, or the team's until they change it. */
     isTarget: (id: string): boolean => book.has(id),
@@ -257,10 +259,11 @@ export function buildContext(ws: Workspace, today: Date, now?: Date) {
         except: from?.id,
       }),
     /**
-     * Those in My targets most worth seeing on a day, leaving out anyone in that day's
-     * plan, even if they cancelled, and on a weekday anyone not in that day, or in but
-     * not seeing people then, as the app would only pick someone to warn about. The
-     * week report passes `usual` false, as it's for any day that week and says when
+     * Those in My targets most worth seeing on a day, with the drive to them from
+     * where the day starts, leaving out anyone in that day's plan, even if they
+     * cancelled, and on a weekday anyone not in that day, or in but not seeing
+     * people then, as the app would only pick someone to warn about. The week
+     * report passes `usual` false, as it's for any day that week and says when
      * they see people. For a later day, anyone planned or seen today waits too.
      */
     suggestions: (day: string, count: number, usual = true) => {
@@ -271,7 +274,10 @@ export function buildContext(ws: Workspace, today: Date, now?: Date) {
         .filter((e) => book.has(e.id) && !planned.has(e.id) && (e.kind === 'hcp' || (e.type !== 'Health system' && e.assigned)))
         .filter((e) => !workday || (siteOnDay(e, weekday) && (!usual || usualDay(e, weekday))))
         .filter((e) => day <= todayIso || !seenToday.has(e.id))
-        .map((entity) => ({ entity, signals: signals(entity), priority: priorityOf(entity, ws, today) }))
+        .map((entity) => {
+          const km = haversineKm(start.coords, siteFor(entity, siteOnDay(entity, weekday) ?? undefined).coords);
+          return { entity, signals: signals(entity), priority: priorityOf(entity, ws, today, travelMinutes(km)) };
+        })
         .sort((a, b) => b.priority - a.priority)
         .slice(0, count);
     },

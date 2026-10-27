@@ -100,5 +100,14 @@ export function routeDistance(items, coordsOf, start) {
   return total;
 }
 
+/**
+ * About how many minutes it takes to drive from one place to another: 5 to
+ * park and walk in, 4 a km for the first 10, in the city, and 1.5 a km beyond,
+ * on faster roads, rounded up to 5. Distances are straight lines, not roads, so
+ * it's a guess. Nothing within the same building.
+ */
+export const travelMinutes = (km) =>
+  km < 0.05 ? 0 : Math.ceil((5 + Math.min(km, 10) * 4 + Math.max(0, km - 10) * 1.5) / 5) * 5;
+
 /** Whether the visit needs the rep to travel. */
 export const isOnSite = (item) => item.type === 'In-person visit' || item.type === 'Meeting';

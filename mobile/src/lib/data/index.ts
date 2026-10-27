@@ -133,6 +133,12 @@ export function procedureTotal(entity: Entity): number {
   return rows ? sum(rows.map((r) => sum(r.series.slice(-4)))) : 0;
 }
 
+/** Procedures over the last four quarters and the four before them, as `volumeIn` in lib/codes counts a pick of codes. */
+function procedureVolume(entity: Entity): { year: number; before: number } {
+  const rows = proceduresOf(entity) ?? [];
+  return { year: procedureTotal(entity), before: sum(rows.map((r) => sum(r.series.slice(-8, -4)))) };
+}
+
 export function procedureYoy(entity: Entity): number | null {
   const rows = proceduresOf(entity);
   return rows?.length ? yoy(addSeries(rows.map((r) => r.series))) : null;
@@ -233,11 +239,35 @@ export function signalMeaning(signal: Signal, entity: Entity): string {
   }
 }
 
-const WEIGHTS: Record<SignalId, number> = { followup: 40, leakage: 30, rising: 20, unseen: 12 };
+/** Minutes of driving that cost a point: the unit the score's weights are in. */
+const MINUTES_A_POINT = 5;
 
-/** Relevance used for default sorting and "Who to see". */
-export function priorityOf(entity: Entity, workspace: Activity, today: Date): number {
+/**
+ * How worth seeing someone is: the one score Targets' Relevance, "Who should I see",
+ * the week report's picks and the daily brief rank by. In points, where a point is
+ * 5 minutes of driving:
+ * - 40 for a follow-up due or late, as something was promised;
+ * - 30 when patients go elsewhere, as that's business leaving;
+ * - for their procedures a year, 6 each time they double from 25, up to 30 at 775,
+ *   so the busiest count for more without a big hospital drowning out every doctor;
+ *   half as much again when they use a competitor's products, as those are cases to win;
+ * - a point for every 5 procedures more than the year before, up to 20, so growth
+ *   counts by how much: from 8 a year to 10 is 25% more, but nothing to drive for;
+ * - up to 25 for the time since the rep was last in touch, all of it after a month,
+ *   so someone seen yesterday can wait;
+ * - 5 for every doctor and for the accounts assigned to the rep;
+ * - less a point for every 5 minutes of `driving` to them, as nobody can be in two
+ *   places at once.
+ * `volume` is the procedures counted: all of them, or a pick of codes (`volumeIn` in lib/codes).
+ */
+export function priorityOf(entity: Entity, workspace: Activity, today: Date, driving = 0, volume: { year: number; before: number } | null = procedureVolume(entity)): number {
   const signals = signalsFor(entity, workspace, today);
+  const has = (id: SignalId) => signals.some((s) => s.id === id);
+  const year = volume?.year ?? 0;
+  const size = Math.min(30, 6 * Math.log2(1 + year / 25)) * (entity.competitors?.length ? 1.5 : 1);
+  const growth = Math.min(20, Math.max(0, year - (volume?.before ?? 0)) / 5);
+  const last = lastInteraction(entity.id, workspace);
+  const since = last ? daysBetween(fromIso(last.date), today) : Infinity;
   const assigned = entity.kind === 'hco' ? entity.assigned : true;
-  return sum(signals.map((s) => WEIGHTS[s.id])) + (assigned ? 5 : 0) + Math.min(10, procedureTotal(entity) / 100);
+  return (has('followup') ? 40 : 0) + (has('leakage') ? 30 : 0) + size + growth + Math.min(25, (since * 25) / 30) + (assigned ? 5 : 0) - driving / MINUTES_A_POINT;
 }
