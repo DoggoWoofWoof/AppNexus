@@ -13,7 +13,7 @@ import { DEFAULT_PREFS, restorePrefs, withPrefs } from '@/lib/prefs';
 import { DEFAULT_FILTERS } from '@/lib/search';
 import { useWorkspace, WorkspaceProvider } from '@/lib/store';
 import type { PlanItem } from '@/lib/types';
-import { addAllToPlan, buildContext, freshWorkspace } from '@/lib/workspace';
+import { addPeople, buildContext, freshWorkspace, orderBest } from '@/lib/workspace';
 
 const today = startOfDay(new Date(2026, 9, 19));
 const todayIso = isoDate(today);
@@ -48,15 +48,16 @@ describe('where the day starts', () => {
     expect(fromHome.rows[0].id).not.toBe(fromOffice.rows[0].id);
   });
 
-  test('Pick 5 puts the stop nearest the chosen place first', () => {
+  test('the best order puts the stop nearest the chosen place first', () => {
     const coordsOf = (i: PlanItem) => (getOrg(i.siteId) ?? siteFor(getEntity(i.targetId)!)).coords;
+    const best = (ws: typeof office) => orderBest(addPeople(ws, tomorrowIso, ['maya', 'jordan']), tomorrowIso).plans[tomorrowIso];
     for (const ws of [office, home]) {
       const start = buildContext(ws, today).start.coords;
-      const [first, ...rest] = addAllToPlan(ws, tomorrowIso, ['maya', 'jordan']).plans[tomorrowIso];
+      const [first, ...rest] = best(ws);
       expect(rest.every((i) => haversineKm(start, coordsOf(first)) <= haversineKm(start, coordsOf(i)))).toBe(true);
     }
-    expect(addAllToPlan(office, tomorrowIso, ['maya', 'jordan']).plans[tomorrowIso][0].targetId).toBe('maya');
-    expect(addAllToPlan(home, tomorrowIso, ['maya', 'jordan']).plans[tomorrowIso][0].targetId).toBe('jordan');
+    expect(best(office)[0].targetId).toBe('maya');
+    expect(best(home)[0].targetId).toBe('jordan');
   });
 });
 

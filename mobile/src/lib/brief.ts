@@ -15,7 +15,7 @@ export interface Figure {
   value: string;
   delta?: number | null;
   sub?: string;
-  tone?: 'orange';
+  tone?: 'rose';
 }
 
 /** What a talking point is about, so the screen can give it an icon. */
@@ -78,7 +78,7 @@ export function briefFigures(entity: Entity, ctx: Context): Figure[] {
       label: 'Sent outside the system',
       value: formatNumber(leaving),
       sub: out.length ? `of ${formatNumber(sum(out.map((r) => r.count)))} they referred on` : 'No referrals out',
-      tone: leaving ? 'orange' : undefined,
+      tone: leaving ? 'rose' : undefined,
     };
   } else {
     leak = entity.leakage
@@ -86,7 +86,7 @@ export function briefFigures(entity: Entity, ctx: Context): Figure[] {
           label: 'Patients leaving',
           value: formatNumber(patientsLost(entity.leakage)),
           sub: `${entity.leakage.leftPct}% of ${formatNumber(entity.leakage.patients)}`,
-          tone: entity.leakage.leftPct >= 20 ? 'orange' : undefined,
+          tone: entity.leakage.leftPct >= 20 ? 'rose' : undefined,
         }
       : { label: 'Patients leaving', value: '—', sub: 'Not reported here' };
   }

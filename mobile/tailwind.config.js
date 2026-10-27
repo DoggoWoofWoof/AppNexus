@@ -25,7 +25,7 @@ module.exports = {
         page: hsl('page'),
         track: hsl('track'),
         brand: { DEFAULT: hsl('brand'), soft: hsl('brand-soft'), line: hsl('brand-line') },
-        signal: { DEFAULT: hsl('signal'), text: hsl('signal-text'), soft: hsl('signal-soft') },
+        signal: { DEFAULT: hsl('signal'), text: hsl('signal-text'), soft: hsl('signal-soft'), line: hsl('signal-line') },
         success: { DEFAULT: hsl('success'), soft: hsl('success-soft') },
         warn: { DEFAULT: hsl('warn'), soft: hsl('warn-soft') },
         danger: { DEFAULT: hsl('danger'), soft: hsl('danger-soft') },

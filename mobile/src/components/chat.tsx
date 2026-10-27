@@ -1,6 +1,8 @@
 // The chat used by the Ask tab and by each profile's own Ask: questions on the
 // right, answers on the left, suggestions to tap and one box to type or talk in.
 // An answer leads with one sentence, then the figures behind it and one next step.
+// One about someone the rep could see ends by asking to add them, with "Yes, add
+// to today" first among the replies to tap, which goes to Today once they're in.
 // A conversation reopened from History says when it started, since its answers
 // are as they were then.
 
@@ -29,10 +31,21 @@ import { useWorkspace } from '@/lib/store';
 import { cn } from '@/lib/utils';
 import { canListen, canSpeak, listen, speak, stopSpeaking, VOICE_ERRORS, type Listening } from '@/lib/voice';
 
-/** Questions to tap, as chips. */
-export function QuestionChips({ questions, onPick }: { questions: string[]; onPick: (q: string) => void }) {
+/** Questions to tap, as chips, after `yes`, the reply that says yes to what the answer asked. */
+export function QuestionChips({ questions, onPick, yes }: { questions: string[]; onPick: (q: string) => void; yes?: string }) {
   return (
     <View className="flex-row flex-wrap gap-2">
+      {yes ? (
+        <Pressable
+          onPress={() => onPick(yes)}
+          accessibilityRole="button"
+          accessibilityHint="Adds them and opens Today"
+          hitSlop={4}
+          className="min-h-10 max-w-full justify-center rounded-full bg-primary px-3 py-1.5 active:opacity-80"
+        >
+          <Text className="text-sm font-medium text-primary-foreground">{yes}</Text>
+        </Pressable>
+      ) : null}
       {questions.map((q) => (
         <Pressable
           key={q}
@@ -95,6 +108,12 @@ export function ChatView({
   const send = async (question: string, via: Turn['via']) => {
     stopSpeaking();
     const turn = await chat.ask(chatKey, question, via);
+    // Once someone is added, Today shows them in the day: back to it, or over to it from another tab.
+    if (turn.answer.added) {
+      if (tab === 'today') router.dismissTo('/today');
+      else router.navigate('/today');
+      return;
+    }
     // A spoken question gets a spoken answer, for when the rep is on the move.
     if (via === 'voice') read(turn);
   };
@@ -228,8 +247,11 @@ export function AnswerView({
   onFollow: (link: AskLink) => void;
   onOpenRow: (id: string) => void;
 }) {
+  const ctx = useWorkspace();
   const a = turn.answer;
   const canSave = !!a && !a.unknown && a.intent !== 'saved';
+  // Yes is there until they're in the day, from here or anywhere else.
+  const yes = isLast && a?.offer && !ctx.planItemFor(a.offer.id, a.offer.day) ? a.offer.yes : undefined;
   if (!a) {
     return (
       <View className="self-start rounded-2xl rounded-tl-sm border border-border bg-card px-4 py-3" accessibilityRole="progressbar" accessibilityLabel="Working out the answer">
@@ -251,6 +273,7 @@ export function AnswerView({
           </View>
         ) : null}
         {a.doThis ? <NextStep step={a.doThis} onFollow={onFollow} /> : null}
+        {a.offer ? <Text className="text-base font-semibold leading-6">{a.offer.question}</Text> : null}
         <View className="flex-row flex-wrap items-center gap-x-1 gap-y-1">
           <Text className="min-w-[40%] flex-1 text-2xs text-muted-foreground">{a.scope.join(' · ')}</Text>
           {canSave ? (
@@ -273,7 +296,7 @@ export function AnswerView({
           ) : null}
         </View>
       </View>
-      {isLast && a.next.length ? <QuestionChips questions={a.next} onPick={onAsk} /> : null}
+      {isLast && (yes || a.next.length) ? <QuestionChips questions={a.next} onPick={onAsk} yes={yes} /> : null}
     </>
   );
 }

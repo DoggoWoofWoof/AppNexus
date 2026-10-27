@@ -8,7 +8,7 @@ import type { ReactNode } from 'react';
 import { addDays, isoDate, startOfDay } from '@/lib/format';
 import { BACKUP_KEY, draftKey, laterWriter, restoreDrafts, restoreWorkspace, WORKSPACE_KEY, type DeviceStorage, type LogDraft } from '@/lib/persist';
 import { useWorkspace, WorkspaceProvider } from '@/lib/store';
-import { cancelVisit, findItem, freshWorkspace, noteRecords, visitDone, withRecords } from '@/lib/workspace';
+import { cancelVisit, findItem, freshWorkspace, noteRecords, sampleWorkspace, visitDone, withRecords } from '@/lib/workspace';
 
 const today = startOfDay(new Date(2026, 9, 19));
 const todayIso = isoDate(today);
@@ -25,6 +25,9 @@ function memoryStorage(items = new Map<string, string>()) {
     },
   };
 }
+
+/** Somewhere that kept the sample with today planned: Dr. Patel, Dr. Lee and a call to Dr. Morgan. */
+const keptDay = () => memoryStorage(new Map([[WORKSPACE_KEY, JSON.stringify(sampleWorkspace(today))]]));
 
 // The planner tests' wrapper, eight in the morning, with somewhere to keep things.
 async function renderStore(storage: DeviceStorage) {
@@ -50,7 +53,7 @@ const draft = (patch: Partial<LogDraft> = {}): LogDraft => ({
 
 describe('after a reload', () => {
   test('a logged visit and its note are still there', async () => {
-    const storage = memoryStorage();
+    const storage = keptDay();
     const first = await renderStore(storage);
     await act(() => {
       first.result.current.addNote({ targetId: 'maya', type: 'In-person visit', outcome: 'Met', date: todayIso, note: 'Agreed next steps', visit: { day: todayIso, id: 'v-maya' } });
@@ -75,7 +78,7 @@ describe('after a reload', () => {
   });
 
   test('a half-written note comes back for the same person and visit only', async () => {
-    const storage = memoryStorage();
+    const storage = keptDay();
     const first = await renderStore(storage);
     const key = draftKey('maya', { day: todayIso, id: 'v-maya' });
     await act(() => first.result.current.keepDraft(key, draft()));
@@ -121,6 +124,14 @@ describe('after a reload', () => {
     expect(view.result.current.notice).toBeNull();
     expect(items.has(BACKUP_KEY)).toBe(false);
   });
+
+  test('an untouched sample from an older version starts again with nothing planned, and no notice or copy', async () => {
+    const items = new Map([[WORKSPACE_KEY, JSON.stringify({ ...sampleWorkspace(today), version: 2 })]]);
+    const view = await renderStore(memoryStorage(items));
+    expect(view.result.current.notice).toBeNull();
+    expect(items.has(BACKUP_KEY)).toBe(false);
+    expect(view.result.current.ws.plans[todayIso]).toBeUndefined();
+  });
 });
 
 describe('writing to the phone', () => {
@@ -156,15 +167,15 @@ describe('writing to the phone', () => {
 });
 
 describe('a workspace kept from an earlier day', () => {
-  test('is seeded again for today if the rep never changed it', () => {
+  test('is seeded again for today if the rep never changed it, with nothing planned', () => {
     const ws = restoreWorkspace(JSON.stringify(freshWorkspace(yesterday)), today);
     expect(ws).toEqual(freshWorkspace(today));
-    expect(findItem(ws, todayIso, 'v-maya')?.status).toBe('planned');
+    expect(ws.plans[todayIso]).toBeUndefined();
   });
 
   test('keeps the rep’s own work, and moves the selected day and any free slot on to today', () => {
     const { interaction } = noteRecords({ targetId: 'jordan', type: 'Phone call', outcome: 'Met', date: yesterdayIso, note: 'Call back Monday' });
-    const before = withRecords(cancelVisit(freshWorkspace(yesterday), yesterdayIso, 'v-maya', 'HCP unavailable', yesterdayIso), { interactions: [interaction] });
+    const before = withRecords(cancelVisit(sampleWorkspace(yesterday), yesterdayIso, 'v-maya', 'HCP unavailable', yesterdayIso), { interactions: [interaction] });
     expect(before.freeSlots.map((s) => s.day)).toEqual([yesterdayIso]);
     expect(before.selection).toMatchObject({ day: yesterdayIso, slot: 'v-maya' });
 
@@ -182,7 +193,7 @@ describe('a workspace kept from an earlier day', () => {
   });
 
   test('a free slot or selected day still to come is left as it was', () => {
-    const before = cancelVisit(freshWorkspace(today), todayIso, 'v-maya', 'Other', todayIso);
+    const before = cancelVisit(sampleWorkspace(today), todayIso, 'v-maya', 'Other', todayIso);
     const ws = restoreWorkspace(JSON.stringify(before), today);
     expect(ws.freeSlots).toEqual(before.freeSlots);
     expect(ws.selection).toEqual(before.selection);
@@ -210,7 +221,7 @@ describe('what can’t be used starts from the sample', () => {
       [draftKey('jordan', { day: todayIso, id: 'v-gone' })]: draft({ targetId: 'jordan', visit: { day: todayIso, id: 'v-gone' } }),
       [draftKey('alex')]: draft({ targetId: 'alex', visit: undefined }),
     };
-    const ws = freshWorkspace(today);
+    const ws = sampleWorkspace(today);
     const kept = restoreDrafts(JSON.stringify(drafts), ws);
     expect(Object.keys(kept)).toEqual(['alex', mayaKey, 'jordan']);
     expect(kept.jordan).toEqual({ targetId: 'jordan', outcome: 'Met', note: 'She wants the peer report by Fri', there: [] });

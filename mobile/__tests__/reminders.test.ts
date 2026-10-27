@@ -6,7 +6,7 @@ import * as Notifications from 'expo-notifications';
 
 import { reminderChanges, reminderHref, remindersFor, signature, syncReminders } from '@/lib/reminders';
 import type { PlanItem, Workspace } from '@/lib/types';
-import { buildContext, cancelVisit, freshWorkspace, setVisitTime, visitDone } from '@/lib/workspace';
+import { buildContext, cancelVisit, sampleWorkspace, setVisitTime, visitDone } from '@/lib/workspace';
 
 jest.mock('expo-notifications', () => ({
   SchedulableTriggerInputTypes: { DATE: 'date' },
@@ -18,7 +18,7 @@ jest.mock('expo-notifications', () => ({
 const today = new Date(2026, 9, 20);
 const day = '2026-10-20';
 const at = (h: number, m: number) => new Date(2026, 9, 20, h, m);
-const fresh = () => freshWorkspace(today);
+const sample = () => sampleWorkspace(today);
 const remindersAt = (ws: Workspace, h: number, m: number) => remindersFor(buildContext(ws, today), at(h, m));
 /** Changes one of today's visits. */
 const change = (ws: Workspace, id: string, patch: Partial<PlanItem>): Workspace => ({
@@ -50,7 +50,7 @@ const BRIEF = 'Tap for what to bring and talk about.';
 const UNLOGGED = 'fieldpro-not-logged-2026-10-20';
 
 test('a heads-up 15 minutes before each timed visit, saying where, and the visits not logged at 17:30', () => {
-  const reminders = remindersAt(fresh(), 8, 0);
+  const reminders = remindersAt(sample(), 8, 0);
   expect(reminders.map((r) => [r.title, new Date(r.at)])).toEqual([
     [MAYA, at(9, 45)],
     [JORDAN, at(13, 45)],
@@ -65,19 +65,19 @@ test('a heads-up 15 minutes before each timed visit, saying where, and the visit
 });
 
 test('nothing the rep typed shows on a locked phone', () => {
-  const reminders = remindersAt(change(fresh(), 'v-maya', { goal: 'Ask about Mrs Jones’s echo' }), 8, 0);
+  const reminders = remindersAt(change(sample(), 'v-maya', { goal: 'Ask about Mrs Jones’s echo' }), 8, 0);
   expect(reminders.map((r) => `${r.title} ${r.body}`).join(' ')).not.toMatch(/Jones|procedure mix/);
 });
 
 test('times that have gone are left out', () => {
-  expect(remindersAt(fresh(), 12, 0).map((r) => r.title)).toEqual([JORDAN, '3 visits not logged yet']);
+  expect(remindersAt(sample(), 12, 0).map((r) => r.title)).toEqual([JORDAN, '3 visits not logged yet']);
   // Within 15 minutes of a visit it's too late for its heads-up.
-  expect(remindersAt(fresh(), 13, 50).map((r) => r.title)).toEqual(['3 visits not logged yet']);
-  expect(remindersAt(fresh(), 17, 31)).toEqual([]);
+  expect(remindersAt(sample(), 13, 50).map((r) => r.title)).toEqual(['3 visits not logged yet']);
+  expect(remindersAt(sample(), 17, 31)).toEqual([]);
 });
 
 test('a logged or cancelled visit gets no heads-up and drops out of the 17:30 count', () => {
-  const logged = visitDone(fresh(), day, 'v-maya');
+  const logged = visitDone(sample(), day, 'v-maya');
   expect(remindersAt(logged, 8, 0).map((r) => [r.title, r.body])).toEqual([
     [JORDAN, `Not confirmed yet. ${BRIEF}`],
     ['2 visits not logged yet', 'Tap to log Dr. Lee and Dr. Morgan.'],
@@ -88,7 +88,7 @@ test('a logged or cancelled visit gets no heads-up and drops out of the 17:30 co
 });
 
 test('a call given a time says so, and a visit that ends after 17:30 isn’t counted then', () => {
-  const timed = setVisitTime(fresh(), day, 'v-alex', '15:00');
+  const timed = setVisitTime(sample(), day, 'v-alex', '15:00');
   const reminders = remindersAt(timed, 8, 0);
   expect(reminders.find((r) => r.href === '/today/target/alex')).toMatchObject({
     title: 'Dr. Alex Morgan at 15:00 · Phone call',
@@ -96,12 +96,12 @@ test('a call given a time says so, and a visit that ends after 17:30 isn’t cou
     at: at(14, 45).getTime(),
   });
   expect(reminders[reminders.length - 1]).toMatchObject({ title: '3 visits not logged yet', body: 'Tap to log Dr. Patel, Dr. Lee and Dr. Morgan.' });
-  const late = change(fresh(), 'v-jordan', { time: '17:15' });
+  const late = change(sample(), 'v-jordan', { time: '17:15' });
   expect(remindersAt(late, 8, 0).map((r) => r.title)).toEqual([MAYA, 'Dr. Jordan Lee at 17:15 · Mount Sinai Morningside', '2 visits not logged yet']);
 });
 
 test('a plan made today for the next working day reminds then too', () => {
-  const ws = fresh();
+  const ws = sample();
   const wed = '2026-10-21';
   const planned = { ...ws, plans: { ...ws.plans, [wed]: [{ ...ws.plans[day][0], id: 'v-maya-wed', time: '09:00' }] } };
   const wanted = remindersAt(planned, 8, 0).filter((r) => r.at > at(23, 59).getTime());
@@ -112,16 +112,16 @@ test('a plan made today for the next working day reminds then too', () => {
 });
 
 test('the rep can keep only the 17:30 reminder, or turn them off', () => {
-  const ctx = buildContext(fresh(), today);
+  const ctx = buildContext(sample(), today);
   expect(remindersFor(ctx, at(8, 0), 'end-of-day').map((r) => r.id)).toEqual([UNLOGGED]);
   expect(remindersFor(ctx, at(8, 0), 'off')).toEqual([]);
 });
 
 test('reminderChanges replaces only what changed and leaves other apps’ notifications alone', () => {
-  const before = remindersAt(fresh(), 8, 0);
+  const before = remindersAt(sample(), 8, 0);
   const scheduled = [...before.map((r) => ({ id: r.id, sig: signature(r) })), { id: 'someone-else', sig: '' }];
   expect(reminderChanges(scheduled, before)).toEqual({ cancel: [], schedule: [] });
-  const moved = remindersAt(change(fresh(), 'v-jordan', { time: '15:00' }), 8, 0);
+  const moved = remindersAt(change(sample(), 'v-jordan', { time: '15:00' }), 8, 0);
   const { cancel, schedule } = reminderChanges(scheduled, moved);
   // Jordan's heads-up moves; the 17:30 count is the same, and Maya's is untouched.
   expect(cancel).toEqual(['fieldpro-visit-v-jordan']);
@@ -132,7 +132,7 @@ test('syncReminders keeps the phone in step as visits are added, moved, logged a
   phone.set('someone-else', { identifier: 'someone-else', content: { title: 'Not ours', body: '', data: {} }, trigger: { date: 0 } });
   const titles = () => [...phone.values()].map((r) => r.content.title).sort();
 
-  let ws = fresh();
+  let ws = sample();
   await syncReminders(remindersAt(ws, 8, 0));
   expect(titles()).toEqual(['3 visits not logged yet', JORDAN, MAYA, 'Not ours']);
   expect(phone.get('fieldpro-visit-v-maya')).toMatchObject({ content: { data: { href: '/today/target/maya' } }, trigger: { type: 'date', date: at(9, 45).getTime(), channelId: 'visits' } });

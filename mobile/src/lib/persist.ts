@@ -90,6 +90,12 @@ function usable(raw: string | null): boolean {
   return isRecord(kept) && kept.version === WORKSPACE_VERSION;
 }
 
+/** Whether kept text is the sample as it was seeded, with nothing of the rep's in it but their choices on the You page. */
+function untouched(raw: string | null): boolean {
+  const kept = readJson(raw);
+  return isRecord(kept) && kept.pristine === true;
+}
+
 /**
  * Drafts kept from last time. One for a visit that has been logged is let go. One
  * for a visit moved or cancelled since stays as a note about the person, unless
@@ -126,7 +132,8 @@ export async function loadKept(storage: DeviceStorage, today: Date): Promise<Kep
     const [ws, drafts] = await Promise.all([storage.getItem(WORKSPACE_KEY), storage.getItem(DRAFTS_KEY)]);
     const restored = restoreWorkspace(ws, today);
     // From an older version, or unreadable: the sample starts again, and a copy is kept before it's written over.
-    const replaced = !!ws && !usable(ws);
+    // An untouched sample from an older version loses nothing of the rep's, so it just starts again.
+    const replaced = !!ws && !usable(ws) && !untouched(ws);
     if (replaced) {
       try {
         await storage.setItem(BACKUP_KEY, ws!);

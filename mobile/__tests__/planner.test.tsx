@@ -14,7 +14,6 @@ import { DEFAULT_FILTERS } from '@/lib/search';
 import { useWorkspace, WorkspaceProvider } from '@/lib/store';
 import type { Entity, Workspace } from '@/lib/types';
 import {
-  addAllToPlan,
   addPeople,
   bookingError,
   bookVisit,
@@ -25,13 +24,13 @@ import {
   fillSlot,
   fillingSlot,
   findItem,
-  freshWorkspace,
   leaveFree,
   moveStop,
   noteError,
   placeOf,
   removeVisit,
   restoreVisit,
+  sampleWorkspace,
   setVisitTime,
   visitTimeError,
 } from '@/lib/workspace';
@@ -43,7 +42,7 @@ const entity = (id: string) => getEntity(id) as Entity;
 const replacementRows = (ws: Workspace) => buildContext(ws, today).search({ ...DEFAULT_FILTERS, sort: 'distance', planned: 'unplanned' });
 const dayIds = (ws: Workspace, day = todayIso) => buildContext(ws, today).dayPlan(day).map((i) => i.id);
 
-const cancelMaya = (ws = freshWorkspace(today)) => cancelVisit(ws, todayIso, 'v-maya', 'HCP unavailable', todayIso);
+const cancelMaya = (ws = sampleWorkspace(today)) => cancelVisit(ws, todayIso, 'v-maya', 'HCP unavailable', todayIso);
 const cancelBoth = () => cancelVisit(cancelMaya(), todayIso, 'v-jordan', 'HCP unavailable', todayIso);
 
 describe('cancel → fill from Targets', () => {
@@ -75,10 +74,10 @@ describe('cancel → fill from Targets', () => {
 
   test('a visit whose time has already come cancels without offering its slot', () => {
     const at = (h: number, m: number) => new Date(2026, 9, 19, h, m);
-    const late = cancelVisit(freshWorkspace(today), todayIso, 'v-maya', 'Other', todayIso, at(10, 0));
+    const late = cancelVisit(sampleWorkspace(today), todayIso, 'v-maya', 'Other', todayIso, at(10, 0));
     expect(findItem(late, todayIso, 'v-maya')?.status).toBe('cancelled');
     expect(late.freeSlots).toEqual([]);
-    expect(cancelVisit(freshWorkspace(today), todayIso, 'v-maya', 'Other', todayIso, at(9, 59)).freeSlots[0]?.time).toBe('10:00');
+    expect(cancelVisit(sampleWorkspace(today), todayIso, 'v-maya', 'Other', todayIso, at(9, 59)).freeSlots[0]?.time).toBe('10:00');
   });
 
   test('putting a cancelled visit back stops offering its slot', () => {
@@ -89,7 +88,7 @@ describe('cancel → fill from Targets', () => {
   });
 
   test('a flexible visit cancels without freeing a slot', () => {
-    const ws = cancelVisit(freshWorkspace(today), todayIso, 'v-alex', 'Other', todayIso);
+    const ws = cancelVisit(sampleWorkspace(today), todayIso, 'v-alex', 'Other', todayIso);
     expect(findItem(ws, todayIso, 'v-alex')?.status).toBe('cancelled');
     expect(ws.freeSlots).toEqual([]);
   });
@@ -125,7 +124,7 @@ describe('who a free slot is offered to', () => {
     expect(fillSlot(ws, 'v-maya', 'jordan')).toBe(ws);
     expect(fillSlot(ws, 'v-jordan', 'kenji')).toBe(ws);
     // Nothing is being filled until a visit is cancelled.
-    expect(buildContext(freshWorkspace(today), today).fitsSlot(entity('kenji'))).toBeNull();
+    expect(buildContext(sampleWorkspace(today), today).fitsSlot(entity('kenji'))).toBeNull();
   });
 
   test('distances while filling are to where each person works that day', () => {
@@ -169,7 +168,7 @@ describe('more than one free slot', () => {
 
 describe('changing a visit', () => {
   test('giving an "Any time" stop a time checks it, then puts it in time order without booking anything', () => {
-    const ws = freshWorkspace(today);
+    const ws = sampleWorkspace(today);
     const noon = new Date(2026, 9, 19, 12, 0);
     expect(visitTimeError(ws, todayIso, 'v-alex', '14:10', noon)).toBe('Clashes with Dr. Jordan Lee at 14:00.');
     expect(visitTimeError(ws, todayIso, 'v-alex', '9.30', noon)).toMatch(/24-hour/);
@@ -184,14 +183,14 @@ describe('changing a visit', () => {
   });
 
   test('a stop can be taken out of the plan, but a logged one stays', () => {
-    const ws = freshWorkspace(today);
+    const ws = sampleWorkspace(today);
     expect(dayIds(removeVisit(ws, todayIso, 'v-alex'))).toEqual(['v-maya', 'v-jordan']);
     const logged = { ...ws, plans: { ...ws.plans, [todayIso]: ws.plans[todayIso].map((i) => (i.id === 'v-maya' ? { ...i, status: 'done' as const } : i)) } };
     expect(removeVisit(logged, todayIso, 'v-maya')).toBe(logged);
   });
 
   // Dr. Watanabe, Dr. Patel at 10:00, Dr. Lee at 14:00, Dr. Cohen, then the call to Dr. Morgan.
-  const fuller = () => addPeople(freshWorkspace(today), todayIso, ['kenji', 'hannah']);
+  const fuller = () => addPeople(sampleWorkspace(today), todayIso, ['kenji', 'hannah']);
   const idOf = (ws: Workspace, targetId: string) => ws.plans[todayIso].find((i) => i.targetId === targetId)!.id;
   const order = (ws: Workspace, now?: Date) => buildContext(ws, today).dayPlan(todayIso, now).map((i) => i.targetId);
 
@@ -241,7 +240,7 @@ describe('changing a visit', () => {
 
 describe('adding several people from Targets', () => {
   test('puts each where it adds the least driving in their usual times, skipping anyone already planned', () => {
-    const ws = freshWorkspace(today);
+    const ws = sampleWorkspace(today);
     const next = addPeople(ws, todayIso, ['kenji', 'jordan', 'hannah', 'kenji', 'nobody']);
     const plan = buildContext(next, today).dayPlan(todayIso);
     // Dr. Watanabe fits before the 10:00 and Dr. Cohen after Dr. Lee's 14:00; the call
@@ -273,7 +272,7 @@ describe('booking', () => {
   });
 
   test('rescheduling checks for clashes, then moves the visit and keeps its goal', () => {
-    const ws = freshWorkspace(today);
+    const ws = sampleWorkspace(today);
     const from = { day: todayIso, id: 'v-maya' };
     expect(bookingError(ws, { targetId: 'maya', slot: { day: todayIso, time: '14:10', siteId: 'msw' }, confirmed: false, from })).toMatch(/^Clashes with .+ at 14:00\.$/);
     expect(bookingError(ws, { targetId: 'maya', slot: { day: todayIso, time: '9.30', siteId: 'msw' }, confirmed: false, from })).toMatch(/24-hour/);
@@ -288,22 +287,22 @@ describe('booking', () => {
   });
 
   test('someone already planned that day can’t be booked twice', () => {
-    const ws = freshWorkspace(today);
+    const ws = sampleWorkspace(today);
     expect(bookingError(ws, { targetId: 'jordan', slot: { day: todayIso, time: '16:30', siteId: 'msm' }, confirmed: false })).toMatch(/already in your plan/);
   });
 });
 
-describe('Pick 5 for me', () => {
-  test('adds the people most worth seeing to an empty day once each, nearest first after the start', () => {
+describe('adding several at once', () => {
+  test('puts each person in an empty day once, at no fixed time', () => {
     const tomorrow = isoDate(addDays(today, 1));
-    const ws = freshWorkspace(today);
+    const ws = sampleWorkspace(today);
     const ids = buildContext(ws, today).suggestions(tomorrow, 5).map((s) => s.entity.id);
-    const next = addAllToPlan(ws, tomorrow, [...ids, ids[0], 'nobody']);
+    const next = addPeople(ws, tomorrow, [...ids, ids[0], 'nobody']);
     const plan = next.plans[tomorrow];
     expect(plan.map((i) => i.targetId).sort()).toEqual([...ids].sort());
     expect(plan.every((i) => i.status === 'planned' && i.mode === 'flexible')).toBe(true);
     expect(next.pristine).toBe(false);
-    expect(addAllToPlan(ws, tomorrow, ['nobody'])).toBe(ws);
+    expect(addPeople(ws, tomorrow, ['nobody'])).toBe(ws);
   });
 });
 
@@ -319,7 +318,7 @@ describe('store', () => {
   async function renderStore(clock = new Date(2026, 9, 19, 8, 0)) {
     // Eight in the morning unless said, before any of the day's visits.
     const wrapper = ({ children }: { children: ReactNode }) => (
-      <WorkspaceProvider today={today} now={() => clock}>
+      <WorkspaceProvider today={today} now={() => clock} initial={sampleWorkspace(today)}>
         {children}
       </WorkspaceProvider>
     );

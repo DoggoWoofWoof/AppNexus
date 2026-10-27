@@ -10,12 +10,12 @@ import { ChatProvider, TERRITORY, useChat } from '@/lib/chat';
 import { addDays, isoDate, startOfDay } from '@/lib/format';
 import { docText, reportDoc } from '@/lib/saved';
 import { useWorkspace, WorkspaceProvider } from '@/lib/store';
-import { bookVisit, buildContext, cancelVisit, freshWorkspace } from '@/lib/workspace';
+import { bookVisit, buildContext, cancelVisit, sampleWorkspace } from '@/lib/workspace';
 
 // A Monday: the sample week runs from the Tuesday before.
 const today = startOfDay(new Date(2026, 9, 19));
 const todayIso = isoDate(today);
-const ws = freshWorkspace(today);
+const ws = sampleWorkspace(today);
 const ctx = buildContext(ws, today);
 const week = (w = ws) => answer('Summarise my week', buildContext(w, today));
 const fact = (a: ReturnType<typeof week>, title: string) => a.rows.find((r) => r.title === title);
@@ -106,7 +106,7 @@ describe('summarise my week', () => {
 describe('the week as a saved report', () => {
   test('saves from Ask, shows in Saved, and copies with when it was made and "For internal use"', async () => {
     const wrapper = ({ children }: { children: ReactNode }) => (
-      <WorkspaceProvider today={today}>
+      <WorkspaceProvider today={today} initial={sampleWorkspace(today)}>
         <ChatProvider>{children}</ChatProvider>
       </WorkspaceProvider>
     );

@@ -635,9 +635,82 @@ const nextDoor = generate({
   from: { npi: 1000020121, doctor: 2320, account: 2130, contact: 2430 },
 });
 
+// A practice near the team's hospitals in Manhattan North, written out rather
+// than generated so the seeded ones stay as they were. It's across Morningside
+// Park from Mount Sinai Morningside, so the daily brief has someone not in My
+// targets to see on the way.
+const adelekeProcedures: ProcedureRow[] = [
+  { family: 'Diagnostic cardiac cath', code: 'CPT 93458', series: series(70, 0.1) },
+  { family: 'PCI', code: 'CPT 92928', series: series(58, 0.14) },
+  { family: 'Peripheral intervention', code: 'CPT 37225', series: series(6, 0.04) },
+];
+const ADELEKE: HcpData = {
+  id: 'callum-adeleke',
+  name: 'Dr. Callum Adeleke',
+  credentials: 'MD',
+  npi: '1000020180',
+  specialty: 'Interventional Cardiology',
+  yearsInPractice: 11,
+  languages: ['English'],
+  education: [
+    ['Medical school', 'SUNY Downstate College of Medicine'],
+    ['Residency', 'Internal Medicine, NYU Langone'],
+    ['Fellowship', 'Interventional Cardiology, Lenox Hill Hospital'],
+  ],
+  boards: ['Cardiovascular Disease', 'Interventional Cardiology'],
+  contact: { phone: '(212) 555-2380', email: 'callum.adeleke@example.org', preferred: null, assistant: null },
+  access: { reach: 'Ask at the front desk; the scheduler keeps the diary.', confirms: 'usually' },
+  affiliations: [{ orgId: 'wrenfield', role: 'Interventional cardiologist', share: 100, days: 'Mon–Fri' }],
+  procedures: adelekeProcedures,
+  diagnoses: [
+    { name: 'Coronary artery disease', code: 'I25.10', series: series(330, 0.05) },
+    { name: 'Stable angina', code: 'I20.9', series: series(130, 0.03) },
+    { name: 'NSTEMI', code: 'I21.4', series: series(60, 0.04) },
+  ],
+  referrals: { inbound: [], outbound: [] },
+  relationships: [],
+  leakageRisk: false,
+  insight: insightFor(SPECIALTIES[0], adelekeProcedures, 'Competitor B'),
+  webSections: WEB_SECTIONS,
+  competitors: ['Competitor B'],
+};
+const WRENFIELD: OrgData = {
+  id: 'wrenfield',
+  name: 'Wrenfield Cardiology Group',
+  type: 'Clinic',
+  typeDetail: DETAIL.practice,
+  parentId: null,
+  address: '2150 Frederick Douglass Boulevard',
+  city: 'New York, NY 10026',
+  coords: [-73.954, 40.804],
+  onMap: true,
+  ownership: 'Physician-owned',
+  phone: '(212) 555-2150',
+  beds: null,
+  founded: null,
+  assigned: false,
+  access: { reach: 'Email the practice manager with a short agenda.', confirms: 'usually' },
+  executives: [
+    { id: 'thornquist', name: 'Saskia Thornquist', title: 'Practice Manager', role: 'Gatekeeper', phone: '(212) 555-2450', email: 'saskia.thornquist@example.org' },
+  ],
+  procedures: addUp(
+    adelekeProcedures.map((row) => ({ row, weight: 1.3 })),
+    (r) => r.code,
+    (r) => ({ ...r, family: plainFamily(r.family) }),
+  ),
+  diagnoses: addUp(
+    ADELEKE.diagnoses.map((row) => ({ row, weight: 1.3 })),
+    (r) => r.name,
+    (r) => r,
+  ),
+  leakage: null,
+  leakageUnavailable: 'Where patients go is counted only for your team’s accounts in this sample.',
+  competitors: ['Competitor B'],
+};
+
 /** The rest of the rep's own territory, in New York and New Jersey. */
-export const TERRITORY_HCPS = yours.hcps;
-export const TERRITORY_ORGS = yours.orgs;
+export const TERRITORY_HCPS = [...yours.hcps, ADELEKE];
+export const TERRITORY_ORGS = [...yours.orgs, WRENFIELD];
 /** The territories next door, Connecticut and Pennsylvania. */
 export const NEXT_DOOR_HCPS = nextDoor.hcps;
 export const NEXT_DOOR_ORGS = nextDoor.orgs;

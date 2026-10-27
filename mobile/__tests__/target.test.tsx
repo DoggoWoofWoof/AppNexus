@@ -16,11 +16,11 @@ import type { Asked } from '@/lib/saved';
 import { WorkspaceProvider } from '@/lib/store';
 import { askedBefore, howToGetIn, NEARBY_KM, promiseDue, similarNearby, siteThatDay, visitsSoFar, whoTheyReferTo } from '@/lib/target';
 import type { FollowUp, Hcp, Interaction, Org, PlanItem, Workspace } from '@/lib/types';
-import { buildContext, freshWorkspace } from '@/lib/workspace';
+import { buildContext, sampleWorkspace } from '@/lib/workspace';
 
 const today = startOfDay(new Date(2026, 9, 20));
 const todayIso = isoDate(today);
-const ws = freshWorkspace(today);
+const ws = sampleWorkspace(today);
 const ctx = buildContext(ws, today);
 const day = (offset: number) => isoDate(addDays(today, offset));
 const hcp = (id: string) => getEntity(id) as Hcp;
@@ -78,7 +78,7 @@ describe('You asked before', () => {
     const items = new Map([[CHATS_KEY, JSON.stringify(chats)]]);
     const storage: DeviceStorage = { getItem: async (key) => items.get(key) ?? null, setItem: async (key, value) => void items.set(key, value) };
     const wrapper = ({ children }: { children: ReactNode }) => (
-      <WorkspaceProvider today={today}>
+      <WorkspaceProvider today={today} initial={sampleWorkspace(today)}>
         <ChatProvider storage={storage}>{children}</ChatProvider>
       </WorkspaceProvider>
     );
@@ -186,10 +186,12 @@ describe('Who they refer to', () => {
 describe('Similar doctors nearby', () => {
   test('like Dr. Patel, close to where she is, in that day and not already planned', () => {
     const similar = similarNearby(hcp('maya'), ws, todayIso);
-    expect(similar.map((d) => d.hcp.id)).toEqual(['okafor', 'priya', 'marcus']);
-    expect(similar[0]).toMatchObject({ why: 'Also does diagnostic cardiac cath and PCI', hours: '15:00–17:00', site: { id: 'msh' } });
-    expect(similar[0].km).toBeLessThan(0.1);
-    expect(similar[1].why).toBe('Also sees coronary artery disease');
+    // The most alike first: Dr. Adeleke is in the same specialty doing the same procedures, a short drive away.
+    expect(similar.map((d) => d.hcp.id)).toEqual(['callum-adeleke', 'okafor', 'priya']);
+    expect(similar[0]).toMatchObject({ why: 'Also does diagnostic cardiac cath and PCI', hours: '09:00–17:00', site: { id: 'wrenfield' } });
+    expect(similar[1]).toMatchObject({ why: 'Also does diagnostic cardiac cath and PCI', hours: '15:00–17:00', site: { id: 'msh' } });
+    expect(similar[1].km).toBeLessThan(0.1);
+    expect(similar[2].why).toBe('Also sees coronary artery disease');
     const planned = new Set(ws.plans[todayIso].map((i) => i.targetId));
     for (const d of similar) {
       expect(planned.has(d.hcp.id)).toBe(false);

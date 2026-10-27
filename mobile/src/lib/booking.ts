@@ -78,6 +78,16 @@ export function usualDay(entity: Entity, weekday: number): boolean {
   return days.some((d) => d.has(weekday)) || days.every((d) => !d.size);
 }
 
+/**
+ * Whether a visit can happen on a day: on a working day when they're at one of
+ * their sites and usually see people then, and at the weekend anyone, as nobody
+ * is anywhere in particular.
+ */
+export function canSeeOn(entity: Entity, day: string): boolean {
+  const weekday = fromIso(day).getDay();
+  return weekday === 0 || weekday === 6 || (!!siteOnDay(entity, weekday) && usualDay(entity, weekday));
+}
+
 /** "Not their usual time", or "Outside office hours" for an account or anyone else going by office hours. */
 export const outsideWord = (entity: Entity): string => (keepsOfficeHours(entity) ? 'Outside office hours' : 'Not their usual time');
 

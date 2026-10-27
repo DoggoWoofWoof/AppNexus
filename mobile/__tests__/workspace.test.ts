@@ -6,7 +6,7 @@ import { describe, expect, test } from '@jest/globals';
 import { allEntities, getEntity, getOrg, signalsFor } from '@/lib/data';
 import { addDays, fromIso, isoDate, startOfDay } from '@/lib/format';
 import { activeFilterCount, DEFAULT_FILTERS, type Filters } from '@/lib/search';
-import { buildContext, freshWorkspace, WORKSPACE_VERSION } from '@/lib/workspace';
+import { buildContext, freshWorkspace, sampleWorkspace, WORKSPACE_VERSION } from '@/lib/workspace';
 
 const today = startOfDay(new Date());
 const ws = freshWorkspace(today);
@@ -52,9 +52,10 @@ describe('search', () => {
 });
 
 describe('workspace', () => {
-  test('the sample is seeded for today', () => {
+  test('the sample is seeded for today, with nothing planned', () => {
     expect(ws).toMatchObject({ version: WORKSPACE_VERSION, seededOn: isoDate(today), pristine: true });
-    expect(ctx.dayPlan(ctx.todayIso).length).toBeGreaterThan(0);
+    // Today opens on the daily brief, and the day fills from it or from Targets.
+    expect(ctx.dayPlan(ctx.todayIso)).toEqual([]);
   });
 
   test('the sample visits and calls are on weekdays, whatever day it’s seeded', () => {
@@ -67,7 +68,7 @@ describe('workspace', () => {
 
   test('every plan item, note and follow-up points at a real target', () => {
     const ids = [
-      ...Object.values(ws.plans).flat().map((i) => i.targetId),
+      ...Object.values(sampleWorkspace(today).plans).flat().map((i) => i.targetId),
       ...ws.interactions.map((i) => i.targetId),
       ...ws.followUps.map((f) => f.targetId),
     ];

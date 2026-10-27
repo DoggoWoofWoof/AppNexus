@@ -13,7 +13,6 @@ import { withPrefs } from './prefs';
 import { withPrepEdit, withSummaryText, type PrepEdit } from './prep';
 import type { Entity, PlanItem, Prefs, SavedReport, VisitType, Workspace } from './types';
 import {
-  addAllToPlan,
   addPeople,
   addToPlan,
   bookingDaysFrom,
@@ -116,8 +115,6 @@ type Store = Context & {
    * working day, or the next each can go, with one Undo.
    */
   moveNotDone: () => void;
-  /** Adds several people to a day, nearest first, as `addToPlan` does. */
-  addAllToPlan: (targetIds: string[], day: string) => void;
   /** Adds the people picked on Targets after the day's other stops, with one Undo, as `addToPlan` does. */
   addPeople: (targetIds: string[], day: string) => void;
   /** Puts someone on My targets, or takes them off, with Undo. */
@@ -129,6 +126,11 @@ type Store = Context & {
   removeSaved: (id: string) => void;
   /** Changes the rep's own choices on the You page. Quietly, and Undo leaves them as they are. */
   setPrefs: (patch: Partial<Prefs>) => void;
+  /**
+   * Folds the daily brief on Today away until tomorrow, or with false opens it
+   * again. Quietly, and Undo leaves it as it is. After a change, as it builds on it.
+   */
+  foldBrief: (folded?: boolean) => void;
   /** Keeps the rep's own words and goal for someone's Summary (their prep), with Undo. Both blank goes back to the one from the data. */
   editPrep: (id: string, edit: PrepEdit) => void;
   /** Puts words from Ask in someone's Summary in place of the rep's, keeping their goal, with Undo. */
@@ -160,11 +162,13 @@ type ProviderProps = {
   now?: () => Date;
   /** Where the workspace and note drafts are kept. Without it (most tests) it starts from the sample and keeps nothing. */
   storage?: DeviceStorage | null;
+  /** Without storage, the workspace to start from, such as a day already planned; the sample otherwise. */
+  initial?: Workspace;
 };
 
-export function WorkspaceProvider({ children, today: initialDay, now = systemClock, storage = null }: ProviderProps) {
+export function WorkspaceProvider({ children, today: initialDay, now = systemClock, storage = null, initial }: ProviderProps) {
   const [today] = useState(() => initialDay ?? startOfDay(now()));
-  const [kept, setKept] = useState<Kept | null>(() => (storage ? null : { ws: freshWorkspace(today), drafts: {}, readable: true }));
+  const [kept, setKept] = useState<Kept | null>(() => (storage ? null : { ws: initial ?? freshWorkspace(today), drafts: {}, readable: true }));
   useEffect(() => {
     if (!storage) return;
     let live = true;
@@ -325,7 +329,7 @@ function LoadedWorkspace({
       if (away.length) return { message: `${who.name} added ${onDay(day)}, but ${who.kind === 'hco' ? 'it’s' : 'they’re'} ${notIn}`, changed: true, better: moveDayFor(next, added[0], day, days) };
       // Say where it went, as the map numbers the stops, so the rep needn't go and look.
       const spot = stopNumber(next, day, who.id, now());
-      const where = !spot ? ' as a call' : spot.of < 2 ? '' : ` · stop ${spot.number}${spot.after ? `, after ${shortName(getEntity(spot.after.targetId) ?? who)}` : ', first'}`;
+      const where = !spot ? (added[0].type === 'Email' ? ' as an email' : ' as a call') : spot.of < 2 ? '' : ` · stop ${spot.number}${spot.after ? `, after ${shortName(getEntity(spot.after.targetId) ?? who)}` : ', first'}`;
       return { message: `${who.name} added ${onDay(day)}${where}${spot?.outside ? ` · ${outsideWord(who).toLowerCase()}` : ''}`, changed: true };
     };
     /**
@@ -474,7 +478,6 @@ function LoadedWorkspace({
         const elsewhere = other ? ` · ${shortName(other)} to ${dayInWords(others[0].to, today)}${why}` : others.length ? ` · ${others.length} to other days` : '';
         apply(next, `${what} moved to ${dayInWords(to, today)}${elsewhere}`);
       },
-      addAllToPlan: (targetIds: string[], day: string) => addTo(day, (ws, d) => addAllToPlan(ws, d, targetIds, now())),
       addPeople: (targetIds: string[], day: string) => addTo(day, (ws, d) => addPeople(ws, d, targetIds, now())),
       toggleTarget: (id: string) => {
         const who = getEntity(id);
@@ -495,6 +498,12 @@ function LoadedWorkspace({
       saveReport: (report: SavedReport) => apply(saveReport(current.current, report), 'Saved. Find it in the menu.'),
       removeSaved: (id: string) => apply(removeSaved(current.current, id), 'Removed from Saved'),
       setPrefs: (patch: Partial<Prefs>) => quietly(withPrefs(current.current, patch)),
+      // On whatever the last change left, like selectDay, so folding it after adding someone keeps them.
+      foldBrief: (folded = true) =>
+        setWs((w) => {
+          const { briefFolded: _was, ...selection } = w.selection;
+          return { ...w, selection: folded ? { ...selection, briefFolded: todayIso } : selection };
+        }),
       editPrep: (id: string, edit: PrepEdit) => {
         const next = withPrepEdit(current.current, id, edit);
         if (next !== current.current) apply(next, writers ? 'Summary saved on this phone' : 'Summary saved');

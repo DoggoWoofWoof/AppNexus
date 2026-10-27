@@ -111,7 +111,7 @@ function Glance({ figures, onPress }: { figures: Figure[]; onPress: (i: number) 
           <Text className="text-xs text-muted-foreground" numberOfLines={2}>
             {f.label}
           </Text>
-          <Text className={cn('font-serif text-2xl leading-8', f.value.length > 7 && 'text-lg leading-6', f.tone === 'orange' && 'text-signal-text')}>{f.value}</Text>
+          <Text className={cn('font-serif text-2xl leading-8', f.value.length > 7 && 'text-lg leading-6', f.tone === 'rose' && 'text-signal-text')}>{f.value}</Text>
           {f.delta != null ? <Delta value={f.delta} /> : f.sub ? <Text className="text-xs text-muted-foreground" numberOfLines={2}>{f.sub}</Text> : null}
         </Pressable>
       ))}
@@ -453,7 +453,7 @@ function HcpBlocks({ hcp, cards }: { hcp: Hcp; cards: Cards }) {
                 sub={r.reason}
                 value={r.count}
                 max={maxOut}
-                tone={r.outside ? 'orange' : 'accent'}
+                tone={r.outside ? 'rose' : 'accent'}
                 display={
                   <View className="flex-row items-center gap-1">
                     <Text className="font-mono text-sm">{formatNumber(r.count)}</Text>
@@ -546,7 +546,7 @@ function OrgBlocks({ org, cards }: { org: Org; cards: Cards }) {
                 sub={inSystem ? 'Same health system' : 'Outside the system'}
                 value={d.patients}
                 max={maxDest}
-                tone={inSystem ? 'success' : 'orange'}
+                tone={inSystem ? 'success' : 'rose'}
                 display={
                   <View className="items-end">
                     <Text className="font-mono text-sm">{formatNumber(d.patients)}</Text>
@@ -560,7 +560,7 @@ function OrgBlocks({ org, cards }: { org: Org; cards: Cards }) {
             <>
               <Sub>Leaving, by procedure</Sub>
               {l.byFamily.map((f) => (
-                <BarRow key={f.family} label={f.family} value={f.leftPct} display={<Text className="font-mono text-sm">{f.leftPct}%</Text>} max={50} tone="orange" />
+                <BarRow key={f.family} label={f.family} value={f.leftPct} display={<Text className="font-mono text-sm">{f.leftPct}%</Text>} max={50} tone="rose" />
               ))}
               <FinePrint>{`${l.scope}. Illustrative figures; places outside the system are fictional names.`}</FinePrint>
             </>

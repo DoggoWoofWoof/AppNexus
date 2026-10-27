@@ -11,7 +11,7 @@ import { isoDate, startOfDay } from '@/lib/format';
 import { routeUrl } from '@/lib/links';
 import { scheduleDay, travelMinutes, type ScheduleOptions } from '@/lib/plan';
 import type { Entity, LonLat, PlanItem } from '@/lib/types';
-import { buildContext, freshWorkspace } from '@/lib/workspace';
+import { buildContext, sampleWorkspace } from '@/lib/workspace';
 
 // Start at 0,0; site a is about 1.1 km away, b about 3.3 km (2.2 km from a).
 const SITES: Record<string, LonLat> = { a: [0, 0.01], b: [0, 0.03] };
@@ -178,7 +178,7 @@ describe('choosing a time', () => {
 
 describe('the sample day', () => {
   const today = startOfDay(new Date(2026, 9, 19));
-  const ctx = buildContext(freshWorkspace(today), today);
+  const ctx = buildContext(sampleWorkspace(today), today);
 
   test('Maya at 10:00, Jordan at 14:00, and the call to Alex in his usual time, with nothing clashing', () => {
     const s = ctx.daySchedule(isoDate(today));

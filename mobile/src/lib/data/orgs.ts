@@ -8,11 +8,11 @@ import type { OrgData } from '../types';
 import { series } from './series';
 
 /** Out-of-system destinations are fictional so no real competitor is characterised. */
-export const DESTINATIONS: Record<string, { name: string; note: string }> = {
-  hudson: { name: 'Hudson Heart Institute', note: 'Independent heart centre' },
-  eastside: { name: 'Eastside Vascular Partners ASC', note: 'Ambulatory surgery centre' },
-  midtown: { name: 'Midtown Cardiac Surgery Center', note: 'Independent surgical centre' },
-  harlemRiver: { name: 'Harlem River Cardiology Group', note: 'Independent cardiology practice' },
+export const DESTINATIONS: Record<string, { name: string; short: string; note: string }> = {
+  hudson: { name: 'Hudson Heart Institute', short: 'Hudson', note: 'Independent heart centre' },
+  eastside: { name: 'Eastside Vascular Partners ASC', short: 'Eastside', note: 'Ambulatory surgery centre' },
+  midtown: { name: 'Midtown Cardiac Surgery Center', short: 'Midtown', note: 'Independent surgical centre' },
+  harlemRiver: { name: 'Harlem River Cardiology Group', short: 'Harlem River', note: 'Independent cardiology practice' },
 };
 
 export const ORGS: OrgData[] = [

@@ -167,7 +167,7 @@ export interface FreeSlot {
 }
 
 export type SignalId = 'followup' | 'leakage' | 'rising' | 'unseen';
-export type Tone = 'warn' | 'orange' | 'accent' | 'neutral';
+export type Tone = 'warn' | 'rose' | 'accent' | 'neutral';
 export interface Signal { id: SignalId; label: string; tone: Tone }
 
 /**
@@ -198,8 +198,12 @@ export interface Workspace {
   followUps: FollowUp[];
   /** Plan items by ISO day. */
   plans: Record<string, PlanItem[]>;
-  /** The day Today and Targets show, and the free slot (by the cancelled visit's id) Targets is filling. */
-  selection: { day: string; ids: string[]; slot?: string };
+  /**
+   * The day Today and Targets show, the free slot (by the cancelled visit's id)
+   * Targets is filling, and the day the daily brief on Today was folded away, which
+   * opens again the next day.
+   */
+  selection: { day: string; ids: string[]; slot?: string; briefFolded?: string };
   /** Times freed by cancelled visits, soonest first, until each is filled or left free. */
   freeSlots: FreeSlot[];
   /** Reports kept from Ask, newest first. */

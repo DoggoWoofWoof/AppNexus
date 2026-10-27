@@ -17,7 +17,7 @@ export type TagTone = Tone | 'success' | 'danger';
 
 const TONES: Record<TagTone, { box: string; text: string }> = {
   warn: { box: 'bg-warn-soft', text: 'text-warn' },
-  orange: { box: 'bg-signal-soft', text: 'text-signal-text' },
+  rose: { box: 'bg-signal-soft', text: 'text-signal-text' },
   accent: { box: 'bg-brand-soft', text: 'text-brand' },
   neutral: { box: 'bg-track', text: 'text-muted-foreground' },
   success: { box: 'bg-success-soft', text: 'text-success' },
@@ -37,14 +37,19 @@ export function SignalTag({ signal }: { signal: Signal }) {
   return <Tag label={signal.label} tone={signal.tone} />;
 }
 
-/** Initials in a circle for people (including contacts outside the book), a rounded square for accounts. */
-export function Avatar({ entity, size = 'md' }: { entity: { name: string; kind?: Entity['kind'] }; size?: 'md' | 'lg' }) {
+/**
+ * Initials in a circle for people (including contacts outside the book), a
+ * rounded square for accounts. `className` changes the circle, such as its
+ * colour on a tile of the same blue.
+ */
+export function Avatar({ entity, size = 'md', className }: { entity: { name: string; kind?: Entity['kind'] }; size?: 'sm' | 'md' | 'lg'; className?: string }) {
   return (
     <View
       className={cn(
         'items-center justify-center bg-brand-soft',
-        size === 'lg' ? 'h-14 w-14' : 'h-10 w-10',
+        size === 'lg' ? 'h-14 w-14' : size === 'sm' ? 'h-8 w-8' : 'h-10 w-10',
         entity.kind === 'hco' ? 'rounded-md' : 'rounded-full',
+        className,
       )}
       accessibilityElementsHidden
       importantForAccessibility="no-hide-descendants"

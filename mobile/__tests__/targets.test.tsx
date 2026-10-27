@@ -36,8 +36,8 @@ async function renderStore() {
 
 describe('the territory', () => {
   test('is made up: 555 numbers, example.org addresses and no one twice', () => {
-    expect(TERRITORY_HCPS).toHaveLength(120);
-    expect(TERRITORY_ORGS).toHaveLength(30);
+    expect(TERRITORY_HCPS).toHaveLength(121);
+    expect(TERRITORY_ORGS).toHaveLength(31);
     expect(NEXT_DOOR_HCPS).toHaveLength(52);
     expect(NEXT_DOOR_ORGS).toHaveLength(13);
     const doctors = [...TERRITORY_HCPS, ...NEXT_DOOR_HCPS];
@@ -123,7 +123,7 @@ describe('the list', () => {
   });
 
   test('is the rep’s own territory until a state is chosen, and a state shows only who works there', () => {
-    expect(search({})).toHaveLength(130);
+    expect(search({})).toHaveLength(131);
     const nj = search({ states: ['NJ'] });
     expect(nj.length).toBeGreaterThan(0);
     expect(nj.every((r) => stateOf(r.entity) === 'NJ')).toBe(true);

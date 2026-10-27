@@ -473,7 +473,7 @@ const SIGNAL_PHRASES: Record<SignalId, string> = {
 };
 
 /** "PCI" stays as it is; "Coronary" is "coronary procedures" and "Pacemaker implant" "pacemaker implant". */
-function procedureWords(pick: string): string {
+export function procedureWords(pick: string): string {
   const label = pickLabel(pick);
   if (pick === 'imaging') return 'echo and stress tests';
   if (CODE_GROUPS.some((g) => g.id === pick)) return `${label.toLowerCase()} procedures`;

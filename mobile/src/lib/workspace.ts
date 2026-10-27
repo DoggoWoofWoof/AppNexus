@@ -5,15 +5,18 @@
 import { availability, bookingRoute, clashesWith, hoursOn, inOnDay, outsideTimes, parseDays, siteOnDay, suggestSlots, usualDay, windowsFor, type Availability, type Slot } from './booking';
 import { volumeIn } from './codes';
 import { allEntities, getEntity, getOrg, isAt, lastInteraction, priorityOf, signalsFor, siteFor, stateOf, teamTargets, YOUR_STATES } from './data';
-import { seedWorkspace } from './data/seed';
+import { sampleDay, seedWorkspace } from './data/seed';
 import { addDays, dayInWords, daysBetween, formatDate, fromIso, haversineKm, isoDate, toMinutes, uid } from './format';
-import { activeItems, addTargets, bestOrder, END_OF_DAY, fixedStops, isOnSite, notLogged, placeStops, routeOrder, scheduleDay, timeStop, travelMinutes, type ScheduleOptions } from './plan';
+import { activeItems, addTargets, bestOrder, END_OF_DAY, fixedStops, isOnSite, notLogged, placeStops, routeOrder, scheduleDay, timeStop, travelMinutes, type ScheduleOptions, type Stop } from './plan';
 import { DEFAULT_PREFS, startPoint } from './prefs';
 import { searchTargets, type Filters, type SearchContext } from './search';
 import type { Entity, FollowUp, FreeSlot, Hcp, Interaction, PlanItem, SavedReport, Signal, VisitType, Workspace } from './types';
 
-/** Same version as the prototype's saved workspace, so the shapes stay in step. */
-export const WORKSPACE_VERSION = 2;
+/**
+ * The shape of the workspace kept on the phone. 3 starts the sample with nothing
+ * planned today, so a phone that kept the old sample day starts again.
+ */
+export const WORKSPACE_VERSION = 3;
 
 export function freshWorkspace(today: Date): Workspace {
   return {
@@ -27,6 +30,12 @@ export function freshWorkspace(today: Date): Workspace {
     saved: [],
     prefs: DEFAULT_PREFS,
   };
+}
+
+/** The sample with today planned (`sampleDay`): Dr. Patel, Dr. Lee and a call to Dr. Morgan, for the tests that plan around a day. */
+export function sampleWorkspace(today: Date): Workspace {
+  const ws = freshWorkspace(today);
+  return { ...ws, plans: { ...ws.plans, [isoDate(today)]: sampleDay(today) } };
 }
 
 /** What a search looks through: a doctor's name, specialty, NPI and where they work, by name and town. */
@@ -109,7 +118,7 @@ export function buildContext(ws: Workspace, today: Date, now?: Date) {
     ws,
     today,
     todayIso,
-    /** Where the day starts, chosen on the You page: Today's map, distances, Pick 5 and Ask's "Who is near" start here. */
+    /** Where the day starts, chosen on the You page: Today's route and map, distances and Ask's "Who is near" start here. */
     start,
     signals,
     planItemFor,
@@ -133,6 +142,24 @@ export function buildContext(ws: Workspace, today: Date, now?: Date) {
      * goes in their usual times that day, and today no earlier than now.
      */
     daySchedule: (day: string, now?: Date) => scheduleDay(ws.plans[day] ?? [], scheduleFor(ws, day, now)),
+    /**
+     * What a visit in person to someone would add to a day, put where `addToPlan`
+     * would put it: the minutes more driving, and their stop. Null when it would be
+     * outside their usual times or after the working day, or push another stop
+     * there. Someone already in the day is measured against the day without them,
+     * so it says the same once they're added.
+     */
+    detour: (id: string, day: string, now?: Date): { minutes: number; stop: Stop } | null => {
+      const without = withPlan(ws, day, (items) => items.filter((i) => i.targetId !== id || i.status === 'cancelled'));
+      const stopsOf = (w: Workspace) => scheduleDay(w.plans[day] ?? [], scheduleFor(w, day, now)).stops;
+      const before = stopsOf(without);
+      const after = stopsOf(addToPlan(without, day, id, now));
+      const stop = after.find((s) => s.item.targetId === id && isOnSite(s.item));
+      const wrong = new Set(before.filter((s) => s.outside || s.late).map((s) => s.item.id));
+      if (!stop || after.some((s) => (s.outside || s.late) && !wrong.has(s.item.id))) return null;
+      const driving = (stops: Stop[]) => stops.reduce((total, s) => total + s.travel, 0);
+      return { minutes: driving(after) - driving(before), stop };
+    },
     /** Minutes to drive from a site to a stop; 0 when either is a call or there is no site. */
     travelTo: (siteId: string | null, item: PlanItem): number => {
       const site = siteId ? getOrg(siteId) : null;
@@ -650,13 +677,6 @@ export function notDoneToday(ws: Workspace, todayIso: string, now: Date, days: s
   const count = (day: string) => moves.filter((m) => m.to === day).length;
   const to = [...new Set(moves.map((m) => m.to))].sort((a, b) => count(b) - count(a) || a.localeCompare(b))[0];
   return to ? { moves, to } : null;
-}
-
-/** Adds several people to a day at no fixed time, then puts the day's "Any time" stops in the best order. */
-export function addAllToPlan(ws: Workspace, day: string, targetIds: string[], now?: Date): Workspace {
-  const next = addPeople(ws, day, targetIds, now);
-  if (next === ws) return ws;
-  return orderBest(next, day, now);
 }
 
 /** Why a flexible stop can't go at a time, or null when it can. A time that has already gone today can't be chosen. */

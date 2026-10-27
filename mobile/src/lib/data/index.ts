@@ -206,7 +206,7 @@ export function signalsFor(entity: Entity, workspace: Activity, today: Date): Si
     out.push({ id: 'followup', label: overdue ? 'Overdue follow-up' : 'Follow-up due', tone: 'warn' });
   }
   const leaking = entity.kind === 'hcp' ? entity.leakageRisk : (entity.leakage?.leftPct ?? 0) >= 20;
-  if (leaking) out.push({ id: 'leakage', label: 'Patients going elsewhere', tone: 'orange' });
+  if (leaking) out.push({ id: 'leakage', label: 'Patients going elsewhere', tone: 'rose' });
   const growth = procedureYoy(entity);
   if (growth != null && growth >= 10) out.push({ id: 'rising', label: 'Busier than last year', tone: 'accent' });
   const last = lastInteraction(entity.id, workspace);

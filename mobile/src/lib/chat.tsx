@@ -10,16 +10,22 @@
 //
 // What the rep asks about someone feeds their full Summary (lib/saved.ts), and
 // "save that" keeps the last answer as a report in the menu's Saved list.
+//
+// An answer about someone the rep could see and hasn't planned to ends by asking
+// "Add Dr. Volkov to today?" (lib/ask.ts). "Yes, add to today" adds them, and the
+// chat goes to Today (components/chat.tsx), which shows them in the day with the
+// daily brief folded away; "no" leaves it, and they aren't asked about again.
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { AppState } from 'react-native';
 
-import { answer, SAMPLE, type Answer } from './ask';
-import { getEntity } from './data';
+import { answer, SAMPLE, yesOrNo, type Answer } from './ask';
+import { getEntity, shortName } from './data';
 import { addDays, daysBetween, firstSentence, formatDate, fromMinutes, startOfDay, uid } from './format';
 import { CHATS_BACKUP_KEY, CHATS_KEY, laterWriter, type DeviceStorage } from './persist';
 import { reportFrom, type Asked } from './saved';
 import { useWorkspace } from './store';
+import type { Entity } from './types';
 
 /** The Ask tab's thread; a person's own thread is keyed by their id. */
 export const TERRITORY = 'territory';
@@ -304,6 +310,18 @@ function LoadedChats({ children, kept, storage }: { children: ReactNode; kept: C
       latest.current.ctx.saveReport(report);
       return report;
     };
+    /** Yes to adding someone: they go in the day, and Today shows that day with the brief folded away. */
+    const addOffered = (offer: NonNullable<Answer['offer']>, who: Entity, scoped: boolean): Answer => {
+      const c = latest.current.ctx;
+      // Where adding puts them: the next working day, once today is over.
+      const day = c.addingTo(offer.day);
+      const already = !!c.planItemFor(who.id, day);
+      if (!already) c.addToPlan(who.id, offer.day);
+      // After adding, as these build on it.
+      c.selectDay(day);
+      c.foldBrief();
+      return addedReply(who, day, already, c.dayWord(day), scoped);
+    };
 
     return {
       turns: (key) => (threads[key] ?? []).map(stillSaved),
@@ -321,7 +339,13 @@ function LoadedChats({ children, kept, storage }: { children: ReactNode; kept: C
 
         let result: Answer;
         let savedId: string | undefined;
-        if (SAVE_ONLY.test(question)) {
+        // A reply to what the last answer asked at its end: "Add Dr. Volkov to today?"
+        const offered = last?.answer?.offer;
+        const reply = offered ? yesOrNo(question) : null;
+        const offeredWho = offered ? getEntity(offered.id) : null;
+        if (offered && offeredWho && reply) {
+          result = reply === 'yes' ? addOffered(offered, offeredWho, scoped) : notNowReply(offeredWho, scoped);
+        } else if (SAVE_ONLY.test(question)) {
           const target = [...previous].reverse().find((t) => t.answer && !t.answer.unknown && t.answer.intent !== 'saved');
           if (target?.answer) {
             const already = isSaved(target.savedId) ? target.savedId : undefined;
@@ -333,7 +357,13 @@ function LoadedChats({ children, kept, storage }: { children: ReactNode; kept: C
           }
         } else {
           const rest = question.replace(REPORT, '');
-          result = await Promise.resolve().then(() => answer(rest, latest.current.ctx, { about, scoped, talkedAbout }));
+          const c = latest.current.ctx;
+          // Who an answer offers to add goes in the day Today shows, or the next working day once today is over.
+          const [first, next] = c.planDays();
+          const offerOn = c.addingTo(c.ws.selection.day === next.iso ? next.iso : first.iso);
+          // Nobody the rep said no to is asked about again in this chat.
+          const declined = previous.flatMap((t, i) => (i > 0 && yesOrNo(t.question) === 'no' ? (previous[i - 1].answer?.offer?.id ?? []) : []));
+          result = await Promise.resolve().then(() => answer(rest, latest.current.ctx, { about, scoped, talkedAbout, offerOn, declined }));
           if (rest !== question && !result.unknown) savedId = keep(question, result).id;
         }
         update(key, (turns) => turns.map((t) => (t.id === id ? { ...t, answer: result, savedId } : t)));
@@ -391,6 +421,36 @@ function LoadedChats({ children, kept, storage }: { children: ReactNode; kept: C
   }, [threads, chats.past, chats.opened, opened, dayStart, savedIds]);
 
   return <ChatContext.Provider value={store}>{children}</ChatContext.Provider>;
+}
+
+/** The reply to yes: who is in the day now. The chat goes to Today, which shows them. */
+function addedReply(who: Entity, day: string, already: boolean, dayWord: string, scoped: boolean): Answer {
+  const on = dayWord === 'today' || dayWord === 'tomorrow' ? dayWord : `on ${dayWord}`;
+  return {
+    intent: 'plan',
+    about: who.id,
+    subject: null,
+    scope: ['Your plan', SAMPLE],
+    summary: already ? `${who.name} is already in your plan ${on}.` : `Added ${who.name} to ${dayWord}.`,
+    rows: [],
+    next: scoped ? ['What should I bring up?', 'What happened last time?'] : [`What should I bring up with ${who.name}?`, 'What’s on my plan today?'],
+    added: { id: who.id, day },
+    unknown: true,
+  };
+}
+
+/** The reply to no: nothing changes. */
+function notNowReply(who: Entity, scoped: boolean): Answer {
+  return {
+    intent: 'plan',
+    about: who.id,
+    subject: null,
+    scope: [],
+    summary: `OK, I won’t add ${shortName(who)}.`,
+    rows: [],
+    next: scoped ? ['What should I bring up?', 'Where do their patients go?'] : ['Who should I see today?', 'What’s on my plan today?'],
+    unknown: true,
+  };
 }
 
 /** The reply to "save that". */

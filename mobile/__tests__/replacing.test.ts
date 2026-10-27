@@ -11,7 +11,7 @@ import { addDays, isoDate, startOfDay } from '@/lib/format';
 import { bestOrder, placeStops, scheduleDay } from '@/lib/plan';
 import { activeFilterCount, insteadFilters } from '@/lib/search';
 import type { Entity, LonLat, PlanItem } from '@/lib/types';
-import { addPeople, buildContext, freshWorkspace, moveStop, moveToDay, moveToDayError, orderBest, stopNumber } from '@/lib/workspace';
+import { addPeople, buildContext, moveStop, moveToDay, moveToDayError, orderBest, sampleWorkspace, stopNumber } from '@/lib/workspace';
 
 const today = startOfDay(new Date(2026, 9, 19));
 const todayIso = isoDate(today);
@@ -71,7 +71,7 @@ describe('placing stops', () => {
   });
 
   test('on the sample day, Best order keeps the booked times and has nothing left to improve', () => {
-    const ws = addPeople(freshWorkspace(today), todayIso, ['kenji', 'hannah', 'priya']);
+    const ws = addPeople(sampleWorkspace(today), todayIso, ['kenji', 'hannah', 'priya']);
     const best = orderBest(ws, todayIso);
     const plan = buildContext(best, today).dayPlan(todayIso);
     expect(plan.find((i) => i.id === 'v-maya')?.time).toBe('10:00');
@@ -80,7 +80,7 @@ describe('placing stops', () => {
   });
 
   test('Best order says how much less driving it would be', () => {
-    const ws = addPeople(freshWorkspace(today), todayIso, ['kenji', 'hannah', 'priya']);
+    const ws = addPeople(sampleWorkspace(today), todayIso, ['kenji', 'hannah', 'priya']);
     // The "Any time" stops turned round, from the order with the least driving.
     const anyTime = buildContext(ws, today)
       .dayPlan(todayIso)
@@ -95,14 +95,14 @@ describe('placing stops', () => {
   });
 
   test('stops are numbered as the map numbers them; a call has no number', () => {
-    const ws = freshWorkspace(today);
+    const ws = sampleWorkspace(today);
     expect(stopNumber(ws, todayIso, 'jordan')).toMatchObject({ number: 2, of: 2, after: { id: 'v-maya' } });
     expect(stopNumber(ws, todayIso, 'alex')).toBeNull();
   });
 });
 
 describe('who to see instead', () => {
-  const ws = freshWorkspace(today);
+  const ws = sampleWorkspace(today);
   const ctx = buildContext(ws, today);
 
   test('for a freed time: up to three doctors free then, not already planned and not the one who cancelled', () => {
@@ -126,7 +126,7 @@ describe('who to see instead', () => {
 
 describe('moving a visit to the next day', () => {
   test('an Any time visit moves, keeping its goal and where it came from', () => {
-    const ws = freshWorkspace(today);
+    const ws = sampleWorkspace(today);
     const next = moveToDay(ws, todayIso, 'v-alex', tomorrowIso);
     expect(next.plans[todayIso].some((i) => i.targetId === 'alex')).toBe(false);
     expect(next.plans[tomorrowIso].find((i) => i.targetId === 'alex')).toMatchObject({
@@ -136,7 +136,7 @@ describe('moving a visit to the next day', () => {
   });
 
   test('a visit with a time, or one already planned there, says why it can’t', () => {
-    const ws = freshWorkspace(today);
+    const ws = sampleWorkspace(today);
     expect(moveToDayError(ws, todayIso, 'v-maya', tomorrowIso)).toMatch(/Change the time/);
     expect(moveToDay(ws, todayIso, 'v-maya', tomorrowIso)).toBe(ws);
     const twice = moveToDay(ws, todayIso, 'v-alex', tomorrowIso);
@@ -155,7 +155,7 @@ describe('whether a doctor is in', () => {
 
 describe('See everyone after a cancel', () => {
   test('opens Targets on doctors in that day and not planned, nearest to where the visit was, and says so in Filters', () => {
-    const ctx = buildContext(freshWorkspace(today), today);
+    const ctx = buildContext(sampleWorkspace(today), today);
     const filters = insteadFilters('msm');
     expect(activeFilterCount(filters)).toBe(3);
     const rows = ctx.search(filters);
@@ -172,7 +172,7 @@ describe('See everyone after a cancel', () => {
 });
 
 describe('the day view for choosing a time', () => {
-  const plan = freshWorkspace(today).plans[todayIso];
+  const plan = sampleWorkspace(today).plans[todayIso];
 
   test('half hours from 08:00 to 18:00, the rep’s visits taken, their usual times shaded and the first of those picked', () => {
     const grid = dayGrid(entity('kenji'), { day: todayIso, plan, duration: 30, onSite: true });

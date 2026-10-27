@@ -14,7 +14,7 @@ import { buildBrief, outcomeWord, visitWhen } from './brief';
 import { accountsByPatientsLost, allHcps, allOrgs, destination, getEntity, getOrg, hcpsAt, patientsLost, primaryOrg, procedureYoy, proceduresOf, referredOut, shortName, siteFor, STATES, testsOf, topReferrersOut } from './data';
 import { DATA_PERIOD, PRIOR_PERIOD } from './data/seed';
 import { addSeries } from './data/series';
-import { usualTimes } from './booking';
+import { canSeeOn, usualTimes } from './booking';
 import { pickLabel } from './codes';
 import { addDays, formatDate, formatKm, formatNumber, formatPct, haversineKm, isoDate, listJoin, plural, relativeDay, relativeDayLower, sum } from './format';
 import { PREP_QUESTION, prepAnswer } from './prep';
@@ -92,6 +92,13 @@ export interface Answer {
   doThis?: { text: string; label: string; link: AskLink } | null;
   /** Questions to ask next. */
   next: string[];
+  /**
+   * What the answer asks at its end, and the reply that says yes: "Add Dr. Volkov
+   * to today?" and "Yes, add to today". Saying yes adds them (lib/chat.tsx).
+   */
+  offer?: { id: string; day: string; question: string; yes: string };
+  /** Who saying yes put in the day, and which day, so the chat goes to Today to show them. */
+  added?: { id: string; day: string };
   unknown?: boolean;
   /** What a saved copy is called, when the kind of question isn't enough (the week it covers). */
   title?: string;
@@ -104,6 +111,10 @@ export interface AskOptions {
   scoped?: boolean;
   /** People and accounts the rep has asked about, whose Summary is in Saved. */
   talkedAbout?: string[];
+  /** The day an answer offers to add someone to (`offer`); without it, it offers nothing. */
+  offerOn?: string;
+  /** People the rep said no to adding, who aren't offered again. */
+  declined?: string[];
 }
 
 /** Starter questions, grouped by the moment in a rep's day they help with. */
@@ -308,7 +319,7 @@ interface Input {
 }
 
 /** Answers a question from the sample data and the rep's own activity. */
-export function answer(question: string, ctx: Context, { about = null, scoped = false, talkedAbout = [] }: AskOptions = {}): Answer {
+export function answer(question: string, ctx: Context, { about = null, scoped = false, talkedAbout = [], offerOn, declined = [] }: AskOptions = {}): Answer {
   const intent = detectIntent(question, about, scoped);
   const named = findEntity(question);
   const q = normalise(question);
@@ -331,7 +342,39 @@ export function answer(question: string, ctx: Context, { about = null, scoped = 
   // The week is the rep's own, even when asked in a person's chat, and a list is the territory's, or an account's.
   const entity = intent === 'week' || (intent === 'find' && subject?.kind === 'hcp') ? null : subject;
   const { about: answerAbout, ...result } = BUILDERS[intent]({ question, q, entity, ctx, talkedAbout });
-  return { intent, about: answerAbout !== undefined ? answerAbout : (entity?.id ?? null), subject: entity?.id ?? null, ...result };
+  const built: Answer = { intent, about: answerAbout !== undefined ? answerAbout : (entity?.id ?? null), subject: entity?.id ?? null, ...result };
+  const offer = offerOn ? offerFor(built, ctx, offerOn, declined) : null;
+  return offer ? { ...built, offer } : built;
+}
+
+/** Answers that don't end by offering to add someone: booking a time is their next step, or they aren't about who to see. */
+const NO_OFFER: Intent[] = ['contact', 'visit', 'points', 'plan', 'prep', 'saved', 'week', 'search'];
+
+/**
+ * What an answer asks at its end: "Add Dr. Volkov to today?", for whoever it's
+ * about, which for a list is the first in it or the one it says to start with.
+ * Only when the rep hasn't planned to, and not for a health system, which isn't
+ * somewhere to visit, or after a list that found nobody. Saying yes adds a
+ * visit, as + Add does everywhere, so only when the rep could see them that day.
+ * Patients lost across the territory names an account and says to start with a
+ * doctor there, so it offers neither.
+ */
+function offerFor(a: Answer, ctx: Context, day: string, declined: string[]): Answer['offer'] | null {
+  if (NO_OFFER.includes(a.intent) || (a.about !== a.subject && (a.intent === 'leakage' || !a.rows.length))) return null;
+  const who = a.about ? getEntity(a.about) : null;
+  if (!who || declined.includes(who.id) || (who.kind === 'hco' && who.type === 'Health system') || ctx.planItemFor(who.id, day)) return null;
+  const word = ctx.dayWord(day);
+  return canSeeOn(who, day) ? { id: who.id, day, question: `Add ${shortName(who)} to ${word}?`, yes: `Yes, add to ${word}` } : null;
+}
+
+// "Yes, add to today", "sure", "add them": yes to what an answer asked at its end. "Not now": no.
+const YES = /^((yes|yeah|yep|sure|ok|okay|go ahead|do it|please do|please)( please)?( add)?|(please )?add)( (them|him|her|it))?( (to|for) [a-z0-9 ]+)?( please)?$/;
+const NO = /^(no|nope|nah|not now|not today|no thanks?( you)?|maybe later|later|skip( (them|him|her|it))?|don t|do not)$/;
+
+/** Whether a reply says yes or no to what an answer asked at its end; null for anything else, such as another question. */
+export function yesOrNo(reply: string): 'yes' | 'no' | null {
+  const q = normalise(reply);
+  return YES.test(q) ? 'yes' : NO.test(q) ? 'no' : null;
 }
 
 type Built = Omit<Answer, 'intent' | 'about' | 'subject'> & { about?: string | null };
@@ -987,5 +1030,5 @@ const BUILDERS: Record<Intent, (input: Input) => Built> = {
 export function spoken(a: Answer): string {
   const points = a.intent === 'points' ? a.rows.map((r) => r.title) : [];
   const lines = a.intent === 'week' ? a.rows.map((r) => `${[r.title, r.figure].filter(Boolean).join(', ')}: ${r.sub ?? ''}.`.replace(/: \.$/, '.')) : [];
-  return [a.summary, ...points, ...lines, a.doThis?.text].filter(Boolean).join(' ');
+  return [a.summary, ...points, ...lines, a.doThis?.text, a.offer?.question].filter(Boolean).join(' ');
 }

@@ -13,17 +13,19 @@
 // under it, which, like pressing search, sets the chips from the words
 // (lib/target-query.ts); anything left over, such as a name or a town, is
 // searched for. Ask's answer to the same question opens here with the same
-// chips. An account named, as in "top doctors at Quarry Ridge", or tapped from
-// its row or its page, shows who works there, with an "At" chip to take it off.
+// chips, and so do the daily brief's tiles, each on its state. An account
+// named, as in "top doctors at Quarry Ridge", or tapped from its row or its
+// page, shows who works there, with an "At" chip to take it off.
 // Each row has the phone and email.
-// The star on a row keeps someone in My targets, which Today's suggestions and
-// Ask go by, and + puts them in the day's plan. Each doctor says whether they're
+// The star on a row keeps someone in My targets, which Ask goes by and the daily
+// brief looks beyond. + picks someone for the day's route, as many as the rep
+// likes, and "Build route" at the bottom puts them all in the day, each where it
+// adds the least driving, then opens Today to go over the route, with one Undo;
+// the star beside it puts them all in My targets. Each doctor says whether they're
 // usually in that day ("In 12:30–13:30" or "Not in on Tuesdays"), and those who
 // are come first. Someone in that day who doesn't usually see people then says
 // when they do ("Not their usual time · usually Fri 13:00–16:00"). Someone
-// already planned at any time gets "Set a time". Select picks several to add to
-// the day, or to My targets, in one go, with one Undo; adding them to the day
-// opens Today, to go over the whole day with them in it.
+// already planned at any time gets "Set a time".
 // My targets come first, then everyone else, each under a heading, unless the
 // list is nearest first or by name. A star tapped leaves the row where it is
 // until the list changes, so the rows don't jump about while adding people.
@@ -59,6 +61,7 @@ import { filterOptions, findFilters, type FilterOption } from '@/lib/filter-sear
 import { formatKm, listJoin, plural } from '@/lib/format';
 import { telUrl } from '@/lib/links';
 import { activeFilterCount, DEFAULT_FILTERS, filterChips, insteadFilters, mineFirst, readSearchLink, type Filters, type SearchRow } from '@/lib/search';
+import { SHORT_SPECIALTY } from '@/lib/specialties';
 import { useWorkspace } from '@/lib/store';
 import { describeSearch, readTargetQuery } from '@/lib/target-query';
 import type { Entity, Signal, VisitType } from '@/lib/types';
@@ -87,14 +90,15 @@ export default function Targets() {
     set(rest);
   };
   // From "See everyone": who it's instead of and where the visit was, set as filters each time it's tapped.
-  const params = useLocalSearchParams<{ near?: string; except?: string; at?: string; org?: string; find?: string; from?: string }>();
+  const params = useLocalSearchParams<{ near?: string; except?: string; at?: string; org?: string; find?: string; from?: string; by?: string }>();
   const [instead, setInstead] = useState<{ near: string; except: string; at?: string } | null>(null);
   if (params.at && params.near && params.at !== instead?.at) {
     setInstead({ near: params.near, except: params.except ?? '', at: params.at });
     setFilters(insteadFilters(params.near));
   }
-  // From an account's page, the doctors there; from Ask, the search it answered,
-  // whose territory and procedures Ask has set. Set each time either is tapped.
+  // From an account's page, the doctors there; from Ask or the daily brief, the
+  // search it answered, whose territory and procedures are the rep's chips (a tile
+  // of the brief sets its state there first). Set each time one is tapped.
   const [fromOrg, setFromOrg] = useState<string | null>(null);
   if (params.from && params.from !== fromOrg && (params.org || params.find)) {
     setFromOrg(params.from);
@@ -104,7 +108,7 @@ export default function Targets() {
       delete asked.states;
       delete asked.codes;
       setFilters({ ...DEFAULT_FILTERS, ...asked, org: asked.org && getOrg(asked.org) ? asked.org : '' });
-      setRead('Set from what you asked. Tap a chip to change it.');
+      setRead(params.by === 'brief' ? 'From your daily brief. Tap a chip to change it.' : 'Set from what you asked. Tap a chip to change it.');
     }
   }
   // The account chosen has its own chip, so clearing the filters keeps it.
@@ -115,8 +119,8 @@ export default function Targets() {
   const atOrg = filters.org ? getOrg(filters.org) : undefined;
   const scroll = useRef<ScrollViewInstance>(null);
   const { width, fontScale } = useWindowDimensions();
-  // Select: the people ticked to add in one go, or null when not selecting.
-  const [picked, setPicked] = useState<string[] | null>(null);
+  // Who + has picked for the day's route.
+  const [picked, setPicked] = useState<string[]>([]);
   const day = ctx.ws.selection.day;
   const dayWord = ctx.dayWord(day);
   const free = ctx.filling;
@@ -164,7 +168,10 @@ export default function Targets() {
   const nextDoor = !rows.length && !states.length && !filters.org && !free ? ctx.search({ ...applied, states: NEXT_DOOR.map((s) => s.id) }) : [];
   const nextDoorStates = NEXT_DOOR.filter((s) => nextDoor.some((r) => stateOf(r.entity) === s.id));
   const visits = useVisitSheets();
-  const picking = picked && !free ? picked : null;
+  // The day Build route adds to: the next working day once today is over.
+  const routeDay = ctx.addingTo(day);
+  // Those picked not in that day already, as when added from their page since; none while filling a freed time.
+  const picking = free ? [] : picked.filter((id) => !ctx.planItemFor(id, routeDay));
   const count = activeFilterCount(filters);
   const people = filters.kind === 'hcp';
   const fill = (id: string) => {
@@ -172,17 +179,19 @@ export default function Targets() {
     ctx.fillSlot(free.itemId, id);
     router.navigate('/today');
   };
-  const toggle = (id: string) => setPicked((p) => (p?.includes(id) ? p.filter((x) => x !== id) : [...(p ?? []), id]));
-  // The people picked go in the day, and Today opens to go over it, in route order, with Undo.
-  const addPicked = () => {
-    setPicked(null);
-    if (!picking?.length) return;
+  const toggle = (id: string) => setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
+  // Build route: the people picked go in the day, and Today opens to go over the route, with one Undo.
+  const buildRoute = () => {
+    setPicked([]);
+    if (!picking.length) return;
     ctx.addPeople(picking, day);
+    // The rep has chosen who to see, so Today shows the day with the brief folded away.
+    ctx.foldBrief();
     router.navigate('/today');
   };
+  // They stay picked, to build the route with them too.
   const starPicked = () => {
-    if (picking?.length) ctx.addTargets(picking);
-    setPicked(null);
+    if (picking.length) ctx.addTargets(picking);
   };
   // Doctors and accounts have their own specialties and types, so switching clears them.
   const switchTo = (kind: Entity['kind']) => set({ kind, specialties: [], orgTypes: [] });
@@ -301,7 +310,7 @@ export default function Targets() {
           ) : null}
         </View>
 
-        {insteadOf && !free && !picking ? (
+        {insteadOf && !free ? (
           <View className="flex-row items-center gap-2">
             <Text className="flex-1 text-base text-muted-foreground" accessibilityLiveRegion="polite">
               <Text className="text-base font-semibold">{`Instead of ${shortName(insteadOf)}`}</Text>
@@ -340,31 +349,18 @@ export default function Targets() {
               </View>
             ) : null}
           </View>
-        ) : picking ? (
-          <View className="flex-row items-center gap-2">
-            <Text className="flex-1 text-base text-muted-foreground" accessibilityLiveRegion="polite">
-              {picking.length ? `${plural(picking.length, 'person', 'people')} picked` : `Tap people to add to ${dayWord} or My targets`}
-            </Text>
-            <Button size="sm" variant="ghost" onPress={() => setPicked(null)}>
-              <Text className="text-brand">Cancel</Text>
-            </Button>
-          </View>
         ) : (
           <View className="flex-row items-center gap-2">
             <Text className="flex-1 text-base text-muted-foreground" accessibilityLiveRegion="polite">
               {rows.length
-                ? `${plural(rows.length, people ? 'doctor' : 'account')}, ${ORDER_WORDS[applied.sort]}${page ? ` · page ${page + 1} of ${pages}` : ` · +\u00a0adds to ${dayWord}`}`
+                ? `${plural(rows.length, people ? 'doctor' : 'account')}, ${ORDER_WORDS[applied.sort]}${page ? ` · page ${page + 1} of ${pages}` : ` · +\u00a0picks who to see ${ctx.dayWord(routeDay)}`}`
                 : nextDoor.length
                   ? `Nobody in your territory. ${plural(nextDoor.length, people ? 'doctor' : 'account')} in ${listJoin(nextDoorStates.map((s) => s.label))}.`
                   : offer
                     ? 'Nobody by that name. Tap Show above, or press search, to use the words as filters.'
                     : 'Nobody matches. Try fewer filters.'}
             </Text>
-            {rows.some((r) => !r.planned) ? (
-              <Button size="sm" variant="ghost" onPress={() => setPicked([])} accessibilityLabel={`Select several to add to ${dayWord} or My targets`}>
-                <Text className="text-brand">Select</Text>
-              </Button>
-            ) : nextDoor.length ? (
+            {nextDoor.length ? (
               <Button
                 size="sm"
                 variant="ghost"
@@ -386,24 +382,21 @@ export default function Targets() {
                   {first + i < mineCount ? `My targets · ${mineCount}` : `Everyone else · ${rows.length - mineCount}`}
                 </Text>
               ) : null}
-              {picking ? (
-                <PickRow row={row} on={picking.includes(row.entity.id)} onToggle={() => toggle(row.entity.id)} />
-              ) : (
-                <TargetRow
-                  row={row}
-                  freeTime={free?.time ?? null}
-                  fit={fits.get(row.entity.id) ?? null}
-                  inDay={inDay.get(row.entity.id) ?? null}
-                  dayWord={dayWord}
-                  warning={row.planned ? ctx.timeWarning(row.planned, day, false) : null}
-                  logged={day === ctx.todayIso ? ctx.loggedToday(row.entity.id) : null}
-                  onStar={() => ctx.toggleTarget(row.entity.id)}
-                  onDoctors={() => seeDoctors(row.entity.id)}
-                  onFill={() => fill(row.entity.id)}
-                  onAdd={() => ctx.addToPlan(row.entity.id, day)}
-                  onSetTime={() => row.planned && visits.openSetTime(row.entity, { day, id: row.planned.id, item: row.planned })}
-                />
-              )}
+              <TargetRow
+                row={row}
+                freeTime={free?.time ?? null}
+                fit={fits.get(row.entity.id) ?? null}
+                inDay={inDay.get(row.entity.id) ?? null}
+                dayWord={dayWord}
+                warning={row.planned ? ctx.timeWarning(row.planned, day, false) : null}
+                logged={day === ctx.todayIso ? ctx.loggedToday(row.entity.id) : null}
+                onStar={() => ctx.toggleTarget(row.entity.id)}
+                onDoctors={() => seeDoctors(row.entity.id)}
+                onFill={() => fill(row.entity.id)}
+                picked={picking.includes(row.entity.id)}
+                onPick={() => toggle(row.entity.id)}
+                onSetTime={() => row.planned && visits.openSetTime(row.entity, { day, id: row.planned.id, item: row.planned })}
+              />
             </Fragment>
           ))}
         </View>
@@ -420,8 +413,8 @@ export default function Targets() {
             </Button>
           </View>
         ) : null}
-        {/* Room to scroll the last row clear of the Add bar. */}
-        {picking ? <View className="h-20" /> : null}
+        {/* Room to scroll the last row clear of the Build route bar. */}
+        {picking.length ? <View className="h-20" /> : null}
 
         <Dialog open={!!sheet} onOpenChange={(open) => !open && setSheet(null)}>
           {sheet === 'filters' ? (
@@ -463,15 +456,27 @@ export default function Targets() {
         </Dialog>
         {visits.sheets}
       </Screen>
-      {picking ? (
+      {picking.length ? (
         // Room at the bottom for the Ask button, which rises out of the tab bar below.
+        // At very large text the star goes without its words, so Build route still fits.
         <View className="absolute inset-x-0 bottom-0 flex-row gap-2 border-t border-border bg-background px-4 pb-7 pt-3">
-          <Button size="lg" variant="outline" className="rounded-xl" disabled={!picking.length} onPress={starPicked} accessibilityLabel={`Add ${plural(picking.length, 'person', 'people')} to My targets`}>
+          <Button
+            size="lg"
+            variant="outline"
+            className="rounded-xl"
+            onPress={starPicked}
+            accessibilityLabel={`Add the ${plural(picking.length, 'person', 'people')} picked to My targets`}
+          >
             <Icon as={Star} size={18} />
-            <Text>My targets</Text>
+            {wrapChips ? <Text>My targets</Text> : null}
           </Button>
-          <Button size="lg" className="flex-1 rounded-xl" disabled={!picking.length} onPress={addPicked}>
-            <Text className="text-lg">{picking.length ? `Add ${picking.length} to ${dayWord}` : 'Pick people'}</Text>
+          <Button
+            size="lg"
+            className="flex-1 rounded-xl"
+            onPress={buildRoute}
+            accessibilityLabel={`Build ${ctx.dayWord(routeDay)}’s route with the ${plural(picking.length, 'person', 'people')} picked`}
+          >
+            <Text className="text-lg">{`Build route · ${picking.length}`}</Text>
           </Button>
         </View>
       ) : null}
@@ -527,17 +532,7 @@ function Chip({
   );
 }
 
-const TONE: Record<Signal['tone'], string> = { warn: 'text-warn', orange: 'text-signal-text', accent: 'text-brand', neutral: 'text-muted-foreground' };
-
-// Specialties as reps say them, short enough to go beside a name.
-const SHORT_SPECIALTY: Record<string, string> = {
-  'Interventional Cardiology': 'Interventional',
-  'Cardiac Electrophysiology': 'EP',
-  'Cardiothoracic Surgery': 'Cardiothoracic',
-  'Vascular Surgery': 'Vascular surgery',
-  'Advanced Heart Failure Cardiology': 'Heart failure',
-  'Internal Medicine': 'Internal medicine',
-};
+const TONE: Record<Signal['tone'], string> = { warn: 'text-warn', rose: 'text-signal-text', accent: 'text-brand', neutral: 'text-muted-foreground' };
 
 /**
  * Their name and specialty; their procedures a year and the change ("86 a year
@@ -620,7 +615,8 @@ function TargetRow({
   onStar,
   onDoctors,
   onFill,
-  onAdd,
+  picked,
+  onPick,
   onSetTime,
 }: {
   row: SearchRow;
@@ -638,7 +634,9 @@ function TargetRow({
   /** For an account, shows the doctors there. */
   onDoctors: () => void;
   onFill: () => void;
-  onAdd: () => void;
+  /** Picked with +, for Build route. */
+  picked: boolean;
+  onPick: () => void;
   onSetTime: () => void;
 }) {
   const profileHref = useProfileHref();
@@ -667,9 +665,20 @@ function TargetRow({
   } else if (planned) {
     action = <Added name={entity.name} logged={planned.status === 'done'} />;
   } else {
+    // + picks them, and a second tap puts them back; Build route at the bottom adds everyone picked.
     action = (
-      <Button size="sm" variant="outline" className="rounded-lg" onPress={onAdd} accessibilityLabel={`Add ${entity.name} to your plan`}>
-        <Text>+ Add</Text>
+      <Button
+        size="sm"
+        variant={picked ? 'default' : 'outline'}
+        className="rounded-lg"
+        onPress={onPick}
+        // Not accessibilityState: the web build only passes aria-checked on.
+        role="checkbox"
+        aria-checked={picked}
+        accessibilityLabel={`Pick ${entity.name} for your route`}
+      >
+        {picked ? <Icon as={Check} size={16} className="text-primary-foreground" /> : null}
+        <Text>{picked ? 'Picked' : '+ Add'}</Text>
       </Button>
     );
   }
@@ -713,24 +722,6 @@ const ContactLink = ({ icon, label, hint, onPress }: { icon: LucideIcon; label: 
     <Text className="text-sm text-muted-foreground">{label}</Text>
   </Pressable>
 );
-
-/** In Select the whole row ticks them: one big target, and no button inside another. */
-function PickRow({ row, on, onToggle }: { row: SearchRow; on: boolean; onToggle: () => void }) {
-  const { entity, planned } = row;
-  return (
-    <Pressable
-      onPress={onToggle}
-      disabled={!!planned}
-      accessibilityRole="checkbox"
-      accessibilityState={{ checked: on, disabled: !!planned }}
-      accessibilityLabel={planned ? `${entity.name}, already in your plan` : entity.name}
-      className={cn('min-h-16 flex-row items-center gap-3 rounded-xl border px-4 py-2', on ? 'border-primary bg-accent' : 'border-border bg-card')}
-    >
-      <RowInfo row={row} />
-      {planned ? <Added name={entity.name} logged={planned.status === 'done'} /> : <Icon as={on ? SquareCheckBig : Square} size={22} className={on ? 'text-primary' : 'text-muted-foreground'} />}
-    </Pressable>
-  );
-}
 
 /**
  * A sheet from the chips: what it's for, the choices, and the list's count to go

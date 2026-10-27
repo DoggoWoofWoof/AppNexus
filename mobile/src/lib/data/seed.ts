@@ -5,8 +5,10 @@ import type { FollowUp, Interaction, PlanItem, StartPoint } from '../types';
 
 // The sample volumes, referrals and leakage are a fixed snapshot: the twelve
 // months to the end of September 2026, plus the twelve before for comparison.
-// Notes, follow-ups and the plan move with today instead. Every figure says so.
-export const DATA_PERIOD = 'Sample data, Oct 2025 to Sep 2026';
+// Notes, follow-ups and plans move with today instead. Every figure says so.
+/** The twelve months the figures cover, which "this year" means. */
+export const FIGURES_YEAR = 'Oct 2025 to Sep 2026';
+export const DATA_PERIOD = `Sample data, ${FIGURES_YEAR}`;
 /** The twelve months the figures are compared with: "on last year" means these. */
 export const PRIOR_PERIOD = 'Oct 2024 to Sep 2025';
 /** The day after the figures end, so charts label the same quarters as DATA_PERIOD. */
@@ -86,16 +88,9 @@ export function seedWorkspace(today: Date) {
     { id: 'f-jordan-1', targetId: 'jordan', text: 'Book a lunch-and-learn for fellows', due: day(-20), done: true, doneOn: day(-21), interactionId: 'i-jordan-1' },
   ];
 
-  const today0 = day(0);
-  // Where Dr. Patel and Dr. Morgan work today (lib/data/hcps.ts), so the plan matches their days.
-  const mayaSite = today.getDay() === 2 ? 'msh' : 'msw';
-  const alexSite = today.getDay() === 5 ? 'msh' : 'msw';
+  // Nothing is planned today, so Today opens on the daily brief, and the day fills
+  // from it or from Build route on Targets.
   const plans: Record<string, PlanItem[]> = {
-    [today0]: [
-      { id: 'v-maya', targetId: 'maya', siteId: mayaSite, mode: 'timed', time: '10:00', duration: 30, type: 'In-person visit', goal: 'Bring the procedure mix vs. peers report.', status: 'planned', booking: 'confirmed', via: 'Rosa Diaz, scheduler' },
-      { id: 'v-jordan', targetId: 'jordan', siteId: 'msm', mode: 'timed', time: '14:00', duration: 30, type: 'In-person visit', goal: 'Confirm a date for the fellows lunch-and-learn.', status: 'planned', booking: 'requested', via: 'Email' },
-      { id: 'v-alex', targetId: 'alex', siteId: alexSite, mode: 'flexible', time: null, duration: 15, type: 'Phone call', goal: 'Ask about ablation referrals leaving the system.', status: 'planned' },
-    ],
     // Earlier this week: one visit logged after it moved a day, one meeting logged,
     // one cancelled and one never logged, for "Summarise my week".
     [workday(1)]: [
@@ -115,4 +110,20 @@ export function seedWorkspace(today: Date) {
   };
 
   return { interactions, followUps, plans };
+}
+
+/**
+ * A day already planned, for the tests that plan around one: Dr. Patel at 10:00,
+ * Dr. Lee at 14:00 not confirmed yet, and a call to Dr. Morgan at any time. The
+ * sample itself starts each day with nothing planned.
+ */
+export function sampleDay(today: Date): PlanItem[] {
+  // Where Dr. Patel and Dr. Morgan work today (lib/data/hcps.ts), so the plan matches their days.
+  const mayaSite = today.getDay() === 2 ? 'msh' : 'msw';
+  const alexSite = today.getDay() === 5 ? 'msh' : 'msw';
+  return [
+    { id: 'v-maya', targetId: 'maya', siteId: mayaSite, mode: 'timed', time: '10:00', duration: 30, type: 'In-person visit', goal: 'Bring the procedure mix vs. peers report.', status: 'planned', booking: 'confirmed', via: 'Rosa Diaz, scheduler' },
+    { id: 'v-jordan', targetId: 'jordan', siteId: 'msm', mode: 'timed', time: '14:00', duration: 30, type: 'In-person visit', goal: 'Confirm a date for the fellows lunch-and-learn.', status: 'planned', booking: 'requested', via: 'Email' },
+    { id: 'v-alex', targetId: 'alex', siteId: alexSite, mode: 'flexible', time: null, duration: 15, type: 'Phone call', goal: 'Ask about ablation referrals leaving the system.', status: 'planned' },
+  ];
 }

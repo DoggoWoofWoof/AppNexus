@@ -26,10 +26,10 @@ import {
   fillSlot,
   fillSlotError,
   findItem,
-  freshWorkspace,
   moveToDay,
   moveToDayError,
   noteRecords,
+  sampleWorkspace,
   setVisitTime,
   visitsLogged,
   withRecords,
@@ -40,7 +40,7 @@ const today = startOfDay(new Date(2026, 9, 20));
 const todayIso = isoDate(today);
 const wedIso = isoDate(addDays(today, 1));
 const at = (h: number, m: number) => new Date(2026, 9, 20, h, m);
-const fresh = () => freshWorkspace(today);
+const sample = () => sampleWorkspace(today);
 const ctxOf = (ws: Workspace) => buildContext(ws, today);
 const status = (ws: Workspace, id: string, day = todayIso) => findItem(ws, day, id)?.status;
 const note = (patch: Partial<NoteDraft>): NoteDraft => ({ targetId: 'maya', type: 'In-person visit', outcome: 'Met', date: todayIso, note: '', ...patch });
@@ -71,12 +71,12 @@ describe('a visit due a log', () => {
 
 describe('the next working day', () => {
   test('is tomorrow from Monday to Thursday, and Monday from a Friday', () => {
-    expect(ctxOf(fresh()).planDays()).toEqual([
+    expect(ctxOf(sample()).planDays()).toEqual([
       { iso: todayIso, label: 'Today' },
       { iso: wedIso, label: 'Tomorrow' },
     ]);
     const friday = startOfDay(new Date(2026, 9, 23));
-    const ctx = buildContext(freshWorkspace(friday), friday);
+    const ctx = buildContext(sampleWorkspace(friday), friday);
     expect(ctx.planDays()[1]).toEqual({ iso: '2026-10-26', label: 'Monday' });
     // The weekday in the coming week, and the date after that.
     expect([ctx.dayWord('2026-10-23'), ctx.dayWord('2026-10-26'), ctx.dayWord('2026-10-28'), ctx.dayWord('2026-10-30')]).toEqual([
@@ -85,11 +85,11 @@ describe('the next working day', () => {
       'Wednesday',
       'Fri 30 Oct',
     ]);
-    expect(ctxOf(fresh()).dayWord(wedIso)).toBe('tomorrow');
+    expect(ctxOf(sample()).dayWord(wedIso)).toBe('tomorrow');
   });
 
   test('suggestions for it are people in that day, and wait for anyone planned or seen today', () => {
-    const ctx = ctxOf(fresh());
+    const ctx = ctxOf(sample());
     const picks = ctx.suggestions(wedIso, 50);
     expect(picks.length).toBeGreaterThan(0);
     expect(picks.every((s) => siteOnDay(s.entity, 3))).toBe(true);
@@ -101,21 +101,21 @@ describe('the next working day', () => {
 
 describe('logging covers the visits it was', () => {
   test('the visit it was logged from, with what happened', () => {
-    const ws = visitsLogged(fresh(), note({ outcome: 'Attempted', visit: { day: todayIso, id: 'v-maya' } }));
+    const ws = visitsLogged(sample(), note({ outcome: 'Attempted', visit: { day: todayIso, id: 'v-maya' } }));
     expect(findItem(ws, todayIso, 'v-maya')).toMatchObject({ status: 'done', outcome: 'Attempted' });
   });
 
   test('a note of the same kind for someone planned that day, but not a call for a visit', () => {
-    expect(status(visitsLogged(fresh(), note({})), 'v-maya')).toBe('done');
-    expect(status(visitsLogged(fresh(), note({ type: 'Phone call' })), 'v-maya')).toBe('planned');
+    expect(status(visitsLogged(sample(), note({})), 'v-maya')).toBe('done');
+    expect(status(visitsLogged(sample(), note({ type: 'Phone call' })), 'v-maya')).toBe('planned');
     // A message isn't a visit.
-    expect(status(visitsLogged(fresh(), note({ outcome: 'Left message' })), 'v-maya')).toBe('planned');
+    expect(status(visitsLogged(sample(), note({ outcome: 'Left message' })), 'v-maya')).toBe('planned');
     // Nor does a note for another day count.
-    expect(status(visitsLogged(fresh(), note({ date: isoDate(addDays(today, -1)) })), 'v-maya')).toBe('planned');
+    expect(status(visitsLogged(sample(), note({ date: isoDate(addDays(today, -1)) })), 'v-maya')).toBe('planned');
   });
 
   test('a meeting at an account covers the doctors ticked as there', () => {
-    const ws = visitsLogged(fresh(), note({ targetId: 'msh', type: 'Meeting', attendees: ['maya', 'alex'] }));
+    const ws = visitsLogged(sample(), note({ targetId: 'msh', type: 'Meeting', attendees: ['maya', 'alex'] }));
     expect(status(ws, 'v-maya')).toBe('done');
     // Alex was planned as a phone call, which being in the room doesn't cover.
     expect(status(ws, 'v-alex')).toBe('planned');
@@ -127,19 +127,19 @@ describe('a moved or cancelled visit frees its time', () => {
     bookVisit(ws, { targetId: 'jordan', slot: { day, time, siteId: 'msm' }, confirmed: true, from: { day: todayIso, id: 'v-jordan' } }, todayIso, now);
 
   test('moving a visit offers its old time, saying it moved', () => {
-    const ws = moveJordan(fresh(), wedIso, '09:00');
+    const ws = moveJordan(sample(), wedIso, '09:00');
     expect(ctxOf(ws).freeSlotsOn(todayIso)).toEqual([expect.objectContaining({ time: '14:00', targetId: 'jordan', moved: true })]);
     // Today stays on the day it was showing.
-    expect(ws.selection.day).toBe(fresh().selection.day);
+    expect(ws.selection.day).toBe(sample().selection.day);
   });
 
   test('not when the new time takes the old one, nor once the old time has gone', () => {
-    expect(moveJordan(fresh(), todayIso, '14:15').freeSlots).toEqual([]);
-    expect(moveJordan(fresh(), wedIso, '09:00', at(14, 5)).freeSlots).toEqual([]);
+    expect(moveJordan(sample(), todayIso, '14:15').freeSlots).toEqual([]);
+    expect(moveJordan(sample(), wedIso, '09:00', at(14, 5)).freeSlots).toEqual([]);
   });
 
   test('Today leaves out a freed time once it has gone or something else is there', () => {
-    const ws = cancelVisit(fresh(), todayIso, 'v-maya', 'Clinic ran late', todayIso, at(8, 0));
+    const ws = cancelVisit(sample(), todayIso, 'v-maya', 'Clinic ran late', todayIso, at(8, 0));
     expect(ctxOf(ws).freeSlotsOn(todayIso, at(9, 0)).map((s) => s.time)).toEqual(['10:00']);
     expect(ctxOf(ws).freeSlotsOn(todayIso, at(10, 0))).toEqual([]);
     expect(ctxOf(setVisitTime(ws, todayIso, 'v-alex', '10:00')).freeSlotsOn(todayIso, at(9, 0))).toEqual([]);
@@ -147,7 +147,7 @@ describe('a moved or cancelled visit frees its time', () => {
 });
 
 describe('filling a freed time', () => {
-  const cancelled = () => cancelVisit(fresh(), todayIso, 'v-maya', 'Clinic ran late', todayIso, at(8, 0));
+  const cancelled = () => cancelVisit(sample(), todayIso, 'v-maya', 'Clinic ran late', todayIso, at(8, 0));
 
   test('says why someone can’t go in it, and leaves the plan as it was', () => {
     const ws = cancelled();
@@ -172,7 +172,7 @@ describe('filling a freed time', () => {
 
 describe('visits from earlier in the week never logged', () => {
   test('are listed until logged or said not to have happened, back seven days', () => {
-    const ws = fresh();
+    const ws = sample();
     expect(ctxOf(ws).unloggedBefore().map(({ day, item }) => [day, item.id])).toEqual([['2026-10-15', 'v-raman-past']]);
     const older = { ...ws, plans: { ...ws.plans, '2026-10-12': [{ ...ws.plans['2026-10-15'][0], id: 'v-too-old' }] } };
     expect(ctxOf(older).unloggedBefore().map(({ item }) => item.id)).toEqual(['v-raman-past']);
@@ -185,8 +185,8 @@ describe('seen outside the plan', () => {
   const noted = (ws: Workspace, patch: Partial<NoteDraft>) => withRecords(ws, { interactions: [noteRecords(note(patch)).interaction] });
 
   test('a note counts as logged today, met over not in, and a meeting at an account for the doctors there', () => {
-    expect(ctxOf(fresh()).loggedToday('okafor')).toBeNull();
-    let ws = noted(fresh(), { targetId: 'okafor', outcome: 'Attempted' });
+    expect(ctxOf(sample()).loggedToday('okafor')).toBeNull();
+    let ws = noted(sample(), { targetId: 'okafor', outcome: 'Attempted' });
     expect(ctxOf(ws).loggedToday('okafor')).toEqual({ met: false, type: 'In-person visit' });
     ws = noted(ws, { targetId: 'okafor', type: 'Phone call', outcome: 'Met' });
     expect(ctxOf(ws).loggedToday('okafor')).toEqual({ met: true, type: 'Phone call' });
@@ -195,14 +195,14 @@ describe('seen outside the plan', () => {
   });
 
   test('a visit logged before its time doesn’t hold the stops before it in place', () => {
-    const [maya, alex] = ['v-maya', 'v-alex'].map((id) => findItem(fresh(), todayIso, id)!);
+    const [maya, alex] = ['v-maya', 'v-alex'].map((id) => findItem(sample(), todayIso, id)!);
     const route = [alex, { ...maya, status: 'done' as const }];
     expect(fixedStops(route, 9 * 60)).toBe(0);
     expect(fixedStops(route, 10 * 60)).toBe(2);
   });
 
   test('an "Any time" visit logged now shows after the stops already done', () => {
-    const ws = addPeople(fresh(), todayIso, ['kenji'], at(7, 0));
+    const ws = addPeople(sample(), todayIso, ['kenji'], at(7, 0));
     const kenji = ws.plans[todayIso].find((i) => i.targetId === 'kenji')!;
     const logged = visitsLogged(ws, note({ targetId: 'kenji', visit: { day: todayIso, id: kenji.id } }), at(11, 30));
     const order = ctxOf(logged).dayPlan(todayIso, at(11, 30)).map((i) => i.targetId);
@@ -216,31 +216,31 @@ describe('changing and moving a stop', () => {
     const alex = getEntity('alex')!;
     const there = siteOnDay(alex, today.getDay());
     const away = ['msh', 'msm', 'msw'].find((s) => s !== there)!;
-    const ws = { ...fresh(), plans: { [todayIso]: fresh().plans[todayIso].map((i) => (i.id === 'v-alex' ? { ...i, siteId: away } : i)) } };
+    const ws = { ...sample(), plans: { [todayIso]: sample().plans[todayIso].map((i) => (i.id === 'v-alex' ? { ...i, siteId: away } : i)) } };
     expect(findItem(changeStop(ws, todayIso, 'v-alex', { type: 'In-person visit' }), todayIso, 'v-alex')?.siteId).toBe(there);
   });
 
   test('a time the rep set moves to another day as Any time; a booked visit moves with Change the time', () => {
-    const ws = setVisitTime(fresh(), todayIso, 'v-alex', '11:00');
+    const ws = setVisitTime(sample(), todayIso, 'v-alex', '11:00');
     expect(moveToDay(ws, todayIso, 'v-alex', wedIso).plans[wedIso]?.find((i) => i.targetId === 'alex')).toMatchObject({ mode: 'flexible', time: null });
-    expect(moveToDayError(fresh(), todayIso, 'v-maya', wedIso)).toBe('A booked visit moves with Change the time.');
+    expect(moveToDayError(sample(), todayIso, 'v-maya', wedIso)).toBe('A booked visit moves with Change the time.');
   });
 
   test('Targets stops filling a freed time once it has gone', () => {
-    const ws = cancelVisit(fresh(), todayIso, 'v-maya', 'HCP unavailable', todayIso, at(8, 0));
+    const ws = cancelVisit(sample(), todayIso, 'v-maya', 'HCP unavailable', todayIso, at(8, 0));
     expect(fillingSlot(ws, at(9, 0))?.itemId).toBe('v-maya');
     expect(fillingSlot(ws, at(10, 15))).toBeNull();
   });
 
   test('too tight says the drive is from the last place visited, not a call in between', () => {
     // A call at 10:30, after Dr. Patel's 10:00, then Dr. Lee across town at 10:45.
-    const ws = setVisitTime(setVisitTime(fresh(), todayIso, 'v-alex', '10:30'), todayIso, 'v-jordan', '10:45');
+    const ws = setVisitTime(setVisitTime(sample(), todayIso, 'v-alex', '10:30'), todayIso, 'v-jordan', '10:45');
     const clash = ctxOf(ws).daySchedule(todayIso).clashes.find((c) => c.later.id === 'v-jordan');
     expect(clash).toMatchObject({ kind: 'travel', earlier: { id: 'v-alex' }, from: { id: 'v-maya' } });
   });
 
   test('Saved has a Summary for anyone asked about, then anyone still to see today or next', () => {
-    const ids = ctxOf(fresh())
+    const ids = ctxOf(sample())
       .summaryPeople(['kenji', 'maya'])
       .map((e) => e.id);
     expect(ids.slice(0, 2)).toEqual(['kenji', 'maya']);
@@ -255,7 +255,7 @@ describe('once the day is over', () => {
   const moves = (ws: Workspace, now = at(18, 0)) => ctxOf(ws).notDoneToday(now)?.moves.map((m) => `${m.item.targetId} ${m.to}`) ?? [];
 
   test('from 17:30, the visits not logged that can move, each to the next day they can be seen', () => {
-    const ws = evening(fresh());
+    const ws = evening(sample());
     expect(ctxOf(ws).notDoneToday(at(17, 29))).toBeNull();
     // Dr. Patel's and Dr. Lee's visits were booked, so they stay to be logged.
     expect(moves(ws, at(17, 30)).sort()).toEqual([`alex ${wedIso}`, `kenji ${wedIso}`, `priya ${thuIso}`]);
@@ -269,7 +269,7 @@ describe('once the day is over', () => {
 
   async function renderEvening() {
     const wrapper = ({ children }: { children: ReactNode }) => (
-      <WorkspaceProvider today={today} now={() => at(18, 0)}>
+      <WorkspaceProvider today={today} now={() => at(18, 0)} initial={sampleWorkspace(today)}>
         {children}
       </WorkspaceProvider>
     );
@@ -301,7 +301,7 @@ describe('once the day is over', () => {
 describe('Undo after a note', () => {
   test('goes, so it can’t take the note back with the change before it', async () => {
     const wrapper = ({ children }: { children: ReactNode }) => (
-      <WorkspaceProvider today={today} now={() => at(8, 0)}>
+      <WorkspaceProvider today={today} now={() => at(8, 0)} initial={sampleWorkspace(today)}>
         {children}
       </WorkspaceProvider>
     );

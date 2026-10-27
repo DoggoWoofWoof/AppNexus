@@ -37,7 +37,7 @@ export default function You() {
         </View>
       </View>
 
-      <Section title="Where your day starts" sub="Distances, “Pick 5 for me” and “Who is near” start here">
+      <Section title="Where your day starts" sub="Today’s route, distances and “Who is near” start here">
         <ChoiceButtons
           label="Where your day starts"
           options={START_POINTS.map((p) => ({ value: p.id, title: p.title, sub: p.place }))}

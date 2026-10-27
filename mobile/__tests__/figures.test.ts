@@ -143,7 +143,7 @@ describe('patients lost', () => {
 
   test('an account’s headline figure is the number of patients, with the share under it', () => {
     const [, leaving] = briefFigures(entity('msw'), ctx);
-    expect(leaving).toMatchObject({ label: 'Patients leaving', value: '827', sub: '26% of 3,180', tone: 'orange' });
+    expect(leaving).toMatchObject({ label: 'Patients leaving', value: '827', sub: '26% of 3,180', tone: 'rose' });
   });
 });
 

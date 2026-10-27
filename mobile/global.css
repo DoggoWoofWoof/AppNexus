@@ -34,9 +34,11 @@
     --brand: 226.9 69% 45.5%;
     --brand-soft: 222.9 63.6% 95.7%;
     --brand-line: 224.7 66.2% 87.3%;
-    --signal: 16 71.3% 53.5%;
-    --signal-text: 21.3 70.6% 41.4%;
-    --signal-soft: 28.7 85.2% 94.7%;
+    /* Rose, so a competitor's products and patients going elsewhere never look like gold's things to do today. */
+    --signal: 350 75% 55%;
+    --signal-text: 350 65% 42%;
+    --signal-soft: 350 80% 96%;
+    --signal-line: 350 70% 88%;
     --success: 150.3 59.5% 30%;
     --success-soft: 145.7 38.9% 92.9%;
     --warn: 39.1 100% 27.1%;
@@ -72,9 +74,10 @@
     --brand: 226.1 100% 78%;
     --brand-soft: 225.6 51% 19.2%;
     --brand-line: 225.6 45.5% 32.4%;
-    --signal: 18.4 83.1% 65.3%;
-    --signal-text: 18.5 85.7% 72.5%;
-    --signal-soft: 16.8 32.5% 15.1%;
+    --signal: 352 82% 68%;
+    --signal-text: 354 88% 76%;
+    --signal-soft: 346 38% 16.5%;
+    --signal-line: 346 36% 31%;
     --success: 151.3 49.8% 53.1%;
     --success-soft: 144.8 43.3% 13.1%;
     --warn: 39.7 78.1% 60.6%;

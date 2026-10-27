@@ -14,11 +14,11 @@ import { firstSentence, isoDate, startOfDay } from '@/lib/format';
 import { buildPrep, docText, prepId, prepTarget, reportDoc, reportFrom } from '@/lib/saved';
 import { useWorkspace, WorkspaceProvider } from '@/lib/store';
 import type { Entity } from '@/lib/types';
-import { addToPlan, buildContext, freshWorkspace } from '@/lib/workspace';
+import { addToPlan, buildContext, sampleWorkspace } from '@/lib/workspace';
 
 const today = startOfDay(new Date(2026, 9, 19));
 const todayIso = isoDate(today);
-const ctx = buildContext(freshWorkspace(today), today);
+const ctx = buildContext(sampleWorkspace(today), today);
 const entity = (id: string) => getEntity(id) as Entity;
 
 describe('visit prep', () => {
@@ -68,7 +68,7 @@ describe('reports', () => {
 describe('save that', () => {
   async function renderChat() {
     const wrapper = ({ children }: { children: ReactNode }) => (
-      <WorkspaceProvider today={today}>
+      <WorkspaceProvider today={today} initial={sampleWorkspace(today)}>
         <ChatProvider>{children}</ChatProvider>
       </WorkspaceProvider>
     );
@@ -108,7 +108,7 @@ describe('save that', () => {
 
 describe('+ Add on Targets', () => {
   test('puts someone in the day at no fixed time, once', () => {
-    const ws = freshWorkspace(today);
+    const ws = sampleWorkspace(today);
     const before = ws.plans[todayIso].length;
     const next = addToPlan(ws, todayIso, 'hannah');
     const added = next.plans[todayIso].filter((i) => i.targetId === 'hannah');

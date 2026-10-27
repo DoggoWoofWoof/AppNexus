@@ -1,5 +1,14 @@
-// Today: the day's visits first, in route order, one row each saying why they're
-// worth seeing, so the rep can go over who they're seeing at a glance. Tapping a
+// Today, where the app opens: the daily brief, then the day's visits in route
+// order. The brief (components/daily-brief.tsx) is open when the day starts: a
+// tile for each state of the territory and next door, which opens Targets there,
+// and three doctors worth adding beyond My targets, each with why and + Add to
+// put them in the day. A day with nothing in it shows the brief alone, so the day
+// starts from it, or from Build route on Targets. Once anyone is in the day,
+// Today's review (components/day-review.tsx) says who the rep is seeing and why
+// they matter in a paragraph, and the visits follow, each with its goal and
+// labels in the same colours: gold for what to do today, rose for a competitor's
+// products and patients going elsewhere, green for what's working. Once the rep
+// is done with the brief, it folds to a line at the top. Tapping a
 // row opens their page, with the Summary, Log, Directions and Call at the top. A
 // visit whose time has gone, or an "Any time" one still open at 17:30, gets its
 // own Log button, and the others a ⋯ that opens "Change visit" right here, like
@@ -7,10 +16,11 @@
 // into another order.
 // From 17:30 the day is over: a line under the visits says who wasn't seen (how
 // many, when there are more than three) and moves them all to tomorrow, with Undo,
-// and those visits stop showing a time for today. "Add a visit" opens Targets, where + puts someone in the plan where it
-// adds the least driving. The map comes after the visits, and what's left from
-// before (visits earlier in the week never logged, and follow-ups due) is one
-// "Still to do" line at the bottom that opens in place.
+// and those visits stop showing a time for today. "Add a visit" opens Targets,
+// where + picks people and "Build route" puts them in the day, each where it adds
+// the least driving, and comes back here. The map comes after the visits, and
+// what's left from before (visits earlier in the week never logged, and
+// follow-ups due) is one "Still to do" line at the bottom that opens in place.
 // Each stop has a time, "About 10:45" for an "Any time" one, worked out from the
 // drive between stops and their usual times. The drive to each stop is on a line
 // between it and the one before, like directions in a maps app, and the next one
@@ -21,10 +31,12 @@
 // in order, from wherever the phone is.
 
 import { router } from 'expo-router';
-import { Car, ChevronDown, ChevronRight, ChevronUp, CircleCheck, Ellipsis, GripVertical, ListTodo, Navigation, Plus, Sparkles, X } from 'lucide-react-native';
+import { Car, ChevronDown, ChevronRight, ChevronUp, CircleCheck, Ellipsis, GripVertical, ListTodo, Navigation, Plus, X } from 'lucide-react-native';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Animated, Linking, Pressable, useWindowDimensions, View } from 'react-native';
 
+import { DailyBrief, useDailyBrief } from '@/components/daily-brief';
+import { DayReview, StopLabels } from '@/components/day-review';
 import { Avatar, useProfileHref } from '@/components/entity';
 import { useLogSheet } from '@/components/log-sheet';
 import { MenuButton } from '@/components/menu';
@@ -38,6 +50,7 @@ import { getEntity, getOrg, shortName } from '@/lib/data';
 import { formatDate, formatMinutes, fromMinutes, listJoin, plural, toMinutes } from '@/lib/format';
 import { routeUrl } from '@/lib/links';
 import { outcomeWord } from '@/lib/brief';
+import { stopLabels, type StopLabel } from '@/lib/day-review';
 import { END_OF_DAY, fixedStops, isOnSite, notLogged, type Clash, type Stop } from '@/lib/plan';
 import { useWorkspace } from '@/lib/store';
 import type { Entity, PlanItem } from '@/lib/types';
@@ -75,6 +88,11 @@ export default function Today() {
   const now = minutesNow(clock);
   const plan = ctx.dayPlan(day, clock);
   const active = plan.filter((i) => i.status !== 'cancelled');
+  const brief = useDailyBrief(day, clock);
+  // A day with nothing in it shows the brief alone, so the day starts from it, or from Build route on Targets.
+  const briefOnly = !!brief && !brief.folded && !plan.length;
+  // What matters about each stop, in a label or two (`stopLabels` in lib/day-review.ts).
+  const labels = stopLabels(ctx, day, clock);
   // When each stop is and the drive to it, from the order and their usual times.
   const schedule = ctx.daySchedule(day, clock);
   const stopOf = new Map(schedule.stops.map((s) => [s.item.id, s]));
@@ -115,9 +133,9 @@ export default function Today() {
   // Best order only changes "Any time" stops still to come; once the day is over there are none.
   const anyTimeToCome = active.some((i) => i.status === 'planned' && i.mode !== 'timed' && !unlogged(i));
   const saves = anyTimeToCome ? ctx.bestOrderSaves(day, clock) : null;
+  // What the stops under it don't say: how far along, the driving all day and when it ends.
   const summary = [
-    plural(active.length, 'stop'),
-    done ? `${done} done` : '',
+    done ? `${done} of ${active.length} done` : '',
     driving ? `${formatMinutes(driving)} driving` : '',
     finish != null ? `finish about ${fromMinutes(finish)}` : '',
   ]
@@ -135,8 +153,6 @@ export default function Today() {
     const who = getEntity(item.targetId);
     if (who) openLog(who, { day: on, id: item.id, type: item.type }, on === today.iso ? {} : { title: `Log ${formatDate(on)}` });
   };
-  // Picked for the day they'll go on, which is the next working day once today is over.
-  const pickFive = () => ctx.addAllToPlan(ctx.suggestions(ctx.addingTo(day), 5).map((s) => s.entity.id), day);
   // Whether Still to do is open.
   const [showLeft, setShowLeft] = useState(false);
   const left = listJoin([earlier.length ? `${plural(earlier.length, 'visit')} to log` : '', due.length ? `${plural(due.length, 'follow-up')} due` : ''].filter(Boolean));
@@ -259,9 +275,15 @@ export default function Today() {
         </View>
       )}
 
+      {brief ? <DailyBrief state={brief} /> : null}
+      {briefOnly ? null : <DayReview day={day} now={clock} />}
+
       {plan.length ? (
         // On the web a drag with the mouse would otherwise select the text it passes.
         <View className="gap-2 web:select-none">
+          <Text variant="kicker" role="heading">
+            Your day
+          </Text>
           <View className="flex-row items-center gap-2">
             <Text className="flex-1 text-sm text-muted-foreground" accessibilityLiveRegion="polite">
               {active.length ? summary : 'All cancelled'}
@@ -339,6 +361,7 @@ export default function Today() {
                     item={item}
                     stop={stop}
                     warnings={warnings}
+                    labels={labels.get(item.id) ?? []}
                     next={item === next}
                     unlogged={unlogged(item)}
                     number={onSite.indexOf(item) + 1}
@@ -373,55 +396,39 @@ export default function Today() {
               </Button>
             </View>
           ) : null}
-          {active.some((i) => i.status === 'planned' && !unlogged(i)) ? (
-            <Text className="text-sm text-muted-foreground">{`${handles ? 'Drag the dots to change the order. ' : ''}Tap a visit for their page, and ⋯ to change or cancel it.`}</Text>
-          ) : null}
         </View>
       ) : null}
-      {/* With nothing left to do, as when every visit was cancelled, the app can pick again.
-          Once today is over it says so, and what it picks goes on the next working day. */}
-      {active.length ? null : (
-        <View className="items-center gap-3 py-8">
-          <View className="items-center gap-1">
-            <Text className="text-lg font-semibold">{dayOver ? 'Nothing left today' : plan.length ? 'Nothing left planned' : 'Nothing planned yet'}</Text>
-            <Text className="text-center text-muted-foreground">Pick who to see, or let the app pick the five most worth seeing.</Text>
-          </View>
-          <Button variant="outline" className="rounded-xl" onPress={pickFive}>
-            <Icon as={Sparkles} size={18} className="text-brand" />
-            <Text className="text-brand">Pick 5 for me</Text>
-          </Button>
-        </View>
+      {/* A day with nothing in it says so once the brief is folded; once today is over, what's added goes on the next working day. */}
+      {plan.length || briefOnly ? null : <Text className="text-sm text-muted-foreground">{dayOver ? 'Nothing left today' : 'Nothing planned yet'}</Text>}
+
+      {briefOnly ? null : (
+        <Button
+          size="lg"
+          variant={active.length ? 'outline' : 'default'}
+          className="rounded-xl"
+          onPress={() => router.navigate('/targets')}
+        >
+          <Icon as={Plus} size={20} className={active.length ? undefined : 'text-primary-foreground'} />
+          <Text className="text-lg">{active.length ? 'Add a visit' : 'Choose who to see'}</Text>
+        </Button>
       )}
 
-      <Button
-        size="lg"
-        variant={active.length ? 'outline' : 'default'}
-        className="rounded-xl"
-        onPress={() => router.navigate('/targets')}
-      >
-        <Icon as={Plus} size={20} className={active.length ? undefined : 'text-primary-foreground'} />
-        <Text className="text-lg">{active.length ? 'Add a visit' : 'Choose who to see'}</Text>
-      </Button>
-
       {pins.length ? (
-        <View className="gap-1">
-          <StopMap
-            pins={pins}
-            start={{ coords: ctx.start.coords, label: `${ctx.start.title}, ${ctx.start.place}` }}
-            route
-            onPinPress={open}
-            label={`Map of ${ctx.dayWord(day)}’s stops`}
-            // Taller on a wider screen, such as an iPad, up to the column's width.
-            height={Math.round(Math.min(360, Math.max(190, (Math.min(width, 720) - 32) * 0.55)))}
-          />
-          <Text className="text-sm text-muted-foreground">{`From ${ctx.start.title}, ${ctx.start.place} · straight lines, not roads`}</Text>
-        </View>
+        <StopMap
+          pins={pins}
+          start={{ coords: ctx.start.coords, label: `${ctx.start.title}, ${ctx.start.place}` }}
+          route
+          onPinPress={open}
+          label={`Map of ${ctx.dayWord(day)}’s stops`}
+          // Taller on a wider screen, such as an iPad, up to the column's width.
+          height={Math.round(Math.min(360, Math.max(190, (Math.min(width, 720) - 32) * 0.55)))}
+        />
       ) : null}
 
       {/* What's left from before, under the day so the day comes first: one line that
           opens to the visits never logged (log them on their day, or say they didn't
           happen), then the follow-ups due. */}
-      {earlier.length || due.length ? (
+      {!briefOnly && (earlier.length || due.length) ? (
         <View className="gap-2">
           <Pressable
             onPress={() => setShowLeft((s) => !s)}
@@ -471,8 +478,9 @@ export default function Today() {
                   <View className="h-10 w-10 items-center justify-center rounded-full bg-warn-soft">
                     <Icon as={ListTodo} size={20} className="text-warn" />
                   </View>
+                  {/* How many is on the Still to do line. */}
                   <View className="flex-1 gap-0.5">
-                    <Text className="text-base font-semibold">{`${plural(due.length, 'follow-up')} due`}</Text>
+                    <Text className="text-base font-semibold">Follow-ups</Text>
                     <Text className="text-sm text-muted-foreground">
                       {[late && `${late} late`, due.length - late && `${due.length - late} due today`].filter(Boolean).join(' · ')}
                     </Text>
@@ -575,6 +583,7 @@ function StopRow({
   item,
   stop,
   warnings,
+  labels,
   next,
   unlogged,
   number,
@@ -587,6 +596,8 @@ function StopRow({
   item: PlanItem;
   stop: Stop | undefined;
   warnings: string[];
+  /** What matters about them, each in its colour. */
+  labels: StopLabel[];
   next: boolean;
   unlogged: boolean;
   number: number;
@@ -599,7 +610,6 @@ function StopRow({
   onLog: () => void;
   onChange: () => void;
 }) {
-  const ctx = useWorkspace();
   const narrow = useNarrow();
   const who = getEntity(item.targetId);
   if (!who) return null;
@@ -613,8 +623,8 @@ function StopRow({
   // Where to go for a visit, unless it's the account itself, or how for a call.
   const how = isOnSite(item) ? (item.siteId === who.id ? '' : (getOrg(item.siteId)?.name ?? '')) : item.type;
   const sub = [when, how, status, unconfirmed && 'Not confirmed yet'].filter(Boolean).join(' · ');
-  // Why they're worth seeing: the visit's own goal, or what makes them a priority.
-  const why = done || cancelled ? '' : item.goal || ctx.signals(who)[0]?.label || '';
+  // What the visit is for, with what matters about them in the labels under it.
+  const goal = done || cancelled ? '' : item.goal;
 
   // Log or ⋯, or a tick once it's done. At very large text it goes under the words,
   // which would otherwise be a few letters to a line; "Done" is in the words then.
@@ -637,8 +647,8 @@ function StopRow({
   );
 
   // Tapping the row opens their page; Log and ⋯ sit beside it rather than inside,
-  // as a button can't hold another. Orange is kept for what needs
-  // sorting out, such as a time not confirmed; a visit not logged has its Log button.
+  // as a button can't hold another. Gold is kept for what needs sorting out, such
+  // as a time not confirmed; a visit not logged has its Log button.
   return (
     <View className={cn('rounded-xl bg-card', next || lifted ? 'border-2 border-primary' : 'border border-border', lifted && 'shadow-lg', cancelled && 'opacity-60')}>
       <View className="min-h-16 flex-row items-center gap-1 pr-1">
@@ -646,7 +656,7 @@ function StopRow({
         <Pressable
           onPress={onPress}
           accessibilityRole="link"
-          accessibilityLabel={[who.name, sub, ...warnings, why].filter(Boolean).join(', ')}
+          accessibilityLabel={[who.name, sub, ...warnings, goal, ...labels.map((l) => l.label)].filter(Boolean).join(', ')}
           accessibilityHint="Opens their page"
           className={cn('flex-1 flex-row items-center gap-3 rounded-xl py-3 active:bg-accent', handle === undefined && 'pl-3')}
         >
@@ -659,11 +669,12 @@ function StopRow({
                 {w}
               </Text>
             ))}
-            {why ? (
+            {goal ? (
               <Text className="text-sm text-muted-foreground" numberOfLines={1}>
-                {why}
+                {goal}
               </Text>
             ) : null}
+            <StopLabels labels={labels} />
           </View>
         </Pressable>
         {narrow ? null : action}

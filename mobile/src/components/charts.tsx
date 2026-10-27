@@ -106,9 +106,9 @@ export function QuarterBars({ values, labels, caption }: { values: number[]; lab
   );
 }
 
-export type BarTone = 'accent' | 'orange' | 'success';
+export type BarTone = 'accent' | 'rose' | 'success';
 
-const BAR: Record<BarTone, string> = { accent: 'bg-primary', orange: 'bg-signal', success: 'bg-success' };
+const BAR: Record<BarTone, string> = { accent: 'bg-primary', rose: 'bg-signal', success: 'bg-success' };
 
 /** A horizontal bar. Its value is read out by the row it sits in. */
 export function Bar({ value, max, tone = 'accent' }: { value: number; max: number; tone?: BarTone }) {

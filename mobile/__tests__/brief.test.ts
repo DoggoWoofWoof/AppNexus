@@ -8,10 +8,10 @@ import { allEntities, getEntity, getOrg } from '@/lib/data';
 import { DATA_PERIOD } from '@/lib/data/seed';
 import { addDays, isoDate, startOfDay } from '@/lib/format';
 import type { Entity } from '@/lib/types';
-import { buildContext, freshWorkspace } from '@/lib/workspace';
+import { buildContext, sampleWorkspace } from '@/lib/workspace';
 
 const today = startOfDay(new Date(2026, 9, 19));
-const ws = freshWorkspace(today);
+const ws = sampleWorkspace(today);
 const ctx = buildContext(ws, today);
 const entity = (id: string): Entity => getEntity(id)!;
 

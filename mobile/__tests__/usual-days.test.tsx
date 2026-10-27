@@ -82,7 +82,7 @@ describe('a day they’re in but don’t usually see people', () => {
     expect(kenji.timeWarning(kenji.planItemFor('kenji', todayIso)!, todayIso, true)).toBe('Not their usual time · usually Mon 08:00–11:00 · try Monday');
   });
 
-  test('Pick 5 for me leaves out anyone who doesn’t see people that day', () => {
+  test('who to see leaves out anyone who doesn’t see people that day', () => {
     // Dr. Raman is in on Fridays but sees people on Tuesdays and Thursdays.
     const ctx = buildContext(freshWorkspace(today), today);
     const picks = ctx.suggestions(fridayIso, 5);

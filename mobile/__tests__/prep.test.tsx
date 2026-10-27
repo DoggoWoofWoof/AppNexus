@@ -21,7 +21,7 @@ import { IMPROVE_PREP, isThinPrep, prepEdit, START_PREP, TEXT_MAX, withPrepEdit,
 import { buildPrep } from '@/lib/saved';
 import { useWorkspace, WorkspaceProvider } from '@/lib/store';
 import type { Entity, Workspace } from '@/lib/types';
-import { buildContext, freshWorkspace } from '@/lib/workspace';
+import { buildContext, sampleWorkspace } from '@/lib/workspace';
 
 // Where the app would go, without a navigator to go there.
 jest.mock('expo-router', () => ({
@@ -42,7 +42,7 @@ jest.mock('@/components/ui/label', () => mockUndrawn());
 const go = jest.mocked(router);
 
 const today = startOfDay(new Date(2026, 9, 20));
-const ws = freshWorkspace(today);
+const ws = sampleWorkspace(today);
 const ctx = buildContext(ws, today);
 const entity = (id: string) => getEntity(id) as Entity;
 const within = (next: Workspace) => buildContext(next, today);
@@ -241,7 +241,7 @@ describe('Write a summary with Ask', () => {
 
 describe('in the app', () => {
   const wrapper = ({ children }: { children: ReactNode }) => (
-    <WorkspaceProvider today={today}>
+    <WorkspaceProvider today={today} initial={sampleWorkspace(today)}>
       <ChatProvider>{children}</ChatProvider>
     </WorkspaceProvider>
   );
