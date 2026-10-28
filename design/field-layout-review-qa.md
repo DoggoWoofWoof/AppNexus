@@ -2,6 +2,15 @@
 
 Branch: `codex/field-mock-layout-review`, based on refreshed `origin/dev` at `e8cfcc9331f197e3d089bc4720d3e95785a51167`. This branch contains design prototypes and their hosted exports. It does not implement the mobile app.
 
+## Live previews
+
+- [Field / Ask / History](https://rawcdn.githack.com/DoggoWoofWoof/AppNexus/4ccaf534798a166da40512e0a08df88b950b20cf/design/published-review/dist/field/index.html)
+- [Targets / Ask / Opportunity](https://rawcdn.githack.com/DoggoWoofWoof/AppNexus/4ccaf534798a166da40512e0a08df88b950b20cf/design/published-review/dist/targets/index.html)
+
+Both URLs serve committed static exports from the public branch. The CDN displays a one-time external-content notice. The live Field link was walked through Route → Maya → Alex; both live pages loaded their correct navigation. Existing GitHub Pages main/dev deployments were not changed. The branch's Check demo workflow passed.
+
+A Sites project was registered but not deployed: an initial unsandboxed credential handoff was rejected by automatic review; the supported sandboxed attempt could not reach the Site Git source endpoint (`getaddrinfo() thread failed to start`). The helper was stopped. No hosting credential was written into repository files. The persisted Site identity may be reused if that publishing path becomes available; the live links above do not depend on it.
+
 ## Two layouts, one workflow
 
 - **Field / Ask / History:** targets, territories and Map inside Field; History in the bottom navigation.

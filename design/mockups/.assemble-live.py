@@ -1,8 +1,9 @@
 from pathlib import Path
 import re
+import sys
 
 repo=Path(__file__).resolve().parents[2]
-out=Path('C:/Users/Swastik/.codex/visualizations/2026/10/15/01a13ffc-69da-7f82-8395-4fa7694b3392/field-live-workflow.html')
+out=Path(sys.argv[1]) if len(sys.argv)>1 else repo/'design/mockups/field-live-workflow.html'
 s=(repo/'design/mockups/fieldpro-territory-preview.html').read_text(encoding='utf-8')
 s=s.replace('fieldpro-territory-preview','field-live-workflow')
 s=s.replace('Design preview · fictional figures · simulated AI, voice, reports and calendar','Live website flow study · illustrative data · simulated services')

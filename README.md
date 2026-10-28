@@ -1,5 +1,17 @@
 # AppNexus · Field Pro
 
+## Current design review — two navigation layouts
+
+These are clickable mocks with the same updated voice-first Ask, profiles and visit flow. Only navigation placement differs; this branch does not implement the mobile app.
+
+- [Field / Ask / History — live preview](https://rawcdn.githack.com/DoggoWoofWoof/AppNexus/4ccaf534798a166da40512e0a08df88b950b20cf/design/published-review/dist/field/index.html)
+- [Targets / Ask / Opportunity — live preview](https://rawcdn.githack.com/DoggoWoofWoof/AppNexus/4ccaf534798a166da40512e0a08df88b950b20cf/design/published-review/dist/targets/index.html)
+- [Screen audit, fixes, QA and mock limitations](design/field-layout-review-qa.md)
+
+The public preview host may show a one-time **Open the page** content notice. Both links are pinned to the reviewed code commit, so they do not change when documentation changes.
+
+## Existing dev prototype
+
 [Open the clickable prototype](https://doggowoofwoof.github.io/AppNexus/)
 
 Field Pro is the DocNexus app for medical device sales reps in the field. The website is where a rep or manager does deep analysis at a desk. The app is for the day itself:
