@@ -1,0 +1,119 @@
+    #field-live-workflow .fp-phone{--fp-blue:light-dark(#236bff,#80a4ff);--fp-blue-soft:light-dark(#eef3ff,#25365c);--fp-card:var(--fp-paper);--fp-fg:var(--fp-ink);--fp-input:var(--fp-soft);max-width:430px}
+    #field-live-workflow .fp-brand{font-family:Inter,Arial,sans-serif;font-weight:650;font-size:25px;letter-spacing:-1px}
+    #field-live-workflow .fp-headtitle{font-size:18px;font-weight:600}
+    #field-live-workflow .fp-header{min-height:62px}
+    #field-live-workflow .refine-nav{background:var(--fp-card);min-height:75px;padding:7px 18px 9px;overflow:visible;flex-shrink:0;border-top:1px solid var(--fp-line)}
+    #field-live-workflow .refine-nav>button{background:transparent;color:var(--fp-muted);gap:5px;font-size:12px;min-height:54px;overflow:visible}
+    #field-live-workflow .refine-nav>button[aria-current]{color:var(--fp-blue);background:transparent}
+    #field-live-workflow .refine-nav .fp-ask-orb{height:50px;width:50px;display:grid;place-items:center;border-radius:50%;background:var(--fp-blue);color:white;box-shadow:0 0 0 5px var(--fp-card),0 4px 18px #236bff35;margin-top:-25px;transform:none}
+    #field-live-workflow .refine-nav .fp-ask-orb svg{height:23px;width:23px}
+    #field-live-workflow .refine-nav .refine-asknav{padding-top:0;gap:8px}
+    #field-live-workflow .refine-shortcuts{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:7px;margin:10px 0 16px}
+    #field-live-workflow .refine-shortcuts .fp-btn{font-size:12px;padding:10px 9px;min-height:42px;white-space:nowrap;min-width:0}
+    #field-live-workflow .refine-shortcuts .refine-scope{overflow:hidden;text-overflow:ellipsis;justify-content:flex-start}
+    #field-live-workflow .refine-shortcuts svg{width:15px;flex-shrink:0}
+    #field-live-workflow .refine-specialties{margin:8px 0 18px}
+    #field-live-workflow .refine-codechips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+    #field-live-workflow .refine-codechips button{font-size:12px;min-height:35px;padding:7px 11px}
+    #field-live-workflow .refine-codecontrol{display:flex;align-items:center;gap:9px;margin:2px 0 12px}
+    #field-live-workflow .refine-codecontrol>span{color:var(--fp-muted);font-size:12px}
+    #field-live-workflow .refine-targetgroups{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0}
+    #field-live-workflow .refine-targetgroups>div{min-width:0}
+    #field-live-workflow .refine-targetgroups>div>div{display:flex;background:var(--fp-input);border-radius:11px;padding:3px;margin-top:7px;gap:2px}
+    #field-live-workflow .refine-targetgroups button{flex:1;border:0;border-radius:8px;padding:9px 3px;min-height:43px;font:inherit;font-size:12px;color:var(--fp-muted);background:transparent}
+    #field-live-workflow .refine-targetgroups button[aria-pressed=true]{background:var(--fp-card);color:var(--fp-blue);box-shadow:0 1px 3px #1820441a}
+    #field-live-workflow .refine-targettools{display:flex;gap:7px;align-items:center;margin-bottom:13px}
+    #field-live-workflow .refine-targettools .fp-btn{flex:1;font-size:12px;padding:9px}
+    #field-live-workflow .refine-filterrow{display:flex;gap:6px;align-items:center;margin-bottom:12px}
+    #field-live-workflow .refine-filterrow .fp-btn{font-size:11px;padding:7px 8px;min-height:35px}
+    #field-live-workflow .refine-filterrow>span{margin-left:auto;font-size:11px;color:var(--fp-muted);white-space:nowrap}
+    #field-live-workflow .refine-area{display:flex;align-items:center;gap:7px;border:1px solid var(--fp-line);border-radius:12px;background:var(--fp-card);margin:12px 0;padding:8px 10px;font-size:12px}
+    #field-live-workflow .refine-area>span{flex:1}
+    #field-live-workflow .live-target .fp-flex.fp-spread{padding-top:8px;border-top:1px solid var(--fp-line)}
+    #field-live-workflow .live-target .fp-flex.fp-spread .fp-link{border:1px solid var(--fp-line);border-radius:8px;padding:7px 9px;font-size:11px;min-height:34px;background:var(--fp-card);color:var(--fp-fg)}
+    #field-live-workflow .live-profilehero h1{font-family:Inter,Arial,sans-serif;font-size:22px;line-height:1.22;font-weight:600;letter-spacing:-.6px;margin:0 0 5px}
+    #field-live-workflow .live-profilehero p{font-size:12px;line-height:1.45;color:var(--fp-muted);margin:0}
+    #field-live-workflow .refine-profilemeta{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+    #field-live-workflow .refine-actiongrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+    #field-live-workflow .refine-actiontile{border:1px solid var(--fp-line);border-radius:14px;background:var(--fp-card);color:var(--fp-fg);font:inherit;min-height:77px;padding:12px 5px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:9px;font-size:12px;text-align:center;line-height:1.3}
+    #field-live-workflow .refine-actiontile svg{width:20px;height:20px}
+    #field-live-workflow .refine-secondaryactions{display:flex;gap:6px;margin:10px 0 18px}
+    #field-live-workflow .refine-secondaryactions .fp-btn{flex:1;min-width:0;font-size:11px;padding:8px 5px;background:transparent}
+    #field-live-workflow .live-contact{display:flex;gap:7px;flex-wrap:wrap;padding:10px 0}
+    #field-live-workflow .live-contact .fp-link{font-size:12px;min-height:32px;padding:5px 0}
+    #field-live-workflow .live-card>.fp-flex.fp-wrap>.fp-link,#field-live-workflow .live-card>.fp-flex.fp-spread>.fp-link{padding:8px 10px;border:1px solid var(--fp-line);border-radius:8px;background:var(--fp-card);min-height:36px;font-size:12px}
+    #field-live-workflow .refine-runsheet{border:1px solid var(--fp-line);background:var(--fp-card);border-radius:16px;margin:1px 0 18px}
+    #field-live-workflow .refine-runsheet>summary{display:flex;align-items:center;justify-content:space-between;padding:13px 15px;list-style:none}
+    #field-live-workflow .refine-runsheet>summary::-webkit-details-marker{display:none}
+    #field-live-workflow .refine-runsheet small{font-size:10px;letter-spacing:.12em;color:var(--fp-blue);display:block;margin-bottom:4px;font-weight:650}
+    #field-live-workflow .refine-runsheet strong{font-size:20px;font-weight:650}
+    #field-live-workflow .refine-runsheet em{font-style:normal;color:var(--fp-blue)}
+    #field-live-workflow .refine-runsheet summary>span:last-child{display:flex;gap:6px;color:var(--fp-muted)}
+    #field-live-workflow .refine-runsheetbody{padding:0 13px 13px;border-top:1px solid var(--fp-line)}
+    #field-live-workflow .refine-facility h3{font-size:12px;margin:14px 0 7px;color:var(--fp-muted)}
+    #field-live-workflow .refine-facility>button{display:flex;align-items:center;gap:9px;width:100%;border:0;border-radius:10px;background:transparent;color:var(--fp-fg);padding:9px;font:inherit;text-align:left;font-size:13px}
+    #field-live-workflow .refine-facility>button.active{background:var(--fp-blue-soft)}
+    #field-live-workflow .refine-facility .fp-initial{height:33px;width:33px;font-size:11px}
+    #field-live-workflow .refine-facility small{display:block;color:var(--fp-muted);font-size:11px;margin-top:3px}
+    #field-live-workflow .refine-person{display:flex;align-items:center;gap:10px;margin-bottom:15px}
+    #field-live-workflow .refine-person>div{flex:1;min-width:0}
+    #field-live-workflow .refine-person h1{font-family:Inter,Arial,sans-serif;font-weight:650;font-size:23px;line-height:1.2;margin:0 0 5px;letter-spacing:-.6px}
+    #field-live-workflow .refine-person p{font-size:12px;line-height:1.4;color:var(--fp-muted);margin:0}
+    #field-live-workflow .refine-evidence{border:1px solid var(--fp-line);background:var(--fp-card);border-radius:14px;padding:13px;margin:14px 0}
+    #field-live-workflow .refine-evidencechips{display:flex;gap:6px;flex-wrap:wrap}
+    #field-live-workflow .refine-evidencechips .fp-tag{font-size:11px;padding:7px 8px}
+    #field-live-workflow .refine-evidencedetail{display:flex;align-items:center;justify-content:space-between;gap:9px;font-size:11px;color:var(--fp-muted);margin-top:10px}
+    #field-live-workflow .refine-evidencedetail .fp-btn{font-size:11px;padding:7px;min-height:34px}
+    #field-live-workflow .refine-profiletools{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 16px}
+    #field-live-workflow .refine-profiletools .fp-btn{font-size:11px;padding:7px;min-height:34px}
+    #field-live-workflow .refine-prereadtabs{border-radius:0;border-width:0 0 1px;margin-bottom:18px}
+    #field-live-workflow .refine-prereadtabs button{font-size:12px;padding:12px 2px;background:transparent;border-bottom:2px solid transparent;border-radius:0;line-height:1.3}
+    #field-live-workflow .refine-prereadtabs button[aria-selected=true]{color:var(--fp-fg);background:transparent;border-bottom-color:var(--fp-blue);box-shadow:none}
+    #field-live-workflow .refine-callfooter{background:var(--fp-card);border-top:1px solid var(--fp-line);padding:11px 14px 17px;flex-shrink:0}
+    #field-live-workflow .refine-callfooter>.fp-btn{min-height:43px;background:linear-gradient(110deg,#3281fb,#2450d5);border-color:transparent;color:white;box-shadow:0 4px 9px #236bff22}
+    #field-live-workflow .refine-callsecondary{display:flex;gap:6px;margin-top:7px}
+    #field-live-workflow .refine-callsecondary>.fp-btn{font-size:12px;padding:8px;min-height:36px}
+    #field-live-workflow .refine-callsecondary>.fp-iconbtn{min-width:36px;width:36px;height:36px}
+    #field-live-workflow .refine-callfooter>p{font-size:11px;color:var(--fp-muted);margin:8px 0 0;display:flex;align-items:center;gap:5px}
+    #field-live-workflow .refine-callfooter>p svg{width:12px;height:12px}
+    #field-live-workflow .refine-askheading{display:flex;gap:8px;align-items:flex-start;padding:8px 0 15px}
+    #field-live-workflow .refine-askheading>div{flex:1}
+    #field-live-workflow .refine-askheading h1{font-family:Inter,Arial,sans-serif;font-size:28px;font-weight:600;letter-spacing:-.6px;margin:0 0 10px}
+    #field-live-workflow .refine-askheading p{color:var(--fp-muted);font-size:15px;line-height:1.5;margin:0}
+    #field-live-workflow .refine-prompts{display:flex;flex-direction:column;align-items:flex-start;gap:9px;padding-bottom:18px}
+    #field-live-workflow .refine-prompts .fp-btn{border-radius:30px;background:var(--fp-blue-soft);border-color:var(--fp-line);color:var(--fp-blue);text-align:left;min-height:43px;font-size:13px;padding:10px 14px;justify-content:flex-start}
+    #field-live-workflow .refine-askcontext{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--fp-blue-soft);border-radius:12px;margin-bottom:15px;font-size:12px;color:var(--fp-blue)}
+    #field-live-workflow .refine-question{display:flex;align-items:flex-start;gap:8px;background:var(--fp-input);padding:11px 13px;border-radius:13px;margin-bottom:14px}
+    #field-live-workflow .refine-question h2{font:inherit;font-size:14px;margin:0;line-height:1.5}
+    #field-live-workflow .refine-question svg{flex-shrink:0;width:16px;height:16px;margin-top:2px}
+    #field-live-workflow .refine-voicecomposer{border-top:1px solid var(--fp-line);background:var(--fp-bg);padding:18px 16px 23px;display:flex;flex-direction:column;align-items:center;flex-shrink:0}
+    #field-live-workflow .refine-mic{width:86px;height:86px;border:0;border-radius:50%;background:#4768f1;color:white;display:grid;place-items:center;box-shadow:0 4px 14px #4768f124}
+    #field-live-workflow .refine-mic svg[data-lucide]{width:36px!important;height:36px!important}
+    #field-live-workflow .refine-voicecomposer>p{font-size:14px;color:var(--fp-muted);margin:10px 0 18px}
+    #field-live-workflow .refine-askinput{display:flex;align-items:center;width:100%;gap:6px;background:var(--fp-input);border:1px solid var(--fp-line);border-radius:30px;padding:4px 5px 4px 15px;box-sizing:border-box}
+    #field-live-workflow .refine-askinput input{min-width:0;flex:1;background:transparent;border:0;color:var(--fp-fg);font:inherit;font-size:14px;min-height:39px;outline-offset:2px}
+    #field-live-workflow .refine-askinput>.fp-iconbtn{width:34px;height:34px;background:var(--fp-blue);border-color:transparent;color:white;border-radius:50%}
+    #field-live-workflow .refine-voicetools{width:100%;display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+    #field-live-workflow .refine-voicetools .fp-btn{font-size:11px;min-height:31px;padding:5px 8px;background:transparent;border-color:transparent}
+    #field-live-workflow .refine-voicetools .fp-iconbtn{width:31px;height:31px;background:transparent;border-color:transparent}
+    #field-live-workflow .refine-voicecomposer .live-voicepanel{margin:0 0 12px;width:100%;box-sizing:border-box;max-height:160px;overflow:auto}
+    #field-live-workflow .refine-menu{display:flex;flex-direction:column;gap:10px}
+    #field-live-workflow .refine-routeheading{display:flex;align-items:center;gap:9px;justify-content:space-between;margin:5px 0 18px}
+    #field-live-workflow .refine-routeheading h1{font-size:27px;margin:0}
+    #field-live-workflow .refine-routeheading .fp-btn{font-size:12px;padding:8px;min-height:35px}
+    #field-live-workflow .refine-origin{flex:1;min-width:0;border:1px solid var(--fp-line);background:var(--fp-card);color:var(--fp-fg);border-radius:10px;padding:9px;font:inherit;font-size:13px}
+    #field-live-workflow .refine-routecall{display:flex;gap:7px;align-items:center;padding:13px 0;border-top:1px solid var(--fp-line)}
+    #field-live-workflow .refine-routecall:first-of-type{margin-top:12px}
+    #field-live-workflow .refine-routecall .fp-row-main{font-size:13px}
+    #field-live-workflow .refine-routecall .fp-iconbtn{width:32px;height:34px}
+    #field-live-workflow .refine-callsecondary .refine-backcall{width:35px;min-width:35px;padding:6px}
+    #field-live-workflow .refine-record{margin-top:14px}
+    #field-live-workflow .refine-record h3{font-size:13px;font-weight:600;margin:13px 0 6px}
+    #field-live-workflow .refine-record>p:not(.fp-small){font-size:13px;line-height:1.6;margin:7px 0 13px}
+    #field-live-workflow .refine-recordactions{display:flex;gap:6px;flex-wrap:wrap;border-top:1px solid var(--fp-line);padding-top:11px}
+    #field-live-workflow .refine-recordactions .fp-btn{font-size:11px;min-height:35px;padding:7px 9px}
+    #field-live-workflow .fp-phone[data-screen=ask] .fp-main{padding-bottom:8px}
+    #field-live-workflow .fp-phone[data-screen=ask] .live-thread>li{padding-bottom:22px}
+    #field-live-workflow .fp-phone[data-screen=ask] .live-do{display:flex;flex-wrap:wrap}
+    #field-live-workflow .fp-phone[data-screen=ask] .live-do>p{width:100%}
+    @media(max-width:380px){#field-live-workflow .refine-actiontile{font-size:11px;min-height:72px}#field-live-workflow .refine-shortcuts .fp-btn{font-size:11px;padding:9px 7px}#field-live-workflow .refine-targetgroups{gap:7px}#field-live-workflow .refine-targetgroups button{font-size:11px}}

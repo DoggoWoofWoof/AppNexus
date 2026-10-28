@@ -1,0 +1,57 @@
+    #field-live-workflow .refine-targetgroups{grid-template-columns:1fr;gap:13px;margin:16px 0}
+    #field-live-workflow .refine-targetgroups>div>div{gap:4px}
+    #field-live-workflow .refine-targetgroups button{font-size:13px;min-height:43px;white-space:nowrap;padding:9px 10px}
+    #field-live-workflow .audit-targetheading{display:flex;align-items:center;gap:10px}
+    #field-live-workflow .audit-targetheading .fp-row-main{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0;padding:0}
+    #field-live-workflow .audit-targetheading .fp-row-main>span{min-width:0;flex:1}
+    #field-live-workflow .audit-targetheading .fp-row-main strong{font-size:14px;line-height:1.4;display:block}
+    #field-live-workflow .audit-targetheading .fp-row-main small{font-size:12px;line-height:1.4;display:block;margin-top:3px}
+    #field-live-workflow .audit-targetheading .fp-row-main>svg{flex-shrink:0;width:15px!important;height:15px!important}
+    #field-live-workflow .live-targetmetrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 12px;padding:16px 0}
+    #field-live-workflow .live-targetmetrics .fp-kicker{font-size:11px;letter-spacing:0;text-transform:none;line-height:1.45;margin-bottom:4px;min-height:16px}
+    #field-live-workflow .live-targetmetrics strong{font:500 18px/1.35 Inter,Arial,sans-serif;letter-spacing:-.5px;overflow-wrap:normal;white-space:nowrap}
+    #field-live-workflow .live-targetmetrics small{font-size:11px;min-height:0;line-height:1.4;margin-top:2px}
+    #field-live-workflow .live-targetmetrics small:empty{display:none}
+    #field-live-workflow .audit-targetfoot{display:flex;align-items:center;justify-content:space-between;gap:7px;padding-top:9px;border-top:1px solid var(--fp-line)}
+    #field-live-workflow .audit-targetfoot .fp-tag{font-size:10px;max-width:72%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+    #field-live-workflow .audit-targetfoot .fp-btn{font-size:11px;padding:7px 8px;min-height:34px;flex-shrink:0}
+    #field-live-workflow .refine-shortcuts.audit-two-shortcuts{grid-template-columns:minmax(0,1fr) auto}
+    #field-live-workflow .refine-scope>span{min-width:0;overflow:hidden;text-overflow:ellipsis}
+    #field-live-workflow .refine-shortcuts .fp-btn{min-height:43px}
+    #field-live-workflow .live-mapfilters{display:flex;flex-direction:column;gap:9px;padding:12px;margin:12px 0}
+    #field-live-workflow .live-mapfilters .audit-mapwhere{display:grid;grid-template-columns:1fr;gap:8px}
+    #field-live-workflow .audit-mapwhere .fp-btn{width:100%;justify-content:flex-start;min-height:42px;font-size:13px;padding:10px 12px;white-space:normal;text-align:left;line-height:1.45}
+    #field-live-workflow .live-mapfilters .audit-maptools{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    #field-live-workflow .audit-maptools>.fp-btn{flex:1;justify-content:flex-start;min-height:40px;font-size:12px}
+    #field-live-workflow .audit-maptools>.fp-iconbtn{width:40px;height:40px;flex-shrink:0}
+    #field-live-workflow .audit-maplayers{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:7px;margin:13px 0 18px}
+    #field-live-workflow .audit-maplayers>span{font-size:12px;color:var(--fp-muted)}
+    #field-live-workflow .audit-maplayers .fp-pills{margin:0;gap:4px}
+    #field-live-workflow .audit-maplayers .fp-pill{font-size:11px;padding:7px 10px;min-height:34px}
+    #field-live-workflow .audit-resultheading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:16px 0 3px}
+    #field-live-workflow .audit-resultheading h2{margin:0;font-size:17px}
+    #field-live-workflow .audit-resultheading span{font-size:11px;color:var(--fp-muted)}
+    #field-live-workflow .refine-nav>button>span:not(.fp-ask-orb){white-space:nowrap;font-size:12px}
+    #field-live-workflow .refine-codechips button{font-size:12px;line-height:1.4}
+    #field-live-workflow .refine-secondaryactions .fp-btn{font-size:12px}
+    #field-live-workflow .fp-phone input,#field-live-workflow .fp-phone textarea,#field-live-workflow .fp-phone select{font-size:16px}
+    #field-live-workflow .refine-askinput input{font-size:15px}
+    #field-live-workflow .refine-actiontile{font-size:12px;min-height:78px;padding:12px 6px}
+    #field-live-workflow .live-jump{margin:14px 0}
+    #field-live-workflow .live-calendar .audit-calendarday{min-height:44px;border-radius:7px;background:color-mix(in srgb,var(--fp-blue) calc(var(--density)*100%),var(--fp-card));text-align:center;padding:5px 2px;color:var(--fp-fg);font-size:12px}
+    #field-live-workflow .audit-calendarday small{display:block;font-size:11px;margin-top:2px}
+    #field-live-workflow .audit-summaryrow{display:flex;align-items:center;justify-content:space-between;gap:9px;padding:13px 0;border-bottom:1px solid var(--fp-line);font-size:13px}
+    #field-live-workflow .audit-summaryrow:last-child{border-bottom:0}
+    #field-live-workflow .audit-summaryrow small{display:block;color:var(--fp-muted);font-size:11px;margin-top:4px}
+    #field-live-workflow .audit-summaryrow .fp-btn{min-height:36px;padding:7px 10px;font-size:12px;flex-shrink:0}
+    #field-live-workflow .audit-summaryactions{display:flex;flex-wrap:wrap;gap:9px;margin:18px 0}
+    #field-live-workflow .audit-summaryactions .fp-btn{flex:1;font-size:12px}
+    #field-live-workflow .audit-summaryactions .fp-full{flex-basis:100%}
+    #field-live-workflow .audit-selectionbar{gap:8px}
+    #field-live-workflow .audit-selectionbar>span{font-size:12px;flex:1;white-space:nowrap}
+    #field-live-workflow .audit-selectionbar .fp-iconbtn{width:31px;height:34px;background:transparent;border-color:transparent}
+    #field-live-workflow .audit-selectionbar .fp-btn{font-size:12px;padding:10px 12px;min-height:42px}
+    #field-live-workflow .fp-stategrid{grid-template-columns:repeat(auto-fit,minmax(42px,1fr));gap:5px}
+    #field-live-workflow .fp-stategrid .fp-pill{min-height:42px}
+    #field-live-workflow .live-results>.fp-note.warn{display:flex;flex-direction:column;gap:9px;align-items:flex-start;margin:12px 0}
+    #field-live-workflow .audit-distance{display:block;color:var(--fp-blue);font-size:11px;margin-top:4px}
