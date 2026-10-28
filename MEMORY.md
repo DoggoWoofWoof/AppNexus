@@ -8,7 +8,7 @@ Inspected actual live FieldPro this turn: its five assigned cohort groups contai
 
 Identity images/logos occupy the left slot of target rows and profiles; route selection is on the right. Fictional records use initials/facility fallbacks. Photo/logo URL support is present, with production image wiring still unimplemented. The single territory manager creates/renames/chooses coverage. Local mock assignment supports an entity in multiple territories and preserves other memberships; this is a design behavior, not a verified production contract.
 
-Authoring layer: `design/mockups/.territory-views.js` and `.territory-theme.css`, appended to the shared mock builder. Code commit/live URLs will be recorded below after publication. Latest QA is in `design/field-layout-review-qa.md`. Mock-only scope remains in force. The original checkout and mobile/main/dev app code remain untouched.
+Authoring layer: `design/mockups/.territory-views.js` and `.territory-theme.css`, appended to the shared mock builder. Published mock code commit: `dfc7cc5a485852291f266a0796dc82b2b66e7f10` on `codex/field-mock-layout-review`. Updated immutable live links are in README.md and the QA document. Both live variants loaded; territory manager and voice-first Ask were checked on the live pages. Latest QA is in `design/field-layout-review-qa.md`. Mock-only scope remains in force. The original checkout and mobile/main/dev app code remain untouched.
 
 ## Latest: two-layout review branch and publication authorized
 

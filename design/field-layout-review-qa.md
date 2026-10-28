@@ -4,10 +4,10 @@ Branch: `codex/field-mock-layout-review`, based on refreshed `origin/dev` at `e8
 
 ## Live previews
 
-- [Field / Ask / History](https://rawcdn.githack.com/DoggoWoofWoof/AppNexus/4ccaf534798a166da40512e0a08df88b950b20cf/design/published-review/dist/field/index.html)
-- [Targets / Ask / Opportunity](https://rawcdn.githack.com/DoggoWoofWoof/AppNexus/4ccaf534798a166da40512e0a08df88b950b20cf/design/published-review/dist/targets/index.html)
+- [Field / Ask / History](https://rawcdn.githack.com/DoggoWoofWoof/AppNexus/dfc7cc5a485852291f266a0796dc82b2b66e7f10/design/published-review/dist/field/index.html)
+- [Targets / Ask / Opportunity](https://rawcdn.githack.com/DoggoWoofWoof/AppNexus/dfc7cc5a485852291f266a0796dc82b2b66e7f10/design/published-review/dist/targets/index.html)
 
-Both URLs serve committed static exports from the public branch. The CDN displays a one-time external-content notice. The live Field link was walked through Route → Maya → Alex; both live pages loaded their correct navigation. Existing GitHub Pages main/dev deployments were not changed. The branch's Check demo workflow passed.
+Both URLs serve committed static exports from the public branch. The CDN displays a one-time external-content notice. Both updated live pages loaded their correct navigation. The live territory manager was opened and the other layout’s retained Tap and talk Ask control was verified; Route → Maya → Alex was rechecked locally. Existing GitHub Pages main/dev deployments were not changed. The previous published revision’s Check demo workflow passed; current mock syntax and interaction checks are recorded below.
 
 A Sites project was registered but not deployed: an initial unsandboxed credential handoff was rejected by automatic review; the supported sandboxed attempt could not reach the Site Git source endpoint (`getaddrinfo() thread failed to start`). The helper was stopped. No hosting credential was written into repository files. The persisted Site identity may be reused if that publishing path becomes available; the live links above do not depend on it.
 

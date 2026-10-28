@@ -4,8 +4,8 @@
 
 These are clickable mocks with the same updated voice-first Ask, profiles and visit flow. Only navigation placement differs; this branch does not implement the mobile app.
 
-- [Field / Ask / History — live preview](https://rawcdn.githack.com/DoggoWoofWoof/AppNexus/4ccaf534798a166da40512e0a08df88b950b20cf/design/published-review/dist/field/index.html)
-- [Targets / Ask / Opportunity — live preview](https://rawcdn.githack.com/DoggoWoofWoof/AppNexus/4ccaf534798a166da40512e0a08df88b950b20cf/design/published-review/dist/targets/index.html)
+- [Field / Ask / History — live preview](https://rawcdn.githack.com/DoggoWoofWoof/AppNexus/dfc7cc5a485852291f266a0796dc82b2b66e7f10/design/published-review/dist/field/index.html)
+- [Targets / Ask / Opportunity — live preview](https://rawcdn.githack.com/DoggoWoofWoof/AppNexus/dfc7cc5a485852291f266a0796dc82b2b66e7f10/design/published-review/dist/targets/index.html)
 - [Screen audit, fixes, QA and mock limitations](design/field-layout-review-qa.md)
 
 The public preview host may show a one-time **Open the page** content notice. Both links are pinned to the reviewed code commit, so they do not change when documentation changes.
