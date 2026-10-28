@@ -1,0 +1,88 @@
+    #field-live-workflow .territory-workspace{margin:0 0 13px}
+    #field-live-workflow .territory-search{display:flex;align-items:center;gap:8px;padding:7px 7px 7px 12px;border:1px solid var(--fp-line);border-radius:14px;background:var(--fp-card);min-height:54px}
+    #field-live-workflow .territory-search>svg{width:18px!important;height:18px!important;color:var(--fp-muted)}
+    #field-live-workflow .territory-search input{flex:1;min-width:0;border:0;background:transparent;padding:5px 0;font-size:14px;color:var(--fp-fg);outline-offset:2px}
+    #field-live-workflow .territory-search .territory-ask{border:0;color:var(--fp-blue);background:var(--fp-blue-soft);padding:9px 10px;font-size:12px;min-height:38px;border-radius:10px;gap:5px}
+    #field-live-workflow .territory-search>.fp-iconbtn{width:26px;height:30px;border:0;background:transparent}
+    #field-live-workflow .territory-tools{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px;margin-top:8px}
+    #field-live-workflow .territory-tools.with-map{grid-template-columns:minmax(0,1fr) auto auto}
+    #field-live-workflow .territory-tools>.fp-btn{padding:9px 10px;font-size:12px;min-height:42px;gap:6px}
+    #field-live-workflow .territory-tools>.fp-iconbtn{width:42px;height:42px;border-radius:11px}
+    #field-live-workflow .territory-picker{justify-content:flex-start}
+    #field-live-workflow .territory-picker>span{min-width:0;flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+    #field-live-workflow .territory-tools svg{width:16px!important;height:16px!important;flex-shrink:0}
+    #field-live-workflow .territory-browse{margin:4px 0 12px}
+    #field-live-workflow .territory-segment{display:flex;gap:4px;background:var(--fp-input);border-radius:12px;padding:4px}
+    #field-live-workflow .territory-segment button{flex:1;min-width:0;border:0;border-radius:9px;font:inherit;font-size:13px;min-height:42px;background:transparent;color:var(--fp-muted);text-align:center;display:flex;justify-content:center;align-items:center;gap:7px}
+    #field-live-workflow .territory-segment button[aria-selected=true]{background:var(--fp-card);color:var(--fp-blue);box-shadow:0 1px 4px #19295413;font-weight:500}
+    #field-live-workflow .territory-segment.secondary{background:transparent;border-radius:0;padding:0;margin-top:8px;gap:8px}
+    #field-live-workflow .territory-segment.secondary button{border:1px solid var(--fp-line);background:var(--fp-card);color:var(--fp-muted);min-height:39px}
+    #field-live-workflow .territory-segment.secondary button[aria-selected=true]{background:var(--fp-blue-soft);border-color:color-mix(in srgb,var(--fp-blue) 35%,var(--fp-line));color:var(--fp-blue);box-shadow:none}
+    #field-live-workflow .territory-codecontrols{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px;margin:12px 0}
+    #field-live-workflow .territory-codecontrols>.fp-btn{justify-content:flex-start;padding:9px 10px;min-height:44px;gap:6px;font-size:11px}
+    #field-live-workflow .territory-codecontrols>.fp-btn:first-child{flex-wrap:wrap;min-width:0}
+    #field-live-workflow .territory-codecontrols strong{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;font-size:12px}
+    #field-live-workflow .territory-codecontrols>.fp-btn:first-child>span{color:var(--fp-muted);font-size:11px}
+    #field-live-workflow .territory-codecontrols>.fp-btn:first-child>svg{margin-left:auto;flex-shrink:0}
+    #field-live-workflow .territory-snapshot{margin:13px 0;border:1px solid var(--fp-line);border-radius:13px;background:var(--fp-card);overflow:hidden}
+    #field-live-workflow .territory-snapshot>summary{list-style:none;display:flex;align-items:center;gap:9px;padding:12px;font-size:12px}
+    #field-live-workflow .territory-snapshot>summary::-webkit-details-marker{display:none}
+    #field-live-workflow .territory-snapshot>summary>span{flex:1}
+    #field-live-workflow .territory-snapshot small{display:block;font-size:11px;color:var(--fp-muted);font-weight:400}
+    #field-live-workflow .territory-snapshot>summary>strong{text-align:right;font-size:15px;font-weight:500}
+    #field-live-workflow .territory-snapshot .live-book{margin:0;border-radius:0}
+    #field-live-workflow .territory-resulttools{display:flex;align-items:center;gap:6px;margin:15px 0 9px}
+    #field-live-workflow .territory-resulttools>div{flex:1;min-width:0}
+    #field-live-workflow .territory-resulttools strong{font-size:16px;font-weight:600;display:block}
+    #field-live-workflow .territory-resulttools span{font-size:11px;display:block;color:var(--fp-muted);overflow-wrap:anywhere}
+    #field-live-workflow .territory-resulttools>.fp-iconbtn{width:35px;height:37px}
+    #field-live-workflow .territory-target{background:var(--fp-card);border:1px solid var(--fp-line);border-radius:14px;padding:13px;margin:0 0 12px}
+    #field-live-workflow .territory-targethead{display:flex;align-items:center;gap:9px}
+    #field-live-workflow .territory-identity{display:flex;align-items:center;gap:9px;min-width:0;flex:1;padding:0;color:var(--fp-fg);font:inherit;text-align:left}
+    #field-live-workflow .territory-identity>span:not(.territory-picture){flex:1;min-width:0}
+    #field-live-workflow .territory-identity strong{font-size:14px;line-height:1.35;font-weight:600;display:block}
+    #field-live-workflow .territory-identity small{font-size:11px;line-height:1.45;color:var(--fp-muted);display:block;margin-top:4px}
+    #field-live-workflow .territory-identity em{display:block;font-style:normal;font-size:11px;color:var(--fp-blue);margin-top:4px}
+    #field-live-workflow .territory-identity>svg{width:13px!important;height:13px!important;flex-shrink:0;color:var(--fp-muted)}
+    #field-live-workflow .territory-picture{width:38px;height:42px;border-radius:11px;flex-shrink:0;display:grid;place-items:center;overflow:hidden;background:var(--fp-blue-soft);color:var(--fp-blue);font-size:12px;font-weight:600}
+    #field-live-workflow .territory-picture img{width:100%;height:100%;object-fit:cover}
+    #field-live-workflow .territory-picture.facility{background:var(--fp-input);color:var(--fp-muted)}
+    #field-live-workflow .territory-picture.large{width:48px;height:52px;font-size:15px}
+    #field-live-workflow .territory-select{align-self:flex-start;flex-shrink:0;width:34px;height:36px;min-width:34px;margin-top:1px}
+    #field-live-workflow .territory-target .live-targetmetrics{padding-bottom:0;margin-bottom:0;gap:13px 10px}
+    #field-live-workflow .territory-target .live-targetmetrics strong{font-size:18px}
+    #field-live-workflow .territory-target .live-targetmetrics small{font-size:11px}
+    #field-live-workflow .territory-targetfoot{display:flex;align-items:center;justify-content:space-between;gap:8px;border-top:1px solid var(--fp-line);padding-top:10px;margin-top:13px}
+    #field-live-workflow .territory-targetfoot>span{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--fp-muted)}
+    #field-live-workflow .territory-targetfoot>.fp-btn{font-size:12px;padding:7px 9px;min-height:35px}
+    #field-live-workflow .territory-replacing{display:flex;flex-direction:column;gap:6px;background:var(--fp-warn-bg);color:var(--fp-warn);border-radius:13px;padding:12px;margin:13px 0;font-size:13px}
+    #field-live-workflow .territory-replacing>span{font-size:11px}
+    #field-live-workflow .territory-replacing>.fp-btn{align-self:flex-start;font-size:12px;min-height:35px;margin-top:3px}
+    #field-live-workflow .territory-question{display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:10px 0;font-size:12px}
+    #field-live-workflow .territory-question>.fp-btn{width:100%;font-size:12px}
+    #field-live-workflow .territory-mapfilters{background:var(--fp-card);border:1px solid var(--fp-line);border-radius:13px;padding:10px;margin:12px 0;display:flex;flex-direction:column;gap:8px}
+    #field-live-workflow .territory-mapfilters>div{display:flex;gap:7px}
+    #field-live-workflow .territory-mapfilters .fp-btn{font-size:12px;min-height:39px;flex:1;padding:8px 9px}
+    #field-live-workflow .territory-mapfilters>div:first-child{flex-wrap:wrap}
+    #field-live-workflow .territory-mapfilters .fp-iconbtn{width:36px;height:39px;flex-shrink:0}
+    #field-live-workflow .territory-manager{margin-top:12px}
+    #field-live-workflow .territory-managerrow{display:flex;align-items:center;gap:7px;padding:9px 0;border-bottom:1px solid var(--fp-line)}
+    #field-live-workflow .territory-managerrow>button:first-child{display:flex;align-items:center;gap:10px;flex:1;min-width:0;border-radius:12px;padding:12px 9px;font:inherit;font-size:13px;color:var(--fp-fg);background:transparent}
+    #field-live-workflow .territory-managerrow>button:first-child[aria-pressed=true]{background:var(--fp-blue-soft)}
+    #field-live-workflow .territory-managerrow strong{font-size:14px;display:block;font-weight:600}
+    #field-live-workflow .territory-managerrow small{font-size:11px;display:block;color:var(--fp-muted);margin-top:3px}
+    #field-live-workflow .territory-managerrow>button:first-child>span:nth-child(2){flex:1;min-width:0;overflow-wrap:anywhere}
+    #field-live-workflow .territory-managericon{width:29px;display:grid;place-items:center;flex-shrink:0;color:var(--fp-blue)}
+    #field-live-workflow .territory-managerrow>.fp-iconbtn{width:36px;height:39px}
+    #field-live-workflow .territory-specialties{display:flex;flex-direction:column;gap:6px;margin-top:12px}
+    #field-live-workflow .territory-specialties>button{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:45px;padding:11px 12px;background:var(--fp-card);color:var(--fp-fg);font:inherit;font-size:13px;border:1px solid var(--fp-line);border-radius:10px}
+    #field-live-workflow .territory-specialties>button[aria-pressed=true]{background:var(--fp-blue-soft);color:var(--fp-blue)}
+    #field-live-workflow .territory-cohortgroups{display:flex;flex-wrap:wrap;gap:7px;margin:9px 0 14px}
+    #field-live-workflow .territory-cohortgroups>span{border-radius:8px;background:var(--fp-input);padding:7px 9px;font-size:12px}
+    #field-live-workflow .territory-cohorthelp{border:1px solid var(--fp-line);border-radius:10px;padding:11px;font-size:12px;margin-bottom:18px}
+    #field-live-workflow .territory-cohorthelp p{line-height:1.6;color:var(--fp-muted)}
+    #field-live-workflow .territory-codeheading{display:flex;justify-content:space-between;align-items:center;gap:7px;margin-bottom:10px;font-size:13px}
+    #field-live-workflow .territory-codeheading>span{font-size:11px;color:var(--fp-muted)}
+    #field-live-workflow .territory-scopehint{font-size:11px;color:var(--fp-muted);line-height:1.45;margin:-5px 0 12px}
+    #field-live-workflow .territory-codegrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(62px,1fr));gap:7px}
+    #field-live-workflow .territory-codegrid>span{font-size:13px;padding:10px 6px;text-align:center;background:var(--fp-input);border-radius:8px;color:var(--fp-fg);font-variant-numeric:tabular-nums}

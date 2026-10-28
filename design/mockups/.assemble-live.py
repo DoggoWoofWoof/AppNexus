@@ -1,6 +1,7 @@
 from pathlib import Path
 import re
 import sys
+import json
 
 repo=Path(__file__).resolve().parents[2]
 out=Path(sys.argv[1]) if len(sys.argv)>1 else repo/'design/mockups/field-live-workflow.html'
@@ -10,10 +11,13 @@ s=s.replace('Design preview · fictional figures · simulated AI, voice, reports
 s=s.replace('<div class="viz-carousel viz-dotted-background" aria-label="FieldPro summary layouts">','<div class="viz-dotted-background" aria-label="FieldPro and Field mobile flow">')
 s=re.sub(r'    <section data-variant="Focused summary".*?</section>','    <section aria-label="Mobile FieldPro and Field"><div class="fp-stage"><div class="fp-phone" data-design="live" aria-label="FieldPro mobile workflow"></div></div></section>',s,count=1)
 s=re.sub(r'    <section data-variant="Book summary".*?</section>\n','',s,count=1)
-s=s.replace('stored?.schema===2','stored?.schema===7').replace('schema:2,sessionKey','schema:7,sessionKey').replace('p?.schema!==2','p?.schema!==7')
+s=s.replace('stored?.schema===2','stored?.schema===8').replace('schema:2,sessionKey','schema:8,sessionKey').replace('p?.schema!==2','p?.schema!==8')
 s=s.replace("const groups=['All codes','Hernia','Colectomy','Bariatric'];", "const groups=['All codes','Appendectomy','Bariatric','Cholecystectomy','Fundoplication / hiatal hernia','Gastrectomy','Lysis of adhesions','Small-bowel resection','Splenectomy','Colectomy','OB-GYN','Urology','Inguinal hernia','Ventral hernia'];")
 s=s.replace("const weights={Hernia:.48,Colectomy:.32,Bariatric:.2};", "const weights={Appendectomy:.07,Bariatric:.06,Cholecystectomy:.18,'Fundoplication / hiatal hernia':.06,Gastrectomy:.05,'Lysis of adhesions':.04,'Small-bowel resection':.07,Splenectomy:.02,Colectomy:.16,'OB-GYN':.08,Urology:.05,'Inguinal hernia':.09,'Ventral hernia':.07};")
-s=s.replace("return rows.sort((a,b)=>s.sort==='Name'?a.name.localeCompare(b.name):s.sort==='Nearest'?distance(a,s)-distance(b,s):vol(b,s)-vol(a,s));", "if(s.targetState&&s.targetState!=='all')rows=rows.filter(e=>e.state===s.targetState);if(s.targetCity&&s.targetCity!=='all')rows=rows.filter(e=>e.city===s.targetCity);return rows.sort((a,b)=>s.sort==='Name'?a.name.localeCompare(b.name):s.sort==='Nearest'?distance(a,s)-distance(b,s):s.sort==='Year on year'?b.trend-a.trend:s.sort==='Left %'?((S(b.id).left/S(b.id).volume)-(S(a.id).left/S(a.id).volume)):s.sort==='Leaking $'?S(b.id).leakingMoney-S(a.id).leakingMoney:s.sort==='Opportunity'&&s.kind==='hco'?b.opportunity-a.opportunity:vol(b,s)-vol(a,s));")
+s=s.replace("return rows.sort((a,b)=>s.sort==='Name'?a.name.localeCompare(b.name):s.sort==='Nearest'?distance(a,s)-distance(b,s):vol(b,s)-vol(a,s));", "if(s.targetState&&s.targetState!=='all')rows=rows.filter(e=>e.state===s.targetState);if(s.targetCity&&s.targetCity!=='all')rows=rows.filter(e=>e.city===s.targetCity);if(s.screen==='map'&&s.near)rows=rows.filter(e=>distance(e,s)<=Number(s.radius));return rows.sort((a,b)=>s.sort==='Name'?a.name.localeCompare(b.name):s.sort==='Nearest'?distance(a,s)-distance(b,s):s.sort==='Year on year'?b.trend-a.trend:s.sort==='Left %'?((S(b.id).left/S(b.id).volume)-(S(a.id).left/S(a.id).volume)):s.sort==='Leaking $'?S(b.id).leakingMoney-S(a.id).leakingMoney:s.sort==='Opportunity'&&s.kind==='hco'?b.opportunity-a.opportunity:vol(b,s)-vol(a,s));")
+s=s.replace('    function scoped(s){', "    const inTerritory=(s,id,t)=>!!t&&(s.membership[id]===t||(s.additionalTerritories?.[id]||[]).includes(t));\n    function scoped(s){",1)
+s=s.replace('s.membership[e.id]===t.id','inTerritory(s,e.id,t.id)').replace('s.membership[e.id]===t?.id','inTerritory(s,e.id,t?.id)')
+s=re.sub(r'const membershipLabel=\(e,s\)=>.*?;', "const membershipLabel=(e,s)=>{const t=s.territories.find(t=>t.id===s.territory&&inTerritory(s,e.id,t.id))||s.territories.find(t=>inTerritory(s,e.id,t.id));return t?.name||'';};",s,count=1)
 s=s.replace("let ids=mode==='route'?", "let ids=['territory','account'].includes(mode)?Object.keys(sites):mode==='route'?")
 s=s.replace("reset:()=>{s=makeInitial();states", "reset:()=>{s=makeInitial();live.preTab='overview';live.about=null;live.voice='idle';live.handsFree=false;states")
 s=s.replace("const factor=s=>s.group==='All codes'?1:s.group==='Hernia'?.48:s.group==='Colectomy'?.32:.2;", "const factor=s=>s.group==='All codes'?1:(weights[s.group]||0);")
@@ -53,7 +57,9 @@ views=views.replace("[14,31,11,28,16]:[12,23,19,31,15]", "[20,22,8,35,15]:[18,24
 views=views.replace('weights=[12,23,19,31,15,0,0]', 'weights=[18,24,9,31,18,0,0]')
 views=views.replace("${metric(h?'Procedures 2025':'Claims 2025',fmt(vol(e,s)),e.trend+'% YoY')}${metric(h?'Opportunity 2025':'Referred in',h?cash(e.opportunity*factor(s)):fmt(Math.round(vol(e,s)*1.16)),h?(e.left/e.volume*100).toFixed(1)+'% left':'selected codes')}", "${metric(h?'Procedures 2025':'Claims 2025',fmt(vol(e,s)),'selected codes')}${metric(h?'Share 2025':'Lightest day',h?e.market+'%':'Wed',h?'in-radius procedures':'historical visits')}${metric('YoY vs 2024','+'+e.trend+'%','volume trend')}${metric(h?'Stayed / left':'Referred in',h?(100-e.left/e.volume*100).toFixed(1)+' / '+(e.left/e.volume*100).toFixed(1)+'%':fmt(vol(e,s)*1.16),h?'2025 measured procedures':'selected diagnoses')}${h?metric('Opportunity',cash(e.opportunity*factor(s)),'2025 · billed charges')+metric('Leaking $',cash(e.leakingMoney*factor(s)),'since 2022'):''}")
 
-views += '\n'+(repo/'design/mockups/.review-views.js').read_text(encoding='utf-8')
+views += '\n'+(repo/'design/mockups/.review-views.js').read_text(encoding='utf-8').replace('function liveAct(action){','function baseTerritoryAct(action){').replace('function extraSheet(kind,d){','function baseTerritorySheet(kind,d){')
+cohort=json.loads((repo/'design/mockups/field-cohort.json').read_text(encoding='utf-8'))
+views += '\n'+(repo/'design/mockups/.territory-views.js').read_text(encoding='utf-8').replace('__MEASURED_COHORT__',json.dumps(cohort,ensure_ascii=False))
 
 def clean_module(path):
     text=path.read_text(encoding='utf-8')
@@ -77,6 +83,7 @@ s=s.replace('      render();const observer=',views+'\n      render();const obser
 css=(repo/'design/mockups/.live-theme.css').read_text(encoding='utf-8').replace('font-size:10px','font-size:11px').replace('font-size:9px','font-size:11px')
 css += '\n'+(repo/'design/mockups/.refine-theme.css').read_text(encoding='utf-8')
 css += '\n'+(repo/'design/mockups/.review-theme.css').read_text(encoding='utf-8')
+css += '\n'+(repo/'design/mockups/.territory-theme.css').read_text(encoding='utf-8')
 s=s.replace('  </style>',css+'\n  </style>',1)
 s=s.replace('Restart preview</button></div>', 'Restart preview</button> <select data-preview-width aria-label="Preview phone width"><option value="430">430 px</option><option value="390">390 px</option><option value="320">320 px</option></select></div>')
 s=s.replace('    function makeApp(app){', "    root.querySelector('[data-preview-width]').addEventListener('change',e=>{root.querySelectorAll('.fp-phone').forEach(p=>p.style.maxWidth=e.target.value+'px');});\n    function makeApp(app){")

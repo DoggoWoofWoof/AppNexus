@@ -1,4 +1,14 @@
-# Current baseline — 28 October 2026
+# Current baseline — 29 October 2026
+
+## 29 October — unified territory workspace (latest user direction)
+
+The user removed **Someone new** as a separate starting mode. This overrides all older two-choice scope proposals below. Discovery is **Explore** inside the selected territory. One territory control opens the chooser/creator/editor; no separate Add targets / Territories toolbar. My targets / Explore and HCOs / HCPs are two compact tab rows. One top **Ask or search** input filters the active list/map; questions use the same voice-first Ask. Both navigation layouts receive identical workspace changes. Keep Field / Ask / History and Targets / Ask / Opportunity variants, with their current raised Ask control.
+
+Inspected actual live FieldPro this turn: its five assigned cohort groups contain 123 HCPCS/CPT identifiers. The specialty filter is separate: volume, opportunity and HCP results follow specialty; leakage and market share retain the whole cohort. These meanings and the identifiers are mirrored in the mock; full code descriptions and backend contracts are not established. `design/mockups/field-cohort.json` stores the identifiers and group names; no real customer claim records or real provider portraits were copied.
+
+Identity images/logos occupy the left slot of target rows and profiles; route selection is on the right. Fictional records use initials/facility fallbacks. Photo/logo URL support is present, with production image wiring still unimplemented. The single territory manager creates/renames/chooses coverage. Local mock assignment supports an entity in multiple territories and preserves other memberships; this is a design behavior, not a verified production contract.
+
+Authoring layer: `design/mockups/.territory-views.js` and `.territory-theme.css`, appended to the shared mock builder. Code commit/live URLs will be recorded below after publication. Latest QA is in `design/field-layout-review-qa.md`. Mock-only scope remains in force. The original checkout and mobile/main/dev app code remain untouched.
 
 ## Latest: two-layout review branch and publication authorized
 
@@ -26,7 +36,7 @@ New review candidate: `design/mockups/field-live-workflow.html`; mapping, QA and
 
 The latest revision uses FieldPro for targets, territories, opportunity maps, HCO/HCP discovery and account detail; Field supplies route execution and the step-by-step visit loop. Mix selected dev WEBSITE workflow behavior and the user's Ottava screenshots/ZIP references. Earlier Field-only Scope → Plan → Route → Work → Summary navigation is superseded as the overall app structure. Discuss/map/mock first; do not implement the app yet.
 
-Exactly two starting choices: My territories and Someone new. Remove Saved lists, Everyone in my targets and My hospitals as starting options; do not delete data or remove HCO support. Allow territory creation, selection, HCO/HCP assignment, territory exploration, account → ranked HCPs and nearby discovery. Keep assignment distinct from daily route selection. Exclude account upload/loading, company/unit selection and rep setup screens; assigned configuration is supplied administratively.
+Superseded by the unified territory workspace above: the earlier proposal had My territories and Someone new. Remove Saved lists, Everyone in my targets and My hospitals as starting options; do not delete data or remove HCO support. Allow territory creation, selection, HCO/HCP assignment, territory exploration, account → ranked HCPs and nearby discovery. Keep assignment distinct from daily route selection. Exclude account upload/loading, company/unit selection and rep setup screens; assigned configuration is supplied administratively.
 
 Current navigation: Field / central raised Ask / History. Territory selector, Route and Map are controls within Field. Targets and Map share scope, filters, code groups, periods and selected stops. Profiles/reports are shared across entry points, including the active visit. The older `design/fieldpro-territory-flow-plan.md` navigation proposal is superseded by the 29 October correction.
 

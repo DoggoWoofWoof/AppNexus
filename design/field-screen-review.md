@@ -1,3 +1,5 @@
+> Latest workspace review: discovery is Explore in the selected territory, with a single chooser/creator/editor and one shared Ask or search input. My targets / Explore and HCO / HCP tabs replace the older four-button block. Identity image left, route selection right. See [latest QA](field-layout-review-qa.md) for cohort semantics and both navigation variants.
+
 # Screen review and correction — 29 October 2026
 
 The user rejected the previous mock's exposed workflow stages, changing Route label, text-link clutter and Ask presentation. This review supersedes those design choices. Only the clickable mock is revised; app implementation remains unauthorized.

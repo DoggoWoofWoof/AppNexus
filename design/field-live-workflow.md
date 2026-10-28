@@ -1,3 +1,5 @@
+> Latest revision: one territory chooser/creator/editor replaces the My territories / Someone new start choice. Use My targets / Explore with HCO / HCP tabs and one top Ask or search input. Both navigation variants use this same workspace. Specialty is separate from the assigned 123-code cohort; leakage/share retain the cohort while volume/opportunity/HCPs follow specialty. See [current QA](field-layout-review-qa.md) for verified behavior and mock boundaries. Older descriptions below are historical where they conflict.
+
 # Live FieldPro + Field walkthrough — 28 October 2026
 
 Discussion prototype only. This replaces the rejected territory-preview mock as the current review candidate. It does not approve a specification or change the app.

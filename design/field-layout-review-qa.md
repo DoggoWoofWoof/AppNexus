@@ -11,6 +11,25 @@ Both URLs serve committed static exports from the public branch. The CDN display
 
 A Sites project was registered but not deployed: an initial unsandboxed credential handoff was rejected by automatic review; the supported sandboxed attempt could not reach the Site Git source endpoint (`getaddrinfo() thread failed to start`). The helper was stopped. No hosting credential was written into repository files. The persisted Site identity may be reused if that publishing path becomes available; the live links above do not depend on it.
 
+## Latest territory workspace revision
+
+The latest user correction replaces the separate Someone new starting choice with a single territory chooser/creator/editor. Discovery stays in Explore for the selected territory. Both layouts use My targets / Explore, then HCOs / HCPs. A single Ask or search input handles list/map filtering and question handoff to the unchanged voice-first Ask; the second target search and redundant Add targets / Territories toolbar are removed. Map has one filter/export set.
+
+Target identity photo/logo slots are on the left; route selection is on the right. The fictional sample records use initials and facility icons. Production image sources were verified on the real FieldPro HCP/HCO pages, but real people’s photos were not assigned to fictional names.
+
+Live source comparison: changing FieldPro specialty to Colectomy leaves its five assigned cohort groups and all 123 codes unchanged. Source leakage/share use the full cohort; volume/opportunity/HCPs follow the specialty filter. The mock reproduces this distinction, including the five group names and 123 code identifiers. Full code descriptions are not provided. The cohort viewer can search identifiers; it does not invent a code-to-group mapping.
+
+Additional checks for this revision:
+
+- Create a NY territory → Explore accounts → add an account already in Central Manhattan → My targets contains one account → rename territory → one account remains. Central Manhattan still contains its original two accounts. Local assignment is additive, with Undo; production multi-territory persistence remains unverified.
+- Shared name filtering and question + Enter → existing voice-first Ask. No duplicate workspace name-search input. Original raised microphone/Ask navigation retained.
+- Colectomy changes HCO procedure/opportunity figures and filters HCP lists. HCO market share, leakage percentage and leaking charges remain unchanged. All 123 code identifiers remain available; search 49650 returns one code.
+- Field route → Maya → Done, next → Alex → full profile → Back retains Alex. The workspace revision adds no workflow stage screens.
+- Both layouts share the same extracted script payload. JavaScript syntax and whitespace checks passed. Phone surfaces at 320px and 430px fit horizontally; the measured 320px phone had equal client/scroll widths. Browser viewport override did not take effect for this tab in this revision, so these are phone-surface checks rather than a new actual-viewport claim.
+- Opportunity view retains shared tabs, territory, specialty and search state. The map displays projected geography and current facility markers. No runtime errors were captured in the tested Field flow.
+
+The prior 41-test baseline result below predates this mock-only revision; those app tests were not rerun because app code was unchanged.
+
 ## Two layouts, one workflow
 
 - **Field / Ask / History:** targets, territories and Map inside Field; History in the bottom navigation.
@@ -22,9 +41,9 @@ Both use the same source code for screens, data, forms, voice-first Ask, prepara
 
 | Area | Checked against | Correction |
 |---|---|---|
-| Target groups | Live FieldPro My HCOs / My HCPs and Explore HCOs / Explore HCPs | Stacked full-width groups; all four labels remain single-line at 320px. Switching groups preserves scroll position |
+| Target groups | Live FieldPro My HCOs / My HCPs and Explore HCOs / Explore HCPs | My targets / Explore followed by HCO / HCP tabs, shared by list and map; no duplicate search or toolbar |
 | Target rows | FieldPro metric meanings and supplied screenshot | Six HCO measures retained in two readable columns; sentence-case period labels; less repeated explanatory text; chevron separated from account name |
-| Map controls | Live FieldPro nearby/type/geography controls | Dedicated rows for nearby toggle, origin/radius and type/export. No run-together Type/Export text. Approximate distance appears for nearby/replacement results |
+| Map controls | Live FieldPro nearby/type/geography controls | Nearby/origin controls plus one filter/export set; type/sort options in the shared filter sheet. Approximate distance appears for nearby/replacement results |
 | Route | Field's ordered facility stops and visit loop | No stage stepper. Stable Route label. Reordered facility visits start at the correct first HCP. Continue visits preserves the current planned HCP |
 | Visit | Field run sheet, pre-read tabs and three source actions | Same Log note / Leakage report / Book appointment actions; run sheet expands inline. Next progresses within a facility before the next facility; back respects skipped/cancelled calls |
 | Note/preparation/profile | Field logging + dev contextual Ask | Save preserves the selected pre-read tab; full profile returns to the same HCP; typed drafts are preserved. A draft confirmation appears only when moving on with actual unsaved text |
