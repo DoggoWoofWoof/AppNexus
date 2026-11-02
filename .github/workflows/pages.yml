@@ -1,5 +1,5 @@
 # Publishes two previews to GitHub Pages on every push to main or dev:
-#   /           main: the prototype (demo/) and the app's web build (app/)
+#   /           main: the field app design (design/), the older prototype (demo/) and the app's web build (app/)
 #   /dev/       dev: the same, for work in progress
 name: Pages
 on:

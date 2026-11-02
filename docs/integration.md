@@ -29,6 +29,9 @@ The app needs the services below. Several already exist in the Field backend tha
 | App need | Status |
 | --- | --- |
 | Rep's book: assigned people and accounts, with signals | Exists for the website. Needs a compact mobile response. |
+| One set of filters for the target list and the opportunity map: near a place (start point and radius), state and city, and account type | **To check.** The design gives Targets the map's filters. When wiring the endpoints, check how many of them both endpoints can share. If the target list can't filter by distance, drop the radius from Targets. |
+| Each customer account's setup: Record on or off, topics, meeting types and extra fields (see the [field app design](../design/)) | **To check.** Insights keeps this in the web client, keyed by email domain. The app should get it from the server, per person where it differs: Kura MSLs get the KOMET topic list, and Stemline's view-only users can't add insights. Third Party meetings need Insights' vendor fields. |
+| Recording a meeting on the phone | **Gap.** Recording has to keep going when the screen locks or the rep switches apps, and the audio has to stay on the phone until it can upload. |
 | HCP and HCO profile: identity, affiliations, volumes, referrals, network, people | Largely exists, spread across several website calls. One profile call per entity would suit mobile better. |
 | Leakage for an account and its top destinations | Exists |
 | Account and HCP briefs | Exists |
