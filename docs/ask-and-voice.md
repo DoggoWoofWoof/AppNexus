@@ -1,26 +1,20 @@
 # Ask and voice
 
-## What is in the prototype
+How Ask should take questions in the phone app. A rep can ask in three ways:
 
-**Ask** is the centre tab, and a question typed into Targets search offers to go to Ask. A rep can ask in three ways:
-
-- **Typing.** Questions about their own book: "What has declined?", "Which accounts are leaking the most?", "Brief me on Mount Sinai West", "What's overdue?".
+- **Typing** the question.
 - **Push-to-talk.** Tap the mic, speak, pause. The words appear as they are heard, and the question is sent when the rep stops.
-- **Hands-free.** The app reads each answer aloud, then listens again, until the rep says "stop" or turns hands-free off. This is the free-flowing, Gemini Live-style feel, built without a realtime backend.
+- **Hands-free.** The app reads each answer aloud, then listens again, until the rep says "stop" or turns hands-free off.
 
-Every answer has the same shape. That makes it quick to read, and it is the same card a live voice mode would fill:
+Every answer has the same shape, so it is quick to read, and it is the same card a live voice mode would fill:
 
 1. **One sentence** that answers the question.
-2. **What it covers**, for example "Patients who left the system · Last 12 months · Sample data".
-3. **The ranked figures** behind it. Each row opens the profile, and people can be added straight to the plan.
-4. **Do this:** one next step, such as opening the person to see, opening the leakage view, or reviewing the plan. The person can be added to the plan from the same spot.
+2. **What it covers**, for example "Insights from the last 90 days".
+3. **The figures or quotes** behind it. Each row opens the person, and people can be added to the day from the same spot.
+4. **Do this:** one next step.
 5. **Ask next:** two or three follow-up questions.
 
-Follow-ups keep the thread. After "Brief me on Dr. Maya Patel", the question "Where does she refer?" is about the same person. A new territory-wide question, such as "What has declined?", starts fresh.
-
-In the prototype, answers are worked out on the device from sample figures. When the browser has no speech recognition, or the mic is blocked, the app says so. It then offers **Try a sample voice question**, which plays a clearly labelled simulated question.
-
-**Speak** in **Log visit** uses the same speech input for the note. The words appear in the note as they are heard, the rep can edit them before saving, and the saved record is marked as spoken. Only the text is kept; no audio is stored. Without speech recognition it fills a labelled sample note instead.
+Follow-ups keep the thread: a question about "her" after a brief on one doctor is about the same doctor. A new territory-wide question starts fresh.
 
 ## Recommendation
 
@@ -74,7 +68,7 @@ The app side is the same either way: tools, cards and confirmations.
 
 | Piece | How |
 | --- | --- |
-| Speech to text (push-to-talk) | Native speech recognition through an Expo module. The prototype's `voice.js` mirrors its start, stop and result events. |
+| Speech to text (push-to-talk) | Native speech recognition through an Expo module |
 | Read aloud | `expo-speech` |
 | Live mode audio | WebRTC (OpenAI) or a WebSocket with raw mic audio (Gemini). Both need a development build, not Expo Go. |
 | Answer cards | One `AnswerCard` component, used by typed, push-to-talk and Live answers alike |

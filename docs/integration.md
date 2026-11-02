@@ -1,26 +1,21 @@
 # Integration plan
 
-The prototype is intentionally plain web code, so it can be reviewed in a browser by anyone. The production app is **React Native with Expo**, in [mobile/](../mobile/README.md). This page maps one to the other.
+The [field app design](../design/) is one HTML page that anyone can open in a browser. The production app will be **React Native with Expo**. This page covers the stack, the data services it needs and the build order.
 
 ## App stack
 
-| Concern | Prototype | React Native app |
-| --- | --- | --- |
-| Screens and navigation | `screens/*.js`, with a stack for each tab in `nav.js` | Expo Router. Tabs, with a stack inside each tab, keep Back working the same way. |
-| UI components | `ui.js` helpers and CSS | NativeWind (Tailwind classes) plus react-native-reusables, the React Native port of shadcn/ui |
-| Design tokens | `css/tokens.css` | NativeWind theme with the same colours, radii and type scale, in light and dark |
-| Icons | Lucide SVGs inlined in `icons.js` | `lucide-react-native` (same names) |
-| Data loading, cache, retry | `api.js`, with Normal, Slow, Offline and Error modes | TanStack Query: cached results, retry, and an offline-first query cache |
-| On-device data (plans, notes, drafts) | `localStorage` through `store.js` | SQLite (`expo-sqlite`) or MMKV, with a sync queue |
-| Maps | Static SVG outline plus straight-line distance | `react-native-maps`, with road times from a routing service |
-| Voice | Web Speech API in `voice.js` | Native speech recognition, `expo-speech`, and later a realtime session (see [ask-and-voice.md](ask-and-voice.md)) |
-| Large text | `--ts` scale and em breakpoints | System font scale (Dynamic Type), tested at 200% |
-| Tests | `node --test` on logic and rendering | Jest and React Native Testing Library for logic and screens; Maestro for flows |
-
-These parts carry across almost unchanged:
-
-- the pure logic modules: `plan.js`, `search.js`, `ask.js` (until the service replaces it), and the date and number helpers in `format.js`;
-- the action names in `actions.js`, which become the app's event handlers.
+| Concern | React Native app |
+| --- | --- |
+| Screens and navigation | Expo Router. Tabs, with a stack inside each tab, so Back returns to where the rep was. |
+| UI components | NativeWind (Tailwind classes) plus react-native-reusables, the React Native port of shadcn/ui |
+| Design tokens | NativeWind theme with the design's colours, radii and type scale, in light and dark |
+| Icons | `lucide-react-native` |
+| Data loading, cache, retry | TanStack Query: cached results, retry, and an offline-first query cache |
+| On-device data (notes, drafts, recordings waiting to upload) | SQLite (`expo-sqlite`) or MMKV, with a sync queue |
+| Maps | `react-native-maps`, with road times from a routing service |
+| Recording and voice | Audio recording that keeps going when the screen locks, native speech recognition, `expo-speech`, and later a realtime session (see [ask-and-voice.md](ask-and-voice.md)) |
+| Large text | System font scale (Dynamic Type), tested at 200% |
+| Tests | Jest and React Native Testing Library for logic and screens; Maestro for flows |
 
 ## Data services
 
@@ -40,7 +35,7 @@ The app needs the services below. Several already exist in the Field backend tha
 | Follow-ups with due dates | **Gap.** Today they would live only on the device. |
 | A saved day plan (timed and flexible stops, cancellations) | **Gap.** There is no durable day-plan contract yet. |
 | Road routing and drive times | **Gap.** Needs a routing provider, such as Mapbox, Google Routes or an OSM-based service. |
-| CRM sync | **Not connected.** It is labelled "Coming later" in the app. |
+| CRM sync | **Not connected.** |
 
 ## Design system
 
@@ -57,9 +52,9 @@ Lorick's tool suggestions, and where each fits:
 
 ## Suggested build order
 
-1. **Shell.** Expo app with the five tabs, theme tokens, large-text support and sign-in. Everything but sign-in is in [mobile/](../mobile/README.md), with each tab and profile showing the sample data.
+1. **Shell.** Expo app with the design's tabs and centre button, theme tokens, large-text support, sign-in, and each account's setup from the server.
 2. **Book and profiles.** Targets search, then HCP and HCO profiles on live data, with loading, empty, offline and error states.
 3. **Planning.** Multi-select, plan review and a saved day plan. This depends on the day-plan contract above.
-4. **Activity.** Log visit, notes and follow-ups, kept offline and synced when back online.
+4. **Record and Activity.** Recording, insights, notes and follow-ups, kept offline and synced when back online.
 5. **Ask.** Typed and push-to-talk, on the Ask service. Then hands-free.
 6. **Live voice mode,** once the Ask service is fast enough.
