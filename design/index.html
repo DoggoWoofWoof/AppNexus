@@ -61,7 +61,7 @@ input,textarea,button{font-family:inherit}
         <div>Each account's setup (Record on or off, topics, meeting types, extra fields) should come from the server. Insights keeps it in the web client today, keyed by email domain.</div>
         <div>Some of it is per person, not per account: Kura MSLs get the KOMET topic list, and Stemline has view-only users, who should not see the centre button.</div>
         <div>Recording on a phone has to keep going when the screen locks or the rep switches apps, and the audio has to wait on the phone until there is signal to upload it.</div>
-        <div>Third Party meetings (Stemline, Targeted Oncology) need the vendor fields from Insights, which are not drawn here.</div>
+        <div>Relevance is the app's one score. The server has to return its parts per person: follow-ups due, patients leaving, volume for the chosen code groups, last contact and drive time.</div>
       </div>
     </div>
   </div>
@@ -79,95 +79,6 @@ input,textarea,button{font-family:inherit}
       </div>
 
       <div ref="{{ scrollRef }}" style="position:absolute;top:50px;left:0;right:0;bottom:0;overflow-y:auto;">
-
-        <sc-if value="{{ isToday }}" hint-placeholder-val="{{ true }}">
-          <div style="padding:6px 18px 0;display:flex;flex-direction:column;gap:14px;">
-            <div style="display:flex;align-items:flex-end;gap:10px;">
-              <div style="flex:1;">
-                <div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.09em;color:#7A839A;">THU 29 OCT · {{ territoryUpper }}</div>
-                <div style="font-family:'Source Serif 4',Georgia,serif;font-size:30px;line-height:1.1;letter-spacing:-.02em;margin-top:5px;">Good morning, Alex</div>
-              </div>
-              <button onClick="{{ openMe }}" style="width:38px;height:38px;border-radius:50%;background:#DCE3F5;color:#22409F;border:0;font-size:12.5px;font-weight:700;cursor:pointer;">AJ</button>
-            </div>
-
-            <div style="position:relative;border-radius:22px;padding:18px;color:#fff;overflow:hidden;background:radial-gradient(120% 90% at 16% 0%,#2F59DE 0%,#22409F 52%,#16276A 100%);">
-              <div style="position:absolute;right:-70px;top:-50px;width:210px;height:210px;border-radius:50%;border:1px solid #ffffff26;"></div>
-              <div style="position:absolute;right:-20px;top:60px;width:140px;height:140px;border-radius:50%;border:1px solid #ffffff1c;"></div>
-              <div style="position:relative;display:flex;align-items:center;justify-content:space-between;">
-                <span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.09em;color:#C9D6F7;">TODAY'S ROUTE</span>
-                <span style="font-size:12px;color:#D4DEF7;">{{ routeDoneLabel }}</span>
-              </div>
-              <div style="position:relative;font-family:'Source Serif 4',Georgia,serif;font-size:28px;line-height:1.1;margin-top:8px;letter-spacing:-.015em;">{{ routeHeadline }}</div>
-              <div style="position:relative;display:flex;gap:4px;margin-top:14px;">
-                <sc-for list="{{ runSegs }}" as="sg" hint-placeholder-count="3">
-                  <span style="flex:1;height:5px;border-radius:3px;background:{{ sg.heroBg }};"></span>
-                </sc-for>
-              </div>
-              <sc-if value="{{ hasRoute }}" hint-placeholder-val="{{ true }}">
-                <div style="position:relative;display:flex;align-items:center;gap:11px;margin-top:15px;padding:11px 12px;border-radius:14px;background:#ffffff17;border:1px solid #ffffff24;">
-                  <span style="width:36px;height:36px;border-radius:50%;background:#fff;color:#22409F;display:grid;place-items:center;font-size:12px;font-weight:700;flex:0 0 36px;">{{ nextIni }}</span>
-                  <span style="flex:1;min-width:0;">
-                    <span style="display:block;font-size:11px;color:#C9D6F7;">Next · {{ nextTime }}</span>
-                    <span style="display:block;font-size:14.5px;font-weight:650;margin-top:1px;">{{ nextName }}</span>
-                    <span style="display:block;font-size:12px;color:#D4DEF7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ nextHco }}</span>
-                  </span>
-                </div>
-              </sc-if>
-              <div style="position:relative;display:flex;gap:8px;margin-top:14px;">
-                <button onClick="{{ heroPrimary }}" style="flex:1;padding:13px;border:0;border-radius:13px;background:#fff;color:#22409F;font-size:14.5px;font-weight:700;cursor:pointer;">{{ heroPrimaryLabel }}</button>
-                <button onClick="{{ openRoute }}" style="padding:13px 16px;border:1px solid #ffffff40;border-radius:13px;background:transparent;color:#fff;font-size:14px;font-weight:650;cursor:pointer;">Plan</button>
-              </div>
-            </div>
-
-            <div>
-              <div style="display:flex;align-items:baseline;justify-content:space-between;padding:0 2px;">
-                <span style="font-size:17px;font-weight:700;letter-spacing:-.01em;">Needs attention</span>
-                <button onClick="{{ toActivityFu }}" style="border:0;background:none;color:#2447C4;font-size:13px;font-weight:600;cursor:pointer;padding:0;">See all</button>
-              </div>
-              <div style="margin-top:9px;background:#fff;border:1px solid #E1E6F0;border-radius:16px;overflow:hidden;">
-                <sc-for list="{{ fuOpenList }}" as="f" hint-placeholder-count="2">
-                  <div style="display:flex;align-items:center;gap:11px;padding:12px 14px;border-bottom:1px solid #F0F3F8;">
-                    <button onClick="{{ f.toggle }}" style="width:24px;height:24px;flex:0 0 24px;border-radius:50%;border:2px solid #B9C3D8;background:#fff;cursor:pointer;padding:0;"></button>
-                    <button onClick="{{ f.open }}" style="flex:1;min-width:0;text-align:left;border:0;background:none;padding:0;cursor:pointer;">
-                      <span style="display:block;font-size:14px;font-weight:600;color:#0B1220;line-height:1.3;">{{ f.t }}</span>
-                      <span style="display:block;font-size:12px;color:#5B6478;margin-top:2px;">{{ f.whoName }}</span>
-                    </button>
-                    <span style="font-size:11.5px;font-weight:650;padding:4px 8px;border-radius:7px;background:{{ f.dueBg }};color:{{ f.dueFg }};white-space:nowrap;">{{ f.due }}</span>
-                  </div>
-                </sc-for>
-                <sc-if value="{{ noFuOpen }}" hint-placeholder-val="{{ false }}">
-                  <div style="padding:16px 14px;font-size:13px;color:#5B6478;">All follow-ups done. Nice.</div>
-                </sc-if>
-              </div>
-            </div>
-
-            <button onClick="{{ toTargets }}" style="text-align:left;background:#fff;border:1px solid #E1E6F0;border-radius:16px;padding:15px;cursor:pointer;color:#0B1220;" style-hover="border-color:#2447C4;">
-              <span style="display:flex;align-items:center;justify-content:space-between;">
-                <span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.09em;color:#7A839A;">TERRITORY · {{ territoryUpper }}</span>
-                <span style="color:#C3CAD8;font-size:16px;">›</span>
-              </span>
-              <span style="display:flex;align-items:baseline;gap:8px;margin-top:8px;">
-                <span style="font-family:'Source Serif 4',Georgia,serif;font-size:32px;line-height:1;color:#A94D1B;">$9.5M</span>
-                <span style="font-size:12.5px;color:#5B6478;">leaking since 2022</span>
-              </span>
-              <span style="display:grid;grid-template-columns:repeat(3,1fr);margin-top:14px;padding-top:12px;border-top:1px solid #F0F3F8;">
-                <span><span style="display:block;font-family:'Source Serif 4',Georgia,serif;font-size:19px;">2</span><span style="display:block;font-size:11px;color:#7A839A;margin-top:2px;">Accounts</span></span>
-                <span><span style="display:block;font-family:'Source Serif 4',Georgia,serif;font-size:19px;">3</span><span style="display:block;font-size:11px;color:#7A839A;margin-top:2px;">Target HCPs</span></span>
-                <span><span style="display:block;font-family:'Source Serif 4',Georgia,serif;font-size:19px;color:#1C7A4E;">+8.7%</span><span style="display:block;font-size:11px;color:#7A839A;margin-top:2px;">Volume YoY</span></span>
-              </span>
-            </button>
-
-            <div style="background:#EAF1FC;border:1px solid #D2DFF7;border-radius:16px;padding:14px;">
-              <div style="display:flex;align-items:center;gap:7px;"><span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.08em;color:#fff;background:#2447C4;padding:3px 7px;border-radius:6px;">ASK SUGGESTS</span></div>
-              <div style="font-size:14.5px;font-weight:650;color:#0B1220;margin-top:10px;line-height:1.4;">Dr. Jun Park is your highest leakage risk — and his follow-up is overdue.</div>
-              <div style="display:flex;gap:8px;margin-top:12px;">
-                <button onClick="{{ suggestAdd }}" style="flex:1;padding:11px;border:0;border-radius:11px;background:#2447C4;color:#fff;font-size:13px;font-weight:700;cursor:pointer;">{{ suggestAddLabel }}</button>
-                <button onClick="{{ openJun }}" style="flex:1;padding:11px;border:1px solid #C9D6F2;border-radius:11px;background:#fff;color:#22409F;font-size:13px;font-weight:650;cursor:pointer;">Open profile</button>
-              </div>
-            </div>
-            <div style="height:110px;"></div>
-          </div>
-        </sc-if>
 
         <sc-if value="{{ isTargets }}" hint-placeholder-val="{{ false }}">
           <div style="padding:6px 18px 0;display:flex;flex-direction:column;gap:12px;">
@@ -206,7 +117,7 @@ input,textarea,button{font-family:inherit}
                 <button onClick="{{ openArea }}" style="flex:0 0 auto;display:flex;align-items:center;gap:5px;padding:8px 12px;border-radius:999px;border:1px solid #D7DEEC;background:#fff;color:#0B1220;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#2447C4" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"></path><circle cx="12" cy="9.5" r="2.5"></circle></svg>{{ areaChip }} ▾</button>
                 <sc-if value="{{ showTypeChip }}" hint-placeholder-val="{{ true }}"><button onClick="{{ openArea }}" style="flex:0 0 auto;padding:8px 12px;border-radius:999px;border:1px solid #D7DEEC;background:#fff;color:#0B1220;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;"><span style="color:#7A839A;">Type</span> {{ omType }} ▾</button></sc-if>
                 <button onClick="{{ openFilter }}" style="flex:0 0 auto;padding:8px 12px;border-radius:999px;border:1px solid #D7DEEC;background:#fff;color:#0B1220;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;"><span style="color:#7A839A;">Specialty</span> {{ spec }} ▾</button>
-                <button onClick="{{ openFilter }}" style="flex:0 0 auto;padding:8px 12px;border-radius:999px;border:1px solid #D7DEEC;background:#fff;color:#0B1220;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;">5 groups · 123 codes</button>
+                <button onClick="{{ openFilter }}" style="flex:0 0 auto;padding:8px 12px;border-radius:999px;border:1px solid #D7DEEC;background:#fff;color:#0B1220;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;">{{ groupsChip }}</button>
               </sc-if>
               <button onClick="{{ openFilter }}" style="flex:0 0 auto;padding:8px 12px;border-radius:999px;border:1px solid #D7DEEC;background:#fff;color:#0B1220;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;"><span style="color:#7A839A;">Sort</span> {{ sortNow }} ▾</button>
             </div>
@@ -268,7 +179,7 @@ input,textarea,button{font-family:inherit}
                 </div>
               </div>
               <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:12px;">
-                <span style="font-size:11.5px;font-weight:650;padding:4px 8px;border-radius:7px;background:#E7ECFA;color:#22409F;">Target · {{ territory }}</span>
+                <span style="font-size:11.5px;font-weight:650;padding:4px 8px;border-radius:7px;background:{{ hTagBg }};color:{{ hTagFg }};">{{ hTag }}</span>
                 <span style="font-size:11.5px;font-weight:600;padding:4px 8px;border-radius:7px;background:#EEF1F7;color:#3C4557;">{{ spec }} · 2025</span>
               </div>
             </div>
@@ -395,15 +306,18 @@ input,textarea,button{font-family:inherit}
                   </div>
                 </sc-for>
                 <sc-for list="{{ pVisits }}" as="v" hint-placeholder-count="1">
-                  <div style="background:#fff;border:1px solid #E1E6F0;border-radius:14px;padding:13px 14px;">
-                    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;"><span style="font-size:12px;color:#5B6478;">{{ v.date }} · {{ v.type }}</span><sc-if value="{{ v.hasSrc }}" hint-placeholder-val="{{ false }}"><span style="margin-left:auto;font-size:11px;font-weight:650;padding:3px 7px;border-radius:6px;background:#E7ECFA;color:#22409F;">{{ v.srcLabel }}</span></sc-if><span style="font-size:11px;font-weight:650;padding:3px 7px;border-radius:6px;background:#E3F5EC;color:#1C7A4E;">Met</span></div>
-                    <div style="font-size:14.5px;font-weight:650;margin-top:6px;">{{ v.topic }}</div>
-                    <div style="font-size:13px;color:#3C4557;line-height:1.5;margin-top:3px;">{{ v.note }}</div>
-                    <sc-if value="{{ v.hasChips }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;"><sc-for list="{{ v.chips }}" as="c" hint-placeholder-count="2"><span style="font-size:11px;font-weight:600;padding:3px 7px;border-radius:6px;background:#EEF1F7;color:#3C4557;">{{ c }}</span></sc-for></div></sc-if>
-                  </div>
+                  <button onClick="{{ v.open }}" style="display:block;width:100%;text-align:left;background:#fff;border:1px solid #E1E6F0;border-radius:14px;padding:13px 14px;cursor:pointer;color:#0B1220;">
+                    <span style="display:flex;justify-content:space-between;align-items:center;gap:8px;"><span style="font-size:12px;color:#5B6478;">{{ v.date }} · {{ v.type }}</span><sc-if value="{{ v.hasSrc }}" hint-placeholder-val="{{ false }}"><span style="margin-left:auto;font-size:11px;font-weight:650;padding:3px 7px;border-radius:6px;background:#E7ECFA;color:#22409F;">{{ v.srcLabel }}</span></sc-if><span style="font-size:11px;font-weight:650;padding:3px 7px;border-radius:6px;background:#E3F5EC;color:#1C7A4E;">Met</span></span>
+                    <span style="display:block;font-size:14.5px;font-weight:650;margin-top:6px;">{{ v.topic }}</span>
+                    <span style="display:block;font-size:13px;color:#3C4557;line-height:1.5;margin-top:3px;">{{ v.note }}</span>
+                    <sc-if value="{{ v.hasChips }}" hint-placeholder-val="{{ false }}"><span style="display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;"><sc-for list="{{ v.chips }}" as="c" hint-placeholder-count="2"><span style="font-size:11px;font-weight:600;padding:3px 7px;border-radius:6px;background:#EEF1F7;color:#3C4557;">{{ c }}</span></sc-for></span></sc-if>
+                  </button>
                 </sc-for>
                 <sc-if value="{{ pNoVisits }}" hint-placeholder-val="{{ false }}"><div style="font-size:13px;color:#5B6478;padding:8px 2px;">No visits logged yet.</div></sc-if>
-                <button onClick="{{ pLog }}" style="padding:13px;border:1px dashed #B9C3D8;border-radius:14px;background:#EDF1FB;color:#22409F;font-size:13.5px;font-weight:700;cursor:pointer;">{{ pLogLabel }}</button>
+                <div style="display:flex;gap:8px;">
+                  <button onClick="{{ pLog }}" style="flex:1;padding:13px;border:1px dashed #B9C3D8;border-radius:14px;background:#EDF1FB;color:#22409F;font-size:13.5px;font-weight:700;cursor:pointer;">{{ pLogLabel }}</button>
+                  <button onClick="{{ pFu }}" style="flex:1;padding:13px;border:1px dashed #B9C3D8;border-radius:14px;background:#EDF1FB;color:#22409F;font-size:13.5px;font-weight:700;cursor:pointer;">＋ Follow-up</button>
+                </div>
               </div>
             </sc-if>
             <div style="height:170px;"></div>
@@ -414,12 +328,17 @@ input,textarea,button{font-family:inherit}
           <div style="display:flex;flex-direction:column;">
             <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 14px 6px;">
               <button onClick="{{ back }}" style="display:flex;align-items:center;gap:4px;border:0;background:none;color:#2447C4;font-size:15px;font-weight:600;cursor:pointer;padding:6px 4px;"><span style="font-size:22px;line-height:1;">‹</span>{{ backLabel }}</button>
-              <span style="font-size:12.5px;font-weight:650;padding:7px 11px;border-radius:999px;background:#fff;border:1px solid #D7DEEC;">Thu 29 Oct</span>
+              <span style="font-size:12.5px;font-weight:650;padding:7px 11px;border-radius:999px;background:#fff;border:1px solid #D7DEEC;">{{ routeDate }}</span>
             </div>
             <div style="padding:2px 18px 0;">
               <div style="font-family:'Source Serif 4',Georgia,serif;font-size:30px;line-height:1.1;letter-spacing:-.02em;">Your route</div>
-              <div style="font-size:13px;color:#5B6478;margin-top:4px;">{{ routeHeadline }} · from {{ territory }}</div>
+              <div style="font-size:13px;color:#5B6478;margin-top:4px;">{{ viewHeadline }} · from {{ territory }}</div>
             </div>
+            <sc-if value="{{ hasTomorrow }}" hint-placeholder-val="{{ false }}">
+              <div style="margin:12px 18px 0;display:flex;padding:3px;border-radius:12px;background:#E6EAF2;">
+                <sc-for list="{{ daySegs }}" as="o" hint-placeholder-count="2"><button onClick="{{ o.go }}" style="flex:1;padding:8px;border:0;border-radius:10px;background:{{ o.bg }};color:{{ o.fg }};box-shadow:{{ o.sh }};font-size:13px;font-weight:650;cursor:pointer;">{{ o.label }}</button></sc-for>
+              </div>
+            </sc-if>
             <div style="margin:14px 18px 0;height:150px;border-radius:18px;position:relative;overflow:hidden;border:1px solid #DDE3EC;background-color:#EEF1F4;background-image:repeating-linear-gradient(28deg,transparent 0 22px,#E1E6EE 22px 23.5px),repeating-linear-gradient(118deg,transparent 0 30px,#E1E6EE 30px 31.5px);">
               <span style="position:absolute;left:-20px;top:0;bottom:0;width:70px;background:#D8E4F1;transform:skewX(-14deg);"></span>
               <span style="position:absolute;left:52%;top:18%;width:60px;height:110px;background:#DCE9D6;border-radius:6px;transform:rotate(28deg);"></span>
@@ -451,8 +370,8 @@ input,textarea,button{font-family:inherit}
               <sc-if value="{{ noRoute }}" hint-placeholder-val="{{ false }}">
                 <div style="padding:24px 16px;text-align:center;background:#fff;border:1px dashed #C9D2E4;border-radius:16px;font-size:13.5px;color:#5B6478;">No visits yet. Add doctors from Targets.</div>
               </sc-if>
-              <button onClick="{{ toTargets }}" style="margin-top:2px;padding:13px;border:1px dashed #B9C3D8;border-radius:14px;background:#EDF1FB;color:#22409F;font-size:13.5px;font-weight:700;cursor:pointer;">＋ Add visits from Targets</button>
-              <sc-if value="{{ hasRoute }}" hint-placeholder-val="{{ true }}">
+              <sc-if value="{{ routeIsToday }}" hint-placeholder-val="{{ true }}"><button onClick="{{ toTargets }}" style="margin-top:2px;width:100%;padding:13px;border:1px dashed #B9C3D8;border-radius:14px;background:#EDF1FB;color:#22409F;font-size:13.5px;font-weight:700;cursor:pointer;">＋ Add visits from Targets</button></sc-if>
+              <sc-if value="{{ canStart }}" hint-placeholder-val="{{ true }}">
                 <button onClick="{{ startRun }}" style="margin-top:12px;padding:15px;border:0;border-radius:14px;background:#2447C4;color:#fff;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 10px 22px -10px rgba(36,71,196,.8);">Start route · {{ routeCountLabel }}</button>
               </sc-if>
             </div>
@@ -484,11 +403,21 @@ input,textarea,button{font-family:inherit}
                 <div style="font-size:13px;color:#5B6478;margin-top:3px;">{{ rc.sub }}</div>
               </div>
             </div>
-            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:14px 18px 0;">
-              <button onClick="{{ runLog }}" style="padding:13px 6px;border:1px solid #D7DEEC;border-radius:14px;background:#fff;font-size:13px;font-weight:650;cursor:pointer;color:#0B1220;display:flex;flex-direction:column;align-items:center;gap:5px;"><span style="color:#2447C4;font-size:16px;">✎</span>{{ runLogBtn }}</button>
-              <button onClick="{{ runCall }}" style="padding:13px 6px;border:1px solid #D7DEEC;border-radius:14px;background:#fff;font-size:13px;font-weight:650;cursor:pointer;color:#0B1220;display:flex;flex-direction:column;align-items:center;gap:5px;"><span style="color:#2447C4;font-size:16px;">☎</span>Contact</button>
-              <button onClick="{{ runProfile }}" style="padding:13px 6px;border:1px solid #D7DEEC;border-radius:14px;background:#fff;font-size:13px;font-weight:650;cursor:pointer;color:#0B1220;display:flex;flex-direction:column;align-items:center;gap:5px;"><span style="color:#2447C4;font-size:16px;">◉</span>Profile</button>
-            </div>
+            <sc-if value="{{ runHasRecord }}" hint-placeholder-val="{{ true }}">
+              <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:14px 18px 0;">
+                <button onClick="{{ runRecord }}" style="padding:13px 6px;border:1px solid #D7DEEC;border-radius:14px;background:#fff;font-size:13px;font-weight:650;cursor:pointer;color:#0B1220;display:flex;flex-direction:column;align-items:center;gap:5px;"><span style="color:#DD6134;font-size:16px;">●</span>Record</button>
+                <button onClick="{{ runLog }}" style="padding:13px 6px;border:1px solid #D7DEEC;border-radius:14px;background:#fff;font-size:13px;font-weight:650;cursor:pointer;color:#0B1220;display:flex;flex-direction:column;align-items:center;gap:5px;"><span style="color:#2447C4;font-size:16px;">✎</span>Insight</button>
+                <button onClick="{{ runCall }}" style="padding:13px 6px;border:1px solid #D7DEEC;border-radius:14px;background:#fff;font-size:13px;font-weight:650;cursor:pointer;color:#0B1220;display:flex;flex-direction:column;align-items:center;gap:5px;"><span style="color:#2447C4;font-size:16px;">☎</span>Contact</button>
+                <button onClick="{{ runProfile }}" style="padding:13px 6px;border:1px solid #D7DEEC;border-radius:14px;background:#fff;font-size:13px;font-weight:650;cursor:pointer;color:#0B1220;display:flex;flex-direction:column;align-items:center;gap:5px;"><span style="color:#2447C4;font-size:16px;">◉</span>Profile</button>
+              </div>
+            </sc-if>
+            <sc-if value="{{ runNoRecord }}" hint-placeholder-val="{{ false }}">
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:14px 18px 0;">
+                <button onClick="{{ runLog }}" style="padding:13px 6px;border:1px solid #D7DEEC;border-radius:14px;background:#fff;font-size:13px;font-weight:650;cursor:pointer;color:#0B1220;display:flex;flex-direction:column;align-items:center;gap:5px;"><span style="color:#2447C4;font-size:16px;">✎</span>{{ runLogBtn }}</button>
+                <button onClick="{{ runCall }}" style="padding:13px 6px;border:1px solid #D7DEEC;border-radius:14px;background:#fff;font-size:13px;font-weight:650;cursor:pointer;color:#0B1220;display:flex;flex-direction:column;align-items:center;gap:5px;"><span style="color:#2447C4;font-size:16px;">☎</span>Contact</button>
+                <button onClick="{{ runProfile }}" style="padding:13px 6px;border:1px solid #D7DEEC;border-radius:14px;background:#fff;font-size:13px;font-weight:650;cursor:pointer;color:#0B1220;display:flex;flex-direction:column;align-items:center;gap:5px;"><span style="color:#2447C4;font-size:16px;">◉</span>Profile</button>
+              </div>
+            </sc-if>
             <div style="margin:12px 18px 0;background:#fff;border:1px solid #D9E2F6;border-radius:16px;overflow:hidden;">
               <div style="padding:14px 15px;background:linear-gradient(180deg,#F1F5FE 0%,#FFFFFF 100%);">
                 <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.08em;color:#7A839A;">OBJECTIVE FOR THIS VISIT</div>
@@ -522,6 +451,7 @@ input,textarea,button{font-family:inherit}
                   <span style="width:24px;height:24px;border-radius:50%;background:{{ r.dotBg }};color:#fff;display:grid;place-items:center;font-size:11px;font-weight:700;">{{ r.mark }}</span>
                   <span style="flex:1;min-width:0;"><span style="display:block;font-size:14px;font-weight:650;">{{ r.name }}</span><span style="display:block;font-size:12px;color:#5B6478;">{{ r.status }}</span></span>
                   <sc-if value="{{ r.canContinue }}" hint-placeholder-val="{{ false }}"><button onClick="{{ r.go }}" style="padding:8px 11px;border:1px solid #D7DEEC;border-radius:10px;background:#fff;font-size:12.5px;font-weight:650;cursor:pointer;color:#22409F;">Continue</button></sc-if>
+                  <sc-if value="{{ r.canLog }}" hint-placeholder-val="{{ false }}"><button onClick="{{ r.log }}" style="padding:8px 11px;border:1px solid #D7DEEC;border-radius:10px;background:#fff;font-size:12.5px;font-weight:650;cursor:pointer;color:#22409F;">Add insight</button></sc-if>
                 </div>
               </sc-for>
             </div>
@@ -529,7 +459,7 @@ input,textarea,button{font-family:inherit}
               <button onClick="{{ toActivity }}" style="flex:1;padding:13px;border:1px solid #D7DEEC;border-radius:13px;background:#fff;font-size:13.5px;font-weight:650;cursor:pointer;">View activity</button>
               <button onClick="{{ planTomorrow }}" style="flex:1;padding:13px;border:1px solid #D7DEEC;border-radius:13px;background:#fff;font-size:13.5px;font-weight:650;cursor:pointer;">Plan tomorrow</button>
             </div>
-            <button onClick="{{ toToday }}" style="padding:15px;border:0;border-radius:14px;background:#2447C4;color:#fff;font-size:15px;font-weight:700;cursor:pointer;">Back to Targets</button>
+            <button onClick="{{ toTargets }}" style="padding:15px;border:0;border-radius:14px;background:#2447C4;color:#fff;font-size:15px;font-weight:700;cursor:pointer;">Back to Targets</button>
             <div style="height:110px;"></div>
           </div>
         </sc-if>
@@ -580,19 +510,21 @@ input,textarea,button{font-family:inherit}
                     <div style="display:flex;gap:6px;flex-wrap:wrap;"><sc-for list="{{ m.tags }}" as="tg" hint-placeholder-count="2"><span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.05em;color:#3C4557;background:#F0F3F8;padding:4px 8px;border-radius:6px;">{{ tg }}</span></sc-for></div>
                     <div style="font-size:14.5px;line-height:1.55;color:#1B2333;margin-top:9px;">{{ m.a }}</div>
                     <sc-for list="{{ m.rows }}" as="r" hint-placeholder-count="0">
-                      <div style="display:flex;align-items:center;gap:10px;margin-top:10px;padding-top:10px;border-top:1px solid #F0F3F8;">
+                      <div style="display:flex;align-items:center;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid #F0F3F8;">
                         <button onClick="{{ r.open }}" style="flex:1;min-width:0;display:flex;gap:10px;align-items:center;border:0;background:none;padding:0;cursor:pointer;text-align:left;color:#0B1220;">
                           <span style="width:32px;height:32px;flex:0 0 32px;border-radius:50%;background:#FDEDE4;color:#A94D1B;display:grid;place-items:center;font-size:11px;font-weight:700;">{{ r.ini }}</span>
                           <span style="flex:1;min-width:0;"><span style="display:block;font-size:13.5px;font-weight:650;">{{ r.name }}</span><span style="display:block;font-size:11.5px;color:#5B6478;">{{ r.meta }}</span></span>
                         </button>
+                        <sc-if value="{{ r.isDoc }}" hint-placeholder-val="{{ true }}"><span style="display:flex;gap:6px;"><button onClick="{{ r.log }}" style="width:32px;height:32px;border-radius:9px;border:1px solid #D7DEEC;background:#fff;color:#2447C4;font-size:13px;cursor:pointer;padding:0;">✎</button><button onClick="{{ r.fu }}" style="width:32px;height:32px;border-radius:9px;border:1px solid #D7DEEC;background:#fff;color:#2447C4;font-size:13px;cursor:pointer;padding:0;">◷</button></span></sc-if>
                         <button onClick="{{ r.toggle }}" style="padding:7px 10px;border-radius:9px;border:1px solid {{ r.addBd }};background:{{ r.addBg }};color:{{ r.addFg }};font-size:12px;font-weight:700;cursor:pointer;">{{ r.addLabel }}</button>
                       </div>
                     </sc-for>
+                    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;"><sc-for list="{{ m.next }}" as="nx" hint-placeholder-count="2"><button onClick="{{ nx.go }}" style="padding:6px 10px;border-radius:999px;border:1px solid #DCE3F2;background:#fff;font-size:12px;font-weight:600;color:#22409F;cursor:pointer;">✳ {{ nx.q }}</button></sc-for></div>
                   </sc-if>
                 </div>
               </div>
             </sc-for>
-            <div style="height:220px;"></div>
+            <div style="height:190px;"></div>
           </div>
         </sc-if>
 
@@ -657,7 +589,7 @@ input,textarea,button{font-family:inherit}
                         <span style="flex:1;min-width:0;"><span style="display:block;font-size:11.5px;color:#7A839A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ r.meta }}</span><span style="display:block;font-size:14px;font-weight:650;line-height:1.3;margin-top:1px;">{{ r.name }}</span></span>
                         <span style="font-family:'Source Serif 4',Georgia,serif;font-size:17px;">{{ r.value }}</span>
                       </button>
-                      <button onClick="{{ r.pick }}" style="width:38px;height:38px;flex:0 0 38px;border-radius:11px;border:1px solid {{ r.addBd }};background:{{ r.addBg }};color:{{ r.addFg }};font-size:16px;cursor:pointer;">{{ r.addIcon }}</button>
+                      <button onClick="{{ r.toggle }}" style="width:38px;height:38px;flex:0 0 38px;border-radius:11px;border:1px solid {{ r.addBd }};background:{{ r.addBg }};color:{{ r.addFg }};font-size:16px;cursor:pointer;">{{ r.addIcon }}</button>
                     </div>
                   </sc-for>
                 </sc-if>
@@ -673,13 +605,6 @@ input,textarea,button{font-family:inherit}
                 </sc-if>
                 <div style="height:16px;"></div>
               </div>
-              <sc-if value="{{ omHasPicked }}" hint-placeholder-val="{{ false }}">
-                <div style="display:flex;align-items:center;gap:10px;padding:10px 12px 10px 16px;border-top:1px solid #E1E6F0;background:#FAFBFE;">
-                  <span style="flex:1;font-size:13.5px;font-weight:650;">{{ omPickedLabel }}</span>
-                  <button onClick="{{ omClearPicked }}" style="width:34px;height:34px;border-radius:50%;border:0;background:#EEF1F7;color:#5B6478;cursor:pointer;font-size:12px;">✕</button>
-                  <button onClick="{{ omAddTargets }}" style="padding:10px 14px;border:0;border-radius:11px;background:#2447C4;color:#fff;font-size:13px;font-weight:700;cursor:pointer;">Add to targets</button>
-                </div>
-              </sc-if>
             </div>
           </div>
         </sc-if>
@@ -697,10 +622,12 @@ input,textarea,button{font-family:inherit}
             </div>
             <sc-if value="{{ actVisits }}" hint-placeholder-val="{{ true }}">
               <div style="display:flex;flex-direction:column;gap:10px;">
-                <button onClick="{{ continueDraft }}" style="display:flex;align-items:center;gap:11px;padding:12px 14px;border:1px dashed #B9C3D8;border-radius:14px;background:#EDF1FB;cursor:pointer;text-align:left;">
-                  <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.08em;color:#fff;background:#7A839A;padding:3px 7px;border-radius:6px;">DRAFT</span>
-                  <span style="flex:1;font-size:13.5px;font-weight:650;color:#22409F;">Continue note · Dr. Maya Patel</span><span style="color:#8DA0D6;">›</span>
-                </button>
+                <sc-for list="{{ draftRows }}" as="d" hint-placeholder-count="1">
+                  <button onClick="{{ d.open }}" style="display:flex;align-items:center;gap:11px;padding:12px 14px;border:1px dashed #B9C3D8;border-radius:14px;background:#EDF1FB;cursor:pointer;text-align:left;">
+                    <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.08em;color:#fff;background:#7A839A;padding:3px 7px;border-radius:6px;">DRAFT</span>
+                    <span style="flex:1;font-size:13.5px;font-weight:650;color:#22409F;">{{ d.label }}</span><span style="color:#8DA0D6;">›</span>
+                  </button>
+                </sc-for>
                 <sc-for list="{{ visitList }}" as="v" hint-placeholder-count="2">
                   <button onClick="{{ v.open }}" style="display:flex;gap:12px;text-align:left;background:#fff;border:1px solid #E1E6F0;border-radius:16px;padding:13px 14px;cursor:pointer;color:#0B1220;">
                     <span style="width:38px;height:38px;flex:0 0 38px;border-radius:50%;background:#E7ECFA;color:#22409F;display:grid;place-items:center;font-size:11.5px;font-weight:700;">{{ v.ini }}</span>
@@ -728,6 +655,12 @@ input,textarea,button{font-family:inherit}
                 </sc-for>
               </div>
             </sc-if>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isSumTab }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:6px 18px 0;display:flex;align-items:center;gap:8px;">
+            <span style="flex:1;font-family:'Source Serif 4',Georgia,serif;font-size:30px;line-height:1.1;letter-spacing:-.02em;">Summaries</span>
           </div>
         </sc-if>
 
@@ -827,8 +760,8 @@ input,textarea,button{font-family:inherit}
               <sc-if value="{{ tl.ask }}" hint-placeholder-val="{{ true }}"><span style="font-size:10.5px;font-weight:650;">Ask</span></sc-if>
             </button>
           </div>
-          <button onClick="{{ centreGo }}" style="display:flex;flex-direction:column;align-items:center;gap:3px;border:0;background:none;cursor:pointer;color:{{ centreFg }};padding:0;margin-top:-26px;">
-            <span style="width:60px;height:60px;border-radius:50%;background:{{ centreBg }};border:4px solid #F4F6FA;box-shadow:0 10px 22px -8px rgba(36,71,196,.75);display:grid;place-items:center;color:#fff;box-sizing:border-box;">
+          <button onClick="{{ centreGo }}" style="display:flex;flex-direction:column;align-items:center;gap:3px;border:0;background:none;cursor:pointer;color:{{ centreFg }};padding:0;margin-top:-28px;">
+            <span style="width:56px;height:56px;border-radius:50%;background:{{ centreBg }};border:4px solid #F4F6FA;box-shadow:0 10px 22px -8px rgba(36,71,196,.75);display:grid;place-items:center;color:#fff;box-sizing:border-box;">
               <sc-if value="{{ centreIsRecord }}" hint-placeholder-val="{{ true }}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"></path></svg></sc-if>
               <sc-if value="{{ centreIsNote }}" hint-placeholder-val="{{ false }}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg></sc-if>
             </span>
@@ -841,6 +774,12 @@ input,textarea,button{font-family:inherit}
               <sc-if value="{{ tl.map }}" hint-placeholder-val="{{ true }}"><span style="font-size:10.5px;font-weight:650;">Map</span></sc-if>
             </button>
             </sc-if>
+            <sc-if value="{{ showSumTab }}" hint-placeholder-val="{{ false }}">
+            <button onClick="{{ goSummaries }}" style="position:relative;flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;border:0;background:none;cursor:pointer;color:{{ tc.summaries }};padding:4px 0;">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.5h8.5L18 7v13.5H6z"></path><path d="M9 11.5h6M9 15.5h6"></path></svg>
+              <sc-if value="{{ tl.summaries }}" hint-placeholder-val="{{ true }}"><span style="font-size:10.5px;font-weight:650;">Summaries</span></sc-if>
+            </button>
+            </sc-if>
             <button onClick="{{ goActivity }}" style="position:relative;flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;border:0;background:none;cursor:pointer;color:{{ tc.activity }};padding:4px 0;">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"></circle><path d="M12 7.5V12l3 2"></path></svg>
               <sc-if value="{{ hasFuBadge }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:0;left:50%;margin-left:6px;min-width:17px;height:17px;padding:0 4px;box-sizing:border-box;border-radius:9px;background:#DD6134;color:#fff;font-size:10px;font-weight:700;display:grid;place-items:center;border:2px solid #fff;">{{ fuOpenCount }}</span></sc-if>
@@ -851,14 +790,13 @@ input,textarea,button{font-family:inherit}
       </sc-if>
 
       <sc-if value="{{ askBar }}" hint-placeholder-val="{{ false }}">
-        <div style="position:absolute;left:0;right:0;bottom:84px;z-index:20;padding:10px 14px 12px;background:linear-gradient(180deg,rgba(244,246,250,0),#F4F6FA 30%);display:flex;flex-direction:column;align-items:center;gap:10px;">
-          <button onClick="{{ toggleMic }}" style="position:relative;width:64px;height:64px;border-radius:50%;border:0;background:{{ micBg }};color:#fff;cursor:pointer;box-shadow:0 12px 24px -10px rgba(36,71,196,.8);display:grid;place-items:center;">
-            <sc-if value="{{ listening }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;inset:0;border-radius:50%;background:#DD6134;animation:ring 1.2s infinite;"></span></sc-if>
-            <svg style="position:relative;" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"></path></svg>
-          </button>
-          <div style="font-size:12px;color:#5B6478;font-weight:600;">{{ micLabel }}</div>
-          <div style="width:100%;display:flex;align-items:center;gap:8px;padding:5px 5px 5px 14px;border-radius:999px;background:#fff;border:1px solid #D7DEEC;box-sizing:border-box;">
-            <input value="{{ askIn }}" onChange="{{ onAskIn }}" onKeyDown="{{ askKey }}" placeholder="Or type a question" style="flex:1;min-width:0;border:0;outline:0;font-size:14.5px;background:transparent;">
+        <div style="position:absolute;left:0;right:0;bottom:84px;z-index:20;padding:16px 14px 28px;background:linear-gradient(180deg,rgba(244,246,250,0),#F4F6FA 30%);">
+          <div style="width:100%;display:flex;align-items:center;gap:6px;padding:5px 5px 5px 14px;border-radius:999px;background:#fff;border:1px solid #D7DEEC;box-sizing:border-box;">
+            <input value="{{ askIn }}" onChange="{{ onAskIn }}" onKeyDown="{{ askKey }}" placeholder="Type a question" style="flex:1;min-width:0;border:0;outline:0;font-size:14.5px;background:transparent;">
+            <button onClick="{{ toggleMic }}" style="position:relative;width:36px;height:36px;border-radius:50%;border:0;background:{{ micBg }};color:{{ micFg }};cursor:pointer;display:grid;place-items:center;padding:0;">
+              <sc-if value="{{ listening }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;inset:0;border-radius:50%;background:#DD6134;animation:ring 1.2s infinite;"></span></sc-if>
+              <svg style="position:relative;" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"></path></svg>
+            </button>
             <button onClick="{{ askSend }}" style="width:36px;height:36px;border-radius:50%;border:0;background:#2447C4;color:#fff;cursor:pointer;font-size:15px;font-weight:700;">↑</button>
           </div>
         </div>
@@ -878,8 +816,8 @@ input,textarea,button{font-family:inherit}
               <div style="padding:14px 18px 0;display:flex;flex-direction:column;gap:16px;">
                 <div>
                   <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.09em;color:#7A839A;">SORT BY</div>
-                  <div style="display:flex;padding:3px;border-radius:12px;background:#E6EAF2;margin-top:8px;">
-                    <sc-for list="{{ sortOpts }}" as="o" hint-placeholder-count="4"><button onClick="{{ o.go }}" style="flex:1;padding:8px 2px;border:0;border-radius:10px;background:{{ o.bg }};color:{{ o.fg }};box-shadow:{{ o.sh }};font-size:12.5px;font-weight:650;cursor:pointer;">{{ o.label }}</button></sc-for>
+                  <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">
+                    <sc-for list="{{ sortOpts }}" as="o" hint-placeholder-count="5"><button onClick="{{ o.go }}" style="padding:8px 12px;border-radius:999px;border:1px solid {{ o.bd }};background:{{ o.bg }};color:{{ o.fg }};font-size:13px;font-weight:600;cursor:pointer;">{{ o.label }}</button></sc-for>
                   </div>
                 </div>
                 <sc-if value="{{ isFieldPro }}" hint-placeholder-val="{{ true }}">
@@ -891,9 +829,9 @@ input,textarea,button{font-family:inherit}
                   </div>
                 </div>
                 <div>
-                  <div style="display:flex;justify-content:space-between;"><span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.09em;color:#7A839A;">CODE GROUPS</span><span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A839A;">123 · HCPCS / CPT</span></div>
+                  <div style="display:flex;justify-content:space-between;"><span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.09em;color:#7A839A;">CODE GROUPS</span><span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7A839A;">{{ cgCodesLabel }}</span></div>
                   <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:9px;">
-                    <sc-for list="{{ codeGroups }}" as="cg" hint-placeholder-count="5"><span style="padding:6px 10px;border-radius:8px;background:#EEF1F7;font-size:12px;font-weight:600;color:#3C4557;">{{ cg }}</span></sc-for>
+                    <sc-for list="{{ codeGroups }}" as="cg" hint-placeholder-count="5"><button onClick="{{ cg.go }}" style="padding:6px 10px;border-radius:8px;border:1px solid {{ cg.bd }};background:{{ cg.bg }};color:{{ cg.fg }};font-size:12px;font-weight:600;cursor:pointer;">{{ cg.label }}</button></sc-for>
                   </div>
                   <div style="font-size:12px;color:#5B6478;margin-top:8px;">Leakage and market share always use all 123 cohort codes.</div>
                 </div>
@@ -933,7 +871,7 @@ input,textarea,button{font-family:inherit}
             <sc-if value="{{ shEmail }}" hint-placeholder-val="{{ false }}">
               <div style="padding:14px 18px 0;display:flex;flex-direction:column;gap:10px;">
                 <div style="display:flex;gap:10px;font-size:13.5px;padding:0 2px;"><span style="color:#7A839A;width:56px;">To</span><span style="font-weight:600;">{{ ep.email }}</span></div>
-                <div style="display:flex;gap:10px;font-size:13.5px;padding:0 2px;"><span style="color:#7A839A;width:56px;">Subject</span><span style="font-weight:600;">Follow-up · {{ spec }}</span></div>
+                <div style="display:flex;gap:10px;font-size:13.5px;padding:0 2px;"><span style="color:#7A839A;width:56px;">Subject</span><span style="font-weight:600;">Follow-up · {{ ep.spec }}</span></div>
                 <div style="border:1px solid #D7DEEC;border-radius:14px;padding:12px 13px;background:#F7F9FC;font-size:14px;line-height:1.55;color:#1B2333;">Hello {{ ep.first }},<br><br>{{ ep.open }} I'd value 15 minutes to walk through it — would {{ ep.dayL }} work?<br><br>Best,<br>Alex</div>
                 <div style="font-size:11.5px;color:#7A839A;">Draft preview — nothing is sent.</div>
                 <div style="display:flex;gap:8px;">
@@ -952,7 +890,7 @@ input,textarea,button{font-family:inherit}
                 <input value="{{ fuTask }}" onChange="{{ onFuTask }}" placeholder="Task, e.g. send the referral summary" style="border:1px solid #D7DEEC;border-radius:13px;padding:13px;font-size:14.5px;background:#F7F9FC;outline:0;">
                 <div>
                   <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.09em;color:#7A839A;">DUE</div>
-                  <div style="display:flex;gap:6px;margin-top:8px;"><sc-for list="{{ fuDueOpts }}" as="o" hint-placeholder-count="3"><button onClick="{{ o.go }}" style="flex:1;padding:10px;border-radius:12px;border:1px solid {{ o.bd }};background:{{ o.bg }};color:{{ o.fg }};font-size:13px;font-weight:650;cursor:pointer;">{{ o.label }}</button></sc-for></div>
+                  <div style="display:flex;gap:6px;margin-top:8px;"><sc-for list="{{ fuDueOpts }}" as="o" hint-placeholder-count="4"><button onClick="{{ o.go }}" style="flex:1;padding:10px;border-radius:12px;border:1px solid {{ o.bd }};background:{{ o.bg }};color:{{ o.fg }};font-size:13px;font-weight:650;cursor:pointer;">{{ o.label }}</button></sc-for></div>
                 </div>
                 <button onClick="{{ saveFu }}" style="padding:14px;border:0;border-radius:13px;background:{{ fuSaveBg }};color:#fff;font-size:14.5px;font-weight:700;cursor:pointer;">Add follow-up</button>
               </div>
@@ -1018,9 +956,25 @@ input,textarea,button{font-family:inherit}
                     </div>
                     </sc-if>
                     <div>
-                      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.09em;color:#7A839A;">MEETING · TODAY 29 OCT</div>
+                      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.09em;color:#7A839A;">MEETING · {{ insDateLabel }}</div>
+                      <div style="display:flex;gap:6px;overflow-x:auto;margin:8px -18px 0;padding:0 18px;"><sc-for list="{{ insDateOpts }}" as="o" hint-placeholder-count="7"><button onClick="{{ o.go }}" style="flex:0 0 auto;padding:7px 11px;border-radius:999px;border:1px solid {{ o.bd }};background:{{ o.bg }};color:{{ o.fg }};font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap;">{{ o.label }}</button></sc-for></div>
                       <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;"><sc-for list="{{ insTypeOpts }}" as="o" hint-placeholder-count="6"><button onClick="{{ o.go }}" style="padding:7px 11px;border-radius:999px;border:1px solid {{ o.bd }};background:{{ o.bg }};color:{{ o.fg }};font-size:12.5px;font-weight:600;cursor:pointer;">{{ o.label }}</button></sc-for></div>
                       <sc-if value="{{ insShowLive }}" hint-placeholder-val="{{ true }}">                      <div style="display:flex;gap:6px;margin-top:8px;"><sc-for list="{{ insLiveOpts }}" as="o" hint-placeholder-count="2"><button onClick="{{ o.go }}" style="flex:1;padding:9px;border-radius:12px;border:1px solid {{ o.bd }};background:{{ o.bg }};color:{{ o.fg }};font-size:13px;font-weight:650;cursor:pointer;">{{ o.label }}</button></sc-for></div></sc-if>
+                      <sc-if value="{{ insShowVendor }}" hint-placeholder-val="{{ false }}">
+                        <div style="margin-top:14px;">
+                          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.09em;color:#7A839A;">VENDOR</div>
+                          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;"><sc-for list="{{ insVendorOpts }}" as="o" hint-placeholder-count="5"><button onClick="{{ o.go }}" style="padding:7px 11px;border-radius:999px;border:1px solid {{ o.bd }};background:{{ o.bg }};color:{{ o.fg }};font-size:12.5px;font-weight:600;cursor:pointer;">{{ o.label }}</button></sc-for></div>
+                          <sc-if value="{{ insHasVendorSubs }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;padding-left:10px;border-left:2px solid #E1E6F0;"><sc-for list="{{ insVendorSubOpts }}" as="o" hint-placeholder-count="2"><button onClick="{{ o.go }}" style="padding:5px 9px;border-radius:999px;border:1px solid {{ o.bd }};background:{{ o.bg }};color:{{ o.fg }};font-size:12px;font-weight:600;cursor:pointer;">{{ o.label }}</button></sc-for></div></sc-if>
+                          <sc-if value="{{ insVendorOther }}" hint-placeholder-val="{{ false }}"><input value="{{ insVendorName }}" onChange="{{ onInsVendorName }}" placeholder="Vendor name" style="width:100%;box-sizing:border-box;margin-top:8px;border:1px solid #D7DEEC;border-radius:13px;padding:12px 13px;font-size:14px;background:#F7F9FC;outline:0;"></sc-if>
+                          <input value="{{ insCount }}" onChange="{{ onInsCount }}" placeholder="Number of attendees" style="width:100%;box-sizing:border-box;margin-top:8px;border:1px solid #D7DEEC;border-radius:13px;padding:12px 13px;font-size:14px;background:#F7F9FC;outline:0;">
+                        </div>
+                      </sc-if>
+                      <sc-if value="{{ insShowConf }}" hint-placeholder-val="{{ false }}">
+                        <div style="margin-top:14px;">
+                          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.09em;color:#7A839A;">CONFERENCE</div>
+                          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;"><sc-for list="{{ insConfOpts }}" as="o" hint-placeholder-count="4"><button onClick="{{ o.go }}" style="padding:7px 11px;border-radius:999px;border:1px solid {{ o.bd }};background:{{ o.bg }};color:{{ o.fg }};font-size:12.5px;font-weight:600;cursor:pointer;">{{ o.label }}</button></sc-for></div>
+                        </div>
+                      </sc-if>
                     </div>
                     <sc-if value="{{ insShowStage }}" hint-placeholder-val="{{ false }}">
                       <div style="display:flex;flex-direction:column;gap:14px;">
@@ -1046,7 +1000,7 @@ input,textarea,button{font-family:inherit}
                     </button>
                     <div style="display:flex;gap:8px;">
                       <button onClick="{{ insSaveDraft }}" style="flex:1;padding:14px;border:1px solid #D7DEEC;border-radius:13px;background:#fff;font-size:14px;font-weight:650;cursor:pointer;">Save draft</button>
-                      <button onClick="{{ insSave }}" style="flex:2;padding:14px;border:0;border-radius:13px;background:{{ insSaveBg }};color:#fff;font-size:14.5px;font-weight:700;cursor:pointer;">✳ Generate insights</button>
+                      <button onClick="{{ insSave }}" style="flex:2;padding:14px;border:0;border-radius:13px;background:{{ insSaveBg }};color:#fff;font-size:14.5px;font-weight:700;cursor:pointer;">{{ insSaveLabel }}</button>
                     </div>
                     <sc-if value="{{ insShowCrm }}" hint-placeholder-val="{{ false }}"><div style="margin-top:-6px;font-size:12px;color:#5B6478;text-align:center;">{{ insCrmLabel }}</div></sc-if>
                   </div>
@@ -1132,11 +1086,35 @@ input,textarea,button{font-family:inherit}
               </div>
             </sc-if>
 
+            <sc-if value="{{ shVisit }}" hint-placeholder-val="{{ false }}">
+              <div style="padding:14px 18px 0;display:flex;flex-direction:column;gap:12px;">
+                <div style="display:flex;align-items:center;gap:8px;"><span style="font-size:12.5px;color:#5B6478;">{{ vd.date }} · {{ vd.type }}</span><sc-if value="{{ vd.hasSrc }}" hint-placeholder-val="{{ false }}"><span style="margin-left:auto;font-size:11px;font-weight:650;padding:3px 7px;border-radius:6px;background:#E7ECFA;color:#22409F;">{{ vd.srcLabel }}</span></sc-if></div>
+                <div style="font-family:'Source Serif 4',Georgia,serif;font-size:22px;line-height:1.2;letter-spacing:-.01em;">{{ vd.topic }}</div>
+                <div style="font-size:14.5px;line-height:1.55;color:#1B2333;white-space:pre-line;">{{ vd.note }}</div>
+                <sc-if value="{{ vd.hasTags }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-wrap:wrap;gap:5px;"><sc-for list="{{ vd.chips }}" as="c" hint-placeholder-count="2"><span style="font-size:11px;font-weight:600;padding:3px 7px;border-radius:6px;background:#EEF1F7;color:#3C4557;">{{ c }}</span></sc-for></div></sc-if>
+                <sc-if value="{{ vd.hasPeople }}" hint-placeholder-val="{{ true }}">
+                  <div>
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.09em;color:#7A839A;">WHO WAS THERE</div>
+                    <div style="margin-top:8px;border:1px solid #E1E6F0;border-radius:14px;overflow:hidden;">
+                      <sc-for list="{{ vd.people }}" as="r" hint-placeholder-count="1">
+                        <button onClick="{{ r.open }}" style="display:flex;align-items:center;gap:10px;width:100%;padding:11px 12px;border:0;border-bottom:1px solid #F0F3F8;background:#fff;cursor:pointer;text-align:left;">
+                          <span style="width:32px;height:32px;flex:0 0 32px;border-radius:50%;background:#E7ECFA;color:#22409F;display:grid;place-items:center;font-size:11px;font-weight:700;">{{ r.ini }}</span>
+                          <span style="flex:1;min-width:0;"><span style="display:block;font-size:14px;font-weight:650;color:#0B1220;">{{ r.name }}</span><span style="display:block;font-size:12px;color:#5B6478;">{{ r.meta }}</span></span>
+                          <span style="color:#C3CAD8;">›</span>
+                        </button>
+                      </sc-for>
+                    </div>
+                  </div>
+                </sc-if>
+                <button onClick="{{ closeSheet }}" style="padding:14px;border:0;border-radius:13px;background:#2447C4;color:#fff;font-size:14.5px;font-weight:700;cursor:pointer;">Done</button>
+              </div>
+            </sc-if>
+
             <sc-if value="{{ shMe }}" hint-placeholder-val="{{ false }}">
               <div style="padding:14px 18px 0;display:flex;flex-direction:column;gap:10px;">
                 <div style="display:flex;align-items:center;gap:12px;padding:4px 2px 8px;">
                   <span style="width:48px;height:48px;border-radius:50%;background:#DCE3F5;color:#22409F;display:grid;place-items:center;font-size:15px;font-weight:700;">AJ</span>
-                  <span><span style="display:block;font-size:16px;font-weight:700;">Alex Johnson</span><span style="display:block;font-size:12.5px;color:#5B6478;">Sales rep · Ottava · {{ territory }}</span></span>
+                  <span><span style="display:block;font-size:16px;font-weight:700;">Alex Johnson</span><span style="display:block;font-size:12.5px;color:#5B6478;">{{ meSub }}</span></span>
                 </div>
                 <div style="border:1px solid #E1E6F0;border-radius:14px;overflow:hidden;">
                   <sc-for list="{{ meRows }}" as="r" hint-placeholder-count="4">
@@ -1154,7 +1132,7 @@ input,textarea,button{font-family:inherit}
       </sc-if>
 
       <sc-if value="{{ hasToast }}" hint-placeholder-val="{{ false }}">
-        <div style="position:absolute;top:58px;left:50%;transform:translateX(-50%);z-index:60;padding:10px 16px;border-radius:999px;background:#0B1220;color:#fff;font-size:13px;font-weight:600;white-space:nowrap;box-shadow:0 10px 24px -8px rgba(11,18,32,.5);animation:fadeIn .2s ease;">{{ toast }}</div>
+        <div style="position:absolute;top:58px;left:50%;transform:translateX(-50%);z-index:60;padding:10px 16px;border-radius:999px;background:#0B1220;color:#fff;font-size:13px;font-weight:600;white-space:nowrap;box-shadow:0 10px 24px -8px rgba(11,18,32,.5);animation:fadeIn .2s ease;display:flex;align-items:center;gap:12px;"><span>{{ toast }}</span><sc-if value="{{ hasUndo }}" hint-placeholder-val="{{ false }}"><button onClick="{{ toastUndo }}" style="border:0;background:none;padding:0;color:#9DB8FF;font-size:13px;font-weight:700;cursor:pointer;">Undo</button></sc-if></div>
       </sc-if>
 
       <div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:134px;height:5px;border-radius:3px;background:#0B1220;z-index:70;pointer-events:none;"></div>
@@ -1162,19 +1140,19 @@ input,textarea,button{font-family:inherit}
   </div>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;account&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;ottava&quot;,&quot;stemline&quot;,&quot;kura&quot;,&quot;b1&quot;,&quot;targetedoncology&quot;,&quot;gilead&quot;],&quot;default&quot;:&quot;ottava&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;startTab&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;targets&quot;,&quot;ask&quot;,&quot;map&quot;,&quot;activity&quot;],&quot;default&quot;:&quot;targets&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;tabLabels&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;always&quot;,&quot;active&quot;],&quot;default&quot;:&quot;always&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;account&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;ottava&quot;,&quot;stemline&quot;,&quot;kura&quot;,&quot;b1&quot;,&quot;targetedoncology&quot;,&quot;gilead&quot;],&quot;default&quot;:&quot;ottava&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;startTab&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;targets&quot;,&quot;ask&quot;,&quot;map&quot;,&quot;summaries&quot;,&quot;activity&quot;],&quot;default&quot;:&quot;targets&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;tabLabels&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;always&quot;,&quot;active&quot;],&quot;default&quot;:&quot;always&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
 const HCOS = {
-  msh: { id:'msh', name:'Mount Sinai Hospital', ini:'MS', type:'Hospital', city:'New York, NY', boro:'Manhattan', proc:'12,480', yoy:'+11.2%', share:'23.5%', opp:'$1.5M', leak:'$5.7M', left:'9%', stayed:'91%', dist:'0.8 mi', mine:true, hcps:['maya','alex','jun'], oppN:1.5, volN:12480, yoyN:11.2, distN:0.8, x:'44%', y:'44%' },
-  msw: { id:'msw', name:'Mount Sinai West', ini:'MW', type:'Hospital', city:'New York, NY', boro:'Manhattan', proc:'6,210', yoy:'+4.8%', share:'18.1%', opp:'$0.9M', leak:'$3.8M', left:'12%', stayed:'88%', dist:'2.3 mi', mine:true, hcps:['daniel','elena'], oppN:0.9, volN:6210, yoyN:4.8, distN:2.3, x:'28%', y:'64%' },
-  nyu: { id:'nyu', name:'NYU Langone Tisch', ini:'NY', type:'Hospital', city:'New York, NY', boro:'Manhattan', proc:'9,870', yoy:'+2.1%', share:'14.6%', opp:'$2.2M', leak:'$6.1M', left:'15%', stayed:'85%', dist:'3.9 mi', mine:false, hcps:[], oppN:2.2, volN:9870, yoyN:2.1, distN:3.9, x:'70%', y:'78%' },
-  mssc: { id:'mssc', name:'Midtown Surgery Center', ini:'MC', type:'Surgery center', city:'New York, NY', boro:'Manhattan', proc:'2,140', yoy:'+21.4%', share:'6.2%', opp:'$0.6M', leak:'$1.1M', left:'7%', stayed:'93%', dist:'1.2 mi', mine:false, hcps:[], oppN:0.6, volN:2140, yoyN:21.4, distN:1.2, x:'40%', y:'52%' }
+  msh: { id:'msh', name:'Mount Sinai Hospital', ini:'MS', type:'Hospital', city:'New York, NY', boro:'Manhattan', proc:'12,480', yoy:'+11.2%', share:'23.5%', opp:'$1.5M', leak:'$5.7M', left:'9%', stayed:'91%', dist:'0.8 mi', mine:true, hcps:['maya','alex','jun'], oppN:1.5, volN:12480, yoyN:11.2, distN:0.8, x:'44%', y:'44%', specs:['Appendectomy','Bariatric','Cholecystectomy','Hernia','Urology'] },
+  msw: { id:'msw', name:'Mount Sinai West', ini:'MW', type:'Hospital', city:'New York, NY', boro:'Manhattan', proc:'6,210', yoy:'+4.8%', share:'18.1%', opp:'$0.9M', leak:'$3.8M', left:'12%', stayed:'88%', dist:'2.3 mi', mine:true, hcps:['daniel','elena'], oppN:0.9, volN:6210, yoyN:4.8, distN:2.3, x:'28%', y:'64%', specs:['Bariatric','Colectomy','Hernia','OB-GYN'] },
+  nyu: { id:'nyu', name:'NYU Langone Tisch', ini:'NY', type:'Hospital', city:'New York, NY', boro:'Manhattan', proc:'9,870', yoy:'+2.1%', share:'14.6%', opp:'$2.2M', leak:'$6.1M', left:'15%', stayed:'85%', dist:'3.9 mi', mine:false, hcps:[], oppN:2.2, volN:9870, yoyN:2.1, distN:3.9, x:'70%', y:'78%', specs:['Colectomy','OB-GYN','Urology'] },
+  mssc: { id:'mssc', name:'Midtown Surgery Center', ini:'MC', type:'Surgery center', city:'New York, NY', boro:'Manhattan', proc:'2,140', yoy:'+21.4%', share:'6.2%', opp:'$0.6M', leak:'$1.1M', left:'7%', stayed:'93%', dist:'1.2 mi', mine:false, hcps:[], oppN:0.6, volN:2140, yoyN:21.4, distN:1.2, x:'40%', y:'52%', specs:['Hernia','Cholecystectomy'] }
 };
 const HCPS = {
-  maya: { id:'maya', name:'Dr. Maya Patel', first:'Maya', ini:'MP', spec:'General Surgery', hco:'msh', claims:'860', yoy:'+14%', day:'Wed', dayL:'Wednesday', ref:'998', top:'44970', email:'maya.patel@example.com', phone:'(212) 555-0101', last:'22 Oct', lastN:7, adv:4, iOpen:'Bring the one-page referral summary she asked for.', iBrief:'Last met 22 Oct: wants a one-page referral summary before the OR committee. Advocacy 4/5 and rising.', mine:true, claimsN:860, yoyN:14, distN:0.8, x:'46%', y:'38%', flag:'Follow-up due today', tone:'blue', open:'Bring the one-page referral summary she asked for.', brief:'272 selected-code claims in 2025, up 14%. 19 referral events went outside the system — up from 11 in 2024.' },
-  alex: { id:'alex', name:'Dr. Alex Morgan', first:'Alex', ini:'AM', spec:'General Surgery', hco:'msh', claims:'640', yoy:'+9%', day:'Tue', dayL:'Tuesday', ref:'512', top:'47562', email:'alex.morgan@example.com', phone:'(212) 555-0144', last:'30 Sep', lastN:29, adv:3, iOpen:'Ask how the November OR block changes affect his plans.', iBrief:'Met 30 Sep. Interested but cautious: waiting on the November OR block changes and wants peer outcome data. Advocacy 3/5.', mine:true, claimsN:640, yoyN:9, distN:0.8, x:'52%', y:'47%', open:'Ask how the November OR block changes affect his case volume.', brief:'Steady grower with few outbound referrals. Strong candidate for a case-volume conversation.' },
-  daniel: { id:'daniel', name:'Dr. Daniel Okafor', first:'Daniel', ini:'DO', spec:'Colorectal Surgery', hco:'msw', claims:'410', yoy:'+6%', day:'Thu', dayL:'Thursday', ref:'288', top:'44140', email:'daniel.okafor@example.com', phone:'(212) 555-0172', last:'9 Oct', lastN:20, adv:4, iOpen:'Pick up the procedure-mix review he agreed to on 9 Oct.', iBrief:'Agreed on 9 Oct to review his procedure mix on the next visit. Advocacy 4/5.', mine:true, claimsN:410, yoyN:6, distN:2.3, x:'24%', y:'60%', open:'Walk through his colectomy mix against regional peers.', brief:'Agreed on 9 Oct to review the procedure mix on the next visit. 12% of his cases leave Mount Sinai West.' },
-  jun: { id:'jun', name:'Dr. Jun Park', first:'Jun', ini:'JP', spec:'General Surgery', hco:'msh', claims:'530', yoy:'−3%', day:'Mon', dayL:'Monday', ref:'340', top:'49650', email:'jun.park@example.com', phone:'(212) 555-0190', last:'2 Sep', lastN:57, adv:2, iOpen:'Deliver the account brief he requested on 27 Oct.', iBrief:'Asked for an account brief on 27 Oct, still not sent. Prefers email to visits. Advocacy 2/5 and cooling.', mine:false, claimsN:530, yoyN:-3, distN:0.8, x:'39%', y:'50%', flag:'Follow-up overdue', tone:'orange', open:'Deliver the account brief he requested on 27 Oct.', brief:'Volume dipped 3% while outbound referrals rose — the highest leakage risk in your territory.' },
-  elena: { id:'elena', name:'Dr. Elena Rossi', first:'Elena', ini:'ER', spec:'General Surgery', hco:'msw', claims:'275', yoy:'+18%', day:'Wed', dayL:'Wednesday', ref:'319', top:'44970', email:'elena.rossi@example.com', phone:'(212) 555-0128', last:'—', lastN:999, adv:null, iOpen:'Introduce yourself and learn what she needs.', iBrief:'Not met yet. No insights logged.', mine:false, claimsN:275, yoyN:18, distN:2.3, x:'32%', y:'68%', flag:'Fastest growing', tone:'green', open:'Introduce yourself — she is the fastest-growing surgeon at Mount Sinai West.', brief:'Up 18% YoY with 319 referred-in patients. Not yet contacted.' }
+  maya: { id:'maya', name:'Dr. Maya Patel', first:'Maya', ini:'MP', spec:'General Surgery', hco:'msh', claims:'860', yoy:'+14%', day:'Wed', dayL:'Wednesday', ref:'998', top:'44970', email:'maya.patel@example.com', phone:'(212) 555-0101', last:'22 Oct', lastN:7, adv:4, iOpen:'Bring the one-page referral summary she asked for.', iBrief:'Last met 22 Oct: wants a one-page referral summary before the OR committee. Advocacy 4/5 and rising.', mine:true, claimsN:860, yoyN:14, distN:0.8, x:'46%', y:'38%', specs:['Cholecystectomy','Hernia','Appendectomy'], leak:true, open:'Bring the one-page referral summary she asked for.', brief:'860 selected-code claims in 2025, up 14%. 19 referral events went outside the system — up from 11 in 2024.' },
+  alex: { id:'alex', name:'Dr. Alex Morgan', first:'Alex', ini:'AM', spec:'General Surgery', hco:'msh', claims:'640', yoy:'+9%', day:'Tue', dayL:'Tuesday', ref:'512', top:'47562', email:'alex.morgan@example.com', phone:'(212) 555-0144', last:'30 Sep', lastN:29, adv:3, iOpen:'Ask how the November OR block changes affect his plans.', iBrief:'Met 30 Sep. Interested but cautious: waiting on the November OR block changes and wants peer outcome data. Advocacy 3/5.', mine:true, claimsN:640, yoyN:9, distN:0.8, x:'52%', y:'47%', specs:['Hernia','Bariatric','Cholecystectomy'], open:'Ask how the November OR block changes affect his case volume.', brief:'Steady grower with few outbound referrals. Strong candidate for a case-volume conversation.' },
+  daniel: { id:'daniel', name:'Dr. Daniel Okafor', first:'Daniel', ini:'DO', spec:'Colorectal Surgery', hco:'msw', claims:'410', yoy:'+6%', day:'Thu', dayL:'Thursday', ref:'288', top:'44140', email:'daniel.okafor@example.com', phone:'(212) 555-0172', last:'9 Oct', lastN:20, adv:4, iOpen:'Pick up the procedure-mix review he agreed to on 9 Oct.', iBrief:'Agreed on 9 Oct to review his procedure mix on the next visit. Advocacy 4/5.', mine:true, claimsN:410, yoyN:6, distN:2.3, x:'24%', y:'60%', specs:['Colectomy'], leak:true, open:'Walk through his colectomy mix against regional peers.', brief:'Agreed on 9 Oct to review the procedure mix on the next visit. 12% of his cases leave Mount Sinai West.' },
+  jun: { id:'jun', name:'Dr. Jun Park', first:'Jun', ini:'JP', spec:'General Surgery', hco:'msh', claims:'530', yoy:'−3%', day:'Mon', dayL:'Monday', ref:'340', top:'49650', email:'jun.park@example.com', phone:'(212) 555-0190', last:'2 Sep', lastN:57, adv:2, iOpen:'Deliver the account brief he requested on 27 Oct.', iBrief:'Asked for an account brief on 27 Oct, still not sent. Prefers email to visits. Advocacy 2/5 and cooling.', mine:false, claimsN:530, yoyN:-3, distN:0.8, x:'39%', y:'50%', specs:['Appendectomy','Cholecystectomy','Hernia'], leak:true, open:'Deliver the account brief he requested on 27 Oct.', brief:'Volume dipped 3% while outbound referrals rose — the highest leakage risk in your territory.' },
+  elena: { id:'elena', name:'Dr. Elena Rossi', first:'Elena', ini:'ER', spec:'General Surgery', hco:'msw', claims:'275', yoy:'+18%', day:'Wed', dayL:'Wednesday', ref:'319', top:'44970', email:'elena.rossi@example.com', phone:'(212) 555-0128', last:'—', lastN:999, adv:null, iOpen:'Introduce yourself and learn what she needs.', iBrief:'Not met yet. No insights logged.', mine:false, claimsN:275, yoyN:18, distN:2.3, x:'32%', y:'68%', specs:['Hernia','Bariatric'], open:'Introduce yourself — she is the fastest-growing surgeon at Mount Sinai West.', brief:'Up 18% YoY with 319 referred-in patients. Not yet contacted.' }
 };
 const OM_ACC = [
   { id:'nyu', name:'NYU Langone Tisch', type:'Hospital', area:'Murray Hill', zip:'10016', dist:3.9, v:134, x:'62%', y:'66%' },
@@ -1199,7 +1177,25 @@ const omColor = v => v >= 100 ? ['#22409F','#fff'] : v >= 50 ? ['#3F74D6','#fff'
 const TONES = { blue:['#E7ECFA','#22409F'], orange:['#FDEDE4','#A94D1B'], green:['#E3F5EC','#1C7A4E'] };
 const TIMES = { maya:'10:00', alex:'11:30' };
 const SPECS = ['All codes','Appendectomy','Bariatric','Cholecystectomy','Colectomy','Hernia','OB-GYN','Urology'];
-const SORTS = ['Opportunity','Volume','Growth','Distance'];
+const SORTS = ['Relevance','Opportunity','Volume','Growth','Distance'];
+// code groups, each covering some specialties: 123 HCPCS / CPT codes in all
+const CODE_GROUPS = [
+  { name:'Ottava-field-pro', specs:['Appendectomy','Bariatric','Cholecystectomy'], codes:48 },
+  { name:'Ottava — Colectomy', specs:['Colectomy'], codes:22 },
+  { name:'Ottava — OB-GYN', specs:['OB-GYN'], codes:19 },
+  { name:'Ottava — Urology', specs:['Urology'], codes:21 },
+  { name:'Ottava — Hernia', specs:['Hernia'], codes:13 }
+];
+// the design's today is Thu 29 Oct 2026; n counts days from it
+const WD = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'], MO = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const dateAt = n => new Date(2026, 9, 29 + n);
+const dateOf = n => dateAt(n).getDate() + ' ' + MO[dateAt(n).getMonth()];
+const dayFull = n => WD[dateAt(n).getDay()] + ' ' + dateOf(n);
+const dayOf = n => n === 0 ? 'Today' : n === 1 ? 'Tomorrow' : n === -1 ? 'Yesterday' : dayFull(n);
+const ordinal = n => n + (n % 10 === 1 && n % 100 !== 11 ? 'st' : n % 10 === 2 && n % 100 !== 12 ? 'nd' : n % 10 === 3 && n % 100 !== 13 ? 'rd' : 'th');
+// where the day starts on the sample map, and rough driving: 1% of the map is about 0.08 mi, 4 minutes a mile
+const START = { x:'50%', y:'40%' };
+const driveMin = (a, b) => Math.hypot(parseFloat(a.x) - parseFloat(b.x), parseFloat(a.y) - parseFloat(b.y)) * 0.08 * 4;
 const TERRS = [
   { name:'Central Manhattan', meta:'ZIP 10019, 10029 · 5 assigned' },
   { name:'Upper Manhattan', meta:'ZIP 10031, 10032 · 3 assigned' },
@@ -1207,7 +1203,7 @@ const TERRS = [
 ];
 const ANSWERS = {
   'Who should I see today?': { a:'Start with Dr. Jun Park: follow-up overdue, leakage risk, and no contact since 2 Sep. Then Dr. Maya Patel — her follow-up is due today.', tags:['Today','Follow-ups · leakage · last contact'], rows:['jun','maya'] },
-  'Brief me on Dr. Maya Patel': { a:'Dr. Maya Patel has 272 selected-code claims in 2025, up 14% on 2024. 19 referral events went outside the system. Her lightest day is Wednesday.', tags:['General Surgery','Sample data'], rows:['maya'] },
+  'Brief me on Dr. Maya Patel': { a:'Dr. Maya Patel has 860 selected-code claims in 2025, up 14% on 2024. 19 referral events went outside the system. Her lightest day is Wednesday.', tags:['General Surgery','Sample data'], rows:['maya'] },
   'Which accounts are growing the most?': { a:'Mount Sinai Hospital leads at +11.2% YoY on 12,480 procedures. Mount Sinai West is up 4.8% but leaks 12% of cases — worth a visit.', tags:['2025 vs 2024'], rows:['daniel'] },
   'Summarise my week': { a:'1 visit logged, 3 planned for today, 2 follow-ups open — one overdue for Dr. Jun Park. Territory leakage is flat at $9.5M.', tags:['This week'], rows:['jun'] }
 };
@@ -1221,17 +1217,22 @@ const TYPES = ['All types','Hospital','Surgery center','Physician group','Clinic
 const TAGS = ['Clinical trial','KOL','Competitor','Training'];
 const SIX_TYPES = ['1:1','Third Party','Conference','Advisory Board','Consulting','Observation'];
 const SHORT_TYPES = ['1:1','Ad Board','Conference','Consulting'];
+// Third Party and Conference fields, from the Insights source (a few of each list)
+const EXTRA = { vendors:['ASCO','Curio','MD Outlook','Onc Live','Targeted Oncology','Other'], vendorSubs:{ 'Onc Live':['State of Science','Ask the Expert'], Curio:['Roundtable','Regional Conference'] },
+  confs:['American Society of Clinical Oncology (ASCO)','American Society of Hematology (ASH)','European Society of Medical Oncology (ESMO)','Best of ASCO (BOASCO)'] };
+// what a draft keeps of the insight form
+const DRAFT_KEYS = ['insWho','insAdv','insNote','insTopics','insType','insLive','insConv','insArea','insSubs','insStage','insPrio','insTags','insDateN','insVendor','insVendorSub','insVendorName','insCount','insConf','insHco','insSource','logFu'];
 // customer accounts: one flow everywhere; each account shows only the fields it uses (from the Insights source)
 const ACCOUNTS = {
-  ottava: { name:'Ottava', meta:'J&J MedTech · Field Pro + Insights', fieldPro:true, record:true, adv:true,
+  ottava: { name:'Ottava', meta:'J&J MedTech · Field Pro + Insights', role:'Sales rep', fieldPro:true, record:true, adv:true,
     topics:['Referral patterns','Adoption barriers','Competitor comparison','Ideal patient','OR access'], meetTypes:['1:1','Phone','Email','Ad Board','Conference','Consulting'], tags:TAGS,
     seedTopics:[['Referral patterns'], ['Adoption barriers','OR access'], ['Competitor comparison']],
     notes:['Field Pro customer: the book, the opportunity map, claims and reports.', 'Insights built in: every Insight button opens the same sheet, and Record sits in the centre of the tab bar.', 'Advocacy 1–5 per doctor.'] },
-  stemline: { name:'Stemline', meta:'Menarini · Insights, no Record', record:false, live:true, conv:['Insight','Note'], crm:'Veeva',
+  stemline: { name:'Stemline', meta:'Menarini · Insights, no Record', record:false, live:true, conv:['Insight','Note'], crm:'Veeva', extra:EXTRA,
     topics:['Competitive Landscape','Elacestrant Experience','Sequencing','Biomarker Testing'],
     subs:{ 'Competitive Landscape':['imlunestrant','giredestrant','camizestrant','gedatolisib','vepdegestrant','everolimus','capivasertib','T-DXd'], 'Elacestrant Experience':['RWE','ELA trials','efficacy','safety/tolerability','access/reimbursement'], 'Sequencing':['dual mutations','mono vs. combo','ADC/chemo','sequencing oral SERDs'], 'Biomarker Testing':['VAF/Tumor Markers','liquid vs. solid','serial testing'] },
     meetTypes:SIX_TYPES, tags:[], seedTopics:[['Elacestrant Experience'], ['Sequencing','Biomarker Testing'], ['Competitive Landscape']],
-    notes:['No Record: the centre button opens Add insight on Notes. Upload still takes audio and documents.', 'Each entry is an Insight or a Note, and only Insights go into the Insight Summary.', 'Topics have subtopics. Meeting type plus Live or Virtual. No tags. Saved insights sync to Veeva.'] },
+    notes:['No Record: the centre button opens Add insight on Notes. Upload still takes audio and documents.', 'Each entry is an Insight or a Note, and only Insights go into the Insight Summary.', 'Topics have subtopics. Meeting type plus Live or Virtual. No tags. Saved insights sync to Veeva.', 'Third Party asks for the vendor and how many attended; Conference asks which one.'] },
   kura: { name:'Kura Oncology', meta:'Insights · Record', record:true, adv:true,
     advLabels:['Opposition','Neutral/Private','Support (Private)','Support (Podium)','Vocal Advocacy'],
     topics:['Menin Inhibitor Adoption','Menin Inhibitor Safety','KOMZIFTI vs Revuforj','Defining the Ideal Patient','Life Cycle'], meetTypes:SHORT_TYPES, tags:TAGS,
@@ -1243,9 +1244,9 @@ const ACCOUNTS = {
     meetTypes:SHORT_TYPES, tags:TAGS, seedAreas:['CLL','CLL','MCL'],
     seedTopics:[['Totality of Evidence'], ['Safety/Tolerability Profile','Efficacy Differentiation (High-Risk)'], ['Sonrotoclax vs Venetoclax Differentiation (r/r MCL)']], smy:['CLL','MCL'],
     notes:['Therapeutic area comes first, CLL or MCL, and it picks the topics.', 'The short meeting-type list. No advocacy.', 'Summaries split into CLL and MCL.'] },
-  targetedoncology: { name:'Targeted Oncology', meta:'Insights · Record', record:true, live:true,
+  targetedoncology: { name:'Targeted Oncology', meta:'Insights · Record', record:true, live:true, extra:EXTRA,
     topics:[], meetTypes:SIX_TYPES, tags:TAGS,
-    notes:['No fixed topics: themes come from what was said.', 'The full meeting-type list plus Live or Virtual, and tags.'] },
+    notes:['No fixed topics: themes come from what was said.', 'The full meeting-type list plus Live or Virtual, and tags.', 'Third Party asks for the vendor and how many attended; Conference asks which one.'] },
   gilead: { name:'Gilead Sciences', meta:'Insights · Record', record:true,
     topics:[], meetTypes:['In Person','1:1','Zoom','Ad Board','Conference'], stages:['Observation','Insight','Actionable Insight','Impact'], prios:['High','Medium','Low'], tags:TAGS,
     notes:['The basic form: each insight gets a stage and a priority.', 'Its own meeting types, Zoom among them. No topics, no Live or Virtual.', 'Summaries are congress summaries, made into slides on the website.'] }
@@ -1272,16 +1273,17 @@ const seed = A => {
     ...(A.stages ? { stage: ['Actionable Insight','Insight','Observation'][i], prio: ['High','Medium','Low'][i] } : {}) });
   return {
     visits: [
-      { id:1, who:'maya', date:'22 Oct', dN:7, type:ty[0], topic:T.h[0], note:T.n[0], ...more(0) },
+      { id:1, who:'maya', date:'22 Oct', dN:7, type:ty[0] + (A.live ? ' · Live' : ''), topic:T.h[0], note:T.n[0], ...more(0) },
       { id:2, who:'daniel', date:'9 Oct', dN:20, type: A.fieldPro ? 'Phone' : ty.includes('Zoom') ? 'Zoom' : ty[0] + (A.live ? ' · Virtual' : ''), topic:T.h[1], note:T.n[1], ...(A.conv ? { conv:'Note', src:'Notes' } : {}) },
-      { id:3, who:'alex', date:'30 Sep', dN:29, type:ty[0], topic:T.h[2], note:T.n[2], ...more(1) },
-      { id:4, who:'jun', date:'2 Sep', dN:57, type:'Conference', topic:T.h[3], note:T.n[3], ...more(2) }
+      { id:3, who:'alex', date:'30 Sep', dN:29, type:ty[0] + (A.live ? ' · Live' : ''), topic:T.h[2], note:T.n[2], ...more(1) },
+      { id:4, who:'jun', date:'2 Sep', dN:57, type:'Conference' + (A.live ? ' · Live' : ''), topic:T.h[3], note:T.n[3], ...more(2), ...(A.extra ? { conf:A.extra.confs[0] } : {}) }
     ],
     fus: [
-      { id:1, t:T.fu[0], who:'maya', due:'Today', over:false, done:false },
-      { id:2, t:T.fu[1], who:'jun', due:'27 Oct', over:true, done:false }
+      { id:1, t:T.fu[0], who:'maya', dueN:0, done:false },
+      { id:2, t:T.fu[1], who:'jun', dueN:-2, done:false }
     ],
-    summaries: [{ id:1, name:'September conversations', date:'30 Sep', ids:[3,4], text:null }]
+    summaries: [{ id:1, name:'September conversations', date:'30 Sep', ids:[3,4], text:null }],
+    drafts: [{ id:1, form:{ insWho:['maya'], insNote:'Asked again for the one-page summary.' } }]
   };
 };
 const TLISTS = [
@@ -1294,6 +1296,7 @@ const addSt = (on) => on ? { addBg:'#2447C4', addFg:'#fff', addBd:'#2447C4', add
 
 class Component extends DCLogic {
   scrollRef = React.createRef();
+  _at = [];
   state = (() => {
     const pr = this.props || {};
     const account = ACCOUNTS[pr.account] ? pr.account : 'ottava', A = ACCOUNTS[account];
@@ -1302,13 +1305,13 @@ class Component extends DCLogic {
     return {
     account,
     tab: this.tabsFor({ account }).includes(pr.startTab) ? pr.startTab : 'targets', stack: [], sheet: null, sheetData: null,
-    scope: 'mine', kind: ACCOUNTS[account].fieldPro ? 'hco' : 'hcp', q: '', spec: 'All codes', sort: 'Opportunity', iSort: A.adv ? 'Advocacy' : 'Last met', omType: 'All types', tlist: 'Q4 KOL list',
-    route: ['maya','alex','daniel'], runIdx: 0, runDone: [], runSkip: [], logged: [],
+    scope: 'mine', kind: ACCOUNTS[account].fieldPro ? 'hco' : 'hcp', q: '', spec: 'All codes', cgs: CODE_GROUPS.map(g => g.name), sort: 'Relevance', iSort: 'Relevance', omType: 'All types', tlist: 'Q4 KOL list',
+    route: ['maya','alex','daniel'], tomorrow: [], day: 'today', runIdx: 0, runDone: [], runSkip: [], logged: [],
     ...seed(A),
-    thread: [], askIn: '', listening: false, layer: 'Pins', mapSel: null,
+    thread: [], askIn: '', listening: false,
     actSeg: 'visits', pSeg: 'overview', logFu: false,
-    territory: 'Central Manhattan', toast: null, omKind:'acc', omRadius:5, omMode:'near', omStart:'Central Manhattan', omCity:'Manhattan', omGroup:'all', omSel:null, omExpanded:false, omPicked:[], omLayer:'Pins', fuTask: '', fuWho: 'maya', fuDue: 'Tomorrow',
-    insMode:'notes', insWho:[], insAdv:{}, insNote:'', insTopics:[], insType: A.meetTypes[0], insLive:'Live', insConv:'Insight', insArea:null, insSubs:[], insStage:'Observation', insPrio:'Medium', insTags:[], insFile:null, insRec:false, insPaused:false, insSecs:0, insSource:null, insPickMore:false,
+    territory: 'Central Manhattan', toast: null, toastUndo: null, omKind:'acc', omRadius:5, omMode:'near', omStart:'Central Manhattan', omCity:'Manhattan', omGroup:'all', omSel:null, omExpanded:false, omLayer:'Pins', fuTask: '', fuWho: null, fuDue: 1,
+    ...this.insFresh([], A),
     smySeg:'new', smyQ:'', smyTag:'All', smySel:[], smyName:'', smyBusy:false, smyOpen:null
     };
   })();
@@ -1322,20 +1325,22 @@ class Component extends DCLogic {
     const na = (this.props || {}).account;
     if (na !== this._pa) { this._pa = na; if (ACCOUNTS[na]) this.setAccount(na); }
   }
-  componentWillUnmount() { clearTimeout(this._t); clearTimeout(this._a); clearTimeout(this._m); clearTimeout(this._s); clearInterval(this._i); }
+  componentWillUnmount() { clearTimeout(this._t); clearTimeout(this._a); clearTimeout(this._m); clearTimeout(this._s); clearInterval(this._i); this._at.forEach(clearTimeout); }
 
   // customer account: same flow everywhere, the views change where an account needs it
   acct() { return ACCOUNTS[this.state.account]; }
-  tabsFor(st) { return ['targets', 'ask', ...(ACCOUNTS[st.account].fieldPro ? ['map'] : []), 'activity']; }
+  // Field Pro has the Map; an insights-only account has Summaries in its place
+  tabsFor(st) { return ['targets', 'ask', ACCOUNTS[st.account].fieldPro ? 'map' : 'summaries', 'activity']; }
   setAccount(account) {
     clearInterval(this._i);
     applyPeople(ACCOUNTS[account]);
     this.setState(st => {
-      const A = ACCOUNTS[account], out = { account, sheet: null, ...this.insFresh([], A), ...seed(A), iSort: A.adv ? 'Advocacy' : 'Last met',
-        thread: [], askIn: '', logged: [], smyTag: 'All', smySel: [], smyOpen: null };
+      const A = ACCOUNTS[account], out = { account, sheet: null, ...this.insFresh([], A), ...seed(A), iSort: 'Relevance',
+        thread: [], askIn: '', logged: [], smyTag: 'All', smySel: [], smyOpen: null,
+        route: ['maya','alex','daniel'], tomorrow: [], day: 'today', runIdx: 0, runDone: [], runSkip: [], fuWho: null, toast: null, toastUndo: null };
       if (!this.tabsFor({ account }).includes(st.tab)) { out.tab = 'targets'; out.stack = []; }
       else if (!A.fieldPro && st.stack.some(x => x.s === 'hco' || x.s === 'reports')) out.stack = [];
-      if (!A.fieldPro) { out.kind = 'hcp'; out.scope = 'mine'; }
+      if (!A.fieldPro) { out.kind = 'hcp'; out.scope = 'mine'; if (st.actSeg === 'sum') out.actSeg = 'visits'; }
       else if (!ACCOUNTS[st.account].fieldPro) out.kind = 'hco';
       return out;
     });
@@ -1344,18 +1349,41 @@ class Component extends DCLogic {
   typeOk(type) { return this.state.omType === 'All types' || type === this.state.omType; }
 
   // insights
-  insFresh(who, A = this.acct()) { return { insWho: who, insAdv:{}, insNote:'', insTopics:[], insType: A.meetTypes[0], insLive:'Live', insConv:'Insight', insArea:null, insSubs:[], insStage:'Observation', insPrio:'Medium', insTags:[], insFile:null, insSource:null, insPickMore:false, insRec:false, insPaused:false, insSecs:0, insMode:'notes', logFu:false }; }
+  insFresh(who, A = this.acct()) { return { insWho: who, insAdv:{}, insNote:'', insTopics:[], insType: A.meetTypes[0], insLive:'Live', insConv:'Insight', insArea:null, insSubs:[], insStage:'Observation', insPrio:'Medium', insTags:[], insFile:null, insSource:null, insPickMore:false, insRec:false, insPaused:false, insSecs:0, insMode:'notes', logFu:false,
+    insDateN:0, insVendor:null, insVendorSub:null, insVendorName:'', insCount:'', insConf:null, insHco:null, insDraft:null }; }
   openLog(id) { this.openInsight(id ? [id] : [], 'notes'); }
-  openInsight(who, mode) {
+  // always a fresh form; hco is the account it was opened from, whose doctors come first in the picker
+  openInsight(who, mode, hco) {
     clearInterval(this._i);
     const m = mode === 'record' && !this.acct().record ? 'notes' : mode || 'notes';
-    this.setState(st => ({ ...((st.insWho[0] || null) === (who[0] || null) ? {} : this.insFresh(who)), sheet:'insight', sheetData:null, insMode: m, insRec:false, insPaused:false, insSecs:0 }));
+    this.setState({ ...this.insFresh(who), insHco: hco || null, sheet:'insight', sheetData:null, insMode: m });
+  }
+  // drafts keep the whole form; opening one picks up where it was left
+  keepDraft() {
+    const s = this.state, id = s.insDraft || Date.now(), form = {};
+    DRAFT_KEYS.forEach(k => { form[k] = s[k]; });
+    this.setState(st => ({ drafts: [{ id, form }, ...st.drafts.filter(d => d.id !== id)] }));
+  }
+  openDraft(d) { clearInterval(this._i); this.setState({ ...this.insFresh([]), ...d.form, insDraft: d.id, sheet:'insight', sheetData:null, insMode:'notes' }); }
+  openFu(id) { this.setState({ sheet:'fu', sheetData:null, fuWho: id || null, fuTask:'', fuDue:1 }); }
+  // who can be picked: the account's doctors first, then the rest of the book (insights accounts: the target list)
+  people(hco) {
+    const s = this.state, pool = this.acct().fieldPro ? Object.values(HCPS) : (TLISTS.find(t => t.name === s.tlist) || TLISTS[0]).ids.map(id => HCPS[id]);
+    return hco ? [...pool.filter(p => p.hco === hco), ...pool.filter(p => p.hco !== hco)] : pool;
+  }
+  // who Record tags: the doctor on screen, or the one at the current visit
+  onScreenDoc() {
+    const s = this.state, top = s.stack[s.stack.length - 1];
+    if (top && top.s === 'hcp') return [top.id];
+    if (top && top.s === 'run') { const list = this.groups().flatMap(g => g.ids), id = list[Math.min(s.runIdx, list.length - 1)]; return HCPS[id] ? [id] : []; }
+    return [];
   }
   topicsFor(area) { const A = this.acct(); return A.areas ? (area ? A.areas[area].topics : []) : A.topics; }
   // the centre button: start recording straight away and tag who was there afterwards
   recordNow() {
-    if (!this.acct().record) return this.openInsight([], 'notes');
-    this.openInsight([], 'record');
+    const who = this.onScreenDoc();
+    if (!this.acct().record) return this.openInsight(who, 'notes');
+    this.openInsight(who, 'record');
     this.startRec();
   }
   startRec() {
@@ -1375,13 +1403,13 @@ class Component extends DCLogic {
   }
   finishTranscript(source) {
     clearInterval(this._i);
-    this.setState(st => ({ insRec:false, insPaused:false, insMode:'notes', insSource:source, insNote:this.transcript(st.insWho[0]),
+    this.setState(st => ({ insRec:false, insPaused:false, insMode:'notes', insSource:source, insNote:[st.insNote.trim(), this.transcript(st.insWho[0])].filter(Boolean).join('\n\n'),
       insArea: st.insArea || (this.acct().areas ? Object.keys(this.acct().areas)[0] : null),
       insTopics: st.insTopics.length ? st.insTopics : this.topicsFor(st.insArea || (this.acct().areas ? Object.keys(this.acct().areas)[0] : null)).slice(0, 2) }));
     this.toast('Transcript ready — check the details');
   }
-  whoOf(v) { return v.attendees || [v.who]; }
-  convCount(id) { return this.state.visits.filter(v => this.whoOf(v).includes(id)).length; }
+  whoOf(v) { return v.attendees || (v.who ? [v.who] : []); }
+  convCount(id) { return this.state.visits.filter(v => v.conv !== 'Note' && this.whoOf(v).includes(id)).length; }
   lastOf(id) {
     const v = this.state.visits.find(x => this.whoOf(x).includes(id));
     return v ? { label: v.dN === 0 ? 'Today' : v.date, n: v.dN } : { label: HCPS[id].last, n: HCPS[id].lastN };
@@ -1391,19 +1419,24 @@ class Component extends DCLogic {
     const v = this.state.visits.find(x => this.whoOf(x).includes(id) && rated(x));
     return v ? rated(v) : HCPS[id].adv;
   }
-  insFlag(id) {
+  // one flag per person: a follow-up first, then fastest growing (Field Pro), then not met yet
+  flagOf(id) {
     const f = this.state.fus.find(x => x.who === id && !x.done);
-    if (f) return f.over ? { label:'Follow-up overdue', bg:TONES.orange[0], fg:TONES.orange[1] } : { label:'Follow-up due ' + (/^\d/.test(f.due) ? f.due : f.due.toLowerCase()), bg:TONES.blue[0], fg:TONES.blue[1] };
+    if (f) return f.dueN < 0 ? { label:'Follow-up overdue', bg:TONES.orange[0], fg:TONES.orange[1] } : { label:'Follow-up due ' + (f.dueN <= 1 ? dayOf(f.dueN).toLowerCase() : dayFull(f.dueN)), bg:TONES.blue[0], fg:TONES.blue[1] };
+    if (this.acct().fieldPro && HCPS[id].yoyN >= 15) return { label:'Fastest growing', bg:TONES.green[0], fg:TONES.green[1] };
     if (this.lastOf(id).n >= 999) return { label:'Not met yet', bg:'#EEF1F7', fg:'#3C4557' };
     return null;
   }
   visitView(v) {
     const ids = this.whoOf(v), p = HCPS[ids[0]];
     const A = this.acct();
-    const chips = [...(v.adv ? ['Advocacy ' + v.adv + (A.advLabels ? ' · ' + A.advLabels[v.adv - 1] : '/5')] : []), ...(v.area ? [v.area] : []), ...(v.stage ? [v.stage, v.prio + ' priority'] : []),
+    const advs = v.advs && Object.keys(v.advs).length ? ids.filter(id => v.advs[id]).map(id => [id, v.advs[id]]) : v.adv && p ? [[ids[0], v.adv]] : [];
+    const advChip = ([id, n]) => (advs.length > 1 ? HCPS[id].first + ' ' : 'Advocacy ') + n + (A.advLabels ? ' · ' + A.advLabels[n - 1] : '/5');
+    const chips = [...advs.map(advChip), ...(v.area ? [v.area] : []), ...(v.stage ? [v.stage, v.prio + ' priority'] : []),
+      ...(v.vendor ? [v.vendor + (v.vendorSub ? ' · ' + v.vendorSub : '')] : []), ...(v.count ? [v.count + ' attendees'] : []), ...(v.conf ? [v.conf] : []),
       ...(v.topics || []), ...(v.subs || []), ...(v.tags || [])];
-    return { ...v, name: p.name + (ids.length > 1 ? ' +' + (ids.length - 1) : ''), ini: p.ini, chips, hasChips: chips.length > 0 || !!v.src, hasSrc: !!v.src,
-      srcLabel: v.conv === 'Note' ? 'Note' : v.src === 'Notes' ? 'Insight' : v.src ? 'From ' + v.src.toLowerCase() : '', open: () => this.go('hcp', ids[0]) };
+    return { ...v, name: p ? p.name + (ids.length > 1 ? ' +' + (ids.length - 1) : '') : v.vendor || v.type.split(' · ')[0], ini: p ? p.ini : '3P', chips, hasChips: chips.length > 0 || !!v.src, hasSrc: !!v.src,
+      srcLabel: v.conv === 'Note' ? 'Note' : v.src === 'Notes' ? 'Insight' : v.src ? 'From ' + v.src.toLowerCase() : '', open: () => this.sheet('visit', v.id) };
   }
   themes(list) {
     const count = {}, tagged = list.some(v => v.topics && v.topics.length);
@@ -1413,12 +1446,12 @@ class Component extends DCLogic {
   synth(list) {
     if (!list.length) return '';
     const names = [...new Set(list.flatMap(v => this.whoOf(v)))].map(id => HCPS[id].name);
-    const people = names.length > 1 ? names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1] : names[0];
+    const people = names.length > 1 ? names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1] : names[0] || 'a third-party audience';
     const themes = this.themes(list);
-    const advs = list.map(v => v.adv).filter(Boolean);
+    const advs = list.flatMap(v => v.advs && Object.keys(v.advs).length ? Object.values(v.advs) : [v.adv]).filter(Boolean);
     const avg = advs.length ? (advs.reduce((a, b) => a + b, 0) / advs.length).toFixed(1).replace(/\.0$/, '') : null;
     const n = ['One','Two','Three','Four','Five','Six'][list.length - 1] || String(list.length);
-    const points = list.map(v => { const s1 = v.note.split('. ')[0].replace(/\.?$/, '.'); return 'Dr. ' + HCPS[this.whoOf(v)[0]].name.split(' ').pop() + ': ' + s1; });
+    const points = list.map(v => { const s1 = v.note.split('. ')[0].replace(/\.?$/, '.'); const w = this.whoOf(v)[0]; return (w ? 'Dr. ' + HCPS[w].name.split(' ').pop() : v.vendor || v.type.split(' · ')[0]) + ': ' + s1; });
     return n + (list.length === 1 ? ' conversation' : ' conversations') + ' with ' + people + '. Main themes: ' + themes.join(' and ') + '.' + (avg ? ' Average advocacy ' + avg + ' of 5.' : '') + ' ' + points.join(' ');
   }
 
@@ -1426,35 +1459,102 @@ class Component extends DCLogic {
   replaceTop(s, id) { this.setState(st => ({ stack: [...st.stack.slice(0, -1), { s, id }] })); }
   setTab(t, extra) { this.setState({ tab: t, stack: [], sheet: null, ...(extra || {}) }); }
   sheet(sheet, data) { this.setState({ sheet, sheetData: data == null ? null : data }); }
-  toast(msg) { clearTimeout(this._t); this.setState({ toast: msg }); this._t = setTimeout(() => this.setState({ toast: null }), 2000); }
-  toggleRoute(id) {
-    const has = this.state.route.includes(id);
-    this.setState(st => ({ route: has ? st.route.filter(x => x !== id) : [...st.route, id] }));
-    this.toast(has ? HCPS[id].name + ' removed from route' : HCPS[id].name + ' added to route');
-  }
-  groups() {
+  // an Add or a removal can be undone for a few seconds
+  toast(msg, undo) { clearTimeout(this._t); this.setState({ toast: msg, toastUndo: undo || null }); this._t = setTimeout(() => this.setState({ toast: null, toastUndo: null }), undo ? 4000 : 2000); }
+  // the one Add: a visit goes where it adds the least driving; a doctor at a hospital already on the route joins that stop
+  hcoOf(id) { return HCPS[id] ? HCPS[id].hco : id; }
+  stopOf(id) { if (HCPS[id]) return HCPS[id]; const h = HCOS[id]; return { id, name:h.name, ini:h.ini, spec:h.type, hco:id, isHco:true }; }
+  groupsOf(list) {
     const order = [], map = {};
-    this.state.route.forEach(id => { const h = HCPS[id].hco; if (!map[h]) { map[h] = []; order.push(h); } map[h].push(id); });
+    list.forEach(id => { const h = this.hcoOf(id); if (!map[h]) { map[h] = []; order.push(h); } map[h].push(id); });
     return order.map(h => ({ hco: h, ids: map[h] }));
   }
-  ask(q) {
-    if (!q || !q.trim()) return;
-    const A = this.acct(), ins = ANSWERS_INS[q];
-    const ans = !A.fieldPro
+  groups() { return this.groupsOf(this.state.route); }
+  placeIn(list, id) {
+    const groups = this.groupsOf(list), h = this.hcoOf(id), at = groups.findIndex(g => g.hco === h);
+    if (at >= 0) { const i = list.indexOf(groups[at].ids[groups[at].ids.length - 1]) + 1; return { list: [...list.slice(0, i), id, ...list.slice(i)], stop: at + 1, extra: 0 }; }
+    const pts = [START, ...groups.map(g => HCOS[g.hco])], P = HCOS[h];
+    let best = 0, cost = Infinity;
+    pts.forEach((a, k) => { const b = pts[k + 1], c = driveMin(a, P) + (b ? driveMin(P, b) - driveMin(a, b) : 0); if (c < cost) { cost = c; best = k; } });
+    return { list: [...groups.slice(0, best).flatMap(g => g.ids), id, ...groups.slice(best).flatMap(g => g.ids)], stop: best + 1, extra: Math.round(cost) };
+  }
+  toggleRoute(id, key = 'route') {
+    const prev = this.state[key], undo = () => this.setState({ [key]: prev });
+    if (prev.includes(id)) { this.setState({ [key]: prev.filter(x => x !== id) }); return this.toast(this.stopOf(id).name + ' removed', undo); }
+    const r = this.placeIn(prev, id);
+    this.setState({ [key]: r.list });
+    this.toast('Added: ' + ordinal(r.stop) + ' stop, ' + (r.extra > 0 ? '+' + r.extra + ' min' : 'no extra drive'), undo);
+  }
+  // the app's one score (priorityOf), in points; a point is about 5 minutes of driving. Insights accounts have no claims.
+  relevance(id) {
+    const s = this.state, A = this.acct(), p = HCPS[id], h = p ? null : HCOS[id];
+    const f = p && s.fus.find(x => x.who === id && !x.done);
+    const year = A.fieldPro ? (p ? p.claimsN : h.volN) : 0, yoy = p ? p.yoyN : h.yoyN, grew = year * yoy / (100 + yoy);
+    const since = p ? this.lastOf(id).n : Math.min(999, ...h.hcps.map(x => this.lastOf(x).n));
+    return (f && f.dueN <= 0 ? 40 : 0) + (A.fieldPro && (p ? p.leak : h.leak !== '—') ? 30 : 0)
+      + Math.min(30, 6 * Math.log2(1 + year / 25)) + Math.min(20, Math.max(0, grew) / 5) + Math.min(25, since * 25 / 30)
+      + ((p ? !A.fieldPro || p.mine : h.mine) ? 5 : 0) - (p ? p.distN : h.distN) * 4 / 5;
+  }
+  // adding someone from the map puts them in the book
+  makeHco(r) {
+    const ini = r.name.split(/[\s-]+/).filter(w => /^[A-Z]/.test(w)).slice(0, 2).map(w => w[0]).join('');
+    HCOS[r.id] = { id:r.id, name:r.name, ini, type:r.type, city:'New York, NY', boro:'Manhattan', proc:'—', yoy:'—', share:'—', opp:'$' + r.v + 'K', leak:'—', left:'—', stayed:'0%', dist:r.dist + ' mi', mine:false, hcps:[], oppN:r.v / 1000, volN:0, yoyN:0, distN:r.dist, x:r.x, y:r.y, specs:[] };
+    return HCOS[r.id];
+  }
+  ensureEntity(r) {
+    if (HCPS[r.id] || HCOS[r.id]) { (HCPS[r.id] || HCOS[r.id]).mine = true; return r.id; }
+    if (r.type) { this.makeHco(r).mine = true; return r.id; }
+    const [spec, at] = r.area.split(' · '), acc = OM_ACC.find(a => a.name.includes(at));
+    const h = Object.values(HCOS).find(x => x.name.includes(at)) || (acc ? HCOS[acc.id] || this.makeHco(acc) : HCOS.msh);
+    const first = r.name.split(' ')[1], ini = r.name.replace(/^Dr\. /, '').split(' ').map(w => w[0]).join('');
+    HCPS[r.id] = { id:r.id, name:r.name, first, ini, spec, hco:h.id, claims:'—', yoy:'—', day:'—', dayL:'—', ref:'—', top:'—', email:r.name.replace(/^Dr\. /, '').toLowerCase().replace(/ /g, '.') + '@example.com', phone:'—', last:'—', lastN:999, adv:null,
+      iOpen:'Introduce yourself and learn what ' + first + ' needs.', iBrief:'Not met yet. No insights logged.', open:'Introduce yourself and learn what ' + first + ' needs.', brief:'New to your book: ' + spec + ' at ' + h.name + '.',
+      mine:true, claimsN:0, yoyN:0, distN:r.dist, x:r.x, y:r.y, specs:[] };
+    h.hcps.push(r.id);
+    return r.id;
+  }
+  addFromMap(r) {
+    const id = this.ensureEntity(r), h = HCOS[id];
+    if (h && h.hcps.length) return this.sheet('choose', id);
+    this.toggleRoute(id);
+  }
+  // Ask: a brief on any doctor or account, from what the app knows
+  briefAnswer(p) {
+    const A = this.acct(), f = this.flagOf(p.id);
+    const a = A.fieldPro ? p.brief + (p.dayL !== '—' ? ' Lightest day: ' + p.dayL + '.' : '') : p.iBrief;
+    return { a: a + (f && f.label.startsWith('Follow-up') ? ' ' + f.label + '.' : ''), tags:[p.name, A.fieldPro ? p.spec : 'From your insights'], rows:[p.id] };
+  }
+  hcoBrief(h) {
+    const docs = h.hcps.slice().sort((a, b) => HCPS[b].claimsN - HCPS[a].claimsN);
+    return { a: h.name + ': ' + h.proc + ' procedures, ' + h.yoy + ' on 2024, and ' + h.left + ' of patients leave (' + h.leak + ' since 2022).' + (docs.length ? ' ' + HCPS[docs[0]].name + ' has the most claims here.' : ' No doctors mapped yet, so the hospital itself is the stop.'),
+      tags:[h.name, 'All cohort codes'], rows: docs.length ? docs : [h.id] };
+  }
+  nextFor(q, rows) {
+    const A = this.acct(), asked = [q, ...this.state.thread.map(m => m.q)];
+    const near = rows.filter(id => HCPS[id]).slice(0, 2).flatMap(id => ['Brief me on ' + HCPS[id].name, ...(A.fieldPro ? ['Brief me on ' + HCOS[HCPS[id].hco].name] : [])]);
+    return [...new Set([...near, ...Object.keys(A.fieldPro ? ANSWERS : ANSWERS_INS)])].filter(x => !asked.includes(x)).slice(0, 2);
+  }
+  ask(raw) {
+    const q = (raw || '').trim();
+    if (!q) return;
+    const A = this.acct(), ins = ANSWERS_INS[q], m = /^Brief me on (.+)$/.exec(q);
+    const p = m && Object.values(HCPS).find(x => x.name === m[1]), h = m && !p && A.fieldPro && Object.values(HCOS).find(x => x.name === m[1]);
+    const ans = p ? this.briefAnswer(p) : h ? this.hcoBrief(h) : !A.fieldPro
       ? ins ? { ...ins, a: ins.a.replace('{themes}', this.themes(this.state.visits).join(' and ')).replace('{adv}', A.adv ? ' Advocacy is highest with Dr. Maya Patel and Dr. Daniel Okafor.' : '') } : { a:'From your insights: nothing matched “' + q + '” exactly. Dr. Maya Patel is the closest result on ' + this.state.tlist + '.', tags:['Search'], rows:['maya'] }
       : ANSWERS[q] || { a:'From your book: nothing matched “' + q + '” exactly. Dr. Maya Patel and Mount Sinai Hospital are the closest results in ' + this.state.territory + '.', tags:['Search'], rows:['maya'] };
-    const id = Date.now();
-    this.setState(st => ({ tab:'ask', stack:[], sheet:null, askIn:'', thread:[...st.thread, { id, q, ...ans, pending:true }] }));
-    clearTimeout(this._a);
-    this._a = setTimeout(() => this.setState(st => ({ thread: st.thread.map(m => m.id === id ? { ...m, pending:false } : m) })), 800);
+    const id = Date.now() + Math.random();
+    this.setState(st => ({ tab:'ask', stack:[], sheet:null, askIn:'', thread:[...st.thread, { id, q, ...ans, next: this.nextFor(q, ans.rows), pending:true }] }));
+    // each answer has its own timer, so two quick questions both get answered
+    const tm = setTimeout(() => { this._at = this._at.filter(x => x !== tm); this.setState(st => ({ thread: st.thread.map(x => x.id === id ? { ...x, pending:false } : x) })); }, 800);
+    this._at.push(tm);
   }
   fuMetric(id) {
     const open = this.state.fus.filter(f => f.who === id && !f.done);
-    return { k:'FOLLOW-UPS', v:String(open.length), c: open.some(f => f.over) ? '#A94D1B' : '#0B1220' };
+    return { k:'FOLLOW-UPS', v:String(open.length), c: open.some(f => f.dueN < 0) ? '#A94D1B' : '#0B1220' };
   }
   fuView(f) {
-    const p = HCPS[f.who];
-    return { ...f, whoName: p.name, dueBg: f.done ? '#EEF1F7' : f.over ? '#FDEDE4' : '#E7ECFA', dueFg: f.done ? '#7A839A' : f.over ? '#A94D1B' : '#22409F', due: f.done ? 'Done' : f.over ? 'Overdue · ' + f.due : f.due,
+    const p = HCPS[f.who], over = f.dueN < 0;
+    return { ...f, whoName: p.name, dueBg: f.done ? '#EEF1F7' : over ? '#FDEDE4' : '#E7ECFA', dueFg: f.done ? '#7A839A' : over ? '#A94D1B' : '#22409F', due: f.done ? 'Done' : over ? 'Overdue · ' + dateOf(f.dueN) : dayOf(f.dueN),
       toggle: () => { this.setState(st => ({ fus: st.fus.map(x => x.id === f.id ? { ...x, done: !x.done } : x) })); if (!f.done) this.toast('Follow-up done'); },
       open: () => this.go('hcp', f.who),
       ringBd: f.done ? '#1C7A4E' : '#B9C3D8', ringBg: f.done ? '#1C7A4E' : '#fff', check: f.done ? '✓' : '', deco: f.done ? 'line-through' : 'none', color: f.done ? '#7A839A' : '#0B1220' };
@@ -1491,31 +1591,26 @@ class Component extends DCLogic {
       omStateTint: s.omLayer === 'State', omRegions: regions,
       omBubbles: src.map((r, i) => { const [bg, fg] = omColor(r.v); const size = Math.round(22 + Math.sqrt(r.v) * 2); const on = s.omSel === r.id || selZip === r.zip;
         return { x:r.x, y:py(r.y), size:size + 'px', off:(-size / 2) + 'px', bg, fg, n:i + 1, sh: on ? '0 0 0 3px #0B1220, 0 6px 14px rgba(11,18,32,.3)' : '0 4px 10px rgba(11,18,32,.22)', go: () => this.setState({ omSel: r.id, omGroup:'all', omExpanded:false }) }; }),
-      omKinds: [['acc','Accounts'], ['doc','Doctors']].map(([k, label]) => ({ label, ...segOf(s.omKind === k), go: () => this.setState({ omKind:k, omSel:null, omPicked:[] }) })),
+      omKinds: [['acc','Accounts'], ['doc','Doctors']].map(([k, label]) => ({ label, ...segOf(s.omKind === k), go: () => this.setState({ omKind:k, omSel:null }) })),
       omAreaKicker: near ? (typeOn ? Nouns + ' within ' : 'Within ') + s.omRadius + ' mi of' : typeOn ? Nouns + ' in' : 'Searching in',
       omAreaLabel: near ? s.omStart : s.omCity + ', New York',
       omOpenArea: () => this.sheet('range'),
       omExport: () => this.toast('Exported ' + src.length + ' ' + noun[1]),
       omLayers: ['Pins','ZIP','County','State'].map(l => ({ label:l, bg: s.omLayer === l ? '#2447C4' : 'transparent', fg: s.omLayer === l ? '#fff' : '#3C4557', go: () => this.setState({ omLayer:l }) })),
-      omShowLegend: !s.omExpanded, omLegendBottom: (84 + sheetH + 10) + 'px',
       omSheetH: sheetH + 'px', omToggleSheet: () => this.setState({ omExpanded: !s.omExpanded }),
       omTitle: 'Not in your book' + (near ? ' · ' + s.omRadius + ' mi' : ' · ' + s.omCity),
       omSummary: src.length + ' ' + (src.length === 1 ? noun[0] : noun[1]) + ' · ' + zips.length + ' ZIPs · ' + fmt(total) + ' value',
       omGroups: [['all','All'], ['zip','By ZIP']].map(([k, label]) => ({ label, ...segOf(s.omGroup === k), go: () => this.setState({ omGroup:k, omSel:null }) })),
       omIsAll: s.omGroup === 'all', omIsZip: s.omGroup === 'zip',
-      omRows: src.map((r, i) => { const [bg, fg] = omColor(r.v); const picked = s.omPicked.includes(r.id); const on = s.omSel === r.id;
+      omRows: src.map((r, i) => { const [bg, fg] = omColor(r.v); const inR = s.route.includes(r.id) || (!!HCOS[r.id] && HCOS[r.id].hcps.some(x => s.route.includes(x))); const on = s.omSel === r.id;
         return { n:i + 1, bg, fg, name:r.name, meta:r.area + (r.type && r.type !== 'Hospital' ? ' · ' + r.type : '') + ' · ' + r.dist + ' mi', value:fmt(r.v), rowBg: on ? '#EEF3FD' : '#fff',
           select: () => on ? openRow(r) : this.setState({ omSel:r.id }),
-          pick: () => this.setState(st => ({ omPicked: picked ? st.omPicked.filter(x => x !== r.id) : [...st.omPicked, r.id] })),
-          addBg: picked ? '#2447C4' : '#fff', addFg: picked ? '#fff' : '#2447C4', addBd: picked ? '#2447C4' : '#D7DEEC', addIcon: picked ? '✓' : '+' }; }),
+          toggle: () => this.addFromMap(r), ...addSt(inR) }; }),
       omZips: zips.map((z, i) => { const on = selZip === z.zip; return { n:i + 1, zip:z.zip, area:OM_ZIPAREA[z.zip] || '', value:fmt(z.v), meta:z.items.length + ' ' + (z.items.length === 1 ? noun[0] : noun[1]) + ' · ' + Math.round(z.v / total * 100) + '% of range', pct:Math.max(4, Math.round(z.v / zips[0].v * 100)) + '%', on, rowBg: on ? '#EEF3FD' : '#fff', countLabel: z.items.length + ' ' + (z.items.length === 1 ? noun[0] : noun[1]),
         select: () => on ? this.setState({ omGroup:'all', omSel:z.items[0].id }) : this.setState({ omSel:'z:' + z.zip }) }; }),
-      omHasPicked: s.omPicked.length > 0, omPickedLabel: s.omPicked.length + ' selected',
-      omClearPicked: () => this.setState({ omPicked:[] }),
-      omAddTargets: () => { const n = s.omPicked.length; this.setState({ omPicked:[] }); this.toast(n + ' added to My targets'); },
       shRange: s.sheet === 'range',
       omModes: [['near','Near a place'], ['place','State & city']].map(([k, label]) => ({ label, ...segOf(s.omMode === k), go: () => this.setState({ omMode:k }) })),
-      omStarts: [['Central Manhattan','Your territory centre'], ['My location','Using GPS'], ['Mount Sinai Hospital','Your first stop today']].map(([label, meta]) => { const on = s.omStart === label; return { label, meta, check: on ? '✓' : '', bg: on ? '#EDF1FB' : '#fff', bd: on ? '#2447C4' : '#E1E6F0', go: () => this.setState({ omStart:label }) }; }),
+      omStarts: [...(['Central Manhattan','My location','Mount Sinai Hospital'].includes(s.omStart) ? [] : [[s.omStart, 'The account you came from']]), ['Central Manhattan','Your territory centre'], ['My location','Using GPS'], ['Mount Sinai Hospital','Your first stop today']].map(([label, meta]) => { const on = s.omStart === label; return { label, meta, check: on ? '✓' : '', bg: on ? '#EDF1FB' : '#fff', bd: on ? '#2447C4' : '#E1E6F0', go: () => this.setState({ omStart:label }) }; }),
       omRadii: [2, 5, 10].map(r => ({ label:r + ' mi', ...chipOf(s.omRadius === r), go: () => this.setState({ omRadius:r }) })),
       omCities: ['All cities','Manhattan','Brooklyn','Queens'].map(c => ({ label:c, ...chipOf(s.omCity === c), go: () => this.setState({ omCity:c }) })),
       omApplyLabel: 'Show ' + src.length + ' ' + noun[1]
@@ -1527,16 +1622,19 @@ class Component extends DCLogic {
     const top = s.stack[s.stack.length - 1] || { s: s.tab };
     const scr = top.s;
     const groups = this.groups();
+    const viewKey = s.day === 'tomorrow' ? 'tomorrow' : 'route', viewList = s[viewKey], viewGroups = this.groupsOf(viewList);
+    const headline = list => { const n = list.length, g = this.groupsOf(list).length; return n ? n + (n === 1 ? ' visit' : ' visits') + ' · ' + g + (g === 1 ? ' stop' : ' stops') : 'No route yet'; };
+    const inRoute = id => s.route.includes(id) || (!!HCOS[id] && HCOS[id].hcps.some(x => s.route.includes(x)));
     const runList = groups.flatMap(g => g.ids);
     const routeN = s.route.length;
     const prevTop = s.stack.length > 1 ? s.stack[s.stack.length - 2].s : s.tab;
-    const LABEL = { today:'Today', targets:'Targets', ask:'Ask', map:'Map', activity:'Activity', hco:'Account', hcp:'Doctor', route:'Route', run:'Route', summary:'Summary', reports:'Reports' };
+    const LABEL = { targets:'Targets', ask:'Ask', map:'Map', summaries:'Summaries', activity:'Activity', hco:'Account', hcp:'Doctor', route:'Route', run:'Route', summary:'Summary', reports:'Reports' };
     const A = this.acct(), ins = !A.fieldPro;
     const tabs = this.tabsFor(s);
     const activeTab = s.tab;
     const tc = {}, tl = {};
     const tabLabels = (this.props && this.props.tabLabels) || 'always';
-    ['targets','ask','map','activity'].forEach(t => { tc[t] = t === activeTab ? '#2447C4' : '#7A839A'; tl[t] = tabLabels === 'always' || t === activeTab; });
+    ['targets','ask','map','summaries','activity'].forEach(t => { tc[t] = t === activeTab ? '#2447C4' : '#7A839A'; tl[t] = tabLabels === 'always' || t === activeTab; });
 
     const fuOpen = s.fus.filter(f => !f.done);
     const isRun = scr === 'run';
@@ -1546,12 +1644,15 @@ class Component extends DCLogic {
     const ql = s.q.trim().toLowerCase();
     const sortNow = ins ? s.iSort : s.sort;
     const tlist = TLISTS.find(t => t.name === s.tlist) || TLISTS[0];
+    const cgOn = CODE_GROUPS.filter(g => s.cgs.includes(g.name)), cgSpecs = cgOn.flatMap(g => g.specs);
+    const specOk = x => !x.specs.length || ((s.spec === 'All codes' || x.specs.includes(s.spec)) && x.specs.some(sp => cgSpecs.includes(sp)));
+    const codesOff = !ins && (s.spec !== 'All codes' || s.cgs.length < CODE_GROUPS.length);
     if (ins) {
       items = tlist.ids.map(id => HCPS[id]).filter(p => !ql || p.name.toLowerCase().includes(ql) || HCOS[p.hco].name.toLowerCase().includes(ql));
       const advN = id => this.advOf(id) || 0, lastName = p => p.name.split(' ').pop();
-      items.sort((a, b) => sortNow === 'Name' ? lastName(a).localeCompare(lastName(b)) : sortNow === 'Last met' ? this.lastOf(b.id).n - this.lastOf(a.id).n : advN(b.id) - advN(a.id));
+      items.sort((a, b) => sortNow === 'Relevance' ? this.relevance(b.id) - this.relevance(a.id) : sortNow === 'Name' ? lastName(a).localeCompare(lastName(b)) : sortNow === 'Last met' ? this.lastOf(b.id).n - this.lastOf(a.id).n : advN(b.id) - advN(a.id));
       items = items.map(p => {
-        const f = this.insFlag(p.id), adv = this.advOf(p.id);
+        const f = this.flagOf(p.id), adv = this.advOf(p.id);
         return { name:p.name, sub:p.spec + ' · ' + HCOS[p.hco].name, ini:p.ini, avBg:'#E7ECFA', avFg:'#22409F', avR:'50%', ...addSt(s.route.includes(p.id)),
           toggle: () => this.toggleRoute(p.id), open: () => this.go('hcp', p.id), hasFlag: !!f, flag: f ? f.label : '', flagBg: f ? f.bg : '', flagFg: f ? f.fg : '',
           metrics: A.adv
@@ -1559,24 +1660,24 @@ class Component extends DCLogic {
             : [{ k:'LAST MET', v:this.lastOf(p.id).label, c:'#0B1220' }, { k:'INSIGHTS', v:String(this.convCount(p.id)), c:'#22409F' }, this.fuMetric(p.id)] };
       });
     } else if (s.kind === 'hco') {
-      items = Object.values(HCOS).filter(h => s.scope === 'explore' || h.mine).filter(h => this.areaOk(h.distN, h.boro) && this.typeOk(h.type)).filter(h => !ql || h.name.toLowerCase().includes(ql));
+      items = Object.values(HCOS).filter(h => s.scope === 'explore' || h.mine).filter(h => this.areaOk(h.distN, h.boro) && this.typeOk(h.type)).filter(h => !ql || h.name.toLowerCase().includes(ql)).filter(specOk);
       const key = { Opportunity:'oppN', Volume:'volN', Growth:'yoyN', Distance:'distN' }[s.sort];
-      items.sort((a, b) => s.sort === 'Distance' ? a[key] - b[key] : b[key] - a[key]);
+      items.sort((a, b) => s.sort === 'Relevance' ? this.relevance(b.id) - this.relevance(a.id) : s.sort === 'Distance' ? a[key] - b[key] : b[key] - a[key]);
       items = items.map(h => {
-        const inR = h.hcps.some(id => s.route.includes(id));
+        const inR = inRoute(h.id);
         return { name:h.name, sub:h.type + ' · ' + h.dist + ' away', ini:h.ini, avBg:'#EEF1F7', avFg:'#3C4557', avR:'13px', ...addSt(inR),
-          toggle: () => h.hcps.length ? this.sheet('choose', h.id) : this.toast('No HCPs mapped at ' + h.name + ' yet'),
-          open: () => this.go('hco', h.id), hasFlag:true, flag:'Leaking ' + h.leak + ' since 2022', flagBg:'#FDEDE4', flagFg:'#A94D1B',
+          toggle: () => h.hcps.length ? this.sheet('choose', h.id) : this.toggleRoute(h.id),
+          open: () => this.go('hco', h.id), hasFlag: h.leak !== '—', flag:'Leaking ' + h.leak + ' since 2022', flagBg:'#FDEDE4', flagFg:'#A94D1B',
           metrics:[{ k:'OPPORTUNITY', v:h.opp, c:'#22409F' }, { k:'PROCEDURES', v:h.proc, c:'#0B1220' }, { k:'YOY', v:h.yoy, c:'#1C7A4E' }] };
       });
     } else {
-      items = Object.values(HCPS).filter(p => s.scope === 'explore' || p.mine).filter(p => this.areaOk(p.distN, HCOS[p.hco].boro)).filter(p => !ql || p.name.toLowerCase().includes(ql) || HCOS[p.hco].name.toLowerCase().includes(ql));
+      items = Object.values(HCPS).filter(p => s.scope === 'explore' || p.mine).filter(p => this.areaOk(p.distN, HCOS[p.hco].boro)).filter(p => !ql || p.name.toLowerCase().includes(ql) || HCOS[p.hco].name.toLowerCase().includes(ql)).filter(specOk);
       const key = { Opportunity:'claimsN', Volume:'claimsN', Growth:'yoyN', Distance:'distN' }[s.sort];
-      items.sort((a, b) => s.sort === 'Distance' ? a[key] - b[key] : b[key] - a[key]);
+      items.sort((a, b) => s.sort === 'Relevance' ? this.relevance(b.id) - this.relevance(a.id) : s.sort === 'Distance' ? a[key] - b[key] : b[key] - a[key]);
       items = items.map(p => {
-        const t = TONES[p.tone] || TONES.blue;
+        const f = this.flagOf(p.id);
         return { name:p.name, sub:p.spec + ' · ' + HCOS[p.hco].name, ini:p.ini, avBg:'#E7ECFA', avFg:'#22409F', avR:'50%', ...addSt(s.route.includes(p.id)),
-          toggle: () => this.toggleRoute(p.id), open: () => this.go('hcp', p.id), hasFlag: !!p.flag, flag:p.flag || '', flagBg:t[0], flagFg:t[1],
+          toggle: () => this.toggleRoute(p.id), open: () => this.go('hcp', p.id), hasFlag: !!f, flag: f ? f.label : '', flagBg: f ? f.bg : '', flagFg: f ? f.fg : '',
           metrics:[{ k:'CLAIMS', v:p.claims, c:'#0B1220' }, { k:'YOY', v:p.yoy, c: p.yoyN < 0 ? '#A94D1B' : '#1C7A4E' }, { k:'LIGHTEST', v:p.day, c:'#22409F' }] };
       });
     }
@@ -1586,6 +1687,7 @@ class Component extends DCLogic {
     const empty = ql
       ? { emptyTitle:'No matches for “' + s.q.trim() + '”', emptySub: toExploreFirst ? 'Try Explore, or ask about it.' : 'Check the spelling, or ask about it.',
           emptyA: toExploreFirst ? 'Search Explore' : 'Clear search', emptyAGo: toExploreFirst ? () => this.setState({ scope:'explore' }) : () => this.setState({ q:'' }), emptyB:'Ask about it', emptyBGo: () => this.ask(s.q) }
+      : codesOff ? { emptyTitle:'Nothing for these codes', emptySub:'Change the specialty or the code groups.', emptyA:'Change filters', emptyAGo: () => this.sheet('filter'), emptyB:'Reset filters', emptyBGo: () => this.setState({ spec:'All codes', cgs: CODE_GROUPS.map(g => g.name) }) }
       : { emptyTitle:'Nothing in this area', emptySub: s.kind === 'hco' ? 'Widen the area or change the type.' : 'Widen the area.',
           emptyA:'Change area', emptyAGo: () => this.sheet('range', 'targets'), emptyB:'Reset filters', emptyBGo: resetArea };
     const rangeType = s.sheetData === 'targets' ? !ins && s.kind === 'hco' : s.omKind === 'acc';
@@ -1595,15 +1697,14 @@ class Component extends DCLogic {
     const H = HCOS[hId];
     const pId = scr === 'hcp' ? top.id : 'maya';
     const P = HCPS[pId];
-    const pt = TONES[P.tone] || TONES.blue;
     const pIn = s.route.includes(pId);
-    const hIn = H.hcps.some(id => s.route.includes(id));
+    const hIn = inRoute(H.id);
     const act = (icon, label, go, on) => ({ icon, label, go, bg: on ? '#2447C4' : '#E7ECFA', fg: on ? '#fff' : '#22409F' });
 
     // run
     const idx = Math.min(s.runIdx, Math.max(runList.length - 1, 0));
     const curId = runList[idx] || 'maya';
-    const C = HCPS[curId];
+    const C = this.stopOf(curId), CH = HCOS[C.hco];
     const stopN = groups.findIndex(g => g.ids.includes(curId)) + 1 || 1;
     const runSegs = (runList.length ? runList : ['x','y','z']).map((id, i) => {
       const done = s.runDone.includes(id), skip = s.runSkip.includes(id), cur = isRun && i === idx;
@@ -1621,18 +1722,19 @@ class Component extends DCLogic {
     };
     const routeDone = runList.filter(id => s.runDone.includes(id)).length;
     const nextPending = runList.find(id => !s.runDone.includes(id) && !s.runSkip.includes(id));
-    const NP = HCPS[nextPending || runList[0] || 'maya'];
 
-    // map
-    const layerCfg = { Pins:null, ZIP:{ size:90, r:'50%' }, County:{ size:200, r:'50%' }, State:{ size:420, r:'40%' } }[s.layer];
-    const overlays = layerCfg ? Object.values(HCOS).filter(h => h.mine || s.layer !== 'Pins').map(h => ({ x:h.x, y:h.y, size:layerCfg.size + 'px', off:(-layerCfg.size / 2) + 'px', r:layerCfg.r, bg: h.id === 'nyu' ? 'rgba(221,97,52,.22)' : 'rgba(36,71,196,.18)', bd: h.id === 'nyu' ? 'rgba(221,97,52,.5)' : 'rgba(36,71,196,.45)' })) : [];
-    const mapHcps = Object.values(HCPS).slice().sort((a, b) => a.distN - b.distN);
 
     const epId = (s.sheet === 'email' && s.sheetData) || pId;
     const EP = HCPS[epId] || HCPS.maya;
     const chId = (s.sheet === 'choose' && s.sheetData) || 'msh';
 
-    const titles = { range: rangeType ? 'Area and type' : 'Search area', filter:'Filter and sort', territory: ins ? 'Target lists' : 'Territories', choose:'Who will you see?', email:'Draft email', fu:'New follow-up', me:'Your workspace', insight: s.insRec ? 'Recording' : 'Add insight' };
+    // insight detail
+    const VD = s.sheet === 'visit' && s.visits.find(v => v.id === s.sheetData), VV = VD && this.visitView(VD);
+    const visitDetail = VD ? { ...VV, hasTags: VV.chips.length > 0, hasPeople: this.whoOf(VD).length > 0,
+      people: this.whoOf(VD).map(id => { const p = HCPS[id]; return { ini:p.ini, name:p.name, meta:p.spec + ' · ' + HCOS[p.hco].name, open: () => this.go('hcp', id) }; }) }
+      : { date:'', type:'', topic:'', note:'', chips:[], hasTags:false, hasSrc:false, srcLabel:'', hasPeople:false, people:[] };
+
+    const titles = { visit: VD && VD.conv === 'Note' ? 'Note' : 'Insight', range: rangeType ? 'Area and type' : 'Search area', filter:'Filter and sort', territory: ins ? 'Target lists' : 'Territories', choose:'Who will you see?', email:'Draft email', fu:'New follow-up', me:'Your workspace', insight: s.insRec ? 'Recording' : 'Add insight' };
 
     const jumpDefs = [
       ['Targets', () => this.jump('targets')],
@@ -1644,21 +1746,21 @@ class Component extends DCLogic {
       ['Ask', () => this.jump('ask')],
       !ins && ['Opportunity map', () => this.jump('map')],
       ['Activity', () => this.jump('activity', null, null, { actSeg:'visits' })],
-      ['Summaries', () => this.jump('activity', null, null, { actSeg:'sum' })],
+      ['Summaries', () => ins ? this.jump('summaries') : this.jump('activity', null, null, { actSeg:'sum' })],
       A.record && ['Record', () => { this.jump('targets'); this.recordNow(); }],
       ['Add insight sheet', () => this.jump('targets', { s:'hcp', id:'maya' }, 'insight', this.insFresh(['maya']))],
       ['Filter sheet', () => this.jump('targets', null, 'filter')]
     ].filter(Boolean);
     const curJump = s.sheet === 'insight' ? (s.insMode === 'record' && A.record ? 'Record' : 'Add insight sheet') : s.sheet === 'filter' ? 'Filter sheet' :
-      scr === 'activity' && s.actSeg === 'sum' ? 'Summaries' :
-      ({ today:'Today', targets:'Targets', hco:'Account profile', hcp:'Doctor profile', route:'Route plan', run:'Active route', summary:'Day summary', ask:'Ask', map:'Opportunity map', activity:'Activity' })[scr];
+      scr === 'summaries' || (scr === 'activity' && s.actSeg === 'sum') ? 'Summaries' :
+      ({ targets:'Targets', hco:'Account profile', hcp:'Doctor profile', route:'Route plan', run:'Active route', summary:'Day summary', ask:'Ask', map:'Opportunity map', activity:'Activity' })[scr];
 
     // hcp, insights account
-    const pf = this.insFlag(pId), pLast = this.lastOf(pId), pAdv = this.advOf(pId);
+    const pf = this.flagOf(pId), pLast = this.lastOf(pId), pAdv = this.advOf(pId);
     const pMine = ins ? tlist.ids.includes(pId) : P.mine;
     const pFuOpen = s.fus.filter(f => f.who === pId && !f.done);
     const pLastV = s.visits.find(v => this.whoOf(v).includes(pId));
-    const cLast = this.lastOf(curId), cAdv = this.advOf(curId);
+    const cLast = C.isHco ? { label:'—', n:999 } : this.lastOf(curId), cAdv = C.isHco ? null : this.advOf(curId);
     const advC = a => a >= 4 ? '#1C7A4E' : a && a <= 2 ? '#A94D1B' : '#0B1220';
 
     // summaries
@@ -1669,6 +1771,7 @@ class Component extends DCLogic {
     const smyPicked = s.visits.filter(v => s.smySel.includes(v.id));
 
     // add insight sheet
+    const thirdParty = s.insType === 'Third Party', insReady = (s.insWho.length > 0 || thirdParty) && !!s.insNote.trim() && (!A.areas || !!s.insArea);
     const advDot = on => on ? { bg:'#2447C4', fg:'#fff', bd:'#2447C4' } : { bg:'#fff', fg:'#3C4557', bd:'#D7DEEC' };
     const topicsNow = this.topicsFor(s.insArea), subsNow = A.subs ? s.insTopics.flatMap(t => A.subs[t] || []) : [];
     const toggleIn = (key, val) => this.setState(st => ({ [key]: st[key].includes(val) ? st[key].filter(x => x !== val) : [...st[key], val] }));
@@ -1680,45 +1783,30 @@ class Component extends DCLogic {
       statusBg: '#F4F6FA',
       accountOpts: Object.keys(ACCOUNTS).map(k => { const on = s.account === k, a = ACCOUNTS[k]; return { label:a.name, meta:a.meta, bg: on ? '#2447C4' : '#fff', fg: on ? '#fff' : '#1B2333', bd: on ? '#2447C4' : '#D7DEEC', go: () => this.setAccount(k) }; }),
       modeNotes: A.notes,
-      isToday: scr === 'today', isTargets: scr === 'targets', isAsk: scr === 'ask', isMap: scr === 'map', isActivity: scr === 'activity',
-      isListPage: scr === 'activity',
+      isTargets: scr === 'targets', isSumTab: scr === 'summaries', isAsk: scr === 'ask', isMap: scr === 'map', isActivity: scr === 'activity',
+      isListPage: scr === 'activity' || scr === 'summaries',
       isHco: scr === 'hco', isHcp: scr === 'hcp', isRoute: scr === 'route', isRun, isSummary: scr === 'summary', isReports: scr === 'reports',
       back: () => this.setState(st => ({ stack: st.stack.slice(0, -1) })), backLabel: LABEL[prevTop] || 'Back',
-      showTabs: !isRun, tc, tl, showMapTab: tabs.includes('map'),
+      showTabs: !isRun, tc, tl, showMapTab: tabs.includes('map'), showSumTab: tabs.includes('summaries'),
       centreGo: () => this.recordNow(), centreIsRecord: A.record, centreIsNote: !A.record, centreLabel: A.record ? 'Record' : 'Insight',
       centreBg: 'radial-gradient(120% 120% at 20% 10%,#3D6BF0 0%,#22409F 70%)', centreFg: s.sheet === 'insight' ? '#2447C4' : '#7A839A',
-      goToday: () => this.setTab('today'), goTargets: () => this.setTab('targets'), goAsk: () => this.setTab('ask'), goMap: () => this.setTab('map'), goActivity: () => this.setTab('activity'),
+      goTargets: () => this.setTab('targets'), goAsk: () => this.setTab('ask'), goMap: () => this.setTab('map'), goActivity: () => this.setTab('activity'), goSummaries: () => this.setTab('summaries'),
       hasFuBadge: fuOpen.length > 0, fuOpenCount: fuOpen.length,
-      territory: ins ? s.tlist : s.territory, territoryUpper: (ins ? s.tlist : s.territory).toUpperCase(), territoryChip: ins ? s.tlist : s.territory,
+      territory: ins ? s.tlist : s.territory, territoryChip: ins ? s.tlist : s.territory,
       openMe: () => this.sheet('me'), openTerritory: () => this.sheet('territory'),
-
-      // today
-      hasRoute: routeN > 0, noRoute: routeN === 0,
-      routeHeadline: routeN ? routeN + (routeN === 1 ? ' visit' : ' visits') + ' · ' + groups.length + (groups.length === 1 ? ' stop' : ' stops') : 'No route yet',
-      routeDoneLabel: routeN ? routeDone + ' of ' + routeN + ' done' : 'Add doctors to start',
-      routeCountLabel: routeN + (routeN === 1 ? ' visit' : ' visits'),
-      runSegs,
-      nextIni: NP.ini, nextName: NP.name, nextTime: TIMES[NP.id] || 'Flexible', nextHco: HCOS[NP.hco].name + ' · ' + HCOS[NP.hco].dist,
-      heroPrimaryLabel: !routeN ? 'Find doctors' : routeDone || s.runSkip.length ? 'Continue route' : 'Start route',
-      heroPrimary: () => { if (!routeN) return this.setTab('targets'); const i = runList.indexOf(nextPending); if (i < 0) return this.go('summary'); this.setState({ runIdx: i }); this.go('run'); },
-      openRoute: () => this.go('route'),
-      toActivityFu: () => this.setTab('activity', { actSeg:'fus' }),
-      fuOpenList: fuOpen.map(f => this.fuView(f)), noFuOpen: fuOpen.length === 0,
-      toTargets: () => this.setTab('targets'),
-      suggestAdd: () => this.toggleRoute('jun'), suggestAddLabel: s.route.includes('jun') ? '✓ In route' : 'Add to route', openJun: () => this.go('hcp', 'jun'),
 
       // targets
       q: s.q, hasQ: !!s.q, onQ: e => this.setState({ q: e.target.value }), clearQ: () => this.setState({ q:'' }),
-      toAsk: () => this.setTab('ask'),
+      toAsk: () => s.q.trim() ? this.ask(s.q) : this.setTab('ask'),
       scopeSeg: [['mine','My targets'], ['explore','Explore']].map(([k, label]) => ({ label, ...seg(s.scope === k), go: () => this.setState({ scope:k }) })),
       kindChips: [['hco','HCOs'], ['hcp','HCPs']].map(([k, label]) => ({ label, ...chip(s.kind === k), go: () => this.setState({ kind:k }) })),
       isFieldPro: !ins, showTypeChip: s.kind === 'hco', omType: s.omType, openArea: () => this.sheet('range', 'targets'),
       areaChip: s.omMode === 'near' ? 'Within ' + s.omRadius + ' mi' : s.omCity === 'All cities' ? 'New York' : s.omCity,
-      spec: s.spec, sort: s.sort, sortNow, openFilter: () => this.sheet('filter'),
+      spec: s.spec, sortNow, openFilter: () => this.sheet('filter'),
+      groupsChip: cgOn.length + (cgOn.length === 1 ? ' group · ' : ' groups · ') + cgOn.reduce((n, g) => n + g.codes, 0) + ' codes',
       targetItems: items, noTargets: items.length === 0, ...empty,
       targetCount: items.length + ' ' + (items.length === 1 ? unit[0] : unit[1]) + (ins ? ' on this list' : s.scope === 'explore' ? ' nearby' : ' in your book'),
       targetHint: 'by ' + sortNow.toLowerCase(),
-      toExplore: () => this.setState({ scope:'explore' }), askQ: () => this.ask(s.q),
 
       // pill
       showPill: routeN > 0 && ['targets','hco','hcp'].includes(scr) && !s.sheet,
@@ -1726,14 +1814,14 @@ class Component extends DCLogic {
       clearRoute: () => { this.setState({ route: [], runDone: [], runSkip: [] }); this.toast('Route cleared'); },
 
       // hco
-      h: H,
+      h: H, hTag: H.mine ? 'Target · ' + s.territory : 'Not yet a target', hTagBg: H.mine ? '#E7ECFA' : '#EEF1F7', hTagFg: H.mine ? '#22409F' : '#3C4557',
       hcoReport: () => this.toast('Leakage report queued · ' + H.name),
       hcoActions: [
         act('▤', 'Report', () => this.toast('Leakage report queued · ' + H.name)),
-        act('✎', 'Insight', () => this.openLog(H.hcps[0] || 'maya')),
-        act('◎', 'Map', () => this.setTab('map')),
-        act(hIn ? '✓' : '+', hIn ? 'In route' : 'Route', () => H.hcps.length ? this.sheet('choose', H.id) : this.toast('No HCPs mapped yet'), hIn),
-        act('✳', 'Ask', () => this.ask('Which accounts are growing the most?'))
+        act('✎', 'Insight', () => this.openInsight([], 'notes', H.id)),
+        act('◎', 'Map', () => this.setTab('map', { omMode:'near', omStart:H.name, omSel:H.id })),
+        act(hIn ? '✓' : '+', hIn ? 'In route' : 'Add', () => H.hcps.length ? this.sheet('choose', H.id) : this.toggleRoute(H.id), hIn),
+        act('✳', 'Ask', () => this.ask('Brief me on ' + H.name))
       ],
       hcoStats: [
         { k:'PROCEDURES', v:H.proc, s:H.yoy + ' vs 2024', c:'#0B1220' },
@@ -1741,19 +1829,19 @@ class Component extends DCLogic {
         { k:'OPPORTUNITY', v:H.opp, s:'billed charges · 2025', c:'#22409F' },
         { k:'IN-RADIUS SHARE', v:H.share, s:'within 100 miles', c:'#0B1220' }
       ],
-      hHcps: H.hcps.map(id => { const p = HCPS[id]; return { name:p.name, ini:p.ini, meta:p.spec + ' · ' + p.claims + ' claims', ...addSt(s.route.includes(id)), open: () => this.go('hcp', id), toggle: () => this.toggleRoute(id) }; }),
+      hHcps: H.hcps.slice().sort((a, b) => HCPS[b].claimsN - HCPS[a].claimsN).map(id => { const p = HCPS[id]; return { name:p.name, ini:p.ini, meta:p.spec + ' · ' + p.claims + ' claims', ...addSt(s.route.includes(id)), open: () => this.go('hcp', id), toggle: () => this.toggleRoute(id) }; }),
 
       // hcp
       p: { ...P, last: pLast.label, hcoName: HCOS[P.hco].name, hcoFg: ins ? '#5B6478' : '#2447C4', hcoW: ins ? 400 : 600,
         tag: pMine ? 'Target · ' + (ins ? s.tlist : s.territory) : ins ? 'Not on this list' : 'Not yet a target', tagBg: pMine ? '#E7ECFA' : '#EEF1F7', tagFg: pMine ? '#22409F' : '#3C4557',
-        ...(ins ? { open:P.iOpen, brief:P.iBrief, hasFlag: !!pf, flag: pf ? pf.label : '', flagBg: pf ? pf.bg : '', flagFg: pf ? pf.fg : '' } : { hasFlag: !!P.flag, flagBg: pt[0], flagFg: pt[1] }) },
+        ...(ins ? { open:P.iOpen, brief:P.iBrief } : {}), hasFlag: !!pf, flag: pf ? pf.label : '', flagBg: pf ? pf.bg : '', flagFg: pf ? pf.fg : '' },
       pOpenHco: () => { if (!ins) this.go('hco', P.hco); },
       pDetails: () => this.toast('Contact card copied'),
       hcpActions: [
         act('☎', 'Call', () => this.toast('Calling ' + P.phone)),
         act('✉', 'Email', () => this.sheet('email', pId)),
         act('✎', 'Insight', () => this.openLog(pId)),
-        act(pIn ? '✓' : '+', pIn ? 'In route' : 'Route', () => this.toggleRoute(pId), pIn),
+        act(pIn ? '✓' : '+', pIn ? 'In route' : 'Add', () => this.toggleRoute(pId), pIn),
         act('✳', 'Ask', () => this.ask('Brief me on ' + P.name))
       ],
       pSegs: [['overview','Overview'], ['activity','Activity']].map(([k, label]) => ({ label, ...seg(s.pSeg === k), go: () => this.setState({ pSeg:k }) })),
@@ -1763,32 +1851,47 @@ class Component extends DCLogic {
           : { k:'LAST MEETING', v: pLastV ? pLastV.type.split(' · ')[0] : '—', s: pLastV ? pLastV.topic : 'none logged', c:'#0B1220' },
         { k:'LAST MET', v:pLast.label, s: pLast.n === 0 ? 'today' : pLast.n < 999 ? pLast.n + ' days ago' : 'not met yet', c:'#0B1220' },
         { k:'INSIGHTS', v:String(this.convCount(pId)), s: this.convCount(pId) === 1 ? 'conversation logged' : 'conversations logged', c:'#22409F' },
-        { k:'FOLLOW-UPS', v:String(pFuOpen.length), s: pFuOpen.some(f => f.over) ? 'one overdue' : 'none overdue', c: pFuOpen.some(f => f.over) ? '#A94D1B' : '#0B1220' }
+        { k:'FOLLOW-UPS', v:String(pFuOpen.length), s: pFuOpen.some(f => f.dueN < 0) ? 'one overdue' : 'none overdue', c: pFuOpen.some(f => f.dueN < 0) ? '#A94D1B' : '#0B1220' }
       ] : [
         { k:'CLAIMS', v:P.claims, s:P.yoy + ' · 2025', c:'#0B1220' },
         { k:'LIGHTEST DAY', v:P.dayL, s:'fewest visits · 2025', c:'#22409F' },
         { k:'TOP PROCEDURE', v:P.top, s:'selected codes', c:'#0B1220' },
         { k:'REFERRED IN', v:P.ref, s:'selected diagnoses', c:'#0B1220' }
       ],
-      pEmail: () => this.sheet('email', pId), pAsk: () => this.ask('Brief me on ' + P.name), pCall: () => this.toast('Calling ' + P.phone), pLog: () => this.openLog(pId),
+      pEmail: () => this.sheet('email', pId), pAsk: () => this.ask('Brief me on ' + P.name), pCall: () => this.toast('Calling ' + P.phone), pLog: () => this.openLog(pId), pFu: () => this.openFu(pId),
       pLogLabel: '＋ Add insight',
       pFus: s.fus.filter(f => f.who === pId).map(f => this.fuView(f)),
       pVisits: s.visits.filter(v => this.whoOf(v).includes(pId)).map(v => this.visitView(v)), pNoVisits: !s.visits.some(v => this.whoOf(v).includes(pId)),
 
       // route
-      routeGroups: groups.map((g, i) => ({ n: i + 1, name: HCOS[g.hco].name, dist: HCOS[g.hco].dist, rows: g.ids.map(id => ({ name: HCPS[id].name, spec: HCPS[id].spec, time: TIMES[id] || 'Flexible', remove: () => this.toggleRoute(id) })) })),
+      noRoute: viewList.length === 0,
+      routeHeadline: headline(s.route), viewHeadline: headline(viewList),
+      routeDoneLabel: routeN ? routeDone + ' of ' + routeN + ' done' : 'Add doctors to start',
+      heroPrimaryLabel: !routeN ? 'Find doctors' : routeDone || s.runSkip.length ? 'Continue route' : 'Start route',
+      heroPrimary: () => { if (!routeN) return this.setTab('targets'); const i = runList.indexOf(nextPending); if (i < 0) return this.go('summary'); this.setState({ runIdx: i }); this.go('run'); },
+      routeCountLabel: routeN + (routeN === 1 ? ' visit' : ' visits'),
+      runSegs,
+      openRoute: () => { this.setState({ day:'today' }); this.go('route'); },
+      toTargets: () => this.setTab('targets'),
+      routeDate: dayFull(s.day === 'tomorrow' ? 1 : 0), hasTomorrow: s.tomorrow.length > 0, routeIsToday: viewKey === 'route', canStart: viewKey === 'route' && routeN > 0,
+      daySegs: [['today','Today'], ['tomorrow','Tomorrow']].map(([k, label]) => ({ label, ...seg(s.day === k), go: () => this.setState({ day:k }) })),
+      routeGroups: viewGroups.map((g, i) => ({ n: i + 1, name: HCOS[g.hco].name, dist: HCOS[g.hco].dist, rows: g.ids.map(id => { const st = this.stopOf(id); return { name: st.name, spec: st.spec, time: TIMES[id] || 'Flexible', remove: () => this.toggleRoute(id, viewKey) }; }) })),
       startRun: () => { this.setState({ runIdx:0, runDone:[], runSkip:[] }); this.replaceTop('run'); },
 
       // run
       runPos: (idx + 1) + ' OF ' + Math.max(runList.length, 1),
-      rc: { ...C, stopN, hcoName: HCOS[C.hco].name, time: TIMES[curId] || 'Flexible', yoyC: C.yoyN < 0 ? '#A94D1B' : '#1C7A4E',
+      rc: C.isHco
+        ? { ...C, stopN, hcoName: CH.name, time: 'Flexible', sub: CH.type + ' · ' + CH.dist + ' away', open: 'Meet the team at ' + CH.name + ' and find out who sends patients elsewhere.', brief: CH.left + ' of patients leave the account, ' + CH.leak + ' since 2022.' }
+        : { ...C, stopN, hcoName: CH.name, time: TIMES[curId] || 'Flexible',
         sub: ins ? C.spec + ' · ' + (cLast.n >= 999 ? 'not met yet' : 'last met ' + cLast.label) : C.spec + ' · lightest day ' + C.day,
         ...(ins ? { open:C.iOpen, brief:C.iBrief } : {}) },
-      rcStats: ins
+      rcStats: C.isHco ? [{ k:'PROCEDURES', v:CH.proc, c:'#0B1220' }, { k:'YOY', v:CH.yoy, c: CH.yoyN < 0 ? '#A94D1B' : '#1C7A4E' }, { k:'LEFT', v:CH.left, c:'#A94D1B' }]
+        : ins
         ? [...(A.adv ? [{ k:'ADVOCACY', v: cAdv ? cAdv + '/5' : '—', c:advC(cAdv) }] : []), { k:'LAST MET', v:cLast.label, c:'#0B1220' }, { k:'INSIGHTS', v:String(this.convCount(curId)), c:'#22409F' }, ...(A.adv ? [] : [this.fuMetric(curId)])]
         : [{ k:'CLAIMS', v:C.claims, c:'#0B1220' }, { k:'YOY', v:C.yoy, c: C.yoyN < 0 ? '#A94D1B' : '#1C7A4E' }, { k:'REFERRED IN', v:C.ref, c:'#0B1220' }],
       runEnd: () => this.replaceTop('summary'),
-      runLog: () => this.openLog(curId), runCall: () => this.toast('Calling ' + C.phone), runProfile: () => this.go('hcp', curId),
+      runLog: () => C.isHco ? this.openInsight([], 'notes', curId) : this.openLog(curId), runCall: () => this.toast('Calling ' + (C.isHco ? C.name : C.phone)), runProfile: () => this.go(C.isHco ? 'hco' : 'hcp', curId),
+      runHasRecord: !!A.record, runNoRecord: !A.record, runRecord: () => this.recordNow(),
       runLogBtn: 'Add insight',
       runLogLabel: s.logged.includes(curId) ? '✓ Insight saved' : 'Nothing logged for this visit yet',
       runLogColor: s.logged.includes(curId) ? '#1C7A4E' : '#7A839A',
@@ -1798,9 +1901,17 @@ class Component extends DCLogic {
 
       // summary
       sumDone: routeDone + '/' + routeN, sumSkipped: s.runSkip.length,
-      sumRows: runList.map((id, i) => { const d = s.runDone.includes(id), k = s.runSkip.includes(id); return { name: HCPS[id].name, status: d ? (s.logged.includes(id) ? 'Done · note logged' : 'Done · no note') : k ? 'Not today' : 'Not visited', mark: d ? '✓' : k ? '–' : i + 1, dotBg: d ? '#1C7A4E' : k ? '#C3CAD8' : '#2447C4', canContinue: !d, go: () => { this.setState({ runIdx: i }); this.replaceTop('run'); } }; }),
-      toActivity: () => this.setTab('activity'), toToday: () => this.setTab('targets'),
-      planTomorrow: () => { this.setState({ route:['jun','elena'], runDone:[], runSkip:[] }); this.toast('Tomorrow: 2 visits suggested'); this.replaceTop('route'); },
+      sumRows: runList.map((id, i) => { const d = s.runDone.includes(id), k = s.runSkip.includes(id); return { name: this.stopOf(id).name, status: d ? (s.logged.includes(id) ? 'Done · note logged' : 'Done · no note') : k ? 'Not today' : 'Not visited', mark: d ? '✓' : k ? '–' : i + 1, dotBg: d ? '#1C7A4E' : k ? '#C3CAD8' : '#2447C4', canContinue: !d, canLog: d && !s.logged.includes(id), log: () => HCPS[id] ? this.openLog(id) : this.openInsight([], 'notes', id), go: () => { this.setState({ runIdx: i }); this.replaceTop('run'); } }; }),
+      toActivity: () => this.setTab('activity'),
+      // tomorrow: the three most relevant people not already seen or planned today, placed by least driving
+      planTomorrow: () => {
+        const pool = (ins ? tlist.ids : Object.keys(HCPS)).filter(id => !s.route.includes(id) && !s.runDone.includes(id));
+        const list = pool.sort((a, b) => this.relevance(b) - this.relevance(a)).slice(0, 3).reduce((l, id) => this.placeIn(l, id).list, []);
+        if (!list.length) return this.toast('Everyone worth seeing is on today\'s route');
+        this.setState({ tomorrow: list, day:'tomorrow' });
+        this.toast('Tomorrow: ' + list.length + (list.length === 1 ? ' visit' : ' visits') + ' planned');
+        this.replaceTop('route');
+      },
 
       // reports
       reports: [
@@ -1811,33 +1922,31 @@ class Component extends DCLogic {
       // ask
       askEmpty: s.thread.length === 0,
       askSuggest: Object.keys(ins ? ANSWERS_INS : ANSWERS).map(q => ({ q, go: () => this.ask(q) })),
-      thread: s.thread.map(m => ({ ...m, ready: !m.pending, rows: m.rows.map(id => { const p = HCPS[id], f = ins && this.insFlag(id); return { name:p.name, ini:p.ini, meta:p.spec + ' · ' + (ins ? (f ? f.label : 'Last met ' + this.lastOf(id).label) : p.flag || p.claims + ' claims'), open: () => this.go('hcp', id), toggle: () => this.toggleRoute(id), ...addSt(s.route.includes(id)) }; }) })),
+      thread: s.thread.map(m => ({ ...m, ready: !m.pending, next: (m.next || []).map(q => ({ q, go: () => this.ask(q) })),
+        rows: m.rows.map(id => { const st = this.stopOf(id), isDoc = !st.isHco, f = isDoc && this.flagOf(id), h = HCOS[st.hco];
+          return { name:st.name, ini:st.ini, isDoc, meta: isDoc ? st.spec + ' · ' + (f ? f.label : ins ? 'Last met ' + this.lastOf(id).label : st.claims + ' claims') : st.spec + ' · ' + h.dist,
+            open: () => this.go(isDoc ? 'hcp' : 'hco', id), toggle: () => !isDoc && h.hcps.length ? this.sheet('choose', id) : this.toggleRoute(id),
+            log: () => this.openLog(id), fu: () => this.openFu(id), ...addSt(inRoute(id)) }; }) })),
       askReset: () => this.setState({ thread: [] }),
       askBar: scr === 'ask',
       askIn: s.askIn, onAskIn: e => this.setState({ askIn: e.target.value }),
       askKey: e => { if (e.key === 'Enter') this.ask(s.askIn); }, askSend: () => this.ask(s.askIn),
-      listening: s.listening, micBg: s.listening ? '#DD6134' : 'radial-gradient(120% 120% at 20% 10%,#3D6BF0 0%,#22409F 70%)',
-      micLabel: s.listening ? 'Listening… tap to stop' : 'Tap and talk',
+      listening: s.listening, micBg: s.listening ? '#DD6134' : '#EEF1F7', micFg: s.listening ? '#fff' : '#2447C4',
       toggleMic: () => { if (s.listening) { clearTimeout(this._m); this.setState({ listening:false }); return; } this.setState({ listening:true }); this._m = setTimeout(() => { this.setState({ listening:false }); this.ask('Who should I see today?'); }, 1600); },
 
-      // map
-      layers: ['Pins','ZIP','County','State'].map(l => ({ label:l, bg: s.layer === l ? '#2447C4' : 'transparent', fg: s.layer === l ? '#fff' : '#3C4557', go: () => this.setState({ layer:l }) })),
-      layerCaption: s.layer === 'Pins' ? 'MAP · SAMPLE LOCATIONS' : 'LEAKAGE $ BY ' + s.layer.toUpperCase() + ' · SAMPLE',
-      overlays,
-      pins: mapHcps.map(p => { const on = s.mapSel === p.id; const inR = s.route.includes(p.id); return { x:p.x, y:p.y, ini:p.ini, bg: on ? '#0B1220' : inR ? '#2447C4' : '#fff', fg: on || inR ? '#fff' : '#22409F', go: () => this.setState({ mapSel: on ? null : p.id }) }; }),
-      mapList: mapHcps.map(p => ({ name:p.name, ini:p.ini, meta:HCOS[p.hco].name + ' · ' + p.distN + ' mi', claims:p.claims, bd: s.mapSel === p.id ? '#2447C4' : '#E1E6F0', ...addSt(s.route.includes(p.id)), toggle: () => this.toggleRoute(p.id), open: () => this.go('hcp', p.id) })),
 
       // activity
-      actSegs: [['visits', 'Insights · ' + s.visits.length], ['fus','Follow-ups · ' + fuOpen.length], ['sum', 'Summaries']].map(([k, label]) => ({ label, ...seg(s.actSeg === k), go: () => this.setState({ actSeg:k }) })),
+      actSegs: [['visits', 'Insights · ' + s.visits.filter(v => v.conv !== 'Note').length], ['fus','Follow-ups · ' + fuOpen.length], ...(ins ? [] : [['sum', 'Summaries']])].map(([k, label]) => ({ label, ...seg(s.actSeg === k), go: () => this.setState({ actSeg:k }) })),
       actVisits: s.actSeg === 'visits', actFus: s.actSeg === 'fus',
       actAddLabel: s.actSeg === 'fus' ? '＋ Follow-up' : '＋ Insight',
-      actAdd: () => s.actSeg === 'fus' ? this.sheet('fu') : this.openInsight([], 'notes'),
+      actAdd: () => s.actSeg === 'fus' ? this.openFu(null) : this.openInsight([], 'notes'),
       visitList: s.visits.map(v => this.visitView(v)),
       fuAll: s.fus.map(f => this.fuView(f)),
-      addFu: () => this.sheet('fu'), continueDraft: () => this.openLog('maya'),
+      draftRows: s.drafts.map(d => { const w = (d.form.insWho || [])[0], at = d.form.insHco;
+        return { label: 'Continue ' + (d.form.insConv === 'Note' || !A.conv ? 'note' : 'insight') + (w ? ' · ' + HCPS[w].name : at ? ' · ' + HCOS[at].name : ''), open: () => this.openDraft(d) }; }),
 
       // summaries
-      showSummaries: scr === 'activity' && s.actSeg === 'sum',
+      showSummaries: (scr === 'activity' && s.actSeg === 'sum') || scr === 'summaries',
       smySegs: [['new','New summary'], ['hist','History · ' + s.summaries.length]].map(([k, label]) => ({ label, ...chip(s.smySeg === k), go: () => this.setState({ smySeg:k }) })),
       smyNew: s.smySeg === 'new', smyHist: s.smySeg === 'hist',
       smyQ: s.smyQ, onSmyQ: e => this.setState({ smyQ: e.target.value }),
@@ -1867,30 +1976,42 @@ class Component extends DCLogic {
       smyNoCards: s.summaries.length === 0,
 
       // sheets
-      hasSheet: !!s.sheet, sheetTitle: titles[s.sheet] || '', closeSheet: () => { if (s.insRec) this.toast('Recording discarded'); clearInterval(this._i); this.setState({ sheet:null, insRec:false, insPaused:false }); },
-      shInsight: s.sheet === 'insight', shFilter: s.sheet === 'filter', shTerritory: s.sheet === 'territory', shChoose: s.sheet === 'choose', shEmail: s.sheet === 'email', shFu: s.sheet === 'fu', shMe: s.sheet === 'me',
+      hasSheet: !!s.sheet, sheetTitle: titles[s.sheet] || '', closeSheet: () => {
+        if (s.insRec) this.toast('Recording discarded');
+        else if (s.sheet === 'insight' && s.insNote.trim()) { this.keepDraft(); this.toast('Kept as a draft'); }
+        clearInterval(this._i); this.setState({ sheet:null, insRec:false, insPaused:false });
+      },
+      shInsight: s.sheet === 'insight', shFilter: s.sheet === 'filter', shTerritory: s.sheet === 'territory', shChoose: s.sheet === 'choose', shEmail: s.sheet === 'email', shFu: s.sheet === 'fu', shMe: s.sheet === 'me', shVisit: s.sheet === 'visit', vd: visitDetail,
       toggleLogFu: () => this.setState({ logFu: !s.logFu }), logFuTrack: s.logFu ? '#2447C4' : '#D3D9E6', logFuKnob: s.logFu ? '21px' : '3px',
-      sortOpts: (ins ? [...(A.adv ? ['Advocacy'] : []), 'Last met', 'Name'] : SORTS).map(o => ({ label:o, ...seg(sortNow === o), go: () => this.setState(ins ? { iSort:o } : { sort:o }) })),
+      sortOpts: (ins ? ['Relevance', ...(A.adv ? ['Advocacy'] : []), 'Last met', 'Name'] : SORTS).map(o => ({ label:o, ...chip(sortNow === o), go: () => this.setState(ins ? { iSort:o } : { sort:o }) })),
       specOpts: SPECS.map(o => ({ label:o, ...chip(s.spec === o), go: () => this.setState({ spec:o }) })),
-      codeGroups: ['Ottava-field-pro','Ottava — Colectomy','Ottava — OB-GYN','Ottava — Urology','Ottava — Hernia'],
-      resetFilter: () => this.setState(ins ? { iSort: A.adv ? 'Advocacy' : 'Last met' } : { sort:'Opportunity', spec:'All codes' }),
+      codeGroups: CODE_GROUPS.map(g => { const on = s.cgs.includes(g.name);
+        return { label:g.name, ...chip(on), go: () => on && s.cgs.length === 1 ? this.toast('Keep at least one code group') : this.setState(st => ({ cgs: on ? st.cgs.filter(x => x !== g.name) : [...st.cgs, g.name] })) }; }),
+      cgCodesLabel: cgOn.reduce((n, g) => n + g.codes, 0) + ' · HCPCS / CPT',
+      resetFilter: () => this.setState(ins ? { iSort:'Relevance' } : { sort:'Relevance', spec:'All codes', cgs: CODE_GROUPS.map(g => g.name) }),
       territories: ins
         ? TLISTS.map(t => { const on = s.tlist === t.name; return { name:t.name, meta:t.meta, check: on ? '✓' : '', bg: on ? '#EDF1FB' : '#fff', bd: on ? '#2447C4' : '#E1E6F0', go: () => { this.setState({ tlist:t.name, sheet:null }); this.toast('Switched to ' + t.name); } }; })
         : TERRS.map(t => { const on = s.territory === t.name; return { ...t, check: on ? '✓' : '', bg: on ? '#EDF1FB' : '#fff', bd: on ? '#2447C4' : '#E1E6F0', go: () => { this.setState({ territory:t.name, sheet:null }); this.toast('Switched to ' + t.name); } }; }),
       newItemLabel: ins ? '＋ New target list' : '＋ New territory',
       newTerritory: () => this.toast(ins ? 'New target list form' : 'New territory form'),
       chooseHco: HCOS[chId].name,
-      chooseRows: HCOS[chId].hcps.map(id => { const on = s.route.includes(id); return { name:HCPS[id].name, spec:HCPS[id].spec, check: on ? '✓' : '', bg: on ? '#EDF1FB' : '#fff', bd: on ? '#2447C4' : '#E1E6F0', boxBd: on ? '#2447C4' : '#B9C3D8', boxBg: on ? '#2447C4' : '#fff', toggle: () => this.setState(st => ({ route: on ? st.route.filter(x => x !== id) : [...st.route, id] })) }; }),
-      ep: EP, copyDraft: () => { this.setState({ sheet:null }); this.toast('Draft copied'); },
-      fuWhoOpts: Object.values(HCPS).map(p => ({ label:p.name.replace('Dr. ', ''), ...chip(s.fuWho === p.id), go: () => this.setState({ fuWho:p.id }) })),
+      chooseRows: HCOS[chId].hcps.map(id => { const on = s.route.includes(id); return { name:HCPS[id].name, spec:HCPS[id].spec, check: on ? '✓' : '', bg: on ? '#EDF1FB' : '#fff', bd: on ? '#2447C4' : '#E1E6F0', boxBd: on ? '#2447C4' : '#B9C3D8', boxBg: on ? '#2447C4' : '#fff', toggle: () => this.toggleRoute(id) }; }),
+      ep: { ...EP, open: ins ? EP.iOpen : EP.open }, copyDraft: () => { this.setState({ sheet:null }); this.toast('Draft copied'); },
+      fuWhoOpts: this.people(null).map(p => ({ label:p.name.replace('Dr. ', ''), ...chip(s.fuWho === p.id), go: () => this.setState({ fuWho:p.id }) })),
       fuTask: s.fuTask, onFuTask: e => this.setState({ fuTask: e.target.value }),
-      fuDueOpts: ['Today','Tomorrow','Next week'].map(o => ({ label:o, ...chip(s.fuDue === o), go: () => this.setState({ fuDue:o }) })),
-      fuSaveBg: s.fuTask ? '#2447C4' : '#9DB0E8',
-      saveFu: () => { if (!s.fuTask) return this.toast('Add a task first'); this.setState(st => ({ sheet:null, fuTask:'', actSeg:'fus', fus:[...st.fus, { id:Date.now(), t:st.fuTask, who:st.fuWho, due:st.fuDue, over:false, done:false }] })); this.toast('Follow-up added'); },
+      fuDueOpts: [0, 1, 4, 7].map(n => ({ label:dayOf(n), ...chip(s.fuDue === n), go: () => this.setState({ fuDue:n }) })),
+      fuSaveBg: s.fuTask.trim() && s.fuWho ? '#2447C4' : '#9DB0E8',
+      saveFu: () => {
+        if (!s.fuWho) return this.toast('Pick who it is for');
+        if (!s.fuTask.trim()) return this.toast('Add a task first');
+        this.setState(st => ({ sheet:null, fuTask:'', actSeg:'fus', fus:[...st.fus, { id:Date.now(), t:st.fuTask.trim(), who:st.fuWho, dueN:st.fuDue, done:false }] }));
+        this.toast('Follow-up added · ' + dayOf(s.fuDue));
+      },
+      meSub: (A.role || 'MSL') + ' · ' + A.name + ' · ' + (ins ? s.tlist : s.territory),
       meRows: [
         ...(ins ? [] : [{ icon:'▤', label:'Reports', meta:'2 ready', go: () => this.setState(st => ({ sheet:null, stack:[...st.stack, { s:'reports' }] })) }]),
         { icon:'◎', label: ins ? 'Target lists' : 'Territories', meta: ins ? s.tlist : s.territory, go: () => this.sheet('territory') },
-        { icon:'◷', label:'History & follow-ups', meta:fuOpen.length + ' open', go: () => this.setTab('activity') },
+        { icon:'◷', label:'History & follow-ups', meta:fuOpen.length + ' open', go: () => this.setTab('activity', { actSeg:'fus' }) },
         { icon:'⚙', label:'Settings', meta:'', go: () => this.toast('Settings') }
       ],
 
@@ -1905,10 +2026,10 @@ class Component extends DCLogic {
         hasAdvLabel: !!(A.advLabels && s.insAdv[id]), advLabel: A.advLabels && s.insAdv[id] ? A.advLabels[s.insAdv[id] - 1] : '',
         remove: () => this.setState(st => ({ insWho: st.insWho.filter(x => x !== id) })),
         scores: [1, 2, 3, 4, 5].map(n => ({ n, ...advDot(s.insAdv[id] === n), go: () => this.setState(st => ({ insAdv: { ...st.insAdv, [id]: n } })) })) }; }),
-      insQuarter: 'Q4 2026',
+      insQuarter: 'Q' + (Math.floor(dateAt(-s.insDateN).getMonth() / 3) + 1) + ' ' + dateAt(-s.insDateN).getFullYear(),
       insShowPicker: s.insWho.length === 0 || s.insPickMore, insHasWho: s.insWho.length > 0,
       insPickerLabel: s.insWho.length ? 'Add another HCP' : 'Who did you meet?',
-      insWhoOpts: (ins ? tlist.ids.map(id => HCPS[id]) : Object.values(HCPS)).filter(p => !s.insWho.includes(p.id)).map(p => ({ label:p.name.replace('Dr. ', ''), ...chip(false), go: () => this.setState(st => ({ insWho:[...st.insWho, p.id], insPickMore:false })) })),
+      insWhoOpts: this.people(s.insHco).filter(p => !s.insWho.includes(p.id)).map(p => ({ label:p.name.replace('Dr. ', ''), ...chip(false), go: () => this.setState(st => ({ insWho:[...st.insWho, p.id], insPickMore:false })) })),
       insAddHcp: () => this.setState({ insPickMore: !s.insPickMore }), insAddLabel: s.insPickMore ? 'Cancel' : '＋ Add another HCP',
       insHasSource: !!s.insSource, insSourceLabel: s.insSource === 'Recording' ? 'Transcribed from your recording' + (s.insSecs ? ' · ' + Math.floor(s.insSecs / 60) + ':' + String(s.insSecs % 60).padStart(2, '0') : '') : 'Transcribed from ' + (s.insFile || 'your upload'),
       insNote: s.insNote, onInsNote: e => this.setState({ insNote: e.target.value }),
@@ -1927,20 +2048,33 @@ class Component extends DCLogic {
       insTypeOpts: A.meetTypes.map(t => ({ label:t, ...chip(s.insType === t), go: () => this.setState({ insType:t }) })),
       insLiveOpts: ['Live','Virtual'].map(t => ({ label:t, ...chip(s.insLive === t), go: () => this.setState({ insLive:t }) })),
       insTagOpts: A.tags.map(t => ({ label:t, ...chip(s.insTags.includes(t)), go: () => toggleIn('insTags', t) })),
-      insSaveBg: s.insWho.length && s.insNote.trim() ? '#2447C4' : '#9DB0E8',
-      insSaveDraft: () => { clearInterval(this._i); this.setState({ sheet:null, insRec:false }); this.toast('Draft saved'); },
+      insSaveBg: insReady ? '#2447C4' : '#9DB0E8', insSaveLabel: A.conv && s.insConv === 'Note' ? 'Save note' : 'Save insight',
+      insDateOpts: [0, 1, 2, 3, 4, 5, 6].map(n => ({ label: n === 0 ? 'Today' : n === 1 ? 'Yesterday' : WD[dateAt(-n).getDay()] + ' ' + dateAt(-n).getDate(), ...chip(s.insDateN === n), go: () => this.setState({ insDateN:n }) })),
+      insDateLabel: (s.insDateN === 0 ? 'Today ' + dateOf(0) : s.insDateN === 1 ? 'Yesterday ' + dateOf(-1) : dayFull(-s.insDateN)).toUpperCase(),
+      insShowVendor: !!A.extra && thirdParty,
+      insVendorOpts: (A.extra ? A.extra.vendors : []).map(t => ({ label:t, ...chip(s.insVendor === t), go: () => this.setState({ insVendor:t, insVendorSub:null }) })),
+      insHasVendorSubs: !!(A.extra && A.extra.vendorSubs[s.insVendor]),
+      insVendorSubOpts: ((A.extra && A.extra.vendorSubs[s.insVendor]) || []).map(t => ({ label:t, ...chip(s.insVendorSub === t), go: () => this.setState({ insVendorSub:t }) })),
+      insVendorOther: s.insVendor === 'Other', insVendorName: s.insVendorName, onInsVendorName: e => this.setState({ insVendorName: e.target.value }),
+      insCount: s.insCount, onInsCount: e => this.setState({ insCount: e.target.value.replace(/\D/g, '') }),
+      insShowConf: !!A.extra && s.insType === 'Conference',
+      insConfOpts: (A.extra ? A.extra.confs : []).map(t => ({ label:t, ...chip(s.insConf === t), go: () => this.setState({ insConf:t }) })),
+      insSaveDraft: () => { clearInterval(this._i); this.keepDraft(); this.setState({ sheet:null, insRec:false }); this.toast('Draft saved'); },
       insSave: () => {
-        if (!s.insWho.length) return this.toast('Add who you met');
+        if (!s.insWho.length && !thirdParty) return this.toast('Add who you met');
         if (!s.insNote.trim()) return this.toast('Add what you heard');
         if (A.areas && !s.insArea) return this.toast('Pick the therapeutic area');
-        const who = s.insWho, first = who[0];
-        this.setState(st => ({ ...this.insFresh([]), sheet:null, logged:[...new Set([...st.logged, ...who])],
-          visits:[{ id:Date.now(), who:first, attendees:who, advs: A.adv ? st.insAdv : {}, adv: A.adv ? st.insAdv[first] || null : null, date:'29 Oct', dN:0,
-            type:st.insType + (A.live && st.insLive === 'Virtual' ? ' · Virtual' : ''), topic:st.insTopics[0] || st.insArea || 'Insight', note:st.insNote.trim(), topics:st.insTopics,
+        const who = s.insWho, first = who[0] || null, dN = s.insDateN;
+        this.setState(st => ({ ...this.insFresh([]), sheet:null, logged:[...new Set([...st.logged, ...who, ...(st.insHco ? [st.insHco] : [])])],
+          drafts: st.drafts.filter(d => d.id !== st.insDraft),
+          visits:[{ id:Date.now(), who:first, attendees:who, advs: A.adv ? st.insAdv : {}, adv: A.adv && first ? st.insAdv[first] || null : null, date:dateOf(-dN), dN,
+            type:st.insType + (A.live ? ' · ' + st.insLive : ''), topic:st.insTopics[0] || st.insArea || 'Insight', note:st.insNote.trim(), topics:st.insTopics,
             subs:st.insSubs.filter(x => subsNow.includes(x)), tags: A.tags.length ? st.insTags : [], src:st.insSource || 'Notes',
-            ...(A.conv ? { conv:st.insConv } : {}), ...(A.areas ? { area:st.insArea } : {}), ...(A.stages ? { stage:st.insStage, prio:st.insPrio } : {}) }, ...st.visits],
-          fus: st.logFu ? [...st.fus, { id:Date.now(), t:'Follow up with ' + HCPS[first].name, who:first, due:'Tomorrow', over:false, done:false }] : st.fus }));
-        this.toast((A.conv && s.insConv === 'Note' ? 'Note' : 'Insight') + ' saved · ' + HCPS[first].name + (who.length > 1 ? ' +' + (who.length - 1) : '') + (A.crm ? ' · synced to ' + A.crm : ''));
+            ...(A.conv ? { conv:st.insConv } : {}), ...(A.areas ? { area:st.insArea } : {}), ...(A.stages ? { stage:st.insStage, prio:st.insPrio } : {}),
+            ...(A.extra && st.insType === 'Third Party' ? { vendor: st.insVendor === 'Other' ? st.insVendorName.trim() || 'Other' : st.insVendor, vendorSub: st.insVendorSub, count: st.insCount } : {}),
+            ...(A.extra && st.insType === 'Conference' ? { conf: st.insConf } : {}) }, ...st.visits].sort((a, b) => a.dN - b.dN),
+          fus: st.logFu && first ? [...st.fus, { id:Date.now(), t:'Follow up with ' + HCPS[first].name, who:first, dueN:1, done:false }] : st.fus }));
+        this.toast((A.conv && s.insConv === 'Note' ? 'Note' : 'Insight') + ' saved' + (first ? ' · ' + HCPS[first].name + (who.length > 1 ? ' +' + (who.length - 1) : '') : '') + (A.crm ? ' · synced to ' + A.crm : ''));
       },
       insNoFile: !s.insFile, insHasFile: !!s.insFile, insFileName: s.insFile || '',
       insPickFile: () => this.setState({ insFile: (s.insWho[0] ? HCPS[s.insWho[0]].name.split(' ').pop() : 'Visit') + ' meeting 29 Oct.m4a' }),
@@ -1959,7 +2093,8 @@ class Component extends DCLogic {
       rangeShowType: rangeType,
       omTypeOpts: TYPES.map(t => ({ label:t, ...chip(s.omType === t), go: () => this.setState({ omType:t }) })),
       omApplyLabel: s.sheetData === 'targets' ? 'Show ' + items.length + ' ' + (items.length === 1 ? unit[0] : unit[1]) : omv.omApplyLabel,
-      hasToast: !!s.toast, toast: s.toast || ''
+      hasToast: !!s.toast, toast: s.toast || '',
+      hasUndo: !!s.toastUndo, toastUndo: () => { const u = s.toastUndo; clearTimeout(this._t); this.setState({ toast:null, toastUndo:null }); if (u) u(); }
     };
   }
 }
