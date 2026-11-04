@@ -12,7 +12,7 @@ The [field app design](../design/) is one HTML page that anyone can open in a br
 | Icons | `lucide-react-native` |
 | Data loading, cache, retry | TanStack Query: cached results, retry, and an offline-first query cache |
 | On-device data (notes, drafts, recordings waiting to upload) | SQLite (`expo-sqlite`) or MMKV, with a sync queue |
-| Maps | `react-native-maps`, with road times from a routing service |
+| Maps | Mapbox's map tiles drawn by the app itself, so the pins, the radius circle and the ZIP areas sit on a map you can drag and pinch, with road times from Mapbox's routing |
 | Recording and voice | Audio recording that keeps going when the screen locks, native speech recognition, `expo-speech`, and later a realtime session (see [ask-and-voice.md](ask-and-voice.md)) |
 | Large text | System font scale (Dynamic Type), tested at 200% |
 | Tests | Jest and React Native Testing Library for logic and screens; Maestro for flows |
@@ -36,7 +36,9 @@ The app needs the services below. Several already exist in the Field backend tha
 | Log a visit or note | Exists: the app saves to each account's own backend, as its website does. A failed save comes back as a draft. |
 | Follow-ups with due dates | Insights accounts: saved on Insights. Field Pro accounts: saved as a follow-up note; a store with due dates comes with unifying the accounts. |
 | The route (the day plan) | Kept on the phone, as both websites keep it in the browser. The visits themselves reach the server. |
-| Road routing and drive times | Mapbox's driving times, as the website uses, once its public token is set; until then Add places stops by straight-line distance. The route shows the miles between stops and a map of them. |
+| Road routing and drive times | Mapbox's driving times, as the website uses, with its public token; without one, Add places stops by straight-line distance. The route shows the miles between stops and a map of them. |
+| The opportunity map | Exists: Mapbox tiles you drag and pinch, with zoom and fit buttons, numbered pins that name the doctor on a tap, the radius around the start, and ZIP areas. It needs a latitude and longitude on each account, which the book gives. |
+| Reading answers aloud | Exists: each answer has a Listen button, and a question asked by voice is answered aloud, using the phone's own voice. |
 | CRM sync | **Not connected.** |
 
 ## Design system

@@ -514,6 +514,7 @@ input,textarea,button{font-family:inherit}
                   <sc-if value="{{ m.ready }}" hint-placeholder-val="{{ true }}">
                     <div style="display:flex;gap:6px;flex-wrap:wrap;"><sc-for list="{{ m.tags }}" as="tg" hint-placeholder-count="2"><span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.05em;color:#3C4557;background:#F0F3F8;padding:4px 8px;border-radius:6px;">{{ tg }}</span></sc-for></div>
                     <div style="font-size:14.5px;line-height:1.55;color:#1B2333;margin-top:9px;">{{ m.a }}</div>
+                    <sc-if value="{{ m.hasListen }}" hint-placeholder-val="{{ true }}"><button onClick="{{ m.listen }}" style="margin-top:10px;padding:6px 11px;border-radius:999px;border:1px solid #DCE3F2;background:{{ m.listenBg }};color:{{ m.listenFg }};font-size:12px;font-weight:650;cursor:pointer;">{{ m.listenLabel }}</button></sc-if>
                     <sc-for list="{{ m.rows }}" as="r" hint-placeholder-count="0">
                       <div style="display:flex;align-items:center;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid #F0F3F8;">
                         <button onClick="{{ r.open }}" style="flex:1;min-width:0;display:flex;gap:10px;align-items:center;border:0;background:none;padding:0;cursor:pointer;text-align:left;color:#0B1220;">
@@ -536,6 +537,7 @@ input,textarea,button{font-family:inherit}
 
         <sc-if value="{{ isMap }}" hint-placeholder-val="{{ false }}">
           <div style="position:relative;height:772px;overflow:hidden;">
+            <div data-kit="map" data-map="{{ omMap }}" style="position:absolute;inset:0;overflow:hidden;">
             <div style="position:absolute;inset:0;background-color:#EEF1F4;background-image:repeating-linear-gradient(28deg,transparent 0 22px,#E1E6EE 22px 23.5px),repeating-linear-gradient(118deg,transparent 0 30px,#E1E6EE 30px 31.5px);"></div>
             <span style="position:absolute;left:-40px;top:0;bottom:0;width:100px;background:#D8E4F1;transform:skewX(-14deg);"></span>
             <span style="position:absolute;right:-50px;top:0;bottom:0;width:90px;background:#D8E4F1;transform:skewX(-10deg);"></span>
@@ -552,6 +554,7 @@ input,textarea,button{font-family:inherit}
             <sc-for list="{{ omBubbles }}" as="bb" hint-placeholder-count="6">
               <button onClick="{{ bb.go }}" style="position:absolute;left:{{ bb.x }};top:{{ bb.y }};width:{{ bb.size }};height:{{ bb.size }};margin-left:{{ bb.off }};margin-top:{{ bb.off }};border-radius:50%;background:{{ bb.bg }};color:{{ bb.fg }};border:2.5px solid #fff;box-shadow:{{ bb.sh }};font-size:11.5px;font-weight:700;cursor:pointer;padding:0;">{{ bb.n }}</button>
             </sc-for>
+            </div>
 
             <div style="position:absolute;top:6px;left:12px;right:12px;display:flex;flex-direction:column;gap:7px;">
               <button onClick="{{ omOpenArea }}" style="display:flex;align-items:center;gap:10px;padding:8px 8px 8px 13px;border:0;border-radius:14px;background:#fff;box-shadow:0 6px 18px -8px rgba(11,18,32,.35);cursor:pointer;text-align:left;">
@@ -568,6 +571,14 @@ input,textarea,button{font-family:inherit}
                 </div>
               </div>
             </div>
+
+            <sc-if value="{{ omGeo }}" hint-placeholder-val="{{ false }}">
+              <div style="position:absolute;right:12px;top:128px;display:flex;flex-direction:column;border-radius:12px;background:#fff;box-shadow:0 6px 18px -8px rgba(11,18,32,.35);overflow:hidden;">
+                <button onClick="{{ omZoomIn }}" style="width:40px;height:40px;border:0;background:none;color:#0B1220;font-size:20px;font-weight:600;cursor:pointer;">+</button>
+                <button onClick="{{ omZoomOut }}" style="width:40px;height:40px;border:0;border-top:1px solid #EEF1F7;background:none;color:#0B1220;font-size:20px;font-weight:600;cursor:pointer;">−</button>
+                <button onClick="{{ omFit }}" style="width:40px;height:34px;border:0;border-top:1px solid #EEF1F7;background:none;color:#2447C4;font-size:11.5px;font-weight:700;cursor:pointer;">Fit</button>
+              </div>
+            </sc-if>
 
             <div style="position:absolute;left:0;right:0;bottom:84px;height:{{ omSheetH }};background:#fff;border-radius:24px 24px 0 0;box-shadow:0 -10px 30px -12px rgba(11,18,32,.3);display:flex;flex-direction:column;transition:height .28s cubic-bezier(.2,.8,.2,1);">
               <button onClick="{{ omToggleSheet }}" style="border:0;background:none;padding:8px 0 4px;cursor:pointer;display:flex;justify-content:center;"><span style="width:38px;height:5px;border-radius:3px;background:#D3D9E6;display:block;"></span></button>
@@ -1340,6 +1351,9 @@ const SERVICE = {
   share: what => Promise.resolve(''),
   call: phone => Promise.resolve(),
   open: url => Promise.resolve(),
+  // an answer read aloud: resolves when it has been read, or stopped by `hush`
+  speak: text => new Promise(r => setTimeout(r, Math.min(6000, 1200 + text.length * 40))),
+  hush: () => {},
   // an email to a doctor, { subject, body }; the stand-in writes it from the brief, as the sample does
   email: (who, sample) => later(sample()),
   // driving minutes between places (the start, then stops), as rows of a matrix; the stand-in guesses from the map
@@ -1447,7 +1461,7 @@ class Component extends DCLogic {
     ...seed(A),
     thread: [], askIn: '', listening: false, email: null, switching: null,
     actSeg: 'visits', pSeg: 'overview', logFu: false,
-    territory: TERRS[0] ? TERRS[0].name : '', toast: null, toastUndo: null, omKind:'acc', omRadius:5, omMode:AREA.mode || 'near', omStart:AREA.centre, omCity:AREA.city, omGroup:'all', omSel:null, omExpanded:false, omLayer:'Pins', fuTask: '', fuWho: null, fuDue: 1,
+    territory: TERRS[0] ? TERRS[0].name : '', toast: null, toastUndo: null, omKind:'acc', omRadius:5, omMode:AREA.mode || 'near', omStart:AREA.centre, omCity:AREA.city, omGroup:'all', omSel:null, omExpanded:false, omLayer:'Pins', omCmd:{ kind:'', n:0 }, speaking: null, fuTask: '', fuWho: null, fuDue: 1,
     ...this.insFresh([], A),
     smySeg:'new', smyQ:'', smyTag:'All', smySel:[], smyName:'', smyBusy:false, smyOpen:null,
     signedIn: !pr.signedOut, authEmail:'', ...this.authFresh()
@@ -1463,7 +1477,7 @@ class Component extends DCLogic {
     const na = (this.props || {}).account;
     if (na !== this._pa) { this._pa = na; if (ACCOUNTS[na]) this.setAccount(na); }
   }
-  componentWillUnmount() { clearTimeout(this._t); clearTimeout(this._a); clearTimeout(this._m); clearTimeout(this._s); clearInterval(this._i); this._at.forEach(clearTimeout); }
+  componentWillUnmount() { if (SERVICE.hush) SERVICE.hush(); clearTimeout(this._t); clearTimeout(this._a); clearTimeout(this._m); clearTimeout(this._s); clearInterval(this._i); this._at.forEach(clearTimeout); }
 
   // customer account: same flow everywhere, the views change where an account needs it
   acct() { return ACCOUNTS[this.state.account]; }
@@ -1798,9 +1812,25 @@ class Component extends DCLogic {
     const near = rows.filter(id => HCPS[id]).slice(0, 2).flatMap(id => ['Brief me on ' + HCPS[id].name, ...(A.fieldPro && HCOS[HCPS[id].hco] ? ['Brief me on ' + HCOS[HCPS[id].hco].name] : [])]);
     return [...new Set([...near, ...this.starters()])].filter(x => !asked.includes(x)).slice(0, 2);
   }
-  ask(raw) {
+  // reads an answer aloud; tap again to stop. `id` is the answer's, so only its button changes
+  say(id, text) {
+    if (this.state.speaking === id) return this.hush();
+    if (!SERVICE.speak) return this.toast('Reading aloud isn’t connected yet');
+    if (SERVICE.hush) SERVICE.hush();
+    this.setState({ speaking: id });
+    const end = () => { if (this.state.speaking === id) this.setState({ speaking: null }); };
+    SERVICE.speak(text).then(end, e => { end(); this.toast((e && e.message) || 'That didn’t read aloud · try again'); });
+  }
+  hush() {
+    if (this.state.speaking === null) return;
+    if (SERVICE.hush) SERVICE.hush();
+    this.setState({ speaking: null });
+  }
+  // a question asked out loud is answered out loud (`aloud`); a typed one waits for Listen
+  ask(raw, aloud) {
     const q = (raw || '').trim();
     if (!q) return;
+    this.hush();
     const A = this.acct(), m = /^Brief me on (.+)$/.exec(q), id = Date.now() + Math.random();
     const p = m && Object.values(HCPS).find(x => x.name === m[1]), h = m && !p && A.fieldPro && Object.values(HCOS).find(x => x.name === m[1]);
     const history = this.state.thread.filter(x => !x.pending).slice(-4).map(x => ({ q:x.q, a:x.a }));
@@ -1809,7 +1839,7 @@ class Component extends DCLogic {
     const local = p ? this.briefAnswer(p) : h ? this.hcoBrief(h) : null;
     if (!local && !SERVICE.ask) return answer({ a:'Ask isn’t connected yet for this account', tags:[], rows:[] });
     (local ? later(local) : SERVICE.ask(q, { account:this.state.account, history }, () => this.sampleAnswer(q)))
-      .then(answer, e => answer({ a: (e && e.message) || 'Ask didn’t answer · try again', tags:[], rows:[] }));
+      .then(ans => { answer(ans); if (aloud && ans && ans.a && SERVICE.speak) this.say(id, ans.a); }, e => answer({ a: (e && e.message) || 'Ask didn’t answer · try again', tags:[], rows:[] }));
   }
   // the design's sample answers
   sampleAnswer(q) {
@@ -1894,6 +1924,9 @@ class Component extends DCLogic {
     };
   }
 
+  // the real map's + − and fit; the map reads the count to tell one press from the last
+  omZoom(kind) { this.setState(st => ({ omCmd:{ kind, n:st.omCmd.n + 1 } })); }
+
   omVals() {
     const s = this.state;
     const near = s.omMode === 'near';
@@ -1918,9 +1951,25 @@ class Component extends DCLogic {
     const vn = v => v * 134 / Math.max(134, ...src.map(r => r.v));
     if (s.omLayer === 'ZIP') regions = zips.map(z => { const it = z.items[0]; const c = omColor(vn(z.v))[0]; return { x:it.x, y:py(it.y), size:'80px', off:'-40px', r:'22px', bg:c + '55', bd:c + '99' }; });
     if (s.omLayer === 'County') regions = [{ x:'52%', y:'36%', size:'260px', off:'-130px', r:'38%', bg:'rgba(63,116,214,.16)', bd:'rgba(63,116,214,.45)' }];
+    // a book with real places gets a real map: pins by latitude and longitude, the circle around the start, ZIP halos
+    const geo = !!AREA.geo, startAt = geo && near ? this.startPoint() : null;
+    const omMap = geo ? {
+      pins: src.map((r, i) => ({ r, i })).filter(({ r }) => onEarth(r)).map(({ r, i }) => { const [bg, fg] = omColor(vn(r.v)); const size = Math.round(22 + Math.sqrt(vn(r.v)) * 2);
+        return { id:r.id, lat:r.lat, lng:r.lng, n:i + 1, size, bg, fg, sel: s.omSel === r.id || selZip === r.zip, label: s.omSel === r.id ? r.name : '', go: () => this.setState({ omSel:r.id, omGroup:'all', omExpanded:false }) }; }),
+      start: startAt ? { lat:startAt.lat, lng:startAt.lng } : null,
+      radiusMi: startAt ? s.omRadius : null,
+      halos: s.omLayer === 'ZIP' ? zips.map(z => { const at = z.items.filter(onEarth); if (!at.length) return null;
+        const c = { lat: at.reduce((t, p) => t + p.lat, 0) / at.length, lng: at.reduce((t, p) => t + p.lng, 0) / at.length }, col = omColor(vn(z.v))[0];
+        return { ...c, mi: Math.max(0.35, ...at.map(p => earthMiles(c, p))) * 1.2, bg:col + '55', bd:col + '99' }; }).filter(Boolean) : [],
+      sel: s.omSel && !s.omSel.startsWith('z:') ? s.omSel : null,
+      cmd: s.omCmd,
+      fitKey: [s.omKind, s.omMode, s.omRadius, s.omCity, s.omStart, s.omType, src.length].join('|'),
+      inset: { top:126, bottom:340 }
+    } : null;
     const unit = OM_UNIT[s.omKind], fmt = v => unit === '$K' ? '$' + v.toLocaleString('en-US') + 'K' : v.toLocaleString('en-US') + ' ' + unit;
     return {
       omNear: near, omByPlace: !near,
+      omGeo: geo, omMap, omZoomIn: () => this.omZoom('in'), omZoomOut: () => this.omZoom('out'), omFit: () => this.omZoom('fit'),
       omCircle: circle + 'px', omCircleOff: (-circle / 2) + 'px',
       omStateTint: s.omLayer === 'State', omRegions: regions,
       omBubbles: src.map((r, i) => { const [bg, fg] = omColor(vn(r.v)); const size = Math.round(22 + Math.sqrt(vn(r.v)) * 2); const on = s.omSel === r.id || selZip === r.zip;
@@ -1930,7 +1979,7 @@ class Component extends DCLogic {
       omAreaLabel: near ? s.omStart : [s.omCity, AREA.state].filter(Boolean).join(', '),
       omOpenArea: () => this.sheet('range'),
       omExport: () => this.toast('Exported ' + src.length + ' ' + noun[1]),
-      omLayers: ['Pins','ZIP','County','State'].map(l => ({ label:l, bg: s.omLayer === l ? '#2447C4' : 'transparent', fg: s.omLayer === l ? '#fff' : '#3C4557', go: () => this.setState({ omLayer:l }) })),
+      omLayers: (geo ? ['Pins','ZIP'] : ['Pins','ZIP','County','State']).map(l => ({ label:l, bg: s.omLayer === l ? '#2447C4' : 'transparent', fg: s.omLayer === l ? '#fff' : '#3C4557', go: () => this.setState({ omLayer:l }) })),
       omSheetH: sheetH + 'px', omToggleSheet: () => this.setState({ omExpanded: !s.omExpanded }),
       omTitle: 'Not in your book' + (near ? ' · ' + s.omRadius + ' mi' : ' · ' + s.omCity),
       omSummary: src.length + ' ' + (src.length === 1 ? noun[0] : noun[1]) + ' · ' + zips.length + ' ZIPs · ' + fmt(total) + ' value',
@@ -2272,20 +2321,22 @@ class Component extends DCLogic {
       // an answer may hand off to the website (`link`: { label, url }), for a search Ask can't run here
       thread: s.thread.map(m => ({ ...m, ready: !m.pending, next: (m.next || []).map(q => ({ q, go: () => this.ask(q) })),
         hasLink: !!(m.link && m.link.url), linkLabel: m.link ? m.link.label : '', openLink: () => m.link && this.openLink(m.link.url),
+        hasListen: !m.pending && !!m.a, listenLabel: s.speaking === m.id ? '■ Stop' : '▶ Listen', listenBg: s.speaking === m.id ? '#2447C4' : '#fff', listenFg: s.speaking === m.id ? '#fff' : '#22409F', listen: () => this.say(m.id, m.a),
         rows: m.rows.map(id => { const st = this.stopOf(id), isDoc = !st.isHco, f = isDoc && this.flagOf(id), h = HCOS[st.hco];
           return { name:st.name, ini:st.ini, isDoc, meta: isDoc ? st.spec + ' · ' + (f ? f.label : ins ? 'Last met ' + this.lastOf(id).label : st.claims + ' claims') : st.spec + ' · ' + h.dist,
             open: () => this.go(isDoc ? 'hcp' : 'hco', id), toggle: () => !isDoc && h.hcps.length ? this.sheet('choose', id) : this.toggleRoute(id),
             log: () => this.openLog(id), fu: () => this.openFu(id), ...addSt(inRoute(id)) }; }) })),
-      askReset: () => this.setState({ thread: [] }),
+      askReset: () => { this.hush(); this.setState({ thread: [] }); },
       askBar: scr === 'ask',
       askIn: s.askIn, onAskIn: e => this.setState({ askIn: e.target.value }),
       askKey: e => { if (e.key === 'Enter') this.ask(s.askIn); }, askSend: () => this.ask(s.askIn),
       listening: s.listening, micBg: s.listening ? '#DD6134' : '#EEF1F7', micFg: s.listening ? '#fff' : '#2447C4',
       toggleMic: () => {
         if (s.listening) return this.setState({ listening:false });
+        this.hush();
         if (!SERVICE.listen) return this.toast('Voice input isn’t connected yet · type the question');
         this.setState({ listening:true });
-        SERVICE.listen('Who should I see today?').then(q => { if (!this.state.listening) return; this.setState({ listening:false }); if (q) this.ask(q); }, () => this.setState({ listening:false }));
+        SERVICE.listen('Who should I see today?').then(q => { if (!this.state.listening) return; this.setState({ listening:false }); if (q) this.ask(q, true); }, () => this.setState({ listening:false }));
       },
 
 
