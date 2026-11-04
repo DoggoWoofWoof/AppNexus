@@ -85,7 +85,7 @@ input,textarea,button{font-family:inherit}
             <div style="display:flex;align-items:center;gap:8px;">
               <span style="flex:1;font-family:'Source Serif 4',Georgia,serif;font-size:30px;line-height:1.1;letter-spacing:-.02em;">Targets</span>
               <button onClick="{{ openTerritory }}" style="display:flex;align-items:center;gap:6px;border:1px solid #D7DEEC;background:#fff;border-radius:999px;padding:8px 12px;font-size:12.5px;font-weight:650;color:#0B1220;cursor:pointer;"><span style="width:7px;height:7px;border-radius:50%;background:#2447C4;"></span>{{ territoryChip }}<span style="color:#7A839A;">▾</span></button>
-              <button onClick="{{ openMe }}" style="width:38px;height:38px;border-radius:50%;background:#DCE3F5;color:#22409F;border:0;font-size:12.5px;font-weight:700;cursor:pointer;">AJ</button>
+              <button onClick="{{ openMe }}" style="width:38px;height:38px;border-radius:50%;background:#DCE3F5;color:#22409F;border:0;font-size:12.5px;font-weight:700;cursor:pointer;">{{ meIni }}</button>
             </div>
             <div style="display:flex;align-items:center;gap:12px;padding:12px 10px 12px 14px;border-radius:16px;color:#fff;background:radial-gradient(120% 140% at 10% 0%,#2F59DE 0%,#22409F 60%,#16276A 100%);">
               <button onClick="{{ openRoute }}" style="flex:1;min-width:0;border:0;background:none;padding:0;cursor:pointer;text-align:left;color:#fff;">
@@ -155,8 +155,8 @@ input,textarea,button{font-family:inherit}
                 <div style="font-size:15px;font-weight:650;">{{ emptyTitle }}</div>
                 <div style="font-size:12.5px;color:#5B6478;margin-top:4px;">{{ emptySub }}</div>
                 <div style="display:flex;gap:8px;justify-content:center;margin-top:12px;">
-                  <button onClick="{{ emptyAGo }}" style="padding:10px 14px;border:1px solid #D7DEEC;border-radius:11px;background:#fff;font-size:13px;font-weight:650;cursor:pointer;">{{ emptyA }}</button>
-                  <button onClick="{{ emptyBGo }}" style="padding:10px 14px;border:0;border-radius:11px;background:#2447C4;color:#fff;font-size:13px;font-weight:700;cursor:pointer;">{{ emptyB }}</button>
+                  <sc-if value="{{ hasEmptyA }}" hint-placeholder-val="{{ true }}"><button onClick="{{ emptyAGo }}" style="padding:10px 14px;border:1px solid #D7DEEC;border-radius:11px;background:#fff;font-size:13px;font-weight:650;cursor:pointer;">{{ emptyA }}</button></sc-if>
+                  <sc-if value="{{ hasEmptyB }}" hint-placeholder-val="{{ true }}"><button onClick="{{ emptyBGo }}" style="padding:10px 14px;border:0;border-radius:11px;background:#2447C4;color:#fff;font-size:13px;font-weight:700;cursor:pointer;">{{ emptyB }}</button></sc-if>
                 </div>
               </div>
             </sc-if>
@@ -183,9 +183,9 @@ input,textarea,button{font-family:inherit}
                 <span style="font-size:11.5px;font-weight:600;padding:4px 8px;border-radius:7px;background:#EEF1F7;color:#3C4557;">{{ spec }} · 2025</span>
               </div>
             </div>
-            <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:4px;padding:16px 12px 0;">
+            <div style="display:flex;gap:4px;padding:16px 12px 0;">
               <sc-for list="{{ hcoActions }}" as="a" hint-placeholder-count="5">
-                <button onClick="{{ a.go }}" style="display:flex;flex-direction:column;align-items:center;gap:6px;border:0;background:none;cursor:pointer;padding:0;">
+                <button onClick="{{ a.go }}" style="flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:6px;border:0;background:none;cursor:pointer;padding:0;">
                   <span style="width:50px;height:50px;border-radius:16px;background:{{ a.bg }};color:{{ a.fg }};display:grid;place-items:center;font-size:17px;font-weight:700;">{{ a.icon }}</span>
                   <span style="font-size:11.5px;font-weight:600;color:#3C4557;">{{ a.label }}</span>
                 </button>
@@ -252,9 +252,9 @@ input,textarea,button{font-family:inherit}
                 <sc-if value="{{ p.hasFlag }}" hint-placeholder-val="{{ false }}"><span style="font-size:11.5px;font-weight:650;padding:4px 8px;border-radius:7px;background:{{ p.flagBg }};color:{{ p.flagFg }};">{{ p.flag }}</span></sc-if>
               </div>
             </div>
-            <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:4px;padding:16px 12px 0;">
+            <div style="display:flex;gap:4px;padding:16px 12px 0;">
               <sc-for list="{{ hcpActions }}" as="a" hint-placeholder-count="5">
-                <button onClick="{{ a.go }}" style="display:flex;flex-direction:column;align-items:center;gap:6px;border:0;background:none;cursor:pointer;padding:0;">
+                <button onClick="{{ a.go }}" style="flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:6px;border:0;background:none;cursor:pointer;padding:0;">
                   <span style="width:50px;height:50px;border-radius:16px;background:{{ a.bg }};color:{{ a.fg }};display:grid;place-items:center;font-size:17px;font-weight:700;">{{ a.icon }}</span>
                   <span style="font-size:11.5px;font-weight:600;color:#3C4557;">{{ a.label }}</span>
                 </button>
@@ -269,6 +269,7 @@ input,textarea,button{font-family:inherit}
             </div>
             <sc-if value="{{ pOverview }}" hint-placeholder-val="{{ true }}">
               <div style="padding:12px 18px 0;display:flex;flex-direction:column;gap:12px;">
+                <sc-if value="{{ pStats.length }}" hint-placeholder-val="{{ true }}">
                 <div style="display:grid;grid-template-columns:1fr 1fr;background:#fff;border:1px solid #E1E6F0;border-radius:16px;overflow:hidden;">
                   <sc-for list="{{ pStats }}" as="st" hint-placeholder-count="4">
                     <div style="padding:13px 14px;border-right:1px solid #F0F3F8;border-bottom:1px solid #F0F3F8;">
@@ -278,22 +279,27 @@ input,textarea,button{font-family:inherit}
                     </div>
                   </sc-for>
                 </div>
+                </sc-if>
+                <sc-if value="{{ showBrief }}" hint-placeholder-val="{{ true }}">
                 <div style="background:#fff;border:1px solid #D9E2F6;border-radius:16px;overflow:hidden;">
                   <div style="padding:14px 15px;background:linear-gradient(180deg,#F1F5FE 0%,#FFFFFF 100%);">
                     <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.08em;color:#fff;background:#2447C4;padding:3px 7px;border-radius:6px;">AI BRIEF</span>
                     <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.08em;color:#7A839A;margin-top:12px;">WHAT TO OPEN WITH</div>
                     <div style="font-family:'Source Serif 4',Georgia,serif;font-size:19px;line-height:1.32;margin-top:6px;">{{ p.open }}</div>
                   </div>
-                  <div style="padding:12px 15px 14px;border-top:1px solid #EEF1F7;font-size:13px;line-height:1.5;color:#1B2333;">{{ p.brief }}</div>
+                  <sc-if value="{{ hasBriefText }}" hint-placeholder-val="{{ true }}"><div style="padding:12px 15px 14px;border-top:1px solid #EEF1F7;font-size:13px;line-height:1.5;color:#1B2333;">{{ p.brief }}</div></sc-if>
                   <div style="display:flex;gap:8px;padding:0 15px 14px;">
-                    <button onClick="{{ pEmail }}" style="flex:1;padding:10px;border:1px solid #D7DEEC;border-radius:11px;background:#fff;font-size:12.5px;font-weight:650;color:#22409F;cursor:pointer;">Draft email</button>
+                    <sc-if value="{{ showDraftEmail }}" hint-placeholder-val="{{ true }}"><button onClick="{{ pEmail }}" style="flex:1;padding:10px;border:1px solid #D7DEEC;border-radius:11px;background:#fff;font-size:12.5px;font-weight:650;color:#22409F;cursor:pointer;">Draft email</button></sc-if>
                     <button onClick="{{ pAsk }}" style="flex:1;padding:10px;border:0;border-radius:11px;background:#E7ECFA;font-size:12.5px;font-weight:650;color:#22409F;cursor:pointer;">Ask about brief</button>
                   </div>
                 </div>
+                </sc-if>
+                <sc-if value="{{ showContact }}" hint-placeholder-val="{{ true }}">
                 <div style="background:#fff;border:1px solid #E1E6F0;border-radius:16px;overflow:hidden;">
-                  <button onClick="{{ pCall }}" style="display:flex;align-items:center;gap:11px;width:100%;padding:13px 14px;border:0;border-bottom:1px solid #F0F3F8;background:#fff;cursor:pointer;text-align:left;"><span style="font-size:11px;color:#7A839A;width:44px;">Phone</span><span style="flex:1;font-size:14px;color:#2447C4;font-weight:600;">{{ p.phone }}</span><span style="color:#C3CAD8;">›</span></button>
-                  <button onClick="{{ pEmail }}" style="display:flex;align-items:center;gap:11px;width:100%;padding:13px 14px;border:0;background:#fff;cursor:pointer;text-align:left;"><span style="font-size:11px;color:#7A839A;width:44px;">Email</span><span style="flex:1;font-size:14px;color:#2447C4;font-weight:600;">{{ p.email }}</span><span style="color:#C3CAD8;">›</span></button>
+                  <sc-if value="{{ showPhone }}" hint-placeholder-val="{{ true }}"><button onClick="{{ pCall }}" style="display:flex;align-items:center;gap:11px;width:100%;padding:13px 14px;border:0;border-bottom:1px solid #F0F3F8;background:#fff;cursor:pointer;text-align:left;"><span style="font-size:11px;color:#7A839A;width:44px;">Phone</span><span style="flex:1;font-size:14px;color:#2447C4;font-weight:600;">{{ p.phone }}</span><span style="color:#C3CAD8;">›</span></button></sc-if>
+                  <sc-if value="{{ showEmail }}" hint-placeholder-val="{{ true }}"><button onClick="{{ pEmail }}" style="display:flex;align-items:center;gap:11px;width:100%;padding:13px 14px;border:0;background:#fff;cursor:pointer;text-align:left;"><span style="font-size:11px;color:#7A839A;width:44px;">Email</span><span style="flex:1;font-size:14px;color:#2447C4;font-weight:600;">{{ p.email }}</span><span style="color:#C3CAD8;">›</span></button></sc-if>
                 </div>
+                </sc-if>
               </div>
             </sc-if>
             <sc-if value="{{ pActivity }}" hint-placeholder-val="{{ false }}">
@@ -332,20 +338,19 @@ input,textarea,button{font-family:inherit}
             </div>
             <div style="padding:2px 18px 0;">
               <div style="font-family:'Source Serif 4',Georgia,serif;font-size:30px;line-height:1.1;letter-spacing:-.02em;">Your route</div>
-              <div style="font-size:13px;color:#5B6478;margin-top:4px;">{{ viewHeadline }} · from {{ territory }}</div>
+              <div style="font-size:13px;color:#5B6478;margin-top:4px;">{{ viewHeadline }}{{ routeFrom }}</div>
             </div>
             <sc-if value="{{ hasTomorrow }}" hint-placeholder-val="{{ false }}">
               <div style="margin:12px 18px 0;display:flex;padding:3px;border-radius:12px;background:#E6EAF2;">
                 <sc-for list="{{ daySegs }}" as="o" hint-placeholder-count="2"><button onClick="{{ o.go }}" style="flex:1;padding:8px;border:0;border-radius:10px;background:{{ o.bg }};color:{{ o.fg }};box-shadow:{{ o.sh }};font-size:13px;font-weight:650;cursor:pointer;">{{ o.label }}</button></sc-for>
               </div>
             </sc-if>
-            <div style="margin:14px 18px 0;height:150px;border-radius:18px;position:relative;overflow:hidden;border:1px solid #DDE3EC;background-color:#EEF1F4;background-image:repeating-linear-gradient(28deg,transparent 0 22px,#E1E6EE 22px 23.5px),repeating-linear-gradient(118deg,transparent 0 30px,#E1E6EE 30px 31.5px);">
-              <span style="position:absolute;left:-20px;top:0;bottom:0;width:70px;background:#D8E4F1;transform:skewX(-14deg);"></span>
-              <span style="position:absolute;left:52%;top:18%;width:60px;height:110px;background:#DCE9D6;border-radius:6px;transform:rotate(28deg);"></span>
-              <span style="position:absolute;left:38%;top:58%;width:28px;height:28px;border-radius:50%;background:#2447C4;color:#fff;display:grid;place-items:center;font-size:12px;font-weight:700;border:3px solid #fff;box-shadow:0 4px 10px rgba(11,18,32,.25);">1</span>
-              <span style="position:absolute;left:24%;top:30%;width:28px;height:28px;border-radius:50%;background:#2447C4;color:#fff;display:grid;place-items:center;font-size:12px;font-weight:700;border:3px solid #fff;box-shadow:0 4px 10px rgba(11,18,32,.25);">2</span>
-              <span style="position:absolute;left:10px;bottom:10px;font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.06em;background:#ffffffe0;padding:4px 7px;border-radius:6px;color:#5B6478;">MAP · SAMPLE LOCATIONS</span>
-            </div>
+            <sc-if value="{{ routeMapOn }}" hint-placeholder-val="{{ true }}">
+              <div style="margin:14px 18px 0;height:150px;border-radius:18px;position:relative;overflow:hidden;border:1px solid #DDE3EC;background-color:#EEF1F4;background-image:repeating-linear-gradient(28deg,transparent 0 22px,#E1E6EE 22px 23.5px),repeating-linear-gradient(118deg,transparent 0 30px,#E1E6EE 30px 31.5px);">
+                <sc-if value="{{ routeStartOn }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;left:{{ routeStartX }};top:{{ routeStartY }};width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:#2447C4;border:3px solid #fff;box-sizing:border-box;box-shadow:0 0 0 4px rgba(36,71,196,.18);"></span></sc-if>
+                <sc-for list="{{ routePins }}" as="p" hint-placeholder-count="2"><span style="position:absolute;left:{{ p.x }};top:{{ p.y }};width:28px;height:28px;margin:-17px 0 0 -17px;border-radius:50%;background:#2447C4;color:#fff;display:grid;place-items:center;font-size:12px;font-weight:700;border:3px solid #fff;box-shadow:0 4px 10px rgba(11,18,32,.25);">{{ p.n }}</span></sc-for>
+              </div>
+            </sc-if>
             <div style="padding:16px 18px 0;display:flex;flex-direction:column;gap:0;">
               <sc-for list="{{ routeGroups }}" as="g" hint-placeholder-count="2">
                 <div style="display:flex;gap:12px;">
@@ -406,7 +411,7 @@ input,textarea,button{font-family:inherit}
             <sc-if value="{{ runHasRecord }}" hint-placeholder-val="{{ true }}">
               <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:14px 18px 0;">
                 <button onClick="{{ runRecord }}" style="padding:13px 6px;border:1px solid #D7DEEC;border-radius:14px;background:#fff;font-size:13px;font-weight:650;cursor:pointer;color:#0B1220;display:flex;flex-direction:column;align-items:center;gap:5px;"><span style="color:#DD6134;font-size:16px;">●</span>Record</button>
-                <button onClick="{{ runLog }}" style="padding:13px 6px;border:1px solid #D7DEEC;border-radius:14px;background:#fff;font-size:13px;font-weight:650;cursor:pointer;color:#0B1220;display:flex;flex-direction:column;align-items:center;gap:5px;"><span style="color:#2447C4;font-size:16px;">✎</span>Insight</button>
+                <button onClick="{{ runLog }}" style="padding:13px 6px;border:1px solid #D7DEEC;border-radius:14px;background:#fff;font-size:13px;font-weight:650;cursor:pointer;color:#0B1220;display:flex;flex-direction:column;align-items:center;gap:5px;"><span style="color:#2447C4;font-size:16px;">✎</span>{{ runLogWord }}</button>
                 <button onClick="{{ runCall }}" style="padding:13px 6px;border:1px solid #D7DEEC;border-radius:14px;background:#fff;font-size:13px;font-weight:650;cursor:pointer;color:#0B1220;display:flex;flex-direction:column;align-items:center;gap:5px;"><span style="color:#2447C4;font-size:16px;">☎</span>Contact</button>
                 <button onClick="{{ runProfile }}" style="padding:13px 6px;border:1px solid #D7DEEC;border-radius:14px;background:#fff;font-size:13px;font-weight:650;cursor:pointer;color:#0B1220;display:flex;flex-direction:column;align-items:center;gap:5px;"><span style="color:#2447C4;font-size:16px;">◉</span>Profile</button>
               </div>
@@ -451,7 +456,7 @@ input,textarea,button{font-family:inherit}
                   <span style="width:24px;height:24px;border-radius:50%;background:{{ r.dotBg }};color:#fff;display:grid;place-items:center;font-size:11px;font-weight:700;">{{ r.mark }}</span>
                   <span style="flex:1;min-width:0;"><span style="display:block;font-size:14px;font-weight:650;">{{ r.name }}</span><span style="display:block;font-size:12px;color:#5B6478;">{{ r.status }}</span></span>
                   <sc-if value="{{ r.canContinue }}" hint-placeholder-val="{{ false }}"><button onClick="{{ r.go }}" style="padding:8px 11px;border:1px solid #D7DEEC;border-radius:10px;background:#fff;font-size:12.5px;font-weight:650;cursor:pointer;color:#22409F;">Continue</button></sc-if>
-                  <sc-if value="{{ r.canLog }}" hint-placeholder-val="{{ false }}"><button onClick="{{ r.log }}" style="padding:8px 11px;border:1px solid #D7DEEC;border-radius:10px;background:#fff;font-size:12.5px;font-weight:650;cursor:pointer;color:#22409F;">Add insight</button></sc-if>
+                  <sc-if value="{{ r.canLog }}" hint-placeholder-val="{{ false }}"><button onClick="{{ r.log }}" style="padding:8px 11px;border:1px solid #D7DEEC;border-radius:10px;background:#fff;font-size:12.5px;font-weight:650;cursor:pointer;color:#22409F;">{{ runLogBtn }}</button></sc-if>
                 </div>
               </sc-for>
             </div>
@@ -519,6 +524,7 @@ input,textarea,button{font-family:inherit}
                         <button onClick="{{ r.toggle }}" style="padding:7px 10px;border-radius:9px;border:1px solid {{ r.addBd }};background:{{ r.addBg }};color:{{ r.addFg }};font-size:12px;font-weight:700;cursor:pointer;">{{ r.addLabel }}</button>
                       </div>
                     </sc-for>
+                    <sc-if value="{{ m.hasLink }}" hint-placeholder-val="{{ false }}"><button onClick="{{ m.openLink }}" style="margin-top:12px;padding:10px 14px;border:0;border-radius:11px;background:#2447C4;color:#fff;font-size:13px;font-weight:700;cursor:pointer;">{{ m.linkLabel }} ↗</button></sc-if>
                     <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;"><sc-for list="{{ m.next }}" as="nx" hint-placeholder-count="2"><button onClick="{{ nx.go }}" style="padding:6px 10px;border-radius:999px;border:1px solid #DCE3F2;background:#fff;font-size:12px;font-weight:600;color:#22409F;cursor:pointer;">✳ {{ nx.q }}</button></sc-for></div>
                   </sc-if>
                 </div>
@@ -661,6 +667,7 @@ input,textarea,button{font-family:inherit}
         <sc-if value="{{ isSumTab }}" hint-placeholder-val="{{ false }}">
           <div style="padding:6px 18px 0;display:flex;align-items:center;gap:8px;">
             <span style="flex:1;font-family:'Source Serif 4',Georgia,serif;font-size:30px;line-height:1.1;letter-spacing:-.02em;">Summaries</span>
+            <button onClick="{{ smyBuild }}" style="padding:8px 12px;border-radius:999px;border:0;background:#2447C4;color:#fff;font-size:12.5px;font-weight:700;cursor:pointer;">✳ Build summary</button>
           </div>
         </sc-if>
 
@@ -691,11 +698,6 @@ input,textarea,button{font-family:inherit}
                 <sc-if value="{{ smyNoRows }}" hint-placeholder-val="{{ false }}">
                   <div style="padding:18px;text-align:center;font-size:13px;color:#5B6478;background:#fff;border:1px dashed #C9D2E4;border-radius:14px;">No conversations match.</div>
                 </sc-if>
-                <div style="background:#fff;border:1px solid #D9E2F6;border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:10px;">
-                  <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;"><span style="font-size:15px;font-weight:700;">Build your summary</span><span style="font-size:12.5px;color:#5B6478;">{{ smySelLabel }}</span></div>
-                  <input value="{{ smyName }}" onChange="{{ onSmyName }}" placeholder="Name, e.g. October referral feedback" style="border:1px solid #D7DEEC;border-radius:12px;padding:12px;font-size:14.5px;background:#F7F9FC;outline:0;color:#0B1220;">
-                  <button onClick="{{ smyGenerate }}" style="padding:13px;border:0;border-radius:12px;background:{{ smyGoBg }};color:#fff;font-size:14.5px;font-weight:700;cursor:pointer;">{{ smyGoLabel }}</button>
-                </div>
               </div>
             </sc-if>
             <sc-if value="{{ smyHist }}" hint-placeholder-val="{{ false }}">
@@ -712,7 +714,7 @@ input,textarea,button{font-family:inherit}
                         <div style="font-size:13.5px;line-height:1.55;color:#1B2333;margin-top:8px;padding:12px;border-radius:12px;background:#F4F7FD;">{{ c.text }}</div>
                         <div style="display:flex;gap:8px;margin-top:10px;">
                           <button onClick="{{ c.copy }}" style="flex:1;padding:10px;border:1px solid #D7DEEC;border-radius:11px;background:#fff;font-size:13px;font-weight:650;cursor:pointer;">Copy</button>
-                          <button onClick="{{ c.share }}" style="flex:1;padding:10px;border:0;border-radius:11px;background:#2447C4;color:#fff;font-size:13px;font-weight:700;cursor:pointer;">Share link</button>
+                          <button onClick="{{ c.share }}" style="flex:1;padding:10px;border:0;border-radius:11px;background:#2447C4;color:#fff;font-size:13px;font-weight:700;cursor:pointer;">{{ c.shareLabel }}</button>
                         </div>
                       </div>
                     </sc-if>
@@ -855,6 +857,22 @@ input,textarea,button{font-family:inherit}
               </div>
             </sc-if>
 
+            <sc-if value="{{ shAccount }}" hint-placeholder-val="{{ false }}">
+              <div style="padding:12px 18px 0;display:flex;flex-direction:column;gap:8px;">
+                <sc-for list="{{ accountRows }}" as="t" hint-placeholder-count="6">
+                  <div style="display:flex;flex-direction:column;gap:8px;">
+                    <sc-if value="{{ t.hasHead }}" hint-placeholder-val="{{ false }}">
+                      <div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.08em;color:#7A839A;padding:6px 2px 0;">{{ t.head }}</div>
+                    </sc-if>
+                    <button onClick="{{ t.go }}" style="display:flex;align-items:center;gap:12px;padding:13px 14px;border:1.5px solid {{ t.bd }};border-radius:14px;background:{{ t.bg }};cursor:pointer;text-align:left;">
+                      <span style="flex:1;"><span style="display:block;font-size:14.5px;font-weight:650;color:#0B1220;">{{ t.name }}</span><span style="display:block;font-size:12px;color:#5B6478;margin-top:2px;">{{ t.meta }}</span></span>
+                      <span style="color:#2447C4;font-weight:700;">{{ t.check }}</span>
+                    </button>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+
             <sc-if value="{{ shChoose }}" hint-placeholder-val="{{ false }}">
               <div style="padding:12px 18px 0;display:flex;flex-direction:column;gap:8px;">
                 <div style="font-size:13px;color:#5B6478;line-height:1.5;">Pick who you'll see at {{ chooseHco }}. Each becomes a call at one stop.</div>
@@ -871,13 +889,27 @@ input,textarea,button{font-family:inherit}
             <sc-if value="{{ shEmail }}" hint-placeholder-val="{{ false }}">
               <div style="padding:14px 18px 0;display:flex;flex-direction:column;gap:10px;">
                 <div style="display:flex;gap:10px;font-size:13.5px;padding:0 2px;"><span style="color:#7A839A;width:56px;">To</span><span style="font-weight:600;">{{ ep.email }}</span></div>
-                <div style="display:flex;gap:10px;font-size:13.5px;padding:0 2px;"><span style="color:#7A839A;width:56px;">Subject</span><span style="font-weight:600;">Follow-up · {{ ep.spec }}</span></div>
-                <div style="border:1px solid #D7DEEC;border-radius:14px;padding:12px 13px;background:#F7F9FC;font-size:14px;line-height:1.55;color:#1B2333;">Hello {{ ep.first }},<br><br>{{ ep.open }} I'd value 15 minutes to walk through it — would {{ ep.dayL }} work?<br><br>Best,<br>Alex</div>
+                <sc-if value="{{ emailBusy }}" hint-placeholder-val="{{ false }}"><div style="border:1px solid #D7DEEC;border-radius:14px;padding:22px 13px;background:#F7F9FC;font-size:13.5px;color:#5B6478;">Writing the draft…</div></sc-if>
+                <sc-if value="{{ emailFailed }}" hint-placeholder-val="{{ false }}"><div style="border:1px solid #F0D3C2;border-radius:14px;padding:14px 13px;background:#FDF3EE;font-size:13.5px;line-height:1.5;color:#A94D1B;">{{ emailError }}</div></sc-if>
+                <sc-if value="{{ emailReady }}" hint-placeholder-val="{{ true }}">
+                  <div style="display:flex;flex-direction:column;gap:10px;">
+                    <div style="display:flex;gap:10px;font-size:13.5px;padding:0 2px;"><span style="color:#7A839A;width:56px;">Subject</span><span style="flex:1;min-width:0;font-weight:600;">{{ emailSubject }}</span></div>
+                    <div style="border:1px solid #D7DEEC;border-radius:14px;padding:12px 13px;background:#F7F9FC;font-size:14px;line-height:1.55;color:#1B2333;white-space:pre-wrap;">{{ emailBody }}</div>
+                  </div>
+                </sc-if>
                 <div style="font-size:11.5px;color:#7A839A;">Draft preview — nothing is sent.</div>
                 <div style="display:flex;gap:8px;">
                   <button onClick="{{ closeSheet }}" style="flex:1;padding:14px;border:1px solid #D7DEEC;border-radius:13px;background:#fff;font-size:14px;font-weight:650;cursor:pointer;">Cancel</button>
-                  <button onClick="{{ copyDraft }}" style="flex:2;padding:14px;border:0;border-radius:13px;background:#2447C4;color:#fff;font-size:14.5px;font-weight:700;cursor:pointer;">Copy draft</button>
+                  <button onClick="{{ copyDraft }}" style="flex:2;padding:14px;border:0;border-radius:13px;background:#2447C4;color:#fff;font-size:14.5px;font-weight:700;cursor:pointer;">{{ emailBtn }}</button>
                 </div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ shSummary }}" hint-placeholder-val="{{ false }}">
+              <div style="padding:14px 18px 0;display:flex;flex-direction:column;gap:12px;">
+                <div style="font-size:13px;color:#5B6478;">{{ smySelLabel }}</div>
+                <input value="{{ smyName }}" onChange="{{ onSmyName }}" placeholder="Name, e.g. October referral feedback" style="border:1px solid #D7DEEC;border-radius:13px;padding:13px;font-size:14.5px;background:#F7F9FC;outline:0;color:#0B1220;">
+                <button onClick="{{ smyGenerate }}" style="padding:14px;border:0;border-radius:13px;background:{{ smyGoBg }};color:#fff;font-size:14.5px;font-weight:700;cursor:pointer;">{{ smyGoLabel }}</button>
               </div>
             </sc-if>
 
@@ -941,7 +973,8 @@ input,textarea,button{font-family:inherit}
                       </div>
                     </div>
                     <sc-if value="{{ insHasSource }}" hint-placeholder-val="{{ false }}"><div style="font-size:12.5px;font-weight:650;color:#1C7A4E;">✓ {{ insSourceLabel }}</div></sc-if>
-                    <textarea value="{{ insNote }}" onChange="{{ onInsNote }}" placeholder="What did you hear? The insight, quotes, asks." style="width:100%;box-sizing:border-box;min-height:104px;border:1px solid #D7DEEC;border-radius:14px;padding:12px 13px;font-size:14.5px;line-height:1.5;background:#F7F9FC;outline:0;resize:none;color:#0B1220;"></textarea>
+                    <sc-if value="{{ insBusy }}" hint-placeholder-val="{{ false }}"><div style="font-size:12.5px;font-weight:650;color:#7A839A;">Transcribing… the text fills in when it’s ready</div></sc-if>
+                    <textarea value="{{ insNote }}" onChange="{{ onInsNote }}" placeholder="What did you hear? Quotes, asks, next steps." style="width:100%;box-sizing:border-box;min-height:104px;border:1px solid #D7DEEC;border-radius:14px;padding:12px 13px;font-size:14.5px;line-height:1.5;background:#F7F9FC;outline:0;resize:none;color:#0B1220;"></textarea>
                     <sc-if value="{{ insShowArea }}" hint-placeholder-val="{{ false }}">
                       <div>
                         <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.09em;color:#7A839A;">THERAPEUTIC AREA</div>
@@ -1113,8 +1146,8 @@ input,textarea,button{font-family:inherit}
             <sc-if value="{{ shMe }}" hint-placeholder-val="{{ false }}">
               <div style="padding:14px 18px 0;display:flex;flex-direction:column;gap:10px;">
                 <div style="display:flex;align-items:center;gap:12px;padding:4px 2px 8px;">
-                  <span style="width:48px;height:48px;border-radius:50%;background:#DCE3F5;color:#22409F;display:grid;place-items:center;font-size:15px;font-weight:700;">AJ</span>
-                  <span><span style="display:block;font-size:16px;font-weight:700;">Alex Johnson</span><span style="display:block;font-size:12.5px;color:#5B6478;">{{ meSub }}</span></span>
+                  <span style="width:48px;height:48px;border-radius:50%;background:#DCE3F5;color:#22409F;display:grid;place-items:center;font-size:15px;font-weight:700;">{{ meIni }}</span>
+                  <span><span style="display:block;font-size:16px;font-weight:700;">{{ meName }}</span><span style="display:block;font-size:12.5px;color:#5B6478;">{{ meSub }}</span></span>
                 </div>
                 <div style="border:1px solid #E1E6F0;border-radius:14px;overflow:hidden;">
                   <sc-for list="{{ meRows }}" as="r" hint-placeholder-count="4">
@@ -1127,6 +1160,29 @@ input,textarea,button{font-family:inherit}
                 </div>
               </div>
             </sc-if>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ showSignIn }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute;inset:0;z-index:29;background:#F4F6FA;overflow-y:auto;">
+          <div style="padding:96px 24px 40px;display:flex;flex-direction:column;gap:12px;">
+            <div style="display:flex;align-items:center;gap:7px;"><span style="font-size:21px;font-weight:700;letter-spacing:-.025em;color:#0B1220;">docnexus</span><span style="width:20px;height:20px;border-radius:6px;background:linear-gradient(135deg,#5FB4F7,#2447C4);display:block;"></span></div>
+            <div style="margin:22px 0 6px;">
+              <div style="font-family:'Source Serif 4',Georgia,serif;font-size:30px;line-height:1.1;letter-spacing:-.02em;color:#0B1220;">{{ authTitle }}</div>
+              <div style="font-size:14px;color:#5B6478;margin-top:8px;line-height:1.45;">{{ authSub }}</div>
+            </div>
+            <sc-if value="{{ authShowEmail }}" hint-placeholder-val="{{ true }}"><input type="email" autocomplete="email" value="{{ authEmail }}" onChange="{{ onAuthEmail }}" onKeyDown="{{ authKey }}" placeholder="Email" style="border:1px solid #D7DEEC;border-radius:13px;padding:13px;font-size:14.5px;background:#fff;outline:0;color:#0B1220;"></sc-if>
+            <sc-if value="{{ authShowPw }}" hint-placeholder-val="{{ true }}"><input type="password" autocomplete="current-password" value="{{ authPw }}" onChange="{{ onAuthPw }}" onKeyDown="{{ authKey }}" placeholder="Password" style="border:1px solid #D7DEEC;border-radius:13px;padding:13px;font-size:14.5px;background:#fff;outline:0;color:#0B1220;"></sc-if>
+            <sc-if value="{{ authShowCode }}" hint-placeholder-val="{{ false }}"><input inputmode="numeric" autocomplete="one-time-code" value="{{ authCode }}" onChange="{{ onAuthCode }}" onKeyDown="{{ authKey }}" placeholder="Code from the email" style="border:1px solid #D7DEEC;border-radius:13px;padding:13px;font-size:14.5px;background:#fff;outline:0;color:#0B1220;"></sc-if>
+            <sc-if value="{{ authAskGiven }}" hint-placeholder-val="{{ false }}"><input autocomplete="given-name" value="{{ authGiven }}" onChange="{{ onAuthGiven }}" onKeyDown="{{ authKey }}" placeholder="First name" style="border:1px solid #D7DEEC;border-radius:13px;padding:13px;font-size:14.5px;background:#fff;outline:0;color:#0B1220;"></sc-if>
+            <sc-if value="{{ authAskFamily }}" hint-placeholder-val="{{ false }}"><input autocomplete="family-name" value="{{ authFamily }}" onChange="{{ onAuthFamily }}" onKeyDown="{{ authKey }}" placeholder="Last name" style="border:1px solid #D7DEEC;border-radius:13px;padding:13px;font-size:14.5px;background:#fff;outline:0;color:#0B1220;"></sc-if>
+            <sc-if value="{{ authShowNew }}" hint-placeholder-val="{{ false }}"><input type="password" autocomplete="new-password" value="{{ authNew }}" onChange="{{ onAuthNew }}" onKeyDown="{{ authKey }}" placeholder="New password" style="border:1px solid #D7DEEC;border-radius:13px;padding:13px;font-size:14.5px;background:#fff;outline:0;color:#0B1220;"></sc-if>
+            <sc-if value="{{ authShowNew }}" hint-placeholder-val="{{ false }}"><input type="password" autocomplete="new-password" value="{{ authConfirm }}" onChange="{{ onAuthConfirm }}" onKeyDown="{{ authKey }}" placeholder="Confirm new password" style="border:1px solid #D7DEEC;border-radius:13px;padding:13px;font-size:14.5px;background:#fff;outline:0;color:#0B1220;"></sc-if>
+            <sc-if value="{{ hasAuthErr }}" hint-placeholder-val="{{ false }}"><div style="padding:10px 12px;border-radius:12px;background:#FDEDE4;color:#A94D1B;font-size:13px;line-height:1.45;">{{ authErr }}</div></sc-if>
+            <sc-if value="{{ hasAuthNote }}" hint-placeholder-val="{{ false }}"><div style="padding:10px 12px;border-radius:12px;background:#E3F5EC;color:#1C7A4E;font-size:13px;line-height:1.45;">{{ authNote }}</div></sc-if>
+            <button onClick="{{ authGo }}" style="margin-top:4px;padding:14px;border:0;border-radius:13px;background:{{ authGoBg }};color:#fff;font-size:14.5px;font-weight:700;cursor:pointer;">{{ authGoLabel }}</button>
+            <button onClick="{{ authAlt }}" style="align-self:center;border:0;background:none;padding:8px 4px;color:#2447C4;font-size:13.5px;font-weight:650;cursor:pointer;">{{ authAltLabel }}</button>
           </div>
         </div>
       </sc-if>
@@ -1154,6 +1210,9 @@ const HCPS = {
   jun: { id:'jun', name:'Dr. Jun Park', first:'Jun', ini:'JP', spec:'General Surgery', hco:'msh', claims:'530', yoy:'−3%', day:'Mon', dayL:'Monday', ref:'340', top:'49650', email:'jun.park@example.com', phone:'(212) 555-0190', last:'2 Sep', lastN:57, adv:2, iOpen:'Deliver the account brief he requested on 27 Oct.', iBrief:'Asked for an account brief on 27 Oct, still not sent. Prefers email to visits. Advocacy 2/5 and cooling.', mine:false, claimsN:530, yoyN:-3, distN:0.8, x:'39%', y:'50%', specs:['Appendectomy','Cholecystectomy','Hernia'], leak:true, open:'Deliver the account brief he requested on 27 Oct.', brief:'Volume dipped 3% while outbound referrals rose — the highest leakage risk in your territory.' },
   elena: { id:'elena', name:'Dr. Elena Rossi', first:'Elena', ini:'ER', spec:'General Surgery', hco:'msw', claims:'275', yoy:'+18%', day:'Wed', dayL:'Wednesday', ref:'319', top:'44970', email:'elena.rossi@example.com', phone:'(212) 555-0128', last:'—', lastN:999, adv:null, iOpen:'Introduce yourself and learn what she needs.', iBrief:'Not met yet. No insights logged.', mine:false, claimsN:275, yoyN:18, distN:2.3, x:'32%', y:'68%', specs:['Hernia','Bariatric'], open:'Introduce yourself — she is the fastest-growing surgeon at Mount Sinai West.', brief:'Up 18% YoY with 319 referred-in patients. Not yet contacted.' }
 };
+// stand-ins while a table is empty, so an account with nothing in it yet still opens
+const NO_HCO = { id:'', name:'—', ini:'', type:'', city:'', mine:false, hcps:[], specs:[], x:'50%', y:'50%' };
+const NO_HCP = { id:'', name:'—', first:'', ini:'', spec:'', hco:'', last:'—', lastN:999, adv:null, iOpen:'', iBrief:'', open:'', mine:false, specs:[], x:'50%', y:'50%' };
 const OM_ACC = [
   { id:'nyu', name:'NYU Langone Tisch', type:'Hospital', area:'Murray Hill', zip:'10016', dist:3.9, v:134, x:'62%', y:'66%' },
   { id:'lenox', name:'Lenox Hill Hospital', type:'Hospital', area:'Upper East Side', zip:'10075', dist:1.6, v:86, x:'61%', y:'34%' },
@@ -1173,10 +1232,11 @@ const OM_DOC = [
   { id:'elena', name:'Dr. Elena Rossi', area:'General Surgery · Mount Sinai West', zip:'10019', dist:2.3, v:24, x:'34%', y:'55%' }
 ];
 const OM_ZIPAREA = { '10016':'Murray Hill', '10075':'Upper East Side', '10065':'Lenox Hill', '10025':'Morningside', '10037':'Harlem', '10029':'East Harlem', '10019':'Midtown West' };
+// what a map value counts, per kind: thousands of dollars ('$K'), or a count such as 'claims'
+const OM_UNIT = { acc:'$K', doc:'$K' };
 const omColor = v => v >= 100 ? ['#22409F','#fff'] : v >= 50 ? ['#3F74D6','#fff'] : v >= 25 ? ['#7FCBBE','#0B1220'] : ['#BFE6DC','#0B1220'];
 const TONES = { blue:['#E7ECFA','#22409F'], orange:['#FDEDE4','#A94D1B'], green:['#E3F5EC','#1C7A4E'] };
 const TIMES = { maya:'10:00', alex:'11:30' };
-const SPECS = ['All codes','Appendectomy','Bariatric','Cholecystectomy','Colectomy','Hernia','OB-GYN','Urology'];
 const SORTS = ['Relevance','Opportunity','Volume','Growth','Distance'];
 // code groups, each covering some specialties: 123 HCPCS / CPT codes in all
 const CODE_GROUPS = [
@@ -1193,14 +1253,29 @@ const dateOf = n => dateAt(n).getDate() + ' ' + MO[dateAt(n).getMonth()];
 const dayFull = n => WD[dateAt(n).getDay()] + ' ' + dateOf(n);
 const dayOf = n => n === 0 ? 'Today' : n === 1 ? 'Tomorrow' : n === -1 ? 'Yesterday' : dayFull(n);
 const ordinal = n => n + (n % 10 === 1 && n % 100 !== 11 ? 'st' : n % 10 === 2 && n % 100 !== 12 ? 'nd' : n % 10 === 3 && n % 100 !== 13 ? 'rd' : 'th');
-// where the day starts on the sample map, and rough driving: 1% of the map is about 0.08 mi, 4 minutes a mile
+// where the day starts (the territory's centre) on the map, and rough driving: 1% of the map is about 0.08 mi, 4 minutes a mile
 const START = { x:'50%', y:'40%' };
-const driveMin = (a, b) => Math.hypot(parseFloat(a.x) - parseFloat(b.x), parseFloat(a.y) - parseFloat(b.y)) * 0.08 * 4;
+const driveMin = (a, b) => Math.hypot(parseFloat(a.x) - parseFloat(b.x), parseFloat(a.y) - parseFloat(b.y)) * (AREA.miPerPct || 0.08) * 4;
+// a place the app couldn't put on the map has lat null; the sample's places have no lat at all
+const placed = h => !!h && h.lat !== null && h.x != null;
+const onEarth = h => h.lat != null && h.lng != null;
+const milesApart = (a, b) => {
+  if (!placed(a) || !placed(b)) return '';
+  let m;
+  if (onEarth(a) && onEarth(b)) {
+    const r = d => d * Math.PI / 180, dLat = r(b.lat - a.lat), dLng = r(b.lng - a.lng);
+    m = 7917.5 * Math.asin(Math.sqrt(Math.sin(dLat / 2) ** 2 + Math.cos(r(a.lat)) * Math.cos(r(b.lat)) * Math.sin(dLng / 2) ** 2));
+  } else m = Math.hypot(parseFloat(a.x) - parseFloat(b.x), parseFloat(a.y) - parseFloat(b.y)) * (AREA.miPerPct || 0.08);
+  return (m < 10 ? Math.round(m * 10) / 10 : Math.round(m)) + ' mi';
+};
 const TERRS = [
   { name:'Central Manhattan', meta:'ZIP 10019, 10029 · 5 assigned' },
   { name:'Upper Manhattan', meta:'ZIP 10031, 10032 · 3 assigned' },
   { name:'Brooklyn North', meta:'ZIP 11201, 11205 · 4 assigned' }
 ];
+// the area the map and the range sheet start from: the territory's centre, its state and the cities in it;
+// near the centre or across a city ('All cities' for the whole territory), and how many miles 1% of the map is
+const AREA = { centre:'Central Manhattan', state:'New York', city:'Manhattan', cities:['Manhattan','Brooklyn','Queens'], mode:'near', miPerPct:0.08 };
 const ANSWERS = {
   'Who should I see today?': { a:'Start with Dr. Jun Park: follow-up overdue, leakage risk, and no contact since 2 Sep. Then Dr. Maya Patel — her follow-up is due today.', tags:['Today','Follow-ups · leakage · last contact'], rows:['jun','maya'] },
   'Brief me on Dr. Maya Patel': { a:'Dr. Maya Patel has 860 selected-code claims in 2025, up 14% on 2024. 19 referral events went outside the system. Her lightest day is Wednesday.', tags:['General Surgery','Sample data'], rows:['maya'] },
@@ -1221,8 +1296,53 @@ const SHORT_TYPES = ['1:1','Ad Board','Conference','Consulting'];
 const EXTRA = { vendors:['ASCO','Curio','MD Outlook','Onc Live','Targeted Oncology','Other'], vendorSubs:{ 'Onc Live':['State of Science','Ask the Expert'], Curio:['Roundtable','Regional Conference'] },
   confs:['American Society of Clinical Oncology (ASCO)','American Society of Hematology (ASH)','European Society of Medical Oncology (ESMO)','Best of ASCO (BOASCO)'] };
 // what a draft keeps of the insight form
-const DRAFT_KEYS = ['insWho','insAdv','insNote','insTopics','insType','insLive','insConv','insArea','insSubs','insStage','insPrio','insTags','insDateN','insVendor','insVendorSub','insVendorName','insCount','insConf','insHco','insSource','logFu'];
+const DRAFT_KEYS = ['insKey','insRef','insWho','insAdv','insNote','insTopics','insType','insLive','insConv','insArea','insSubs','insStage','insPrio','insTags','insDateN','insVendor','insVendorSub','insVendorName','insCount','insConf','insHco','insSource','logFu'];
 // customer accounts: one flow everywhere; each account shows only the fields it uses (from the Insights source)
+// the signed-in rep; the app fills it from the session. The sample rep is DocNexus staff, so Me shows the account switch.
+// pick: the account-switch row the app loaded (empty: the row for the account)
+const ME = { name:'Rowan Quill', ini:'RQ', staff:true, pick:'' };
+// sign-in, password and account calls. These stand-ins say yes; the app asks Cognito, and signIn
+// answers { next:'newPassword', missing:['given_name', …] } when a first sign-in must set a password
+const later = v => new Promise(r => setTimeout(() => r(v), 700));
+const AUTH = {
+  signIn: (email, password) => later({}),
+  newPassword: (password, names) => later({}),
+  forgot: email => later({}),
+  reset: (email, code, password) => later({}),
+  signOut: () => Promise.resolve({}),
+  pickAccount: account => Promise.resolve({})
+};
+// Ask, the mic, Record and Upload, Insights' summaries, the leakage report and every save. These stand-ins
+// answer from the sample data after a moment and keep each change on this screen; the app asks Field ask,
+// Insights, Field Pro and Hospital Reports, and sets a service to null where nothing is connected yet, which
+// the screens say instead of making something up
+const SERVICE = {
+  ask: (q, ctx, sample) => later(sample()),
+  listen: sample => new Promise(r => setTimeout(() => r(sample), 1600)),
+  // the recorder: 'start', 'pause', 'resume', 'stop' (resolves with the clip) or 'discard'
+  rec: step => Promise.resolve(null),
+  // a file for Upload ({ name }), or null when the rep cancels
+  pick: sample => later({ name: sample }),
+  // what a recording or file said, and `ref`, the record the save then updates (Insights keeps the upload)
+  transcript: (who, sample, media) => later({ text: sample, ref: null }),
+  summary: (list, item, sample) => new Promise(r => setTimeout(() => r(sample()), 2500)),
+  report: (hco, group) => new Promise(r => setTimeout(() => r({}), 4000)),
+  // the writes; the screen changes at once, and each resolves with the stored ids (`id`, `ref`) once saved
+  save: (visit, form) => later({}),
+  followUp: fu => later({}),
+  followUpDone: (fu, done) => later({}),
+  addTarget: row => later({}),
+  // the phone's own: the clipboard, the share sheet ({ title, text, url }; resolves with what to tell the rep, if
+  // anything), the dialler and opening a link (a report's PDF)
+  copy: text => Promise.resolve(),
+  share: what => Promise.resolve(''),
+  call: phone => Promise.resolve(),
+  open: url => Promise.resolve(),
+  // an email to a doctor, { subject, body }; the stand-in writes it from the brief, as the sample does
+  email: (who, sample) => later(sample()),
+  // driving minutes between places (the start, then stops), as rows of a matrix; the stand-in guesses from the map
+  drive: points => Promise.resolve(points.map(a => points.map(b => driveMin(a, b))))
+};
 const ACCOUNTS = {
   ottava: { name:'Ottava', meta:'J&J MedTech · Field Pro + Insights', role:'Sales rep', fieldPro:true, record:true, adv:true,
     topics:['Referral patterns','Adoption barriers','Competitor comparison','Ideal patient','OR access'], meetTypes:['1:1','Phone','Email','Ad Board','Conference','Consulting'], tags:TAGS,
@@ -1249,8 +1369,21 @@ const ACCOUNTS = {
     notes:['No fixed topics: themes come from what was said.', 'The full meeting-type list plus Live or Virtual, and tags.', 'Third Party asks for the vendor and how many attended; Conference asks which one.'] },
   gilead: { name:'Gilead Sciences', meta:'Insights · Record', record:true,
     topics:[], meetTypes:['In Person','1:1','Zoom','Ad Board','Conference'], stages:['Observation','Insight','Actionable Insight','Impact'], prios:['High','Medium','Low'], tags:TAGS,
-    notes:['The basic form: each insight gets a stage and a priority.', 'Its own meeting types, Zoom among them. No topics, no Live or Virtual.', 'Summaries are congress summaries, made into slides on the website.'] }
+    notes:['The basic form: each insight gets a stage and a priority.', 'Its own meeting types, Zoom among them. No topics, no Live or Virtual.', 'Summaries come back as text and a deck, as on the website.'] }
 };
+// the staff account switch, Field Pro first, then Insights. The app fills it from the login: every Field Pro
+// company it belongs to (each opens as the Field Pro account with that company's book), then the Insights customers
+const PICKS = Object.keys(ACCOUNTS).map(k => ({ id:k, account:k, name:ACCOUNTS[k].name, meta:ACCOUNTS[k].meta, kind: ACCOUNTS[k].fieldPro ? 'Field Pro' : 'Insights' }));
+// What each account shows, block by block. A Field Pro account shows Field Pro's blocks and an Insights account
+// Insights' blocks, never the other platform's. An account's own `show` switches blocks off (show:{ referred:false }),
+// and the app switches off a block whose source isn't connected. A row or tile with nothing in it doesn't show
+const BLOCKS = {
+  fieldPro: { claims:true, lightest:true, topCode:true, referred:true, brief:true, draftEmail:true, phone:true, email:true, followUps:true, summaries:true, reports:true },
+  insights: { lastMeeting:true, lastMet:true, insightCount:true, brief:true, draftEmail:true, phone:true, email:true, followUps:true, summaries:true }
+};
+const showOf = A => ({ ...BLOCKS[A.fieldPro ? 'fieldPro' : 'insights'], ...(A.show || {}) });
+// what a logged conversation is called: Field Pro keeps notes, Insights keeps insights
+const wordsOf = A => A.fieldPro ? { one:'Note', many:'Notes' } : { one:'Insight', many:'Insights' };
 // sample wording: Ottava sells a surgical system, the others are oncology medicines
 const FP_PEOPLE = Object.fromEntries(Object.values(HCPS).map(p => [p.id, { spec:p.spec, iOpen:p.iOpen, iBrief:p.iBrief }]));
 const ONC_PEOPLE = {
@@ -1283,7 +1416,9 @@ const seed = A => {
       { id:2, t:T.fu[1], who:'jun', dueN:-2, done:false }
     ],
     summaries: [{ id:1, name:'September conversations', date:'30 Sep', ids:[3,4], text:null }],
-    drafts: [{ id:1, form:{ insWho:['maya'], insNote:'Asked again for the one-page summary.' } }]
+    reports: [{ id:1, hco:'msh', group:'All codes', date:'22 Oct' }, { id:2, hco:'msw', group:'Colectomy', date:'14 Oct' }],
+    drafts: [{ id:1, form:{ insWho:['maya'], insNote:'Asked again for the one-page summary.' } }],
+    route: ['maya','alex','daniel']
   };
 };
 const TLISTS = [
@@ -1305,14 +1440,15 @@ class Component extends DCLogic {
     return {
     account,
     tab: this.tabsFor({ account }).includes(pr.startTab) ? pr.startTab : 'targets', stack: [], sheet: null, sheetData: null,
-    scope: 'mine', kind: ACCOUNTS[account].fieldPro ? 'hco' : 'hcp', q: '', spec: 'All codes', cgs: CODE_GROUPS.map(g => g.name), sort: 'Relevance', iSort: 'Relevance', omType: 'All types', tlist: 'Q4 KOL list',
-    route: ['maya','alex','daniel'], tomorrow: [], day: 'today', runIdx: 0, runDone: [], runSkip: [], logged: [],
+    scope: 'mine', kind: ACCOUNTS[account].fieldPro ? 'hco' : 'hcp', q: '', spec: 'All codes', cgs: CODE_GROUPS.map(g => g.name), sort: 'Relevance', iSort: 'Relevance', omType: 'All types', tlist: TLISTS[0] ? TLISTS[0].name : '',
+    route: [], tomorrow: [], day: 'today', runIdx: 0, runDone: [], runSkip: [], logged: [],
     ...seed(A),
-    thread: [], askIn: '', listening: false,
+    thread: [], askIn: '', listening: false, email: null, switching: null,
     actSeg: 'visits', pSeg: 'overview', logFu: false,
-    territory: 'Central Manhattan', toast: null, toastUndo: null, omKind:'acc', omRadius:5, omMode:'near', omStart:'Central Manhattan', omCity:'Manhattan', omGroup:'all', omSel:null, omExpanded:false, omLayer:'Pins', fuTask: '', fuWho: null, fuDue: 1,
+    territory: TERRS[0] ? TERRS[0].name : '', toast: null, toastUndo: null, omKind:'acc', omRadius:5, omMode:AREA.mode || 'near', omStart:AREA.centre, omCity:AREA.city, omGroup:'all', omSel:null, omExpanded:false, omLayer:'Pins', fuTask: '', fuWho: null, fuDue: 1,
     ...this.insFresh([], A),
-    smySeg:'new', smyQ:'', smyTag:'All', smySel:[], smyName:'', smyBusy:false, smyOpen:null
+    smySeg:'new', smyQ:'', smyTag:'All', smySel:[], smyName:'', smyBusy:false, smyOpen:null,
+    signedIn: !pr.signedOut, authEmail:'', ...this.authFresh()
     };
   })();
 
@@ -1330,6 +1466,13 @@ class Component extends DCLogic {
   // customer account: same flow everywhere, the views change where an account needs it
   acct() { return ACCOUNTS[this.state.account]; }
   // Field Pro has the Map; an insights-only account has Summaries in its place
+  // Build summary: pick the conversations on the page, then name it in a sheet
+  smyBuild() {
+    const s = this.state;
+    if (s.smySeg !== 'new') this.setState({ smySeg:'new' });
+    if (!s.smySel.length) return this.toast('Pick the conversations first');
+    this.sheet('summary');
+  }
   tabsFor(st) { return ['targets', 'ask', ACCOUNTS[st.account].fieldPro ? 'map' : 'summaries', 'activity']; }
   setAccount(account) {
     clearInterval(this._i);
@@ -1337,7 +1480,7 @@ class Component extends DCLogic {
     this.setState(st => {
       const A = ACCOUNTS[account], out = { account, sheet: null, ...this.insFresh([], A), ...seed(A), iSort: 'Relevance',
         thread: [], askIn: '', logged: [], smyTag: 'All', smySel: [], smyOpen: null,
-        route: ['maya','alex','daniel'], tomorrow: [], day: 'today', runIdx: 0, runDone: [], runSkip: [], fuWho: null, toast: null, toastUndo: null };
+        tomorrow: [], day: 'today', runIdx: 0, runDone: [], runSkip: [], fuWho: null, toast: null, toastUndo: null };
       if (!this.tabsFor({ account }).includes(st.tab)) { out.tab = 'targets'; out.stack = []; }
       else if (!A.fieldPro && st.stack.some(x => x.s === 'hco' || x.s === 'reports')) out.stack = [];
       if (!A.fieldPro) { out.kind = 'hcp'; out.scope = 'mine'; if (st.actSeg === 'sum') out.actSeg = 'visits'; }
@@ -1350,25 +1493,26 @@ class Component extends DCLogic {
 
   // insights
   insFresh(who, A = this.acct()) { return { insWho: who, insAdv:{}, insNote:'', insTopics:[], insType: A.meetTypes[0], insLive:'Live', insConv:'Insight', insArea:null, insSubs:[], insStage:'Observation', insPrio:'Medium', insTags:[], insFile:null, insSource:null, insPickMore:false, insRec:false, insPaused:false, insSecs:0, insMode:'notes', logFu:false,
-    insDateN:0, insVendor:null, insVendorSub:null, insVendorName:'', insCount:'', insConf:null, insHco:null, insDraft:null }; }
+    insDateN:0, insVendor:null, insVendorSub:null, insVendorName:'', insCount:'', insConf:null, insHco:null, insDraft:null,
+    insKey: Date.now().toString(36) + Math.random().toString(36).slice(2, 8), insRef:null, insMedia:null, insBusy:false }; }
   openLog(id) { this.openInsight(id ? [id] : [], 'notes'); }
   // always a fresh form; hco is the account it was opened from, whose doctors come first in the picker
   openInsight(who, mode, hco) {
-    clearInterval(this._i);
+    this.dropRec();
     const m = mode === 'record' && !this.acct().record ? 'notes' : mode || 'notes';
     this.setState({ ...this.insFresh(who), insHco: hco || null, sheet:'insight', sheetData:null, insMode: m });
   }
   // drafts keep the whole form; opening one picks up where it was left
+  draftForm() { const s = this.state, form = {}; DRAFT_KEYS.forEach(k => { form[k] = s[k]; }); return form; }
   keepDraft() {
-    const s = this.state, id = s.insDraft || Date.now(), form = {};
-    DRAFT_KEYS.forEach(k => { form[k] = s[k]; });
+    const s = this.state, id = s.insDraft || Date.now(), form = this.draftForm();
     this.setState(st => ({ drafts: [{ id, form }, ...st.drafts.filter(d => d.id !== id)] }));
   }
-  openDraft(d) { clearInterval(this._i); this.setState({ ...this.insFresh([]), ...d.form, insDraft: d.id, sheet:'insight', sheetData:null, insMode:'notes' }); }
+  openDraft(d) { this.dropRec(); this.setState({ ...this.insFresh([]), ...d.form, insDraft: d.id, sheet:'insight', sheetData:null, insMode:'notes' }); }
   openFu(id) { this.setState({ sheet:'fu', sheetData:null, fuWho: id || null, fuTask:'', fuDue:1 }); }
   // who can be picked: the account's doctors first, then the rest of the book (insights accounts: the target list)
   people(hco) {
-    const s = this.state, pool = this.acct().fieldPro ? Object.values(HCPS) : (TLISTS.find(t => t.name === s.tlist) || TLISTS[0]).ids.map(id => HCPS[id]);
+    const s = this.state, pool = this.acct().fieldPro ? Object.values(HCPS) : (TLISTS.find(t => t.name === s.tlist) || TLISTS[0] || { ids:[] }).ids.map(id => HCPS[id]);
     return hco ? [...pool.filter(p => p.hco === hco), ...pool.filter(p => p.hco !== hco)] : pool;
   }
   // who Record tags: the doctor on screen, or the one at the current visit
@@ -1383,14 +1527,22 @@ class Component extends DCLogic {
   recordNow() {
     const who = this.onScreenDoc();
     if (!this.acct().record) return this.openInsight(who, 'notes');
+    if (!SERVICE.rec || !SERVICE.transcript) { this.openInsight(who, 'notes'); return this.toast('Recording isn’t connected yet · type the ' + wordsOf(this.acct()).one.toLowerCase()); }
     this.openInsight(who, 'record');
     this.startRec();
   }
   startRec() {
     clearInterval(this._i);
+    if (!SERVICE.rec || !SERVICE.transcript) { this.setState({ insMode:'notes' }); return this.toast('Recording isn’t connected yet · type the ' + wordsOf(this.acct()).one.toLowerCase()); }
     this.setState({ insRec:true, insPaused:false, insSecs:0 });
     this._i = setInterval(() => { if (!this.state.insPaused) this.setState(st => ({ insSecs: st.insSecs + 1 })); }, 1000);
+    SERVICE.rec('start').then(null, e => {
+      clearInterval(this._i); this.setState({ insRec:false, insPaused:false, insMode:'notes' });
+      this.toast((e && e.message) || 'The microphone didn’t start · type the ' + wordsOf(this.acct()).one.toLowerCase());
+    });
   }
+  // a recording still running is thrown away (closing the sheet, opening another form)
+  dropRec() { clearInterval(this._i); if (this.state.insRec && SERVICE.rec) SERVICE.rec('discard'); }
   transcript(id) {
     if (!this.acct().fieldPro) {
       if (!id) return 'Two oncologists at the table are open to a follow-up. Both want longer follow-up data before changing their sequencing, and one asked about access for older patients.';
@@ -1403,27 +1555,38 @@ class Component extends DCLogic {
   }
   finishTranscript(source) {
     clearInterval(this._i);
-    this.setState(st => ({ insRec:false, insPaused:false, insMode:'notes', insSource:source, insNote:[st.insNote.trim(), this.transcript(st.insWho[0])].filter(Boolean).join('\n\n'),
-      insArea: st.insArea || (this.acct().areas ? Object.keys(this.acct().areas)[0] : null),
-      insTopics: st.insTopics.length ? st.insTopics : this.topicsFor(st.insArea || (this.acct().areas ? Object.keys(this.acct().areas)[0] : null)).slice(0, 2) }));
-    this.toast('Transcript ready — check the details');
+    const s = this.state, who = s.insWho[0], key = s.insKey;
+    this.setState({ insRec:false, insPaused:false, insMode:'notes', insBusy:true });
+    let clip = null;
+    (source === 'Upload' ? Promise.resolve(s.insMedia) : SERVICE.rec('stop')).then(media => { clip = media; return SERVICE.transcript(s.insWho, this.transcript(who), media, this.draftForm()); }).then(r => {
+      // the sheet was closed or saved meanwhile
+      if (this.state.insKey !== key) return;
+      this.setState(st => ({ insBusy:false, insSource:source, insRef: r.ref || st.insRef, insNote:[st.insNote.trim(), r.text].filter(Boolean).join('\n\n'),
+        insArea: st.insArea || (this.acct().areas ? Object.keys(this.acct().areas)[0] : null),
+        insTopics: st.insTopics.length ? st.insTopics : this.topicsFor(st.insArea || (this.acct().areas ? Object.keys(this.acct().areas)[0] : null)).slice(0, 2) }));
+      this.toast('Transcript ready — check the details');
+    }, e => {
+      // a recording that didn't transcribe waits under Upload, to try again
+      if (this.state.insKey === key) this.setState(clip && clip.name && source === 'Recording' ? { insBusy:false, insMedia:clip, insFile:clip.name } : { insBusy:false });
+      this.toast((e && e.message) || 'The transcript didn’t come through · type the ' + wordsOf(this.acct()).one.toLowerCase());
+    });
   }
   whoOf(v) { return v.attendees || (v.who ? [v.who] : []); }
   convCount(id) { return this.state.visits.filter(v => v.conv !== 'Note' && this.whoOf(v).includes(id)).length; }
   lastOf(id) {
     const v = this.state.visits.find(x => this.whoOf(x).includes(id));
-    return v ? { label: v.dN === 0 ? 'Today' : v.date, n: v.dN } : { label: HCPS[id].last, n: HCPS[id].lastN };
+    return v ? { label: v.dN === 0 ? 'Today' : v.date, n: v.dN } : { label: (HCPS[id] || NO_HCP).last, n: (HCPS[id] || NO_HCP).lastN };
   }
   advOf(id) {
     const rated = v => (v.advs && v.advs[id]) || (v.who === id && v.adv) || null;
     const v = this.state.visits.find(x => this.whoOf(x).includes(id) && rated(x));
-    return v ? rated(v) : HCPS[id].adv;
+    return v ? rated(v) : (HCPS[id] || NO_HCP).adv;
   }
   // one flag per person: a follow-up first, then fastest growing (Field Pro), then not met yet
   flagOf(id) {
     const f = this.state.fus.find(x => x.who === id && !x.done);
     if (f) return f.dueN < 0 ? { label:'Follow-up overdue', bg:TONES.orange[0], fg:TONES.orange[1] } : { label:'Follow-up due ' + (f.dueN <= 1 ? dayOf(f.dueN).toLowerCase() : dayFull(f.dueN)), bg:TONES.blue[0], fg:TONES.blue[1] };
-    if (this.acct().fieldPro && HCPS[id].yoyN >= 15) return { label:'Fastest growing', bg:TONES.green[0], fg:TONES.green[1] };
+    if (this.acct().fieldPro && (HCPS[id] || NO_HCP).yoyN >= 15) return { label:'Fastest growing', bg:TONES.green[0], fg:TONES.green[1] };
     if (this.lastOf(id).n >= 999) return { label:'Not met yet', bg:'#EEF1F7', fg:'#3C4557' };
     return null;
   }
@@ -1436,7 +1599,7 @@ class Component extends DCLogic {
       ...(v.vendor ? [v.vendor + (v.vendorSub ? ' · ' + v.vendorSub : '')] : []), ...(v.count ? [v.count + ' attendees'] : []), ...(v.conf ? [v.conf] : []),
       ...(v.topics || []), ...(v.subs || []), ...(v.tags || [])];
     return { ...v, name: p ? p.name + (ids.length > 1 ? ' +' + (ids.length - 1) : '') : v.vendor || v.type.split(' · ')[0], ini: p ? p.ini : '3P', chips, hasChips: chips.length > 0 || !!v.src, hasSrc: !!v.src,
-      srcLabel: v.conv === 'Note' ? 'Note' : v.src === 'Notes' ? 'Insight' : v.src ? 'From ' + v.src.toLowerCase() : '', open: () => this.sheet('visit', v.id) };
+      srcLabel: v.conv === 'Note' ? 'Note' : v.src === 'Notes' ? wordsOf(A).one : v.src ? 'From ' + v.src.toLowerCase() : '', open: () => this.sheet('visit', v.id) };
   }
   themes(list) {
     const count = {}, tagged = list.some(v => v.topics && v.topics.length);
@@ -1454,36 +1617,114 @@ class Component extends DCLogic {
     const points = list.map(v => { const s1 = v.note.split('. ')[0].replace(/\.?$/, '.'); const w = this.whoOf(v)[0]; return (w ? 'Dr. ' + HCPS[w].name.split(' ').pop() : v.vendor || v.type.split(' · ')[0]) + ': ' + s1; });
     return n + (list.length === 1 ? ' conversation' : ' conversations') + ' with ' + people + '. Main themes: ' + themes.join(' and ') + '.' + (avg ? ' Average advocacy ' + avg + ' of 5.' : '') + ' ' + points.join(' ');
   }
+  // Field Pro's leakage report: a PDF built on the server for the page's code group, one at a time, in 3–5 minutes
+  leakReport(hid) {
+    if (!SERVICE.report) return this.toast('Leakage reports aren’t connected yet');
+    if (this.state.reports.some(r => r.busy)) return this.toast('A report is already being built');
+    const id = Date.now(), group = 'All codes';
+    this.setState(st => ({ reports: [{ id, hco:hid, group, date:dateOf(0), busy:true }, ...st.reports] }));
+    this.toast('Building the leakage report · usually 3–5 minutes');
+    SERVICE.report(hid, group).then(r => {
+      this.setState(st => ({ reports: st.reports.map(x => x.id === id ? { ...x, ...r, busy:false } : x) }));
+      this.toast('Leakage report ready · ' + HCOS[hid].name);
+    }, e => {
+      this.setState(st => ({ reports: st.reports.filter(x => x.id !== id) }));
+      this.toast((e && e.message) || 'The report didn’t build · try again');
+    });
+  }
 
   go(s, id) { this.setState(st => ({ stack: [...st.stack, { s, id }], sheet: null, pSeg: 'overview' })); }
   replaceTop(s, id) { this.setState(st => ({ stack: [...st.stack.slice(0, -1), { s, id }] })); }
   setTab(t, extra) { this.setState({ tab: t, stack: [], sheet: null, ...(extra || {}) }); }
   sheet(sheet, data) { this.setState({ sheet, sheetData: data == null ? null : data }); }
   // an Add or a removal can be undone for a few seconds
+  // the dialler, clipboard, share sheet and links (SERVICE); each says so when it isn't connected
+  call(phone) {
+    if (phone == null || phone === '' || phone === '—') return this.toast('No phone number on record');
+    if (!SERVICE.call) return this.toast('Calling isn’t connected yet · ' + phone);
+    SERVICE.call(phone).then(null, () => this.toast('That didn’t start the call · ' + phone));
+  }
+  copy(text, done) {
+    if (!SERVICE.copy) return this.toast('Copying isn’t connected yet');
+    SERVICE.copy(text).then(() => this.toast(done), () => this.toast('That didn’t copy · try again'));
+  }
+  share(what) {
+    if (!SERVICE.share) return this.toast('Sharing isn’t connected yet');
+    SERVICE.share(what).then(m => { if (m) this.toast(m); }, e => this.toast((e && e.message) || 'That didn’t share · try again'));
+  }
+  openLink(url) {
+    if (!url) return this.toast('The link isn’t ready yet');
+    if (!SERVICE.open) return this.toast('Opening links isn’t connected yet');
+    SERVICE.open(url).then(null, () => this.toast('That didn’t open · try again'));
+  }
+  // the email sheet: the app's email writer drafts it; the stand-in writes it from the brief
+  sampleEmail(id) {
+    const P = HCPS[id] || NO_HCP, open = this.acct().fieldPro ? P.open : P.iOpen;
+    return { subject: 'Follow-up · ' + P.spec, body: 'Hello ' + P.first + ',\n\n' + open + ' I’d value 15 minutes to walk through it — would ' + P.dayL + ' work?\n\nBest,\n' + ME.name.split(' ')[0] };
+  }
+  openEmail(id) {
+    this.sheet('email', id);
+    if (!SERVICE.email) return this.setState({ email: { who:id, subject:'', body:'', busy:false, error:'Email drafts aren’t connected yet' } });
+    this.setState({ email: { who:id, subject:'', body:'', busy:true, error:'' } });
+    const mine = r => this.state.email && this.state.email.who === id && this.state.email.busy && this.setState({ email: { who:id, busy:false, subject:'', body:'', error:'', ...r } });
+    SERVICE.email(id, () => this.sampleEmail(id)).then(d => mine({ subject: d.subject || '', body: d.body || '' }), e => mine({ error: (e && e.message) || 'The email couldn’t be written · try again' }));
+  }
+  // the app passes a notice to show once the screens open (the account switch's, after the new account loads)
+  componentDidMount() { const n = (this.props || {}).notice; if (n) this.toast(n); }
   toast(msg, undo) { clearTimeout(this._t); this.setState({ toast: msg, toastUndo: undo || null }); this._t = setTimeout(() => this.setState({ toast: null, toastUndo: null }), undo ? 4000 : 2000); }
   // the one Add: a visit goes where it adds the least driving; a doctor at a hospital already on the route joins that stop
   hcoOf(id) { return HCPS[id] ? HCPS[id].hco : id; }
-  stopOf(id) { if (HCPS[id]) return HCPS[id]; const h = HCOS[id]; return { id, name:h.name, ini:h.ini, spec:h.type, hco:id, isHco:true }; }
+  stopOf(id) { if (HCPS[id]) return HCPS[id]; const h = HCOS[id] || NO_HCO; return { id, name:h.name, ini:h.ini, spec:h.type, hco:id, isHco:true }; }
   groupsOf(list) {
     const order = [], map = {};
     list.forEach(id => { const h = this.hcoOf(id); if (!map[h]) { map[h] = []; order.push(h); } map[h].push(id); });
     return order.map(h => ({ hco: h, ids: map[h] }));
   }
   groups() { return this.groupsOf(this.state.route); }
-  placeIn(list, id) {
+  // the day starts at the territory's centre; an account with no territory (or no map) has no start
+  startKnown() { return !!this.acct().fieldPro && TERRS.length > 0; }
+  // the route's stops on a small map, fitted to the stops (and the start): one scale both ways, so it keeps their shape
+  routeMapOf(groups) {
+    const pins = groups.map((g, i) => ({ n: i + 1, h: HCOS[g.hco] })).filter(o => placed(o.h));
+    const st = this.startKnown() && placed(START) ? START : null, all = [...pins.map(o => o.h), ...(st ? [st] : [])];
+    if (!pins.length) return { routeMapOn: false, routePins: [], routeStartOn: false, routeStartX: '50%', routeStartY: '50%' };
+    const geo = all.every(onEarth), lat0 = geo ? all.reduce((t, h) => t + h.lat, 0) / all.length * Math.PI / 180 : 0;
+    const xy = h => geo ? [h.lng * Math.cos(lat0), -h.lat] : [parseFloat(h.x), parseFloat(h.y)];
+    const ps = all.map(xy), xs = ps.map(p => p[0]), ys = ps.map(p => p[1]);
+    const W = 354, H = 150, sx = Math.max(...xs) - Math.min(...xs), sy = Math.max(...ys) - Math.min(...ys);
+    const k = Math.min(sx ? W * 0.8 / sx : Infinity, sy ? H * 0.64 / sy : Infinity), kk = isFinite(k) ? k : 0;
+    const mx = (Math.max(...xs) + Math.min(...xs)) / 2, my = (Math.max(...ys) + Math.min(...ys)) / 2;
+    const put = h => { const [x, y] = xy(h); return { x: ((W / 2 + (x - mx) * kk) / W * 100).toFixed(1) + '%', y: ((H / 2 + (y - my) * kk) / H * 100).toFixed(1) + '%' }; };
+    const at = st ? put(st) : { x: '50%', y: '50%' };
+    return { routeMapOn: true, routePins: pins.map(o => ({ n: o.n, ...put(o.h) })), routeStartOn: !!st, routeStartX: at.x, routeStartY: at.y };
+  }
+  placeIn(list, id, mins = driveMin) {
     const groups = this.groupsOf(list), h = this.hcoOf(id), at = groups.findIndex(g => g.hco === h);
     if (at >= 0) { const i = list.indexOf(groups[at].ids[groups[at].ids.length - 1]) + 1; return { list: [...list.slice(0, i), id, ...list.slice(i)], stop: at + 1, extra: 0 }; }
-    const pts = [START, ...groups.map(g => HCOS[g.hco])], P = HCOS[h];
+    const stops = groups.map(g => HCOS[g.hco]), P = HCOS[h], from = this.startKnown() ? START : null;
     let best = 0, cost = Infinity;
-    pts.forEach((a, k) => { const b = pts[k + 1], c = driveMin(a, P) + (b ? driveMin(P, b) - driveMin(a, b) : 0); if (c < cost) { cost = c; best = k; } });
+    for (let k = 0; k <= stops.length; k++) {
+      const a = k ? stops[k - 1] : from, b = stops[k], c = (a ? mins(a, P) : 0) + (b ? mins(P, b) : 0) - (a && b ? mins(a, b) : 0);
+      if (c < cost) { cost = c; best = k; }
+    }
     return { list: [...groups.slice(0, best).flatMap(g => g.ids), id, ...groups.slice(best).flatMap(g => g.ids)], stop: best + 1, extra: Math.round(cost) };
   }
   toggleRoute(id, key = 'route') {
     const prev = this.state[key], undo = () => this.setState({ [key]: prev });
     if (prev.includes(id)) { this.setState({ [key]: prev.filter(x => x !== id) }); return this.toast(this.stopOf(id).name + ' removed', undo); }
-    const r = this.placeIn(prev, id);
-    this.setState({ [key]: r.list });
-    this.toast('Added: ' + ordinal(r.stop) + ' stop, ' + (r.extra > 0 ? '+' + r.extra + ' min' : 'no extra drive'), undo);
+    // driving minutes from the app's maps (SERVICE.drive); without them the stop goes where the map is closest, with no minutes
+    const add = mins => {
+      const now = this.state[key];
+      if (now.includes(id)) return;
+      const r = this.placeIn(now, id, mins || driveMin);
+      this.setState({ [key]: r.list });
+      this.toast('Added: ' + ordinal(r.stop) + ' stop' + (mins ? ', ' + (r.extra > 0 ? '+' + r.extra + ' min' : 'no extra drive') : ''), () => this.setState({ [key]: now }));
+    };
+    const groups = this.groupsOf(prev), h = this.hcoOf(id);
+    if (groups.some(g => g.hco === h)) return add(() => 0);
+    const pts = [...(this.startKnown() ? [START] : []), ...groups.map(g => HCOS[g.hco]), HCOS[h]];
+    if (!SERVICE.drive || pts.length < 2) return add(null);
+    SERVICE.drive(pts).then(m => add((a, b) => m[pts.indexOf(a)][pts.indexOf(b)]), () => add(null));
   }
   // the app's one score (priorityOf), in points; a point is about 5 minutes of driving. Insights accounts have no claims.
   relevance(id) {
@@ -1498,19 +1739,25 @@ class Component extends DCLogic {
   // adding someone from the map puts them in the book
   makeHco(r) {
     const ini = r.name.split(/[\s-]+/).filter(w => /^[A-Z]/.test(w)).slice(0, 2).map(w => w[0]).join('');
-    HCOS[r.id] = { id:r.id, name:r.name, ini, type:r.type, city:'New York, NY', boro:'Manhattan', proc:'—', yoy:'—', share:'—', opp:'$' + r.v + 'K', leak:'—', left:'—', stayed:'0%', dist:r.dist + ' mi', mine:false, hcps:[], oppN:r.v / 1000, volN:0, yoyN:0, distN:r.dist, x:r.x, y:r.y, specs:[] };
+    HCOS[r.id] = { id:r.id, name:r.name, ini, type:r.type, city:r.city || AREA.city, boro:r.boro || AREA.city, proc:'—', yoy:'—', share:'—', opp:'$' + r.v + 'K', leak:'—', left:'—', stayed:'0%', dist:r.dist + ' mi', mine:false, hcps:[], oppN:r.v / 1000, volN:0, yoyN:0, distN:r.dist, x:r.x, y:r.y, specs:[] };
     return HCOS[r.id];
   }
+  storeTarget(r) {
+    if (!SERVICE.addTarget) return;
+    SERVICE.addTarget(r).then(null, e => { const x = HCPS[r.id] || HCOS[r.id]; if (x) x.mine = false; this.forceUpdate(); this.toast(((e && e.message) || 'That didn’t save') + ' · ' + r.name + ' isn’t in your targets yet'); });
+  }
   ensureEntity(r) {
-    if (HCPS[r.id] || HCOS[r.id]) { (HCPS[r.id] || HCOS[r.id]).mine = true; return r.id; }
-    if (r.type) { this.makeHco(r).mine = true; return r.id; }
+    const known = HCPS[r.id] || HCOS[r.id];
+    if (known) { if (!known.mine) { known.mine = true; this.storeTarget(r); } return r.id; }
+    if (r.type) { this.makeHco(r).mine = true; this.storeTarget(r); return r.id; }
     const [spec, at] = r.area.split(' · '), acc = OM_ACC.find(a => a.name.includes(at));
-    const h = Object.values(HCOS).find(x => x.name.includes(at)) || (acc ? HCOS[acc.id] || this.makeHco(acc) : HCOS.msh);
+    const h = Object.values(HCOS).find(x => x.name.includes(at)) || (acc ? HCOS[acc.id] || this.makeHco(acc) : null);
     const first = r.name.split(' ')[1], ini = r.name.replace(/^Dr\. /, '').split(' ').map(w => w[0]).join('');
-    HCPS[r.id] = { id:r.id, name:r.name, first, ini, spec, hco:h.id, claims:'—', yoy:'—', day:'—', dayL:'—', ref:'—', top:'—', email:r.name.replace(/^Dr\. /, '').toLowerCase().replace(/ /g, '.') + '@example.com', phone:'—', last:'—', lastN:999, adv:null,
-      iOpen:'Introduce yourself and learn what ' + first + ' needs.', iBrief:'Not met yet. No insights logged.', open:'Introduce yourself and learn what ' + first + ' needs.', brief:'New to your book: ' + spec + ' at ' + h.name + '.',
+    HCPS[r.id] = { id:r.id, name:r.name, first, ini, spec, hco:h ? h.id : '', claims:'—', yoy:'—', day:'—', dayL:'—', ref:'—', top:'—', email:'—', phone:'—', last:'—', lastN:999, adv:null,
+      iOpen:'Introduce yourself and learn what ' + first + ' needs.', iBrief:'Not met yet. No insights logged.', open:'Introduce yourself and learn what ' + first + ' needs.', brief:'New to your book: ' + spec + (h ? ' at ' + h.name : '') + '.',
       mine:true, claimsN:0, yoyN:0, distN:r.dist, x:r.x, y:r.y, specs:[] };
-    h.hcps.push(r.id);
+    if (h) h.hcps.push(r.id);
+    this.storeTarget(r);
     return r.id;
   }
   addFromMap(r) {
@@ -1529,44 +1776,117 @@ class Component extends DCLogic {
     return { a: h.name + ': ' + h.proc + ' procedures, ' + h.yoy + ' on 2024, and ' + h.left + ' of patients leave (' + h.leak + ' since 2022).' + (docs.length ? ' ' + HCPS[docs[0]].name + ' has the most claims here.' : ' No doctors mapped yet, so the hospital itself is the stop.'),
       tags:[h.name, 'All cohort codes'], rows: docs.length ? docs : [h.id] };
   }
+  // the starter questions; the brief is on the first stop today, else the first person in the book
+  starters() {
+    const s = this.state, id = s.route.find(x => HCPS[x]) || (Object.values(HCPS).find(p => p.mine) || {}).id;
+    return Object.keys(this.acct().fieldPro ? ANSWERS : ANSWERS_INS).map(q => !q.startsWith('Brief me on ') ? q : id ? 'Brief me on ' + HCPS[id].name : null).filter(Boolean);
+  }
   nextFor(q, rows) {
     const A = this.acct(), asked = [q, ...this.state.thread.map(m => m.q)];
-    const near = rows.filter(id => HCPS[id]).slice(0, 2).flatMap(id => ['Brief me on ' + HCPS[id].name, ...(A.fieldPro ? ['Brief me on ' + HCOS[HCPS[id].hco].name] : [])]);
-    return [...new Set([...near, ...Object.keys(A.fieldPro ? ANSWERS : ANSWERS_INS)])].filter(x => !asked.includes(x)).slice(0, 2);
+    const near = rows.filter(id => HCPS[id]).slice(0, 2).flatMap(id => ['Brief me on ' + HCPS[id].name, ...(A.fieldPro && HCOS[HCPS[id].hco] ? ['Brief me on ' + HCOS[HCPS[id].hco].name] : [])]);
+    return [...new Set([...near, ...this.starters()])].filter(x => !asked.includes(x)).slice(0, 2);
   }
   ask(raw) {
     const q = (raw || '').trim();
     if (!q) return;
-    const A = this.acct(), ins = ANSWERS_INS[q], m = /^Brief me on (.+)$/.exec(q);
+    const A = this.acct(), m = /^Brief me on (.+)$/.exec(q), id = Date.now() + Math.random();
     const p = m && Object.values(HCPS).find(x => x.name === m[1]), h = m && !p && A.fieldPro && Object.values(HCOS).find(x => x.name === m[1]);
-    const ans = p ? this.briefAnswer(p) : h ? this.hcoBrief(h) : !A.fieldPro
+    const history = this.state.thread.filter(x => !x.pending).slice(-4).map(x => ({ q:x.q, a:x.a }));
+    this.setState(st => ({ tab:'ask', stack:[], sheet:null, askIn:'', thread:[...st.thread, { id, q, a:'', tags:[], rows:[], next:[], pending:true }] }));
+    const answer = ans => this.setState(st => ({ thread: st.thread.map(x => x.id === id ? { ...x, ...ans, rows: ans.rows || [], next: ans.next || this.nextFor(q, ans.rows || []), pending:false } : x) }));
+    const local = p ? this.briefAnswer(p) : h ? this.hcoBrief(h) : null;
+    if (!local && !SERVICE.ask) return answer({ a:'Ask isn’t connected yet for this account', tags:[], rows:[] });
+    (local ? later(local) : SERVICE.ask(q, { account:this.state.account, history }, () => this.sampleAnswer(q)))
+      .then(answer, e => answer({ a: (e && e.message) || 'Ask didn’t answer · try again', tags:[], rows:[] }));
+  }
+  // the design's sample answers
+  sampleAnswer(q) {
+    const A = this.acct(), ins = ANSWERS_INS[q];
+    return !A.fieldPro
       ? ins ? { ...ins, a: ins.a.replace('{themes}', this.themes(this.state.visits).join(' and ')).replace('{adv}', A.adv ? ' Advocacy is highest with Dr. Maya Patel and Dr. Daniel Okafor.' : '') } : { a:'From your insights: nothing matched “' + q + '” exactly. Dr. Maya Patel is the closest result on ' + this.state.tlist + '.', tags:['Search'], rows:['maya'] }
       : ANSWERS[q] || { a:'From your book: nothing matched “' + q + '” exactly. Dr. Maya Patel and Mount Sinai Hospital are the closest results in ' + this.state.territory + '.', tags:['Search'], rows:['maya'] };
-    const id = Date.now() + Math.random();
-    this.setState(st => ({ tab:'ask', stack:[], sheet:null, askIn:'', thread:[...st.thread, { id, q, ...ans, next: this.nextFor(q, ans.rows), pending:true }] }));
-    // each answer has its own timer, so two quick questions both get answered
-    const tm = setTimeout(() => { this._at = this._at.filter(x => x !== tm); this.setState(st => ({ thread: st.thread.map(x => x.id === id ? { ...x, pending:false } : x) })); }, 800);
-    this._at.push(tm);
   }
   fuMetric(id) {
     const open = this.state.fus.filter(f => f.who === id && !f.done);
     return { k:'FOLLOW-UPS', v:String(open.length), c: open.some(f => f.dueN < 0) ? '#A94D1B' : '#0B1220' };
   }
+  storeFu(fu) {
+    if (!SERVICE.followUp) return;
+    SERVICE.followUp(fu).then(r => r && (r.id || r.ref) && this.setState(st => ({ fus: st.fus.map(x => x.id === fu.id ? { ...x, ...(r.id ? { id: r.id } : {}), ...(r.ref ? { ref: r.ref } : {}) } : x) })),
+      e => { this.setState(st => ({ fus: st.fus.filter(x => x.id !== fu.id) })); this.toast(((e && e.message) || 'The follow-up didn’t save') + ' · add it again'); });
+  }
   fuView(f) {
     const p = HCPS[f.who], over = f.dueN < 0;
     return { ...f, whoName: p.name, dueBg: f.done ? '#EEF1F7' : over ? '#FDEDE4' : '#E7ECFA', dueFg: f.done ? '#7A839A' : over ? '#A94D1B' : '#22409F', due: f.done ? 'Done' : over ? 'Overdue · ' + dateOf(f.dueN) : dayOf(f.dueN),
-      toggle: () => { this.setState(st => ({ fus: st.fus.map(x => x.id === f.id ? { ...x, done: !x.done } : x) })); if (!f.done) this.toast('Follow-up done'); },
+      toggle: () => {
+        this.setState(st => ({ fus: st.fus.map(x => x.id === f.id ? { ...x, done: !x.done } : x) })); if (!f.done) this.toast('Follow-up done');
+        if (SERVICE.followUpDone) SERVICE.followUpDone(f, !f.done).then(null, e => { this.setState(st => ({ fus: st.fus.map(x => x.id === f.id ? { ...x, done: f.done } : x) })); this.toast((e && e.message) || 'That didn’t save · try again'); });
+      },
       open: () => this.go('hcp', f.who),
       ringBd: f.done ? '#1C7A4E' : '#B9C3D8', ringBg: f.done ? '#1C7A4E' : '#fff', check: f.done ? '✓' : '', deco: f.done ? 'line-through' : 'none', color: f.done ? '#7A839A' : '#0B1220' };
   }
   jump(tab, push, sheet, extra) {
-    this.setState({ tab, stack: push ? [push] : [], sheet: sheet || null, sheetData: null, pSeg:'overview', ...(extra || {}) });
+    this.setState({ signedIn:true, tab, stack: push ? [push] : [], sheet: sheet || null, sheetData: null, pSeg:'overview', ...(extra || {}) });
+  }
+
+  // sign-in, as Field Pro's website: sign in, a new password at the first sign-in, a reset code by email
+  authFresh(step) { return { auth: step || 'signIn', authPw:'', authNew:'', authConfirm:'', authCode:'', authGiven:'', authFamily:'', authMissing:[], authErr:'', authNote:'', authBusy:false }; }
+  authGap() {
+    const s = this.state, step = s.auth, pw = step === 'newPassword' || step === 'reset';
+    if ((step === 'signIn' || step === 'forgot') && !s.authEmail.trim()) return 'Enter your email';
+    if (step === 'signIn' && !s.authPw) return 'Enter your password';
+    if (step === 'reset' && !s.authCode.trim()) return 'Enter the code from the email';
+    if (step === 'newPassword' && s.authMissing.includes('given_name') && !s.authGiven.trim()) return 'Enter your first name';
+    if (step === 'newPassword' && s.authMissing.includes('family_name') && !s.authFamily.trim()) return 'Enter your last name';
+    if (pw && !s.authNew) return 'Enter a new password';
+    if (pw && s.authNew !== s.authConfirm) return 'Passwords do not match';
+    return '';
+  }
+  authGo() {
+    const s = this.state, step = s.auth, email = s.authEmail.trim(), gap = this.authGap();
+    if (s.authBusy) return;
+    if (gap) return this.setState({ authErr:gap, authNote:'' });
+    this.setState({ authBusy:true, authErr:'', authNote:'' });
+    const names = { ...(s.authMissing.includes('given_name') ? { given_name:s.authGiven.trim() } : {}), ...(s.authMissing.includes('family_name') ? { family_name:s.authFamily.trim() } : {}) };
+    const call = step === 'signIn' ? AUTH.signIn(email, s.authPw) : step === 'newPassword' ? AUTH.newPassword(s.authNew, names)
+      : step === 'forgot' ? AUTH.forgot(email) : AUTH.reset(email, s.authCode.trim(), s.authNew);
+    call.then(r => {
+      if (r && r.next === 'newPassword') return this.setState({ ...this.authFresh('newPassword'), authMissing: r.missing || [] });
+      if (step === 'forgot') return this.setState(this.authFresh('reset'));
+      if (step === 'reset') return this.setState({ ...this.authFresh(), authNote:'Password changed. Sign in with the new one.' });
+      this.setState({ ...this.authFresh(), signedIn:true, tab:'targets', stack:[] });
+    }, e => this.setState({ authBusy:false, authErr: (e && e.message) || 'That didn’t work. Try again.', ...(e && e.toSignIn ? { auth:'signIn', authPw:'' } : {}) }));
+  }
+  signOutTo(step) { this.setState({ ...this.authFresh(step), signedIn:false, sheet:null }); }
+  signOut() { AUTH.signOut().then(() => this.setState({ ...this.authFresh(), signedIn:false, sheet:null, authEmail:'' })); }
+  authVals() {
+    const s = this.state, step = s.auth, gap = this.authGap();
+    const [title, sub, go, busy] = {
+      signIn: ['Sign in', 'Welcome back to DocNexus', 'Sign in', 'Signing in…'],
+      newPassword: ['Change password', 'Set a new password to continue', 'Change password', 'Changing…'],
+      forgot: ['Reset your password', 'Enter your email and we’ll send a reset code', 'Send code', 'Sending…'],
+      reset: ['Reset your password', 'Enter the code sent to your email', 'Reset password', 'Resetting…']
+    }[step];
+    const field = k => e => this.setState({ [k]: e.target.value, authErr:'' });
+    return {
+      showSignIn: !s.signedIn, authTitle:title, authSub:sub,
+      authShowEmail: step === 'signIn' || step === 'forgot', authShowPw: step === 'signIn', authShowCode: step === 'reset', authShowNew: step === 'newPassword' || step === 'reset',
+      authAskGiven: step === 'newPassword' && s.authMissing.includes('given_name'), authAskFamily: step === 'newPassword' && s.authMissing.includes('family_name'),
+      authEmail:s.authEmail, authPw:s.authPw, authCode:s.authCode, authGiven:s.authGiven, authFamily:s.authFamily, authNew:s.authNew, authConfirm:s.authConfirm,
+      onAuthEmail:field('authEmail'), onAuthPw:field('authPw'), onAuthCode:field('authCode'), onAuthGiven:field('authGiven'), onAuthFamily:field('authFamily'), onAuthNew:field('authNew'), onAuthConfirm:field('authConfirm'),
+      authKey: e => { if (e.key === 'Enter') this.authGo(); },
+      hasAuthErr: !!s.authErr, authErr:s.authErr, hasAuthNote: !!s.authNote, authNote:s.authNote,
+      authGo: () => this.authGo(), authGoLabel: s.authBusy ? busy : go, authGoBg: gap || s.authBusy ? '#9DB0E8' : '#2447C4',
+      authAltLabel: step === 'signIn' ? 'Forgot your password?' : 'Back to sign in',
+      authAlt: () => this.setState(step === 'signIn' ? this.authFresh('forgot') : this.authFresh())
+    };
   }
 
   omVals() {
     const s = this.state;
     const near = s.omMode === 'near';
-    const src = (s.omKind === 'acc' ? OM_ACC : OM_DOC).filter(r => this.areaOk(r.dist, r.boro || 'Manhattan') && (s.omKind !== 'acc' || this.typeOk(r.type))).slice().sort((a, b) => b.v - a.v);
+    const first = s.route[0] ? this.stopOf(s.route[0]) : null, firstStop = first ? (HCOS[first.hco] || NO_HCO).name : null;
+    const src = (s.omKind === 'acc' ? OM_ACC : OM_DOC).filter(r => this.areaOk(r.dist, r.boro || AREA.city) && (s.omKind !== 'acc' || this.typeOk(r.type))).slice().sort((a, b) => b.v - a.v);
     const typeOn = s.omKind === 'acc' && s.omType !== 'All types';
     const total = src.reduce((t, r) => t + r.v, 0);
     const zipMap = {};
@@ -1582,18 +1902,20 @@ class Component extends DCLogic {
     const chipOf = (on) => on ? { bg:'#2447C4', fg:'#fff', bd:'#2447C4' } : { bg:'#fff', fg:'#0B1220', bd:'#D7DEEC' };
     const openRow = (r) => { if (HCPS[r.id]) return this.go('hcp', r.id); if (HCOS[r.id]) return this.go('hco', r.id); this.toast(r.name + ' · preview'); };
     let regions = [];
-    if (s.omLayer === 'ZIP') regions = zips.map(z => { const it = z.items[0]; const c = omColor(z.v)[0]; return { x:it.x, y:py(it.y), size:'80px', off:'-40px', r:'22px', bg:c + '55', bd:c + '99' }; });
+    // colour and size are on the sample's scale, so the largest value in view sets it
+    const vn = v => v * 134 / Math.max(134, ...src.map(r => r.v));
+    if (s.omLayer === 'ZIP') regions = zips.map(z => { const it = z.items[0]; const c = omColor(vn(z.v))[0]; return { x:it.x, y:py(it.y), size:'80px', off:'-40px', r:'22px', bg:c + '55', bd:c + '99' }; });
     if (s.omLayer === 'County') regions = [{ x:'52%', y:'36%', size:'260px', off:'-130px', r:'38%', bg:'rgba(63,116,214,.16)', bd:'rgba(63,116,214,.45)' }];
-    const fmt = v => '$' + v + 'K';
+    const unit = OM_UNIT[s.omKind], fmt = v => unit === '$K' ? '$' + v.toLocaleString('en-US') + 'K' : v.toLocaleString('en-US') + ' ' + unit;
     return {
       omNear: near, omByPlace: !near,
       omCircle: circle + 'px', omCircleOff: (-circle / 2) + 'px',
       omStateTint: s.omLayer === 'State', omRegions: regions,
-      omBubbles: src.map((r, i) => { const [bg, fg] = omColor(r.v); const size = Math.round(22 + Math.sqrt(r.v) * 2); const on = s.omSel === r.id || selZip === r.zip;
+      omBubbles: src.map((r, i) => { const [bg, fg] = omColor(vn(r.v)); const size = Math.round(22 + Math.sqrt(vn(r.v)) * 2); const on = s.omSel === r.id || selZip === r.zip;
         return { x:r.x, y:py(r.y), size:size + 'px', off:(-size / 2) + 'px', bg, fg, n:i + 1, sh: on ? '0 0 0 3px #0B1220, 0 6px 14px rgba(11,18,32,.3)' : '0 4px 10px rgba(11,18,32,.22)', go: () => this.setState({ omSel: r.id, omGroup:'all', omExpanded:false }) }; }),
       omKinds: [['acc','Accounts'], ['doc','Doctors']].map(([k, label]) => ({ label, ...segOf(s.omKind === k), go: () => this.setState({ omKind:k, omSel:null }) })),
       omAreaKicker: near ? (typeOn ? Nouns + ' within ' : 'Within ') + s.omRadius + ' mi of' : typeOn ? Nouns + ' in' : 'Searching in',
-      omAreaLabel: near ? s.omStart : s.omCity + ', New York',
+      omAreaLabel: near ? s.omStart : [s.omCity, AREA.state].filter(Boolean).join(', '),
       omOpenArea: () => this.sheet('range'),
       omExport: () => this.toast('Exported ' + src.length + ' ' + noun[1]),
       omLayers: ['Pins','ZIP','County','State'].map(l => ({ label:l, bg: s.omLayer === l ? '#2447C4' : 'transparent', fg: s.omLayer === l ? '#fff' : '#3C4557', go: () => this.setState({ omLayer:l }) })),
@@ -1602,7 +1924,7 @@ class Component extends DCLogic {
       omSummary: src.length + ' ' + (src.length === 1 ? noun[0] : noun[1]) + ' · ' + zips.length + ' ZIPs · ' + fmt(total) + ' value',
       omGroups: [['all','All'], ['zip','By ZIP']].map(([k, label]) => ({ label, ...segOf(s.omGroup === k), go: () => this.setState({ omGroup:k, omSel:null }) })),
       omIsAll: s.omGroup === 'all', omIsZip: s.omGroup === 'zip',
-      omRows: src.map((r, i) => { const [bg, fg] = omColor(r.v); const inR = s.route.includes(r.id) || (!!HCOS[r.id] && HCOS[r.id].hcps.some(x => s.route.includes(x))); const on = s.omSel === r.id;
+      omRows: src.map((r, i) => { const [bg, fg] = omColor(vn(r.v)); const inR = s.route.includes(r.id) || (!!HCOS[r.id] && HCOS[r.id].hcps.some(x => s.route.includes(x))); const on = s.omSel === r.id;
         return { n:i + 1, bg, fg, name:r.name, meta:r.area + (r.type && r.type !== 'Hospital' ? ' · ' + r.type : '') + ' · ' + r.dist + ' mi', value:fmt(r.v), rowBg: on ? '#EEF3FD' : '#fff',
           select: () => on ? openRow(r) : this.setState({ omSel:r.id }),
           toggle: () => this.addFromMap(r), ...addSt(inR) }; }),
@@ -1610,9 +1932,9 @@ class Component extends DCLogic {
         select: () => on ? this.setState({ omGroup:'all', omSel:z.items[0].id }) : this.setState({ omSel:'z:' + z.zip }) }; }),
       shRange: s.sheet === 'range',
       omModes: [['near','Near a place'], ['place','State & city']].map(([k, label]) => ({ label, ...segOf(s.omMode === k), go: () => this.setState({ omMode:k }) })),
-      omStarts: [...(['Central Manhattan','My location','Mount Sinai Hospital'].includes(s.omStart) ? [] : [[s.omStart, 'The account you came from']]), ['Central Manhattan','Your territory centre'], ['My location','Using GPS'], ['Mount Sinai Hospital','Your first stop today']].map(([label, meta]) => { const on = s.omStart === label; return { label, meta, check: on ? '✓' : '', bg: on ? '#EDF1FB' : '#fff', bd: on ? '#2447C4' : '#E1E6F0', go: () => this.setState({ omStart:label }) }; }),
+      omStarts: [...([AREA.centre,'My location',firstStop].includes(s.omStart) ? [] : [[s.omStart, 'The account you came from']]), [AREA.centre,'Your territory centre'], ['My location','Using GPS'], ...(firstStop ? [[firstStop,'Your first stop today']] : [])].map(([label, meta]) => { const on = s.omStart === label; return { label, meta, check: on ? '✓' : '', bg: on ? '#EDF1FB' : '#fff', bd: on ? '#2447C4' : '#E1E6F0', go: () => this.setState({ omStart:label }) }; }),
       omRadii: [2, 5, 10].map(r => ({ label:r + ' mi', ...chipOf(s.omRadius === r), go: () => this.setState({ omRadius:r }) })),
-      omCities: ['All cities','Manhattan','Brooklyn','Queens'].map(c => ({ label:c, ...chipOf(s.omCity === c), go: () => this.setState({ omCity:c }) })),
+      omCities: ['All cities', ...AREA.cities].map(c => ({ label:c, ...chipOf(s.omCity === c), go: () => this.setState({ omCity:c }) })),
       omApplyLabel: 'Show ' + src.length + ' ' + noun[1]
     };
   }
@@ -1622,14 +1944,14 @@ class Component extends DCLogic {
     const top = s.stack[s.stack.length - 1] || { s: s.tab };
     const scr = top.s;
     const groups = this.groups();
-    const viewKey = s.day === 'tomorrow' ? 'tomorrow' : 'route', viewList = s[viewKey], viewGroups = this.groupsOf(viewList);
+    const viewKey = s.day === 'tomorrow' ? 'tomorrow' : 'route', viewList = s[viewKey], viewGroups = this.groupsOf(viewList), routeMap = this.routeMapOf(viewGroups);
     const headline = list => { const n = list.length, g = this.groupsOf(list).length; return n ? n + (n === 1 ? ' visit' : ' visits') + ' · ' + g + (g === 1 ? ' stop' : ' stops') : 'No route yet'; };
     const inRoute = id => s.route.includes(id) || (!!HCOS[id] && HCOS[id].hcps.some(x => s.route.includes(x)));
     const runList = groups.flatMap(g => g.ids);
     const routeN = s.route.length;
     const prevTop = s.stack.length > 1 ? s.stack[s.stack.length - 2].s : s.tab;
     const LABEL = { targets:'Targets', ask:'Ask', map:'Map', summaries:'Summaries', activity:'Activity', hco:'Account', hcp:'Doctor', route:'Route', run:'Route', summary:'Summary', reports:'Reports' };
-    const A = this.acct(), ins = !A.fieldPro;
+    const A = this.acct(), ins = !A.fieldPro, SH = showOf(A), W = wordsOf(A), has = v => v != null && v !== '' && v !== '—', or = v => has(v) ? v : '—';
     const tabs = this.tabsFor(s);
     const activeTab = s.tab;
     const tc = {}, tl = {};
@@ -1643,7 +1965,7 @@ class Component extends DCLogic {
     let items;
     const ql = s.q.trim().toLowerCase();
     const sortNow = ins ? s.iSort : s.sort;
-    const tlist = TLISTS.find(t => t.name === s.tlist) || TLISTS[0];
+    const tlist = TLISTS.find(t => t.name === s.tlist) || TLISTS[0] || { name:'', meta:'', ids:[] };
     const cgOn = CODE_GROUPS.filter(g => s.cgs.includes(g.name)), cgSpecs = cgOn.flatMap(g => g.specs);
     const specOk = x => !x.specs.length || ((s.spec === 'All codes' || x.specs.includes(s.spec)) && x.specs.some(sp => cgSpecs.includes(sp)));
     const codesOff = !ins && (s.spec !== 'All codes' || s.cgs.length < CODE_GROUPS.length);
@@ -1682,29 +2004,31 @@ class Component extends DCLogic {
       });
     }
     const unit = !ins && s.kind === 'hco' ? ['account','accounts'] : ['clinician','clinicians'];
-    const resetArea = () => this.setState({ omMode:'near', omRadius:5, omStart:'Central Manhattan', omCity:'Manhattan', omType:'All types' });
+    const resetArea = () => this.setState({ omMode:AREA.mode || 'near', omRadius:5, omStart:AREA.centre, omCity:AREA.city, omType:'All types' });
     const toExploreFirst = !ins && s.scope === 'mine';
     const empty = ql
       ? { emptyTitle:'No matches for “' + s.q.trim() + '”', emptySub: toExploreFirst ? 'Try Explore, or ask about it.' : 'Check the spelling, or ask about it.',
           emptyA: toExploreFirst ? 'Search Explore' : 'Clear search', emptyAGo: toExploreFirst ? () => this.setState({ scope:'explore' }) : () => this.setState({ q:'' }), emptyB:'Ask about it', emptyBGo: () => this.ask(s.q) }
       : codesOff ? { emptyTitle:'Nothing for these codes', emptySub:'Change the specialty or the code groups.', emptyA:'Change filters', emptyAGo: () => this.sheet('filter'), emptyB:'Reset filters', emptyBGo: () => this.setState({ spec:'All codes', cgs: CODE_GROUPS.map(g => g.name) }) }
+      : ins ? { emptyTitle: s.tlist ? 'No one on ' + s.tlist : 'No target lists yet', emptySub: 'Targets added on the website show here.',
+          emptyA:'Change list', emptyAGo: () => this.sheet('territory'), hasEmptyA: TLISTS.length > 1, emptyB:'', emptyBGo: () => {}, hasEmptyB: false }
       : { emptyTitle:'Nothing in this area', emptySub: s.kind === 'hco' ? 'Widen the area or change the type.' : 'Widen the area.',
           emptyA:'Change area', emptyAGo: () => this.sheet('range', 'targets'), emptyB:'Reset filters', emptyBGo: resetArea };
     const rangeType = s.sheetData === 'targets' ? !ins && s.kind === 'hco' : s.omKind === 'acc';
 
     // hco / hcp detail
-    const hId = scr === 'hco' ? top.id : 'msh';
-    const H = HCOS[hId];
-    const pId = scr === 'hcp' ? top.id : 'maya';
-    const P = HCPS[pId];
+    const hId = scr === 'hco' ? top.id : Object.keys(HCOS)[0];
+    const H = HCOS[hId] || NO_HCO;
+    const pId = scr === 'hcp' ? top.id : Object.keys(HCPS)[0];
+    const P = HCPS[pId] || NO_HCP;
     const pIn = s.route.includes(pId);
     const hIn = inRoute(H.id);
     const act = (icon, label, go, on) => ({ icon, label, go, bg: on ? '#2447C4' : '#E7ECFA', fg: on ? '#fff' : '#22409F' });
 
     // run
     const idx = Math.min(s.runIdx, Math.max(runList.length - 1, 0));
-    const curId = runList[idx] || 'maya';
-    const C = this.stopOf(curId), CH = HCOS[C.hco];
+    const curId = runList[idx] || Object.keys(HCPS)[0];
+    const C = curId ? this.stopOf(curId) : NO_HCP, CH = HCOS[C.hco] || NO_HCO;
     const stopN = groups.findIndex(g => g.ids.includes(curId)) + 1 || 1;
     const runSegs = (runList.length ? runList : ['x','y','z']).map((id, i) => {
       const done = s.runDone.includes(id), skip = s.runSkip.includes(id), cur = isRun && i === idx;
@@ -1725,8 +2049,8 @@ class Component extends DCLogic {
 
 
     const epId = (s.sheet === 'email' && s.sheetData) || pId;
-    const EP = HCPS[epId] || HCPS.maya;
-    const chId = (s.sheet === 'choose' && s.sheetData) || 'msh';
+    const EP = HCPS[epId] || HCPS[Object.keys(HCPS)[0]] || NO_HCP;
+    const chId = (s.sheet === 'choose' && s.sheetData) || Object.keys(HCOS)[0];
 
     // insight detail
     const VD = s.sheet === 'visit' && s.visits.find(v => v.id === s.sheetData), VV = VD && this.visitView(VD);
@@ -1734,9 +2058,11 @@ class Component extends DCLogic {
       people: this.whoOf(VD).map(id => { const p = HCPS[id]; return { ini:p.ini, name:p.name, meta:p.spec + ' · ' + HCOS[p.hco].name, open: () => this.go('hcp', id) }; }) }
       : { date:'', type:'', topic:'', note:'', chips:[], hasTags:false, hasSrc:false, srcLabel:'', hasPeople:false, people:[] };
 
-    const titles = { visit: VD && VD.conv === 'Note' ? 'Note' : 'Insight', range: rangeType ? 'Area and type' : 'Search area', filter:'Filter and sort', territory: ins ? 'Target lists' : 'Territories', choose:'Who will you see?', email:'Draft email', fu:'New follow-up', me:'Your workspace', insight: s.insRec ? 'Recording' : 'Add insight' };
+    const titles = { visit: VD && VD.conv === 'Note' ? 'Note' : W.one, range: rangeType ? 'Area and type' : 'Search area', filter:'Filter and sort', territory: ins ? 'Target lists' : 'Territories', choose:'Who will you see?', email:'Draft email', fu:'New follow-up', me:'Your workspace', account:'Account', insight: s.insRec ? 'Recording' : 'Add ' + W.one.toLowerCase(), summary:'Build your summary' };
 
     const jumpDefs = [
+      ['Sign in', () => this.signOutTo('signIn')],
+      ['First sign-in', () => this.signOutTo('newPassword')],
       ['Targets', () => this.jump('targets')],
       !ins && ['Account profile', () => this.jump('targets', { s:'hco', id:'msh' })],
       ['Doctor profile', () => this.jump('targets', { s:'hcp', id:'maya' })],
@@ -1751,7 +2077,7 @@ class Component extends DCLogic {
       ['Add insight sheet', () => this.jump('targets', { s:'hcp', id:'maya' }, 'insight', this.insFresh(['maya']))],
       ['Filter sheet', () => this.jump('targets', null, 'filter')]
     ].filter(Boolean);
-    const curJump = s.sheet === 'insight' ? (s.insMode === 'record' && A.record ? 'Record' : 'Add insight sheet') : s.sheet === 'filter' ? 'Filter sheet' :
+    const curJump = !s.signedIn ? (s.auth === 'newPassword' ? 'First sign-in' : 'Sign in') : s.sheet === 'insight' ? (s.insMode === 'record' && A.record ? 'Record' : 'Add insight sheet') : s.sheet === 'filter' ? 'Filter sheet' :
       scr === 'summaries' || (scr === 'activity' && s.actSeg === 'sum') ? 'Summaries' :
       ({ targets:'Targets', hco:'Account profile', hcp:'Doctor profile', route:'Route plan', run:'Active route', summary:'Day summary', ask:'Ask', map:'Opportunity map', activity:'Activity' })[scr];
 
@@ -1788,12 +2114,18 @@ class Component extends DCLogic {
       isHco: scr === 'hco', isHcp: scr === 'hcp', isRoute: scr === 'route', isRun, isSummary: scr === 'summary', isReports: scr === 'reports',
       back: () => this.setState(st => ({ stack: st.stack.slice(0, -1) })), backLabel: LABEL[prevTop] || 'Back',
       showTabs: !isRun, tc, tl, showMapTab: tabs.includes('map'), showSumTab: tabs.includes('summaries'),
-      centreGo: () => this.recordNow(), centreIsRecord: A.record, centreIsNote: !A.record, centreLabel: A.record ? 'Record' : 'Insight',
+      centreGo: () => this.recordNow(), centreIsRecord: A.record, centreIsNote: !A.record, centreLabel: A.record ? 'Record' : W.one,
       centreBg: 'radial-gradient(120% 120% at 20% 10%,#3D6BF0 0%,#22409F 70%)', centreFg: s.sheet === 'insight' ? '#2447C4' : '#7A839A',
       goTargets: () => this.setTab('targets'), goAsk: () => this.setTab('ask'), goMap: () => this.setTab('map'), goActivity: () => this.setTab('activity'), goSummaries: () => this.setTab('summaries'),
       hasFuBadge: fuOpen.length > 0, fuOpenCount: fuOpen.length,
       territory: ins ? s.tlist : s.territory, territoryChip: ins ? s.tlist : s.territory,
       openMe: () => this.sheet('me'), openTerritory: () => this.sheet('territory'),
+      meIni: ME.ini, meName: ME.name, ...this.authVals(),
+      accountRows: PICKS.map((p, i) => { const on = ME.pick ? ME.pick === p.id : s.account === p.account; return { hasHead: i === 0 || PICKS[i - 1].kind !== p.kind, head: p.kind.toUpperCase(),
+        name:p.name, meta: s.switching === p.id ? 'Opening…' : p.meta, check: on ? '✓' : '', bg: on || s.switching === p.id ? '#EDF1FB' : '#fff', bd: on ? '#2447C4' : '#E1E6F0',
+        go: () => { if (s.switching || on) return; this.setState({ switching: p.id });
+          AUTH.pickAccount(p.id).then(() => { ME.pick = p.id; this.setAccount(p.account); this.setState({ switching: null }); this.toast('Switched to ' + p.name); },
+            e => { this.setState({ switching: null }); this.toast((e && e.message) || 'That account didn’t open · try again'); }); } }; }),
 
       // targets
       q: s.q, hasQ: !!s.q, onQ: e => this.setState({ q: e.target.value }), clearQ: () => this.setState({ q:'' }),
@@ -1801,10 +2133,10 @@ class Component extends DCLogic {
       scopeSeg: [['mine','My targets'], ['explore','Explore']].map(([k, label]) => ({ label, ...seg(s.scope === k), go: () => this.setState({ scope:k }) })),
       kindChips: [['hco','HCOs'], ['hcp','HCPs']].map(([k, label]) => ({ label, ...chip(s.kind === k), go: () => this.setState({ kind:k }) })),
       isFieldPro: !ins, showTypeChip: s.kind === 'hco', omType: s.omType, openArea: () => this.sheet('range', 'targets'),
-      areaChip: s.omMode === 'near' ? 'Within ' + s.omRadius + ' mi' : s.omCity === 'All cities' ? 'New York' : s.omCity,
+      areaChip: s.omMode === 'near' ? 'Within ' + s.omRadius + ' mi' : s.omCity === 'All cities' ? AREA.state : s.omCity,
       spec: s.spec, sortNow, openFilter: () => this.sheet('filter'),
       groupsChip: cgOn.length + (cgOn.length === 1 ? ' group · ' : ' groups · ') + cgOn.reduce((n, g) => n + g.codes, 0) + ' codes',
-      targetItems: items, noTargets: items.length === 0, ...empty,
+      targetItems: items, noTargets: items.length === 0, hasEmptyA: true, hasEmptyB: true, ...empty,
       targetCount: items.length + ' ' + (items.length === 1 ? unit[0] : unit[1]) + (ins ? ' on this list' : s.scope === 'explore' ? ' nearby' : ' in your book'),
       targetHint: 'by ' + sortNow.toLowerCase(),
 
@@ -1814,11 +2146,11 @@ class Component extends DCLogic {
       clearRoute: () => { this.setState({ route: [], runDone: [], runSkip: [] }); this.toast('Route cleared'); },
 
       // hco
-      h: H, hTag: H.mine ? 'Target · ' + s.territory : 'Not yet a target', hTagBg: H.mine ? '#E7ECFA' : '#EEF1F7', hTagFg: H.mine ? '#22409F' : '#3C4557',
-      hcoReport: () => this.toast('Leakage report queued · ' + H.name),
+      h: H, hTag: H.mine ? ['Target', s.territory].filter(Boolean).join(' · ') : 'Not yet a target', hTagBg: H.mine ? '#E7ECFA' : '#EEF1F7', hTagFg: H.mine ? '#22409F' : '#3C4557',
+      hcoReport: () => this.leakReport(H.id),
       hcoActions: [
-        act('▤', 'Report', () => this.toast('Leakage report queued · ' + H.name)),
-        act('✎', 'Insight', () => this.openInsight([], 'notes', H.id)),
+        act('▤', 'Report', () => this.leakReport(H.id)),
+        act('✎', W.one, () => this.openInsight([], 'notes', H.id)),
         act('◎', 'Map', () => this.setTab('map', { omMode:'near', omStart:H.name, omSel:H.id })),
         act(hIn ? '✓' : '+', hIn ? 'In route' : 'Add', () => H.hcps.length ? this.sheet('choose', H.id) : this.toggleRoute(H.id), hIn),
         act('✳', 'Ask', () => this.ask('Brief me on ' + H.name))
@@ -1832,34 +2164,36 @@ class Component extends DCLogic {
       hHcps: H.hcps.slice().sort((a, b) => HCPS[b].claimsN - HCPS[a].claimsN).map(id => { const p = HCPS[id]; return { name:p.name, ini:p.ini, meta:p.spec + ' · ' + p.claims + ' claims', ...addSt(s.route.includes(id)), open: () => this.go('hcp', id), toggle: () => this.toggleRoute(id) }; }),
 
       // hcp
-      p: { ...P, last: pLast.label, hcoName: HCOS[P.hco].name, hcoFg: ins ? '#5B6478' : '#2447C4', hcoW: ins ? 400 : 600,
-        tag: pMine ? 'Target · ' + (ins ? s.tlist : s.territory) : ins ? 'Not on this list' : 'Not yet a target', tagBg: pMine ? '#E7ECFA' : '#EEF1F7', tagFg: pMine ? '#22409F' : '#3C4557',
-        ...(ins ? { open:P.iOpen, brief:P.iBrief } : {}), hasFlag: !!pf, flag: pf ? pf.label : '', flagBg: pf ? pf.bg : '', flagFg: pf ? pf.fg : '' },
+      p: { ...P, last: pLast.label, hcoName: (HCOS[P.hco] || NO_HCO).name, hcoFg: ins ? '#5B6478' : '#2447C4', hcoW: ins ? 400 : 600,
+        tag: pMine ? ['Target', ins ? s.tlist : s.territory].filter(Boolean).join(' · ') : ins ? 'Not on this list' : 'Not yet a target', tagBg: pMine ? '#E7ECFA' : '#EEF1F7', tagFg: pMine ? '#22409F' : '#3C4557',
+        open: or(ins ? P.iOpen : P.open) === '—' ? 'No brief for ' + P.name + ' yet.' : (ins ? P.iOpen : P.open), brief: (ins ? P.iBrief : P.brief) || '', phone: or(P.phone), email: or(P.email), hasFlag: !!pf, flag: pf ? pf.label : '', flagBg: pf ? pf.bg : '', flagFg: pf ? pf.fg : '' },
       pOpenHco: () => { if (!ins) this.go('hco', P.hco); },
-      pDetails: () => this.toast('Contact card copied'),
+      pDetails: () => this.copy([P.name, P.spec, (HCOS[P.hco] || NO_HCO).name, has(P.phone) ? P.phone : '', has(P.email) && P.email !== 'Restricted' ? P.email : ''].filter(x => x && x !== '—').join('\n'), 'Contact card copied'),
       hcpActions: [
-        act('☎', 'Call', () => this.toast('Calling ' + P.phone)),
-        act('✉', 'Email', () => this.sheet('email', pId)),
-        act('✎', 'Insight', () => this.openLog(pId)),
+        ...(SH.phone && has(P.phone) ? [act('☎', 'Call', () => this.call(P.phone))] : []),
+        ...(SH.draftEmail ? [act('✉', 'Email', () => this.openEmail(pId))] : []),
+        act('✎', W.one, () => this.openLog(pId)),
         act(pIn ? '✓' : '+', pIn ? 'In route' : 'Add', () => this.toggleRoute(pId), pIn),
         act('✳', 'Ask', () => this.ask('Brief me on ' + P.name))
       ],
       pSegs: [['overview','Overview'], ['activity','Activity']].map(([k, label]) => ({ label, ...seg(s.pSeg === k), go: () => this.setState({ pSeg:k }) })),
       pOverview: s.pSeg === 'overview', pActivity: s.pSeg === 'activity',
-      pStats: ins ? [
+      pStats: (ins ? [
         A.adv ? { k:'ADVOCACY', v: pAdv ? pAdv + ' / 5' : '—', s: pAdv ? (A.advLabels ? A.advLabels[pAdv - 1] : 'last rated ' + pLast.label) : 'not rated yet', c:advC(pAdv) }
-          : { k:'LAST MEETING', v: pLastV ? pLastV.type.split(' · ')[0] : '—', s: pLastV ? pLastV.topic : 'none logged', c:'#0B1220' },
-        { k:'LAST MET', v:pLast.label, s: pLast.n === 0 ? 'today' : pLast.n < 999 ? pLast.n + ' days ago' : 'not met yet', c:'#0B1220' },
-        { k:'INSIGHTS', v:String(this.convCount(pId)), s: this.convCount(pId) === 1 ? 'conversation logged' : 'conversations logged', c:'#22409F' },
-        { k:'FOLLOW-UPS', v:String(pFuOpen.length), s: pFuOpen.some(f => f.dueN < 0) ? 'one overdue' : 'none overdue', c: pFuOpen.some(f => f.dueN < 0) ? '#A94D1B' : '#0B1220' }
+          : { k:'LAST MEETING', v: pLastV ? pLastV.type.split(' · ')[0] : '—', s: pLastV ? pLastV.topic : 'none logged', c:'#0B1220', on: SH.lastMeeting },
+        { k:'LAST MET', v:pLast.label, s: pLast.n === 0 ? 'today' : pLast.n < 999 ? pLast.n + ' days ago' : 'not met yet', c:'#0B1220', on: SH.lastMet },
+        { k:'INSIGHTS', v:String(this.convCount(pId)), s: this.convCount(pId) === 1 ? 'conversation logged' : 'conversations logged', c:'#22409F', on: SH.insightCount },
+        { k:'FOLLOW-UPS', v:String(pFuOpen.length), s: pFuOpen.some(f => f.dueN < 0) ? 'one overdue' : 'none overdue', c: pFuOpen.some(f => f.dueN < 0) ? '#A94D1B' : '#0B1220', on: SH.followUps }
       ] : [
-        { k:'CLAIMS', v:P.claims, s:P.yoy + ' · 2025', c:'#0B1220' },
-        { k:'LIGHTEST DAY', v:P.dayL, s:'fewest visits · 2025', c:'#22409F' },
-        { k:'TOP PROCEDURE', v:P.top, s:'selected codes', c:'#0B1220' },
-        { k:'REFERRED IN', v:P.ref, s:'selected diagnoses', c:'#0B1220' }
-      ],
-      pEmail: () => this.sheet('email', pId), pAsk: () => this.ask('Brief me on ' + P.name), pCall: () => this.toast('Calling ' + P.phone), pLog: () => this.openLog(pId), pFu: () => this.openFu(pId),
-      pLogLabel: '＋ Add insight',
+        { k:'CLAIMS', v:or(P.claims), s:(has(P.yoy) ? P.yoy + ' · ' : '') + '2025', c:'#0B1220', on: SH.claims },
+        { k:'LIGHTEST DAY', v:or(P.dayL), s:'fewest visits · 2025', c:'#22409F', on: SH.lightest },
+        { k:'TOP PROCEDURE', v:or(P.top), s:'selected codes', c:'#0B1220', on: SH.topCode },
+        { k:'REFERRED IN', v:or(P.ref), s:P.refOn || 'selected diagnoses', c:'#0B1220', on: SH.referred }
+      ]).filter(x => x.on !== false),
+      showBrief: SH.brief, hasBriefText: !!(ins ? P.iBrief : P.brief), showDraftEmail: SH.draftEmail,
+      showPhone: SH.phone, showEmail: SH.email, showContact: SH.phone || SH.email,
+      pEmail: () => has(P.email) && P.email !== 'Restricted' ? this.openEmail(pId) : this.toast(P.email === 'Restricted' ? 'Email restricted for your account' : 'No email on record'), pAsk: () => this.ask('Brief me on ' + P.name), pCall: () => this.call(P.phone), pLog: () => this.openLog(pId), pFu: () => this.openFu(pId),
+      pLogLabel: '＋ Add ' + W.one.toLowerCase(),
       pFus: s.fus.filter(f => f.who === pId).map(f => this.fuView(f)),
       pVisits: s.visits.filter(v => this.whoOf(v).includes(pId)).map(v => this.visitView(v)), pNoVisits: !s.visits.some(v => this.whoOf(v).includes(pId)),
 
@@ -1875,7 +2209,9 @@ class Component extends DCLogic {
       toTargets: () => this.setTab('targets'),
       routeDate: dayFull(s.day === 'tomorrow' ? 1 : 0), hasTomorrow: s.tomorrow.length > 0, routeIsToday: viewKey === 'route', canStart: viewKey === 'route' && routeN > 0,
       daySegs: [['today','Today'], ['tomorrow','Tomorrow']].map(([k, label]) => ({ label, ...seg(s.day === k), go: () => this.setState({ day:k }) })),
-      routeGroups: viewGroups.map((g, i) => ({ n: i + 1, name: HCOS[g.hco].name, dist: HCOS[g.hco].dist, rows: g.ids.map(id => { const st = this.stopOf(id); return { name: st.name, spec: st.spec, time: TIMES[id] || 'Flexible', remove: () => this.toggleRoute(id, viewKey) }; }) })),
+      routeFrom: this.startKnown() && s.territory ? ' · from ' + s.territory : '',
+      ...routeMap,
+      routeGroups: viewGroups.map((g, i) => ({ n: i + 1, name: HCOS[g.hco].name, dist: i ? milesApart(HCOS[viewGroups[i - 1].hco], HCOS[g.hco]) : this.startKnown() ? milesApart(START, HCOS[g.hco]) : '', rows: g.ids.map(id => { const st = this.stopOf(id); return { name: st.name, spec: st.spec, time: TIMES[id] || 'Flexible', remove: () => this.toggleRoute(id, viewKey) }; }) })),
       startRun: () => { this.setState({ runIdx:0, runDone:[], runSkip:[] }); this.replaceTop('run'); },
 
       // run
@@ -1890,10 +2226,10 @@ class Component extends DCLogic {
         ? [...(A.adv ? [{ k:'ADVOCACY', v: cAdv ? cAdv + '/5' : '—', c:advC(cAdv) }] : []), { k:'LAST MET', v:cLast.label, c:'#0B1220' }, { k:'INSIGHTS', v:String(this.convCount(curId)), c:'#22409F' }, ...(A.adv ? [] : [this.fuMetric(curId)])]
         : [{ k:'CLAIMS', v:C.claims, c:'#0B1220' }, { k:'YOY', v:C.yoy, c: C.yoyN < 0 ? '#A94D1B' : '#1C7A4E' }, { k:'REFERRED IN', v:C.ref, c:'#0B1220' }],
       runEnd: () => this.replaceTop('summary'),
-      runLog: () => C.isHco ? this.openInsight([], 'notes', curId) : this.openLog(curId), runCall: () => this.toast('Calling ' + (C.isHco ? C.name : C.phone)), runProfile: () => this.go(C.isHco ? 'hco' : 'hcp', curId),
+      runLog: () => C.isHco ? this.openInsight([], 'notes', curId) : this.openLog(curId), runCall: () => this.call(C.isHco ? null : C.phone), runProfile: () => this.go(C.isHco ? 'hco' : 'hcp', curId),
       runHasRecord: !!A.record, runNoRecord: !A.record, runRecord: () => this.recordNow(),
-      runLogBtn: 'Add insight',
-      runLogLabel: s.logged.includes(curId) ? '✓ Insight saved' : 'Nothing logged for this visit yet',
+      runLogBtn: 'Add ' + W.one.toLowerCase(), runLogWord: W.one,
+      runLogLabel: s.logged.includes(curId) ? '✓ ' + W.one + ' saved' : 'Nothing logged for this visit yet',
       runLogColor: s.logged.includes(curId) ? '#1C7A4E' : '#7A839A',
       runNext: () => advance('done'), runSkip: () => advance('skip'),
       runNextLabel: idx >= runList.length - 1 ? 'Done, finish day' : 'Done, next visit',
@@ -1901,7 +2237,7 @@ class Component extends DCLogic {
 
       // summary
       sumDone: routeDone + '/' + routeN, sumSkipped: s.runSkip.length,
-      sumRows: runList.map((id, i) => { const d = s.runDone.includes(id), k = s.runSkip.includes(id); return { name: this.stopOf(id).name, status: d ? (s.logged.includes(id) ? 'Done · note logged' : 'Done · no note') : k ? 'Not today' : 'Not visited', mark: d ? '✓' : k ? '–' : i + 1, dotBg: d ? '#1C7A4E' : k ? '#C3CAD8' : '#2447C4', canContinue: !d, canLog: d && !s.logged.includes(id), log: () => HCPS[id] ? this.openLog(id) : this.openInsight([], 'notes', id), go: () => { this.setState({ runIdx: i }); this.replaceTop('run'); } }; }),
+      sumRows: runList.map((id, i) => { const d = s.runDone.includes(id), k = s.runSkip.includes(id); return { name: this.stopOf(id).name, status: d ? (s.logged.includes(id) ? 'Done · ' + W.one.toLowerCase() + ' logged' : 'Done · no ' + W.one.toLowerCase()) : k ? 'Not today' : 'Not visited', mark: d ? '✓' : k ? '–' : i + 1, dotBg: d ? '#1C7A4E' : k ? '#C3CAD8' : '#2447C4', canContinue: !d, canLog: d && !s.logged.includes(id), log: () => HCPS[id] ? this.openLog(id) : this.openInsight([], 'notes', id), go: () => { this.setState({ runIdx: i }); this.replaceTop('run'); } }; }),
       toActivity: () => this.setTab('activity'),
       // tomorrow: the three most relevant people not already seen or planned today, placed by least driving
       planTomorrow: () => {
@@ -1914,15 +2250,16 @@ class Component extends DCLogic {
       },
 
       // reports
-      reports: [
-        { name:'Mount Sinai Hospital', meta:'All codes · 22 Oct · PDF', status:'Ready', bg:'#E3F5EC', fg:'#1C7A4E', open: () => this.toast('Opening PDF'), share: () => this.toast('Link copied') },
-        { name:'Mount Sinai West', meta:'Colectomy · 14 Oct · PDF', status:'Ready', bg:'#E3F5EC', fg:'#1C7A4E', open: () => this.toast('Opening PDF'), share: () => this.toast('Link copied') }
-      ],
+      reports: s.reports.map(r => ({ name:HCOS[r.hco].name, meta: r.busy ? 'Usually 3–5 minutes' : r.group + ' · ' + r.date + ' · PDF',
+        status: r.busy ? 'Generating…' : 'Ready', bg: r.busy ? '#E7ECFA' : '#E3F5EC', fg: r.busy ? '#22409F' : '#1C7A4E',
+        open: () => r.busy ? this.toast('Still generating') : this.openLink(r.url), share: () => r.busy ? this.toast('Still generating') : r.url ? this.share({ title: HCOS[r.hco].name + ' · ' + r.group, url: r.url }) : this.toast('The link isn’t ready yet') })),
 
       // ask
       askEmpty: s.thread.length === 0,
-      askSuggest: Object.keys(ins ? ANSWERS_INS : ANSWERS).map(q => ({ q, go: () => this.ask(q) })),
+      askSuggest: this.starters().map(q => ({ q, go: () => this.ask(q) })),
+      // an answer may hand off to the website (`link`: { label, url }), for a search Ask can't run here
       thread: s.thread.map(m => ({ ...m, ready: !m.pending, next: (m.next || []).map(q => ({ q, go: () => this.ask(q) })),
+        hasLink: !!(m.link && m.link.url), linkLabel: m.link ? m.link.label : '', openLink: () => m.link && this.openLink(m.link.url),
         rows: m.rows.map(id => { const st = this.stopOf(id), isDoc = !st.isHco, f = isDoc && this.flagOf(id), h = HCOS[st.hco];
           return { name:st.name, ini:st.ini, isDoc, meta: isDoc ? st.spec + ' · ' + (f ? f.label : ins ? 'Last met ' + this.lastOf(id).label : st.claims + ' claims') : st.spec + ' · ' + h.dist,
             open: () => this.go(isDoc ? 'hcp' : 'hco', id), toggle: () => !isDoc && h.hcps.length ? this.sheet('choose', id) : this.toggleRoute(id),
@@ -1932,18 +2269,23 @@ class Component extends DCLogic {
       askIn: s.askIn, onAskIn: e => this.setState({ askIn: e.target.value }),
       askKey: e => { if (e.key === 'Enter') this.ask(s.askIn); }, askSend: () => this.ask(s.askIn),
       listening: s.listening, micBg: s.listening ? '#DD6134' : '#EEF1F7', micFg: s.listening ? '#fff' : '#2447C4',
-      toggleMic: () => { if (s.listening) { clearTimeout(this._m); this.setState({ listening:false }); return; } this.setState({ listening:true }); this._m = setTimeout(() => { this.setState({ listening:false }); this.ask('Who should I see today?'); }, 1600); },
+      toggleMic: () => {
+        if (s.listening) return this.setState({ listening:false });
+        if (!SERVICE.listen) return this.toast('Voice input isn’t connected yet · type the question');
+        this.setState({ listening:true });
+        SERVICE.listen('Who should I see today?').then(q => { if (!this.state.listening) return; this.setState({ listening:false }); if (q) this.ask(q); }, () => this.setState({ listening:false }));
+      },
 
 
       // activity
-      actSegs: [['visits', 'Insights · ' + s.visits.filter(v => v.conv !== 'Note').length], ['fus','Follow-ups · ' + fuOpen.length], ...(ins ? [] : [['sum', 'Summaries']])].map(([k, label]) => ({ label, ...seg(s.actSeg === k), go: () => this.setState({ actSeg:k }) })),
+      actSegs: [['visits', W.many + ' · ' + s.visits.filter(v => v.conv !== 'Note').length], ...(SH.followUps ? [['fus','Follow-ups · ' + fuOpen.length]] : []), ...(ins || !SH.summaries ? [] : [['sum', 'Summaries']])].map(([k, label]) => ({ label, ...seg(s.actSeg === k), go: () => this.setState({ actSeg:k }) })),
       actVisits: s.actSeg === 'visits', actFus: s.actSeg === 'fus',
-      actAddLabel: s.actSeg === 'fus' ? '＋ Follow-up' : '＋ Insight',
-      actAdd: () => s.actSeg === 'fus' ? this.openFu(null) : this.openInsight([], 'notes'),
+      actAddLabel: s.actSeg === 'fus' ? '＋ Follow-up' : s.actSeg === 'sum' ? '✳ Build summary' : '＋ ' + W.one,
+      actAdd: () => s.actSeg === 'fus' ? this.openFu(null) : s.actSeg === 'sum' ? this.smyBuild() : this.openInsight([], 'notes'),
       visitList: s.visits.map(v => this.visitView(v)),
       fuAll: s.fus.map(f => this.fuView(f)),
       draftRows: s.drafts.map(d => { const w = (d.form.insWho || [])[0], at = d.form.insHco;
-        return { label: 'Continue ' + (d.form.insConv === 'Note' || !A.conv ? 'note' : 'insight') + (w ? ' · ' + HCPS[w].name : at ? ' · ' + HCOS[at].name : ''), open: () => this.openDraft(d) }; }),
+        return { label: 'Continue ' + (A.conv && d.form.insConv === 'Note' ? 'note' : W.one.toLowerCase()) + (w ? ' · ' + HCPS[w].name : at ? ' · ' + HCOS[at].name : ''), open: () => this.openDraft(d) }; }),
 
       // summaries
       showSummaries: (scr === 'activity' && s.actSeg === 'sum') || scr === 'summaries',
@@ -1954,37 +2296,56 @@ class Component extends DCLogic {
       smyRows: smySource.map(v => { const on = s.smySel.includes(v.id); return { name:this.visitView(v).name, meta:v.date + ' · ' + v.type + ' · ' + v.topic, note:v.note,
         check: on ? '✓' : '', boxBd: on ? '#2447C4' : '#B9C3D8', boxBg: on ? '#2447C4' : '#fff', bd: on ? '#2447C4' : '#E1E6F0', bg: on ? '#EDF1FB' : '#fff', toggle: () => toggleIn('smySel', v.id) }; }),
       smyNoRows: smySource.length === 0,
-      smySelLabel: smyPicked.length ? smyPicked.length + ' selected' : 'Pick conversations above',
+      smySelLabel: smyPicked.length === 1 ? '1 conversation' : smyPicked.length + ' conversations', smyBuild: () => this.smyBuild(),
       smyName: s.smyName, onSmyName: e => this.setState({ smyName: e.target.value }),
       smyGoBg: smyPicked.length && !s.smyBusy ? '#2447C4' : '#9DB0E8', smyGoLabel: s.smyBusy ? 'Summarising…' : '✳ Generate summary',
       smyGenerate: () => {
         if (s.smyBusy) return;
         if (!smyPicked.length) return this.toast('Pick at least one conversation');
+        if (!A.fieldPro && !SERVICE.summary) return this.toast('Summaries aren’t connected yet');
         const id = Date.now(), list = smyPicked;
         const name = s.smyName.trim() || (list.length === 1 ? 'Conversation with ' + this.visitView(list[0]).name : 'Summary of ' + list.length + ' conversations');
-        this.setState({ smyBusy:true });
+        // an account whose summaries split by area (BeOne: CLL or MCL) writes it for the area chip, else the area every pick shares, else the first
+        const area = A.smy ? (A.smy.includes(s.smyTag) ? s.smyTag : A.smy.find(a => list.length && list.every(v => v.area === a)) || A.smy[0]) : '';
+        const item = { id, name, date:dateOf(0), ids:list.map(v => v.id), text:null, area };
         clearTimeout(this._s);
-        this._s = setTimeout(() => {
-          this.setState(st => ({ smyBusy:false, smySel:[], smyName:'', smySeg:'hist', smyOpen:id, summaries:[{ id, name, date:'29 Oct', ids:list.map(v => v.id), text:this.synth(list) }, ...st.summaries] }));
+        // Field Pro: the phone writes the summary. Insights: the server writes it and its deck in the background, so History shows it generating
+        if (A.fieldPro) {
+          this.setState({ smyBusy:true });
+          this._s = setTimeout(() => {
+            this.setState(st => ({ smyBusy:false, sheet:null, smySel:[], smyName:'', smySeg:'hist', smyOpen:id, summaries:[{ ...item, text:this.synth(list) }, ...st.summaries] }));
+            this.toast('Summary ready');
+          }, 900);
+          return;
+        }
+        this.setState(st => ({ sheet:null, smySel:[], smyName:'', smySeg:'hist', smyOpen:null, summaries:[{ ...item, busy:true }, ...st.summaries] }));
+        SERVICE.summary(list, item, () => this.synth(list)).then(text => {
+          this.setState(st => ({ smyOpen:id, summaries:st.summaries.map(x => x.id === id ? { ...x, busy:false, text } : x) }));
           this.toast('Summary ready');
-        }, 900);
+        }, e => {
+          this.setState(st => ({ summaries: st.summaries.filter(x => x.id !== id) }));
+          this.toast((e && e.message) || 'The summary didn’t build · try again');
+        });
       },
-      smyCards: s.summaries.map(sm => { const on = s.smyOpen === sm.id; const list = s.visits.filter(v => sm.ids.includes(v.id));
-        return { name:sm.name, meta:sm.date + ' · ' + sm.ids.length + (sm.ids.length === 1 ? ' conversation' : ' conversations'), on, arrow: on ? '▴' : '▾',
+      smyCards: s.summaries.map(sm => { const on = s.smyOpen === sm.id && !sm.busy; const list = s.visits.filter(v => sm.ids.includes(v.id));
+        // a summary from the server says how many conversations it covered, not which
+        const n = sm.count != null ? sm.count : sm.ids.length;
+        return { name:sm.name, meta: sm.busy ? 'Generating…' : sm.date + ' · ' + n + (n === 1 ? ' conversation' : ' conversations'), on, arrow: sm.busy ? '' : on ? '▴' : '▾',
           people: [...new Set(list.flatMap(v => this.whoOf(v)))].map(id => HCPS[id].name).join(', '), text: sm.text || this.synth(list),
-          toggle: () => this.setState({ smyOpen: on ? null : sm.id }), copy: () => this.toast('Summary copied'), share: () => this.toast('Share link copied') }; }),
+          toggle: () => { if (!sm.busy) this.setState({ smyOpen: on ? null : sm.id }); }, copy: () => this.copy(sm.text || this.synth(list), 'Summary copied'),
+          shareLabel: sm.deck ? 'Share deck' : 'Share', share: () => this.share({ title: sm.name, text: sm.text || this.synth(list), url: sm.deck || '' }) }; }),
       smyNoCards: s.summaries.length === 0,
 
       // sheets
       hasSheet: !!s.sheet, sheetTitle: titles[s.sheet] || '', closeSheet: () => {
         if (s.insRec) this.toast('Recording discarded');
         else if (s.sheet === 'insight' && s.insNote.trim()) { this.keepDraft(); this.toast('Kept as a draft'); }
-        clearInterval(this._i); this.setState({ sheet:null, insRec:false, insPaused:false });
+        this.dropRec(); this.setState({ sheet:null, insRec:false, insPaused:false, insKey:null });
       },
-      shInsight: s.sheet === 'insight', shFilter: s.sheet === 'filter', shTerritory: s.sheet === 'territory', shChoose: s.sheet === 'choose', shEmail: s.sheet === 'email', shFu: s.sheet === 'fu', shMe: s.sheet === 'me', shVisit: s.sheet === 'visit', vd: visitDetail,
+      shInsight: s.sheet === 'insight', shFilter: s.sheet === 'filter', shTerritory: s.sheet === 'territory', shChoose: s.sheet === 'choose', shEmail: s.sheet === 'email', shFu: s.sheet === 'fu', shSummary: s.sheet === 'summary', shMe: s.sheet === 'me', shAccount: s.sheet === 'account', shVisit: s.sheet === 'visit', vd: visitDetail,
       toggleLogFu: () => this.setState({ logFu: !s.logFu }), logFuTrack: s.logFu ? '#2447C4' : '#D3D9E6', logFuKnob: s.logFu ? '21px' : '3px',
       sortOpts: (ins ? ['Relevance', ...(A.adv ? ['Advocacy'] : []), 'Last met', 'Name'] : SORTS).map(o => ({ label:o, ...chip(sortNow === o), go: () => this.setState(ins ? { iSort:o } : { sort:o }) })),
-      specOpts: SPECS.map(o => ({ label:o, ...chip(s.spec === o), go: () => this.setState({ spec:o }) })),
+      specOpts: ['All codes', ...[...new Set(CODE_GROUPS.flatMap(g => g.specs))].sort()].map(o => ({ label:o, ...chip(s.spec === o), go: () => this.setState({ spec:o }) })),
       codeGroups: CODE_GROUPS.map(g => { const on = s.cgs.includes(g.name);
         return { label:g.name, ...chip(on), go: () => on && s.cgs.length === 1 ? this.toast('Keep at least one code group') : this.setState(st => ({ cgs: on ? st.cgs.filter(x => x !== g.name) : [...st.cgs, g.name] })) }; }),
       cgCodesLabel: cgOn.reduce((n, g) => n + g.codes, 0) + ' · HCPCS / CPT',
@@ -1994,9 +2355,12 @@ class Component extends DCLogic {
         : TERRS.map(t => { const on = s.territory === t.name; return { ...t, check: on ? '✓' : '', bg: on ? '#EDF1FB' : '#fff', bd: on ? '#2447C4' : '#E1E6F0', go: () => { this.setState({ territory:t.name, sheet:null }); this.toast('Switched to ' + t.name); } }; }),
       newItemLabel: ins ? '＋ New target list' : '＋ New territory',
       newTerritory: () => this.toast(ins ? 'New target list form' : 'New territory form'),
-      chooseHco: HCOS[chId].name,
-      chooseRows: HCOS[chId].hcps.map(id => { const on = s.route.includes(id); return { name:HCPS[id].name, spec:HCPS[id].spec, check: on ? '✓' : '', bg: on ? '#EDF1FB' : '#fff', bd: on ? '#2447C4' : '#E1E6F0', boxBd: on ? '#2447C4' : '#B9C3D8', boxBg: on ? '#2447C4' : '#fff', toggle: () => this.toggleRoute(id) }; }),
-      ep: { ...EP, open: ins ? EP.iOpen : EP.open }, copyDraft: () => { this.setState({ sheet:null }); this.toast('Draft copied'); },
+      chooseHco: (HCOS[chId] || NO_HCO).name,
+      chooseRows: (HCOS[chId] || NO_HCO).hcps.map(id => { const on = s.route.includes(id); return { name:HCPS[id].name, spec:HCPS[id].spec, check: on ? '✓' : '', bg: on ? '#EDF1FB' : '#fff', bd: on ? '#2447C4' : '#E1E6F0', boxBd: on ? '#2447C4' : '#B9C3D8', boxBg: on ? '#2447C4' : '#fff', toggle: () => this.toggleRoute(id) }; }),
+      ep: EP, emailBusy: !!(s.email && s.email.busy), emailFailed: !!(s.email && !s.email.busy && s.email.error), emailError: s.email ? s.email.error : '',
+      emailReady: !!(s.email && !s.email.busy && !s.email.error), emailSubject: s.email ? s.email.subject : '', emailBody: s.email ? s.email.body : '',
+      emailBtn: s.email && s.email.error ? 'Try again' : 'Copy draft',
+      copyDraft: () => { const e = s.email; if (!e || e.busy) return; if (e.error) return this.openEmail(e.who); this.copy('Subject: ' + e.subject + '\n\n' + e.body, 'Draft copied'); this.setState({ sheet:null }); },
       fuWhoOpts: this.people(null).map(p => ({ label:p.name.replace('Dr. ', ''), ...chip(s.fuWho === p.id), go: () => this.setState({ fuWho:p.id }) })),
       fuTask: s.fuTask, onFuTask: e => this.setState({ fuTask: e.target.value }),
       fuDueOpts: [0, 1, 4, 7].map(n => ({ label:dayOf(n), ...chip(s.fuDue === n), go: () => this.setState({ fuDue:n }) })),
@@ -2004,20 +2368,23 @@ class Component extends DCLogic {
       saveFu: () => {
         if (!s.fuWho) return this.toast('Pick who it is for');
         if (!s.fuTask.trim()) return this.toast('Add a task first');
-        this.setState(st => ({ sheet:null, fuTask:'', actSeg:'fus', fus:[...st.fus, { id:Date.now(), t:st.fuTask.trim(), who:st.fuWho, dueN:st.fuDue, done:false }] }));
+        const fu = { id:Date.now(), t:s.fuTask.trim(), who:s.fuWho, dueN:s.fuDue, done:false };
+        this.setState(st => ({ sheet:null, fuTask:'', actSeg:'fus', fus:[...st.fus, fu] }));
         this.toast('Follow-up added · ' + dayOf(s.fuDue));
+        this.storeFu(fu);
       },
-      meSub: (A.role || 'MSL') + ' · ' + A.name + ' · ' + (ins ? s.tlist : s.territory),
+      meSub: [A.role || 'MSL', A.name, ins ? s.tlist : s.territory].filter(Boolean).join(' · '),
       meRows: [
-        ...(ins ? [] : [{ icon:'▤', label:'Reports', meta:'2 ready', go: () => this.setState(st => ({ sheet:null, stack:[...st.stack, { s:'reports' }] })) }]),
+        ...(ins || !SH.reports ? [] : [{ icon:'▤', label:'Reports', meta:s.reports.filter(r => !r.busy).length + ' ready', go: () => this.setState(st => ({ sheet:null, stack:[...st.stack, { s:'reports' }] })) }]),
         { icon:'◎', label: ins ? 'Target lists' : 'Territories', meta: ins ? s.tlist : s.territory, go: () => this.sheet('territory') },
         { icon:'◷', label:'History & follow-ups', meta:fuOpen.length + ' open', go: () => this.setTab('activity', { actSeg:'fus' }) },
-        { icon:'⚙', label:'Settings', meta:'', go: () => this.toast('Settings') }
+        ...(ME.staff ? [{ icon:'⇄', label:'Account', meta:(PICKS.find(p => ME.pick ? p.id === ME.pick : p.account === s.account) || A).name, go: () => this.sheet('account') }] : []),
+        { icon:'↪', label:'Sign out', meta:'', go: () => this.signOut() }
       ],
 
       // add insight sheet
       insShowModes: !s.insRec,
-      insModes: [['notes','Notes'], ['upload','Upload'], ...(A.record ? [['record','Record']] : [])].map(([k, label]) => ({ label, ...seg(s.insMode === k), go: () => this.setState({ insMode:k }) })),
+      insModes: [['notes','Type'], ['upload','Upload'], ...(A.record ? [['record','Record']] : [])].map(([k, label]) => ({ label, ...seg(s.insMode === k), go: () => this.setState({ insMode:k }) })),
       insNotes: s.insMode === 'notes', insUpload: s.insMode === 'upload', insRecord: s.insMode === 'record',
       insShowConv: !!A.conv, insConvNote: s.insConv === 'Note',
       insConvOpts: (A.conv || []).map(t => ({ label:t, ...chip(s.insConv === t), go: () => this.setState({ insConv:t }) })),
@@ -2031,7 +2398,7 @@ class Component extends DCLogic {
       insPickerLabel: s.insWho.length ? 'Add another HCP' : 'Who did you meet?',
       insWhoOpts: this.people(s.insHco).filter(p => !s.insWho.includes(p.id)).map(p => ({ label:p.name.replace('Dr. ', ''), ...chip(false), go: () => this.setState(st => ({ insWho:[...st.insWho, p.id], insPickMore:false })) })),
       insAddHcp: () => this.setState({ insPickMore: !s.insPickMore }), insAddLabel: s.insPickMore ? 'Cancel' : '＋ Add another HCP',
-      insHasSource: !!s.insSource, insSourceLabel: s.insSource === 'Recording' ? 'Transcribed from your recording' + (s.insSecs ? ' · ' + Math.floor(s.insSecs / 60) + ':' + String(s.insSecs % 60).padStart(2, '0') : '') : 'Transcribed from ' + (s.insFile || 'your upload'),
+      insBusy: !!s.insBusy, insHasSource: !!s.insSource && !s.insBusy, insSourceLabel: s.insSource === 'Recording' ? 'Transcribed from your recording' + (s.insSecs ? ' · ' + Math.floor(s.insSecs / 60) + ':' + String(s.insSecs % 60).padStart(2, '0') : '') : 'Transcribed from ' + (s.insFile || 'your upload'),
       insNote: s.insNote, onInsNote: e => this.setState({ insNote: e.target.value }),
       insShowArea: !!A.areas,
       insAreaOpts: Object.keys(A.areas || {}).map(k => ({ label:A.areas[k].label, ...chip(s.insArea === k), go: () => this.setState({ insArea:k, insTopics:[] }) })),
@@ -2048,7 +2415,7 @@ class Component extends DCLogic {
       insTypeOpts: A.meetTypes.map(t => ({ label:t, ...chip(s.insType === t), go: () => this.setState({ insType:t }) })),
       insLiveOpts: ['Live','Virtual'].map(t => ({ label:t, ...chip(s.insLive === t), go: () => this.setState({ insLive:t }) })),
       insTagOpts: A.tags.map(t => ({ label:t, ...chip(s.insTags.includes(t)), go: () => toggleIn('insTags', t) })),
-      insSaveBg: insReady ? '#2447C4' : '#9DB0E8', insSaveLabel: A.conv && s.insConv === 'Note' ? 'Save note' : 'Save insight',
+      insSaveBg: insReady ? '#2447C4' : '#9DB0E8', insSaveLabel: 'Save ' + (A.conv && s.insConv === 'Note' ? 'note' : W.one.toLowerCase()),
       insDateOpts: [0, 1, 2, 3, 4, 5, 6].map(n => ({ label: n === 0 ? 'Today' : n === 1 ? 'Yesterday' : WD[dateAt(-n).getDay()] + ' ' + dateAt(-n).getDate(), ...chip(s.insDateN === n), go: () => this.setState({ insDateN:n }) })),
       insDateLabel: (s.insDateN === 0 ? 'Today ' + dateOf(0) : s.insDateN === 1 ? 'Yesterday ' + dateOf(-1) : dayFull(-s.insDateN)).toUpperCase(),
       insShowVendor: !!A.extra && thirdParty,
@@ -2059,30 +2426,41 @@ class Component extends DCLogic {
       insCount: s.insCount, onInsCount: e => this.setState({ insCount: e.target.value.replace(/\D/g, '') }),
       insShowConf: !!A.extra && s.insType === 'Conference',
       insConfOpts: (A.extra ? A.extra.confs : []).map(t => ({ label:t, ...chip(s.insConf === t), go: () => this.setState({ insConf:t }) })),
-      insSaveDraft: () => { clearInterval(this._i); this.keepDraft(); this.setState({ sheet:null, insRec:false }); this.toast('Draft saved'); },
+      insSaveDraft: () => { this.dropRec(); this.keepDraft(); this.setState({ sheet:null, insRec:false, insKey:null }); this.toast('Draft saved'); },
       insSave: () => {
+        if (s.insBusy) return this.toast('The transcript is still coming · one moment');
         if (!s.insWho.length && !thirdParty) return this.toast('Add who you met');
         if (!s.insNote.trim()) return this.toast('Add what you heard');
         if (A.areas && !s.insArea) return this.toast('Pick the therapeutic area');
-        const who = s.insWho, first = who[0] || null, dN = s.insDateN;
+        const who = s.insWho, first = who[0] || null, dN = s.insDateN, id = Date.now(), form = this.draftForm(), draft = s.insDraft;
+        const visit = { id, who:first, attendees:who, advs: A.adv ? s.insAdv : {}, adv: A.adv && first ? s.insAdv[first] || null : null, date:dateOf(-dN), dN,
+          type:s.insType + (A.live ? ' · ' + s.insLive : ''), topic:s.insTopics[0] || s.insArea || wordsOf(A).one, note:s.insNote.trim(), topics:s.insTopics,
+          subs:s.insSubs.filter(x => subsNow.includes(x)), tags: A.tags.length ? s.insTags : [], src:s.insSource || 'Notes',
+          ...(A.conv ? { conv:s.insConv } : {}), ...(A.areas ? { area:s.insArea } : {}), ...(A.stages ? { stage:s.insStage, prio:s.insPrio } : {}),
+          ...(A.extra && s.insType === 'Third Party' ? { vendor: s.insVendor === 'Other' ? s.insVendorName.trim() || 'Other' : s.insVendor, vendorSub: s.insVendorSub, count: s.insCount } : {}),
+          ...(A.extra && s.insType === 'Conference' ? { conf: s.insConf } : {}) };
+        const fu = s.logFu && first ? { id:id + 1, t:'Follow up with ' + HCPS[first].name, who:first, dueN:1, done:false } : null;
         this.setState(st => ({ ...this.insFresh([]), sheet:null, logged:[...new Set([...st.logged, ...who, ...(st.insHco ? [st.insHco] : [])])],
-          drafts: st.drafts.filter(d => d.id !== st.insDraft),
-          visits:[{ id:Date.now(), who:first, attendees:who, advs: A.adv ? st.insAdv : {}, adv: A.adv && first ? st.insAdv[first] || null : null, date:dateOf(-dN), dN,
-            type:st.insType + (A.live ? ' · ' + st.insLive : ''), topic:st.insTopics[0] || st.insArea || 'Insight', note:st.insNote.trim(), topics:st.insTopics,
-            subs:st.insSubs.filter(x => subsNow.includes(x)), tags: A.tags.length ? st.insTags : [], src:st.insSource || 'Notes',
-            ...(A.conv ? { conv:st.insConv } : {}), ...(A.areas ? { area:st.insArea } : {}), ...(A.stages ? { stage:st.insStage, prio:st.insPrio } : {}),
-            ...(A.extra && st.insType === 'Third Party' ? { vendor: st.insVendor === 'Other' ? st.insVendorName.trim() || 'Other' : st.insVendor, vendorSub: st.insVendorSub, count: st.insCount } : {}),
-            ...(A.extra && st.insType === 'Conference' ? { conf: st.insConf } : {}) }, ...st.visits].sort((a, b) => a.dN - b.dN),
-          fus: st.logFu && first ? [...st.fus, { id:Date.now(), t:'Follow up with ' + HCPS[first].name, who:first, dueN:1, done:false }] : st.fus }));
-        this.toast((A.conv && s.insConv === 'Note' ? 'Note' : 'Insight') + ' saved' + (first ? ' · ' + HCPS[first].name + (who.length > 1 ? ' +' + (who.length - 1) : '') : '') + (A.crm ? ' · synced to ' + A.crm : ''));
+          drafts: st.drafts.filter(d => d.id !== draft), visits:[visit, ...st.visits].sort((a, b) => a.dN - b.dN), fus: fu ? [...st.fus, fu] : st.fus }));
+        this.toast((A.conv && s.insConv === 'Note' ? 'Note' : wordsOf(A).one) + ' saved' + (first ? ' · ' + HCPS[first].name + (who.length > 1 ? ' +' + (who.length - 1) : '') : '') + (A.crm ? ' · synced to ' + A.crm : ''));
+        if (!SERVICE.save) return;
+        // the follow-up is stored once the save is; a save that fails comes back as a draft, follow-up switch and all
+        SERVICE.save(visit, { ...form, media: s.insMedia }).then(r => {
+          if (r && r.id) this.setState(st => ({ visits: st.visits.map(v => v.id === id ? { ...v, id: r.id } : v) }));
+          if (fu) this.storeFu(fu);
+        }, e => {
+          this.setState(st => ({ visits: st.visits.filter(v => v.id !== id), fus: fu ? st.fus.filter(f => f.id !== fu.id) : st.fus, drafts: [{ id: draft || id, form }, ...st.drafts.filter(d => d.id !== draft)] }));
+          this.toast(((e && e.message) || 'That didn’t save') + ' · kept as a draft');
+        });
       },
       insNoFile: !s.insFile, insHasFile: !!s.insFile, insFileName: s.insFile || '',
-      insPickFile: () => this.setState({ insFile: (s.insWho[0] ? HCPS[s.insWho[0]].name.split(' ').pop() : 'Visit') + ' meeting 29 Oct.m4a' }),
-      insClearFile: () => this.setState({ insFile:null }),
+      insPickFile: () => !SERVICE.pick || !SERVICE.transcript ? this.toast('Upload isn’t connected yet · type the ' + wordsOf(this.acct()).one.toLowerCase())
+        : SERVICE.pick((s.insWho[0] ? HCPS[s.insWho[0]].name.split(' ').pop() : 'Visit') + ' meeting ' + dateOf(0) + '.m4a').then(f => f && this.setState({ insFile: f.name, insMedia: f }), e => this.toast((e && e.message) || 'That file didn’t open')),
+      insClearFile: () => this.setState({ insFile:null, insMedia:null }),
       insTranscribe: () => this.finishTranscript('Upload'),
       insRec: s.insRec, insRecIdle: !s.insRec,
       insStartRec: () => this.startRec(),
-      insPauseRec: () => this.setState({ insPaused: !s.insPaused }), insPauseLabel: s.insPaused ? '● Resume' : '❚❚ Pause',
+      insPauseRec: () => { SERVICE.rec(s.insPaused ? 'resume' : 'pause'); this.setState({ insPaused: !s.insPaused }); }, insPauseLabel: s.insPaused ? '● Resume' : '❚❚ Pause',
       insStopRec: () => this.finishTranscript('Recording'),
       insRecState: s.insPaused ? 'Paused' : 'Recording', insRecStateFg: s.insPaused ? '#7A839A' : '#DD6134', insRecPulse: s.insPaused ? 'none' : 'pulseDot 1.2s infinite',
       insRecTime: Math.floor(s.insSecs / 60) + ':' + String(s.insSecs % 60).padStart(2, '0'),
@@ -2093,7 +2471,8 @@ class Component extends DCLogic {
       rangeShowType: rangeType,
       omTypeOpts: TYPES.map(t => ({ label:t, ...chip(s.omType === t), go: () => this.setState({ omType:t }) })),
       omApplyLabel: s.sheetData === 'targets' ? 'Show ' + items.length + ' ' + (items.length === 1 ? unit[0] : unit[1]) : omv.omApplyLabel,
-      hasToast: !!s.toast, toast: s.toast || '',
+      // the app passes loading while an account's data loads (at sign-in, and after Me → Account)
+      hasToast: !!s.toast || !!(this.props || {}).loading, toast: s.toast || ((this.props || {}).loading ? 'Loading ' + (PICKS.find(p => ME.pick ? p.id === ME.pick : p.account === s.account) || A).name + '…' : ''),
       hasUndo: !!s.toastUndo, toastUndo: () => { const u = s.toastUndo; clearTimeout(this._t); this.setState({ toast:null, toastUndo:null }); if (u) u(); }
     };
   }

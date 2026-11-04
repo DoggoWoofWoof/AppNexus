@@ -26,15 +26,17 @@ The app needs the services below. Several already exist in the Field backend tha
 | Rep's book: assigned people and accounts, with signals | Exists for the website. Needs a compact mobile response. |
 | One set of filters for the target list and the opportunity map: near a place (start point and radius), state and city, and account type | **To check.** The design gives Targets the map's filters. When wiring the endpoints, check how many of them both endpoints can share. If the target list can't filter by distance, drop the radius from Targets. |
 | Each customer account's setup: Record on or off, topics, meeting types and extra fields (see the [field app design](../design/)) | **To check.** Insights keeps this in the web client, keyed by email domain. The app should get it from the server, per person where it differs: Kura MSLs get the KOMET topic list, and Stemline's view-only users can't add insights. Third Party meetings need Insights' vendor fields. |
-| Recording a meeting on the phone | **Gap.** Recording has to keep going when the screen locks or the rep switches apps, and the audio has to stay on the phone until it can upload. |
+| Recording a meeting on the phone | Built, not yet tried on a phone: recording keeps going with the screen locked. Insights accounts upload the audio for transcription; Field Pro accounts transcribe on the device, so no audio leaves the phone. |
 | HCP and HCO profile: identity, affiliations, volumes, referrals, network, people | Largely exists, spread across several website calls. One profile call per entity would suit mobile better. |
 | Leakage for an account and its top destinations | Exists |
+| The hospital leakage report (a PDF, built on demand in 3–5 minutes) | Exists, as on the website |
 | Account and HCP briefs | Exists |
-| Ask | Exists. It needs to get faster for voice (see [ask-and-voice.md](ask-and-voice.md)). |
-| Log a visit or note | Exists for the website |
-| Follow-ups with due dates | **Gap.** Today they would live only on the device. |
-| A saved day plan (timed and flexible stops, cancellations) | **Gap.** There is no durable day-plan contract yet. |
-| Road routing and drive times | **Gap.** Needs a routing provider, such as Mapbox, Google Routes or an OSM-based service. |
+| Ask | Exists: the Ask the Field Pro website uses, for every account, with the book or target list the phone holds. It needs to get faster for voice (see [ask-and-voice.md](ask-and-voice.md)). |
+| Summaries of conversations | Exists for Insights accounts: the server writes the summary and a slide deck. For Field Pro accounts the phone writes it. |
+| Log a visit or note | Exists: the app saves to each account's own backend, as its website does. A failed save comes back as a draft. |
+| Follow-ups with due dates | Insights accounts: saved on Insights. Field Pro accounts: saved as a follow-up note; a store with due dates comes with unifying the accounts. |
+| The route (the day plan) | Kept on the phone, as both websites keep it in the browser. The visits themselves reach the server. |
+| Road routing and drive times | Mapbox's driving times, as the website uses, once its public token is set; until then Add places stops by straight-line distance. The route shows the miles between stops and a map of them. |
 | CRM sync | **Not connected.** |
 
 ## Design system
@@ -54,7 +56,7 @@ Lorick's tool suggestions, and where each fits:
 
 1. **Shell.** Expo app with the design's tabs and centre button, theme tokens, large-text support, sign-in, and each account's setup from the server.
 2. **Book and profiles.** Targets search, then HCP and HCO profiles on live data, with loading, empty, offline and error states.
-3. **Planning.** Multi-select, plan review and a saved day plan. This depends on the day-plan contract above.
+3. **Planning.** Add, the route plan, the run sheet and the day summary, with the route kept on the phone.
 4. **Record and Activity.** Recording, insights, notes and follow-ups, kept offline and synced when back online.
 5. **Ask.** Typed and push-to-talk, on the Ask service. Then hands-free.
 6. **Live voice mode,** once the Ask service is fast enough.
