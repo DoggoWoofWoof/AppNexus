@@ -1259,13 +1259,15 @@ const driveMin = (a, b) => Math.hypot(parseFloat(a.x) - parseFloat(b.x), parseFl
 // a place the app couldn't put on the map has lat null; the sample's places have no lat at all
 const placed = h => !!h && h.lat !== null && h.x != null;
 const onEarth = h => h.lat != null && h.lng != null;
+const earthMiles = (a, b) => {
+  const r = d => d * Math.PI / 180, dLat = r(b.lat - a.lat), dLng = r(b.lng - a.lng);
+  return 7917.5 * Math.asin(Math.sqrt(Math.sin(dLat / 2) ** 2 + Math.cos(r(a.lat)) * Math.cos(r(b.lat)) * Math.sin(dLng / 2) ** 2));
+};
 const milesApart = (a, b) => {
   if (!placed(a) || !placed(b)) return '';
   let m;
-  if (onEarth(a) && onEarth(b)) {
-    const r = d => d * Math.PI / 180, dLat = r(b.lat - a.lat), dLng = r(b.lng - a.lng);
-    m = 7917.5 * Math.asin(Math.sqrt(Math.sin(dLat / 2) ** 2 + Math.cos(r(a.lat)) * Math.cos(r(b.lat)) * Math.sin(dLng / 2) ** 2));
-  } else m = Math.hypot(parseFloat(a.x) - parseFloat(b.x), parseFloat(a.y) - parseFloat(b.y)) * (AREA.miPerPct || 0.08);
+  if (onEarth(a) && onEarth(b)) m = earthMiles(a, b);
+  else m = Math.hypot(parseFloat(a.x) - parseFloat(b.x), parseFloat(a.y) - parseFloat(b.y)) * (AREA.miPerPct || 0.08);
   return (m < 10 ? Math.round(m * 10) / 10 : Math.round(m)) + ' mi';
 };
 const TERRS = [
@@ -1682,7 +1684,17 @@ class Component extends DCLogic {
   }
   groups() { return this.groupsOf(this.state.route); }
   // the day starts at the territory's centre; an account with no territory (or no map) has no start
-  startKnown() { return !!this.acct().fieldPro && TERRS.length > 0; }
+  startKnown() { return !!this.acct().fieldPro && (!!AREA.here || TERRS.length > 0); }
+  // where "Near a place" measures from: the territory's centre, the phone's location, an account or the first stop
+  startPoint() {
+    const o = this.state.omStart;
+    if (o === 'My location') return AREA.here || null;
+    if (o === AREA.centre) return AREA.centreAt || null;
+    const h = Object.values(HCOS).find(x => x.name === o);
+    return h && onEarth(h) ? h : null;
+  }
+  // miles from that start to an account on the earth, else the account's own figure (from the default start)
+  milesFrom(h, fallback) { const a = this.startPoint(); return a && h && onEarth(h) ? earthMiles(a, h) : fallback; }
   // the route's stops on a small map, fitted to the stops (and the start): one scale both ways, so it keeps their shape
   routeMapOf(groups) {
     const pins = groups.map((g, i) => ({ n: i + 1, h: HCOS[g.hco] })).filter(o => placed(o.h));
@@ -1886,7 +1898,7 @@ class Component extends DCLogic {
     const s = this.state;
     const near = s.omMode === 'near';
     const first = s.route[0] ? this.stopOf(s.route[0]) : null, firstStop = first ? (HCOS[first.hco] || NO_HCO).name : null;
-    const src = (s.omKind === 'acc' ? OM_ACC : OM_DOC).filter(r => this.areaOk(r.dist, r.boro || AREA.city) && (s.omKind !== 'acc' || this.typeOk(r.type))).slice().sort((a, b) => b.v - a.v);
+    const src = (s.omKind === 'acc' ? OM_ACC : OM_DOC).filter(r => this.areaOk(this.milesFrom(s.omKind === 'acc' ? HCOS[r.id] : HCOS[(HCPS[r.id] || {}).hco], r.dist), r.boro || AREA.city) && (s.omKind !== 'acc' || this.typeOk(r.type))).slice().sort((a, b) => b.v - a.v);
     const typeOn = s.omKind === 'acc' && s.omType !== 'All types';
     const total = src.reduce((t, r) => t + r.v, 0);
     const zipMap = {};
@@ -1932,7 +1944,7 @@ class Component extends DCLogic {
         select: () => on ? this.setState({ omGroup:'all', omSel:z.items[0].id }) : this.setState({ omSel:'z:' + z.zip }) }; }),
       shRange: s.sheet === 'range',
       omModes: [['near','Near a place'], ['place','State & city']].map(([k, label]) => ({ label, ...segOf(s.omMode === k), go: () => this.setState({ omMode:k }) })),
-      omStarts: [...([AREA.centre,'My location',firstStop].includes(s.omStart) ? [] : [[s.omStart, 'The account you came from']]), [AREA.centre,'Your territory centre'], ['My location','Using GPS'], ...(firstStop ? [[firstStop,'Your first stop today']] : [])].map(([label, meta]) => { const on = s.omStart === label; return { label, meta, check: on ? '✓' : '', bg: on ? '#EDF1FB' : '#fff', bd: on ? '#2447C4' : '#E1E6F0', go: () => this.setState({ omStart:label }) }; }),
+      omStarts: [...([AREA.centre,'My location',firstStop].includes(s.omStart) ? [] : [[s.omStart, 'The account you came from']]), [AREA.centre,'Your territory centre'], ...(AREA.here ? [['My location','Using GPS']] : []), ...(firstStop ? [[firstStop,'Your first stop today']] : [])].map(([label, meta]) => { const on = s.omStart === label; return { label, meta, check: on ? '✓' : '', bg: on ? '#EDF1FB' : '#fff', bd: on ? '#2447C4' : '#E1E6F0', go: () => this.setState({ omStart:label }) }; }),
       omRadii: [2, 5, 10].map(r => ({ label:r + ' mi', ...chipOf(s.omRadius === r), go: () => this.setState({ omRadius:r }) })),
       omCities: ['All cities', ...AREA.cities].map(c => ({ label:c, ...chipOf(s.omCity === c), go: () => this.setState({ omCity:c }) })),
       omApplyLabel: 'Show ' + src.length + ' ' + noun[1]
@@ -1982,7 +1994,7 @@ class Component extends DCLogic {
             : [{ k:'LAST MET', v:this.lastOf(p.id).label, c:'#0B1220' }, { k:'INSIGHTS', v:String(this.convCount(p.id)), c:'#22409F' }, this.fuMetric(p.id)] };
       });
     } else if (s.kind === 'hco') {
-      items = Object.values(HCOS).filter(h => s.scope === 'explore' || h.mine).filter(h => this.areaOk(h.distN, h.boro) && this.typeOk(h.type)).filter(h => !ql || h.name.toLowerCase().includes(ql)).filter(specOk);
+      items = Object.values(HCOS).filter(h => s.scope === 'explore' || h.mine).filter(h => this.areaOk(this.milesFrom(h, h.distN), h.boro) && this.typeOk(h.type)).filter(h => !ql || h.name.toLowerCase().includes(ql)).filter(specOk);
       const key = { Opportunity:'oppN', Volume:'volN', Growth:'yoyN', Distance:'distN' }[s.sort];
       items.sort((a, b) => s.sort === 'Relevance' ? this.relevance(b.id) - this.relevance(a.id) : s.sort === 'Distance' ? a[key] - b[key] : b[key] - a[key]);
       items = items.map(h => {
@@ -1993,7 +2005,7 @@ class Component extends DCLogic {
           metrics:[{ k:'OPPORTUNITY', v:h.opp, c:'#22409F' }, { k:'PROCEDURES', v:h.proc, c:'#0B1220' }, { k:'YOY', v:h.yoy, c:'#1C7A4E' }] };
       });
     } else {
-      items = Object.values(HCPS).filter(p => s.scope === 'explore' || p.mine).filter(p => this.areaOk(p.distN, HCOS[p.hco].boro)).filter(p => !ql || p.name.toLowerCase().includes(ql) || HCOS[p.hco].name.toLowerCase().includes(ql)).filter(specOk);
+      items = Object.values(HCPS).filter(p => s.scope === 'explore' || p.mine).filter(p => this.areaOk(this.milesFrom(HCOS[p.hco], p.distN), HCOS[p.hco].boro)).filter(p => !ql || p.name.toLowerCase().includes(ql) || HCOS[p.hco].name.toLowerCase().includes(ql)).filter(specOk);
       const key = { Opportunity:'claimsN', Volume:'claimsN', Growth:'yoyN', Distance:'distN' }[s.sort];
       items.sort((a, b) => s.sort === 'Relevance' ? this.relevance(b.id) - this.relevance(a.id) : s.sort === 'Distance' ? a[key] - b[key] : b[key] - a[key]);
       items = items.map(p => {
@@ -2209,7 +2221,7 @@ class Component extends DCLogic {
       toTargets: () => this.setTab('targets'),
       routeDate: dayFull(s.day === 'tomorrow' ? 1 : 0), hasTomorrow: s.tomorrow.length > 0, routeIsToday: viewKey === 'route', canStart: viewKey === 'route' && routeN > 0,
       daySegs: [['today','Today'], ['tomorrow','Tomorrow']].map(([k, label]) => ({ label, ...seg(s.day === k), go: () => this.setState({ day:k }) })),
-      routeFrom: this.startKnown() && s.territory ? ' · from ' + s.territory : '',
+      routeFrom: this.startKnown() && (AREA.here || s.territory) ? ' · from ' + (AREA.here ? 'your location' : s.territory) : '',
       ...routeMap,
       routeGroups: viewGroups.map((g, i) => ({ n: i + 1, name: HCOS[g.hco].name, dist: i ? milesApart(HCOS[viewGroups[i - 1].hco], HCOS[g.hco]) : this.startKnown() ? milesApart(START, HCOS[g.hco]) : '', rows: g.ids.map(id => { const st = this.stopOf(id); return { name: st.name, spec: st.spec, time: TIMES[id] || 'Flexible', remove: () => this.toggleRoute(id, viewKey) }; }) })),
       startRun: () => { this.setState({ runIdx:0, runDone:[], runSkip:[] }); this.replaceTop('run'); },
