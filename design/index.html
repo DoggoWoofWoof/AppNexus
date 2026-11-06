@@ -107,10 +107,10 @@ input,textarea,button{font-family:inherit}
                 </sc-for>
               </div>
             </sc-if>
-            <div style="display:flex;gap:7px;overflow-x:auto;margin:0 -18px;padding:0 18px;">
+            <div style="display:flex;align-items:center;gap:7px;">
               <sc-if value="{{ isFieldPro }}" hint-placeholder-val="{{ true }}"><sc-for list="{{ kindChips }}" as="c" hint-placeholder-count="2">
                   <button onClick="{{ c.go }}" style="flex:0 0 auto;padding:8px 13px;border-radius:999px;border:1px solid {{ c.bd }};background:{{ c.bg }};color:{{ c.fg }};font-size:13px;font-weight:650;cursor:pointer;">{{ c.label }}</button>
-              </sc-for></sc-if>
+              </sc-for></sc-if><div style="display:flex;flex:1;min-width:0;gap:7px;overflow-x:auto;">
               <button onClick="{{ openTerritory }}" style="flex:0 0 auto;display:flex;align-items:center;gap:6px;border:1px solid #D7DEEC;background:#fff;border-radius:999px;padding:8px 12px;font-size:13px;font-weight:650;color:#0B1220;cursor:pointer;white-space:nowrap;"><span style="width:7px;height:7px;border-radius:50%;background:#2447C4;"></span>{{ territoryChip }}<span style="color:#7A839A;">▾</span></button>
               <sc-if value="{{ isFieldPro }}" hint-placeholder-val="{{ true }}">
                 <span style="flex:0 0 1px;background:#D7DEEC;margin:6px 2px;"></span>
@@ -120,7 +120,7 @@ input,textarea,button{font-family:inherit}
                 <sc-if value="{{ showTargetSort }}" hint-placeholder-val="{{ true }}"><button onClick="{{ openFilter }}" style="flex:0 0 auto;padding:8px 12px;border-radius:999px;border:1px solid #D7DEEC;background:#fff;color:#0B1220;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;">{{ groupsChip }}</button></sc-if>
               </sc-if>
               <sc-if value="{{ showTargetSort }}" hint-placeholder-val="{{ true }}"><button onClick="{{ openFilter }}" style="flex:0 0 auto;padding:8px 12px;border-radius:999px;border:1px solid #D7DEEC;background:#fff;color:#0B1220;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;"><span style="color:#7A839A;">Sort</span> {{ sortNow }} ▾</button></sc-if>
-            </div>
+              </div></div>
             <div style="display:flex;align-items:baseline;justify-content:space-between;padding:2px 2px 0;">
               <span style="font-size:13px;font-weight:650;color:#3C4557;">{{ targetCount }}</span>
               <span style="font-size:12px;color:#7A839A;">{{ targetHint }}</span>
@@ -1900,7 +1900,7 @@ class Component extends DCLogic {
     };
   }
   // the app passes a notice to show once the screens open (the account switch's, after the new account loads)
-  componentDidMount() { const n = (this.props || {}).notice; if (n) this.toast(n); }
+  componentDidMount() { const n = (this.props || {}).notice; if (n) this.toast(n); this.loadExplore(); }
   toast(msg, undo) { clearTimeout(this._t); this.setState({ toast: msg, toastUndo: undo || null }); this._t = setTimeout(() => this.setState({ toast: null, toastUndo: null }), undo ? 4000 : 2000); }
   // the one Add: a visit goes where it adds the least driving; a doctor at a hospital already on the route joins that stop
   hcoOf(id) { return HCPS[id] ? HCPS[id].hco : id; }
@@ -2517,9 +2517,11 @@ class Component extends DCLogic {
     const hPeople = H.profilePeople || (WORKSPACE.companyId ? [] : H.hcps.map(id => ({ id,count:HCPS[id]?.claimsN || 0 })).sort((a,b) => b.count - a.count));
     const hPeopleLimit = s.hPeopleLimit || 24;
     const hProfile = { ...H,...H.profileLeak,share:H.profileMarket?.share ?? H.share };
+    const hVolume = H.metric === 'PROCEDURES' ? H.proc : H.profileVolume ?? H.proc;
+    const hGrowth = H.metric === 'PROCEDURES' ? H.yoy : H.profileYoy ?? H.yoy;
     const hLeakPeriod = H.profileLeak ? (H.profileLeak.since ? 'since ' + H.profileLeak.since : 'all years on file') : 'since 2022';
     const hcoStats = WORKSPACE.drugAccount ? [] : [
-      { k:H.metric || WORKSPACE.metric || 'PROCEDURES',v:H.proc,s:has(H.yoy) ? H.yoy + ' vs 2024' : '2025',c:'#0B1220' },
+      { k:H.metric || WORKSPACE.metric || 'PROCEDURES',v:hVolume,s:has(hGrowth) ? hGrowth + ' vs 2024' : '2025',c:'#0B1220' },
       { k:'LEFT THE ACCOUNT',v:hProfile.left,s:'all cohort codes · 2025',c:'#A94D1B' },
       { k:'OPPORTUNITY',v:H.opp,s:'billed charges · 2025',c:'#22409F' },
       { k:'IN-RADIUS SHARE',v:hProfile.share,s:'within ' + (H.profileMarket?.miles || 100) + ' miles',c:'#0B1220' },
@@ -2620,7 +2622,7 @@ class Component extends DCLogic {
         act('✳', 'Ask', () => this.ask('Brief me on ' + H.name))
       ],
       hcoStats,hcoSections,
-      hHcps: hPeople.slice(0,hPeopleLimit).flatMap(({id,count}) => { const p = HCPS[id]; return p ? [{ name:p.name,photo:p.photo,npi:p.id,ini:p.ini,meta:[p.spec,count.toLocaleString() + ' ' + (WORKSPACE.drugAccount ? 'fills since 2022' : (WORKSPACE.hcpMetric || 'claims').toLowerCase())].filter(Boolean).join(' · '),...addSt(s.route.includes(id)),open:() => this.go('hcp',id),toggle:() => this.toggleRoute(id,'route',H.id) }] : []; }),
+      hHcps: hPeople.slice(0,hPeopleLimit).flatMap(({id,count}) => { const p = HCPS[id]; return p ? [{ name:p.name,photo:p.photo,npi:p.id,ini:p.ini,meta:[p.spec,count.toLocaleString() + ' ' + (H.profilePeopleBasis || (WORKSPACE.drugAccount ? 'fills since 2022' : (WORKSPACE.hcpMetric || 'claims').toLowerCase()))].filter(Boolean).join(' · '),...addSt(s.route.includes(id)),open:() => this.go('hcp',id),toggle:() => this.toggleRoute(id,'route',H.id) }] : []; }),
 
       // hcp
       p: { ...P, spec:pTarget?.specialty || P.spec,last:pTarget?.lastMeeting || pLast.label,hcoName:pTarget?.site || (HCOS[P.hco] || NO_HCO).name,
