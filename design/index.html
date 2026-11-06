@@ -293,6 +293,27 @@ input,textarea,button{font-family:inherit}
                   </sc-for>
                 </div>
                 </sc-if>
+                <sc-if value="{{ pVisitBrief }}" hint-placeholder-val="{{ false }}">
+                  <div style="background:#fff;border:1px solid #D9E2F6;border-radius:16px;overflow:hidden;">
+                    <div style="display:flex;flex-direction:column;gap:7px;padding:14px 15px;background:#F1F5FE;">
+                      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                        <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.08em;color:#fff;background:#2447C4;padding:3px 7px;border-radius:6px;">AI BRIEF</span>
+                        <span style="font-size:12px;color:#5B6478;">Read this first</span>
+                      </div>
+                      <span style="font-size:11.5px;color:#5B6478;">{{ pBriefBasis }}</span>
+                      <sc-if value="{{ pBriefMessage }}" hint-placeholder-val="{{ false }}"><span style="font-size:13px;color:#3C4557;">{{ pBriefMessage }}</span></sc-if>
+                      <sc-if value="{{ pCanWriteBrief }}" hint-placeholder-val="{{ false }}"><button onClick="{{ pWriteBrief }}" style="align-self:flex-start;padding:7px 0;border:0;background:transparent;font-size:13px;font-weight:700;color:#2447C4;cursor:pointer;">{{ pBriefAction }}</button></sc-if>
+                    </div>
+                    <sc-for list="{{ pBriefSections }}" as="section" hint-placeholder-count="3">
+                      <div style="display:flex;flex-direction:column;gap:8px;padding:12px 15px;border-top:1px solid #EEF1F7;">
+                        <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.08em;color:#5B6478;">{{ section.title }}</span>
+                        <sc-if value="{{ section.text }}" hint-placeholder-val="{{ true }}"><span style="font-family:'Source Serif 4',Georgia,serif;font-size:19px;line-height:1.32;color:#0B1220;">{{ section.text }}</span></sc-if>
+                        <sc-for list="{{ section.points }}" as="point" hint-placeholder-count="2"><div style="display:flex;flex-direction:column;gap:2px;font-size:13px;line-height:1.5;color:#1B2333;"><div style="font-weight:700;">{{ point.lead }}</div><div>{{ point.text }}</div></div></sc-for>
+                      </div>
+                    </sc-for>
+                    <sc-if value="{{ showDraftEmail }}" hint-placeholder-val="{{ true }}"><button onClick="{{ pEmail }}" style="margin:0 15px 14px;padding:10px;border:1px solid #D7DEEC;border-radius:11px;background:#fff;font-size:12.5px;font-weight:650;color:#22409F;cursor:pointer;">Email to send</button></sc-if>
+                  </div>
+                </sc-if>
                 <sc-if value="{{ showBrief }}" hint-placeholder-val="{{ true }}">
                 <div style="background:#fff;border:1px solid #D9E2F6;border-radius:16px;overflow:hidden;">
                   <div style="padding:14px 15px;background:linear-gradient(180deg,#F1F5FE 0%,#FFFFFF 100%);">
@@ -307,6 +328,25 @@ input,textarea,button{font-family:inherit}
                   </div>
                 </div>
                 </sc-if>
+                <sc-for list="{{ pPanels }}" as="panel" hint-placeholder-count="0">
+                  <div style="background:#fff;border:1px solid #E1E6F0;border-radius:16px;overflow:hidden;">
+                    <div style="display:flex;flex-direction:column;gap:4px;padding:13px 14px;">
+                      <span style="font-size:15px;font-weight:700;color:#0B1220;">{{ panel.title }}</span>
+                      <sc-if value="{{ panel.detail }}" hint-placeholder-val="{{ false }}"><span style="font-size:11.5px;color:#5B6478;">{{ panel.detail }}</span></sc-if>
+                      <sc-if value="{{ panel.message }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;color:#5B6478;">{{ panel.message }}</span></sc-if>
+                    </div>
+                    <sc-for list="{{ panel.rows }}" as="row" hint-placeholder-count="2">
+                      <div style="display:flex;flex-direction:column;gap:3px;padding:9px 14px;border-top:1px solid #F0F3F8;">
+                        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
+                          <sc-if value="{{ row.linked }}" hint-placeholder-val="{{ false }}"><button onClick="{{ row.open }}" style="flex:1;padding:0;border:0;background:transparent;text-align:left;cursor:pointer;font-size:13px;font-weight:650;color:#2447C4;">{{ row.label }}</button></sc-if>
+                          <sc-if value="{{ row.plain }}" hint-placeholder-val="{{ true }}"><span style="flex:1;font-size:13px;font-weight:650;color:#1B2333;">{{ row.label }}</span></sc-if>
+                          <span style="max-width:70%;font-size:13px;color:#3C4557;text-align:right;">{{ row.value }}</span>
+                        </div>
+                        <sc-if value="{{ row.detail }}" hint-placeholder-val="{{ false }}"><span style="font-size:11.5px;color:#5B6478;">{{ row.detail }}</span></sc-if>
+                      </div>
+                    </sc-for>
+                  </div>
+                </sc-for>
                 <sc-if value="{{ showContact }}" hint-placeholder-val="{{ true }}">
                 <div style="background:#fff;border:1px solid #E1E6F0;border-radius:16px;overflow:hidden;">
                   <sc-if value="{{ showPhone }}" hint-placeholder-val="{{ true }}"><button onClick="{{ pCall }}" style="display:flex;align-items:center;gap:11px;width:100%;padding:13px 14px;border:0;border-bottom:1px solid #F0F3F8;background:#fff;cursor:pointer;text-align:left;"><span style="font-size:11px;color:#7A839A;width:44px;">Phone</span><span style="flex:1;font-size:14px;color:#2447C4;font-weight:600;">{{ p.phone }}</span><span style="color:#C3CAD8;">›</span></button></sc-if>
@@ -911,21 +951,29 @@ input,textarea,button{font-family:inherit}
             </sc-if>
 
             <sc-if value="{{ shEmail }}" hint-placeholder-val="{{ false }}">
-              <div style="padding:14px 18px 0;display:flex;flex-direction:column;gap:10px;">
-                <div style="display:flex;gap:10px;font-size:13.5px;padding:0 2px;"><span style="color:#7A839A;width:56px;">To</span><span style="font-weight:600;">{{ ep.email }}</span></div>
-                <sc-if value="{{ emailBusy }}" hint-placeholder-val="{{ false }}"><div style="border:1px solid #D7DEEC;border-radius:14px;padding:22px 13px;background:#F7F9FC;font-size:13.5px;color:#5B6478;">Writing the draft…</div></sc-if>
-                <sc-if value="{{ emailFailed }}" hint-placeholder-val="{{ false }}"><div style="border:1px solid #F0D3C2;border-radius:14px;padding:14px 13px;background:#FDF3EE;font-size:13.5px;line-height:1.5;color:#A94D1B;">{{ emailError }}</div></sc-if>
+              <div style="padding:14px 18px 0;display:flex;flex-direction:column;gap:12px;">
+                <div style="font-size:13px;line-height:1.45;color:#5B6478;">Choose a purpose for {{ emailWho }}. Field Pro uses their profile and research to write a draft you can edit.</div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.09em;color:#7A839A;">PURPOSE</div>
+                <button onClick="{{ emailPick }}" disabled="{{ emailLocked }}" aria-label="Purpose" style="display:flex;align-items:center;justify-content:space-between;padding:12px;border:1px solid #D7DEEC;border-radius:12px;background:#F7F9FC;color:#0B1220;font-weight:650;cursor:pointer;"><span>{{ emailPurpose }}</span><span>▾</span></button>
+                <sc-if value="{{ emailPicking }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;gap:5px;"><sc-for list="{{ emailPurposes }}" as="o" hint-placeholder-count="4">
+                  <button onClick="{{ o.go }}" aria-label="{{ o.label }}" style="padding:10px 12px;text-align:left;border:1px solid {{ o.bd }};border-radius:10px;background:{{ o.bg }};color:{{ o.fg }};font-size:13.5px;font-weight:600;cursor:pointer;">{{ o.label }}</button>
+                </sc-for></div></sc-if>
+                <sc-if value="{{ emailIsCustom }}" hint-placeholder-val="{{ false }}"><input value="{{ emailCustom }}" onChange="{{ onEmailCustom }}" readonly="{{ emailLocked }}" maxlength="200" aria-label="Your own purpose" placeholder="Enter your own purpose" style="border:1px solid #D7DEEC;border-radius:12px;padding:12px;font-size:14px;background:#F7F9FC;outline:0;"></sc-if>
+                <button onClick="{{ writeEmail }}" disabled="{{ emailWriteOff }}" style="padding:13px;border:0;border-radius:12px;background:{{ emailWriteBg }};color:#fff;font-size:14px;font-weight:700;cursor:pointer;">{{ emailWriteLabel }}</button>
+                <sc-if value="{{ emailStatus }}" hint-placeholder-val="{{ true }}"><div style="border:1px solid #D7DEEC;border-radius:13px;padding:12px;background:#F7F9FC;font-size:13px;line-height:1.45;color:#5B6478;">{{ emailStatus }}</div></sc-if>
+                <sc-if value="{{ emailError }}" hint-placeholder-val="{{ false }}"><div style="border:1px solid #F0D3C2;border-radius:13px;padding:12px;background:#FDF3EE;font-size:13px;line-height:1.45;color:#A94D1B;">{{ emailError }}</div></sc-if>
                 <sc-if value="{{ emailReady }}" hint-placeholder-val="{{ true }}">
                   <div style="display:flex;flex-direction:column;gap:10px;">
-                    <div style="display:flex;gap:10px;font-size:13.5px;padding:0 2px;"><span style="color:#7A839A;width:56px;">Subject</span><span style="flex:1;min-width:0;font-weight:600;">{{ emailSubject }}</span></div>
-                    <div style="border:1px solid #D7DEEC;border-radius:14px;padding:12px 13px;background:#F7F9FC;font-size:14px;line-height:1.55;color:#1B2333;white-space:pre-wrap;">{{ emailBody }}</div>
+                    <sc-for list="{{ emailBlanks }}" as="b" hint-placeholder-count="1"><div style="display:flex;flex-direction:column;gap:4px;"><div style="font-size:12px;color:#5B6478;">{{ b.label }}</div><input value="{{ b.value }}" onChange="{{ b.change }}" readonly="{{ emailLocked }}" aria-label="{{ b.label }}" placeholder="Fill in" style="border:1px solid #B9C3D8;border-radius:10px;padding:10px;font-size:14px;background:#F7F9FC;outline:0;"></div></sc-for>
+                    <div style="font-size:12px;color:#5B6478;">Subject</div>
+                    <input value="{{ emailSubject }}" onChange="{{ onEmailSubject }}" readonly="{{ emailLocked }}" aria-label="Email subject" style="border:1px solid #D7DEEC;border-radius:12px;padding:11px;font-size:14px;background:#F7F9FC;outline:0;color:#0B1220;">
+                    <div style="font-size:12px;color:#5B6478;">Email</div>
+                    <textarea value="{{ emailBody }}" onChange="{{ onEmailBody }}" readonly="{{ emailLocked }}" aria-label="Email message" style="min-height:160px;border:1px solid #D7DEEC;border-radius:12px;padding:11px;font-size:14px;line-height:1.5;background:#F7F9FC;outline:0;color:#0B1220;"></textarea>
+                    <div style="font-size:12px;line-height:1.4;color:#5B6478;">{{ emailHandoff }}</div>
+                    <div style="display:flex;gap:8px;"><button onClick="{{ copyDraft }}" disabled="{{ emailCopyOff }}" style="flex:1;padding:11px;border:0;border-radius:11px;background:{{ emailCopyBg }};color:#fff;font-size:13px;font-weight:650;cursor:pointer;">Copy email</button><button onClick="{{ openDraft }}" disabled="{{ emailOpenOff }}" style="flex:1;padding:11px;border:1px solid #D7DEEC;border-radius:11px;background:#fff;color:{{ emailOpenColor }};font-size:13px;font-weight:650;cursor:pointer;">Open in email</button></div>
+                    <sc-if value="{{ emailEdited }}" hint-placeholder-val="{{ false }}"><button onClick="{{ resetEmail }}" style="align-self:flex-start;padding:3px 0;border:0;background:none;color:#22409F;font-size:13px;font-weight:650;cursor:pointer;">Reset to original</button></sc-if>
                   </div>
                 </sc-if>
-                <div style="font-size:11.5px;color:#7A839A;">Draft preview — nothing is sent.</div>
-                <div style="display:flex;gap:8px;">
-                  <button onClick="{{ closeSheet }}" style="flex:1;padding:14px;border:1px solid #D7DEEC;border-radius:13px;background:#fff;font-size:14px;font-weight:650;cursor:pointer;">Cancel</button>
-                  <button onClick="{{ copyDraft }}" style="flex:2;padding:14px;border:0;border-radius:13px;background:#2447C4;color:#fff;font-size:14.5px;font-weight:700;cursor:pointer;">{{ emailBtn }}</button>
-                </div>
               </div>
             </sc-if>
 
@@ -1370,7 +1418,13 @@ const SERVICE = {
   speak: text => new Promise(r => setTimeout(r, Math.min(6000, 1200 + text.length * 40))),
   hush: () => {},
   // an email to a doctor, { subject, body }; the stand-in writes it from the brief, as the sample does
-  email: (who, sample) => later(sample()),
+  email: {
+    purposes:[['sales_visit','Ottava sales visit'],['meeting','Ask for a meeting'],['follow_up','Follow up after a visit'],['evidence','Share clinical evidence'],['event','Invite to a demo or event'],['custom','Your own purpose…']].map(([id,label]) => ({ id,label })),
+    customLimit:200, read:() => later(null), keep:() => later(null), recipient:who => HCPS[who]?.email || '',
+    prepare:(editor) => ({ editor,fields:[],missing:[],canUse:!!editor.subject.trim() && !!editor.body.trim(),copy:'Subject: ' + editor.subject + '\n\n' + editor.body,href:'mailto:' }),
+    open:() => later(null),
+    write:(who, selection, wanted, sample) => later(sample())
+  },
   // driving minutes between places (the start, then stops), as rows of a matrix; the stand-in guesses from the map
   drive: points => Promise.resolve(points.map(a => points.map(b => driveMin(a, b))))
 };
@@ -1493,7 +1547,7 @@ class Component extends DCLogic {
     const na = (this.props || {}).account;
     if (na !== this._pa) { this._pa = na; if (ACCOUNTS[na]) this.setAccount(na); }
   }
-  componentWillUnmount() { this._exploreKey = null; clearTimeout(this._exploreTimer); if (SERVICE.hush) SERVICE.hush(); clearTimeout(this._t); clearTimeout(this._a); clearTimeout(this._m); clearTimeout(this._s); clearInterval(this._i); this._at.forEach(clearTimeout); }
+  componentWillUnmount() { this.finishEmail(); this._exploreKey = null; clearTimeout(this._exploreTimer); if (SERVICE.hush) SERVICE.hush(); clearTimeout(this._t); clearTimeout(this._a); clearTimeout(this._m); clearTimeout(this._s); clearInterval(this._i); this._at.forEach(clearTimeout); }
 
   exploreRequest() {
     const s = this.state;
@@ -1516,13 +1570,28 @@ class Component extends DCLogic {
     if (key === this._exploreKey) return;
     clearTimeout(this._exploreTimer);
     this._exploreKey = key;
-    if (!query || this.state.explorePage?.key === key) return;
-    const wanted = () => this._exploreKey === key;
+    const visit = this._exploreVisit = {};
+    if (!query) return;
+    const wanted = () => this._exploreKey === key && this._exploreVisit === visit;
+    const figures = page => {
+      if (!wanted()) return;
+      SERVICE.exploreFigures?.(query.request,page,wanted,(id,figure) => this.setState(({ explorePage }) => {
+        if (explorePage?.key !== key || !wanted()) return null;
+        return { explorePage:{ ...explorePage,figures:{ ...explorePage.figures,[id]:{ ...explorePage.figures[id],...figure } } } };
+      }));
+    };
+    if (this.state.explorePage?.key === key && !this.state.explorePage.failed) {
+      figures(this.state.explorePage);
+      return;
+    }
     const read = () => {
       const explore = SERVICE.explore;
       if (!explore || !wanted()) return;
       explore(query.request, wanted).then(
-        page => { if (wanted()) this.setState({ explorePage:{ ...page,key } }); },
+        page => {
+          if (!wanted()) return;
+          this.setState({ explorePage:{ ...page,key,figures:{} } }, () => figures(page));
+        },
         () => { if (wanted()) this.setState({ explorePage:{ key,failed:true } }); }
       );
     };
@@ -1650,10 +1719,10 @@ class Component extends DCLogic {
     return v ? rated(v) : (HCPS[id] || NO_HCP).adv;
   }
   // one flag per person: a follow-up first, then fastest growing (Field Pro), then not met yet
-  flagOf(id) {
+  flagOf(id, growth = (HCPS[id] || NO_HCP).yoyN) {
     const f = this.state.fus.find(x => x.who === id && !x.done);
     if (f) return f.dueN < 0 ? { label:'Follow-up overdue', bg:TONES.orange[0], fg:TONES.orange[1] } : { label:'Follow-up due ' + (f.dueN <= 1 ? dayOf(f.dueN).toLowerCase() : dayFull(f.dueN)), bg:TONES.blue[0], fg:TONES.blue[1] };
-    if (this.acct().fieldPro && (HCPS[id] || NO_HCP).yoyN >= 15) return { label:'Fastest growing', bg:TONES.green[0], fg:TONES.green[1] };
+    if (this.acct().fieldPro && growth >= 15) return { label:'Fastest growing', bg:TONES.green[0], fg:TONES.green[1] };
     if (this.lastOf(id).n >= 999) return { label:'Not met yet', bg:'#EEF1F7', fg:'#3C4557' };
     return null;
   }
@@ -1724,17 +1793,104 @@ class Component extends DCLogic {
     if (!SERVICE.open) return this.toast('Opening links isn’t connected yet');
     SERVICE.open(url).then(null, () => this.toast('That didn’t open · try again'));
   }
-  // the email sheet: the app's email writer drafts it; the stand-in writes it from the brief
+  // Field Pro writes after the rep picks a purpose. The design preview has its own sample.
   sampleEmail(id) {
     const P = HCPS[id] || NO_HCP, open = this.acct().fieldPro ? P.open : P.iOpen;
     return { subject: 'Follow-up · ' + P.spec, body: 'Hello ' + P.first + ',\n\n' + open + ' I’d value 15 minutes to walk through it — would ' + P.dayL + ' work?\n\nBest,\n' + ME.name.split(' ')[0] };
   }
   openEmail(id) {
-    this.sheet('email', id);
-    if (!SERVICE.email) return this.setState({ email: { who:id, subject:'', body:'', busy:false, error:'Email drafts aren’t connected yet' } });
-    this.setState({ email: { who:id, subject:'', body:'', busy:true, error:'' } });
-    const mine = r => this.state.email && this.state.email.who === id && this.state.email.busy && this.setState({ email: { who:id, busy:false, subject:'', body:'', error:'', ...r } });
-    SERVICE.email(id, () => this.sampleEmail(id)).then(d => mine({ subject: d.subject || '', body: d.body || '' }), e => mine({ error: (e && e.message) || 'The email couldn’t be written · try again' }));
+    const service = SERVICE.email;
+    if (!service || !HCPS[id]) return this.toast('Email writing isn’t available for this profile');
+    this.finishEmail();
+    const ticket = this._emailTicket = {};
+    const current = this.state.email;
+    if (current?.who === id && current.original) {
+      return this.setState({ sheet:'email',sheetData:id,email:{ ...current,busy:false,picking:false,error:'' } });
+    }
+    const start = { who:id,purpose:service.purposes[0].id,custom:'',fills:{},original:null,draft:null,restoring:true,busy:false,picking:false,error:'',missing:[] };
+    this.setState({ sheet:'email',sheetData:id,email:start });
+    const restore = saved => {
+      if (this._emailTicket !== ticket) return;
+      const restored = saved && service.purposes.some(p => p.id === saved.purpose) ? saved : {};
+      this.setState({ email:{ ...start,...restored,restoring:false } });
+    };
+    service.read(id).then(restore, () => restore(null));
+  }
+  finishEmail() {
+    this._emailTicket = null;
+    clearTimeout(this._emailTimer);
+    this._emailSave?.();
+    this._emailSave = null;
+  }
+  changeEmail(next, keep = false) {
+    this.setState({ email:next });
+    const service = SERVICE.email;
+    if (!keep || !next.original || !service) return;
+    clearTimeout(this._emailTimer);
+    const { who, purpose, custom, original, draft, fills } = next;
+    const changed = draft.subject !== original.subject || draft.body !== original.body || Object.values(fills).some(v => v.trim());
+    this._emailSave = () => { service.keep(who, changed ? { purpose,custom,original,draft,fills } : null).catch(() => {}); };
+    this._emailTimer = setTimeout(() => { this._emailSave?.(); this._emailSave = null; }, 400);
+  }
+  writeEmail() {
+    const e = this.state.email, service = SERVICE.email, ticket = this._emailTicket;
+    if (!e || !service || !ticket || e.busy || e.restoring || this._writingEmail === ticket ||
+      (e.purpose === 'custom' && !e.custom.trim())) return;
+    this._writingEmail = ticket;
+    const wanted = () => this._emailTicket === ticket;
+    this.changeEmail({ ...e,busy:true,picking:false,error:'' });
+    service.write(e.who, { purpose:e.purpose,custom:e.custom }, wanted, () => this.sampleEmail(e.who)).then(
+      ({subject,body,missing = []}) => {
+        if (!wanted()) return;
+        const draft = { subject,body };
+        this.changeEmail({ ...e,busy:false,picking:false,error:'',original:draft,draft,fills:{},missing }, true);
+      },
+      error => { if (wanted()) this.changeEmail({ ...e,busy:false,picking:false,error:error?.message || 'The email couldn’t be written. Try again.' }); }
+    ).finally(() => { if (this._writingEmail === ticket) this._writingEmail = null; });
+  }
+  emailVals() {
+    const e = this.state.sheet === 'email' ? this.state.email : null;
+    const service = SERVICE.email, p = e ? HCPS[e.who] : null;
+    const to = e && service ? service.recipient(e.who) : '';
+    const prepared = e?.draft && service ? service.prepare(e.draft, e.fills, to) : null;
+    const locked = !e || e.busy || e.restoring;
+    const edit = part => event => {
+      if (locked || !prepared) return;
+      this.changeEmail({ ...e,draft:{ ...prepared.editor,[part]:event.target.value },fills:{} }, true);
+    };
+    const writeOff = locked || !service || (e.purpose === 'custom' && !e.custom.trim());
+    const canCopy = !locked && !!prepared?.canUse;
+    const canOpen = canCopy && !!prepared.href;
+    const emailStatus = e?.restoring ? 'Opening your draft…' : e?.busy ? 'Reading their profile and writing the email…' :
+      e?.missing?.length ? 'This draft was written without ' + e.missing.join(', ') + '.' :
+      e && !e.draft && !e.error ? 'Your email starts here. Pick a purpose and tap Write email.' : '';
+    return {
+      emailWho:p?.name || 'this HCP', emailLocked:locked, emailPicking:!locked && e.picking,
+      emailPurpose:service?.purposes.find(o => o.id === e?.purpose)?.label || '',
+      emailPick:() => { if (!locked) this.changeEmail({ ...e,picking:!e.picking }); },
+      emailPurposes:(service?.purposes || []).map(o => ({
+        label:o.label, ...chip(o.id === e?.purpose), go:() => { if (!locked) this.changeEmail({ ...e,purpose:o.id,picking:false,error:'' }, true); }
+      })),
+      emailIsCustom:e?.purpose === 'custom', emailCustom:e?.custom || '',
+      onEmailCustom:event => { if (!locked) this.changeEmail({ ...e,custom:event.target.value.slice(0,service.customLimit),error:'' }, true); },
+      emailWriteOff:writeOff, emailWriteBg:writeOff ? '#9CAACB' : '#2447C4',
+      emailWriteLabel:e?.busy ? 'Writing…' : prepared ? 'Write again' : 'Write email', writeEmail:() => this.writeEmail(),
+      emailStatus,emailError:e?.error || '',emailReady:!!prepared,emailSubject:prepared?.editor.subject || '',emailBody:prepared?.editor.body || '',
+      onEmailSubject:edit('subject'),onEmailBody:edit('body'),
+      emailBlanks:(prepared?.fields || []).map(b => ({
+        label:b.label + (b.optional ? ' (optional)' : ''), value:e.fills[b.token] || '',
+        change:event => { if (!locked) this.changeEmail({ ...e,fills:{ ...e.fills,[b.token]:event.target.value } }, true); }
+      })),
+      emailHandoff:prepared?.missing.length ? 'Fill in ' + prepared.missing.join(', ') + ' to use this draft.' :
+        prepared?.canUse && !prepared.href ? 'This draft is too long for the email app. Copy it to use it.' :
+        to ? 'To ' + to : 'Add their address in your email app.',
+      emailCopyOff:!canCopy,emailCopyBg:canCopy ? '#2447C4' : '#9CAACB',
+      emailOpenOff:!canOpen,emailOpenColor:canOpen ? '#2447C4' : '#7A839A',
+      copyDraft:() => { if (canCopy) this.copy(prepared.copy,'Email copied'); },
+      openDraft:() => { if (canOpen) service.open(prepared.href).catch(() => this.toast('The email app couldn’t open. You can copy the draft.')); },
+      emailEdited:!!e?.original && !locked && (e.draft.subject !== e.original.subject || e.draft.body !== e.original.body || Object.values(e.fills).some(v => v.trim())),
+      resetEmail:() => { if (!locked && e.original) this.changeEmail({ ...e,draft:e.original,fills:{} }, true); }
+    };
   }
   // the app passes a notice to show once the screens open (the account switch's, after the new account loads)
   componentDidMount() { const n = (this.props || {}).notice; if (n) this.toast(n); }
@@ -2109,14 +2265,23 @@ class Component extends DCLogic {
       items = (explorePage?.rows || []).flatMap(row => {
         const entity = hcp ? HCPS[row.id] : HCOS[row.id];
         if (!entity) return [];
-        const flag = entity.mine ? 'On this list' :
+        const figure = explorePage.figures?.[row.id] || {};
+        const onList = entity.mine ? 'On this list' :
           TERRS.some(t => (hcp ? t.hcpIds : t.hcoIds)?.includes(row.id)) ? 'On another list' : '';
+        const leak = !hcp && !WORKSPACE.drugAccount && WORKSPACE.view !== 'hema_sales' && (figure.leak || (has(entity.leak) ? entity.leak + ' since 2022' : ''));
+        const status = hcp ? this.flagOf(row.id, figure.growth ?? 0) : leak ? { label:'Leaking ' + leak,bg:'#FDEDE4',fg:'#A94D1B' } : null;
+        const flag = status?.label === 'Not met yet' && onList ? null : status;
+        const volume = { k:WORKSPACE.explore.metric || measure,v:row.value,c:'#0B1220' };
+        const yoy = { k:'YOY',v:figure.yoy ?? '…',c:figure.growth < 0 ? '#A94D1B' : figure.growth > 0 ? '#1C7A4E' : '#5B6478' };
+        const metrics = hcp ? [volume,yoy,{ k:'LIGHTEST',v:figure.lightest ?? '…',c:'#22409F' }] : [
+          ...(WORKSPACE.explore.opportunity ? [{ k:'OPPORTUNITY',v:figure.opportunity ?? '…',c:'#22409F' }] : []),volume,yoy
+        ];
         return [{
           name:entity.name, photo:entity.photo, npi:hcp ? entity.id : '', sub:row.detail, ini:entity.ini,
           avBg:hcp ? '#E7ECFA' : '#EEF1F7', avFg:hcp ? '#22409F' : '#3C4557', avR:hcp ? '50%' : '13px', ...addSt(inRoute(entity.id)),
           open:() => this.go(s.kind, entity.id), toggle:() => this.toggleRoute(entity.id),
-          hasFlag:!!flag, flag, flagBg:'#E7ECFA', flagFg:'#22409F',
-          metrics:[{ k:measure + ' · ' + WORKSPACE.explore.year, v:row.value, c:'#0B1220' }]
+          hasFlag:!!(flag || onList), flag:flag?.label || onList, flagBg:flag?.bg || '#E7ECFA', flagFg:flag?.fg || '#22409F',
+          metrics
         }];
       });
     } else if (s.kind === 'hco') {
@@ -2128,8 +2293,8 @@ class Component extends DCLogic {
         const inR = inRoute(h.id);
         return { name:h.name, photo:h.photo, sub:h.type + ' · ' + h.dist + ' away', ini:h.ini, avBg:'#EEF1F7', avFg:'#3C4557', avR:'13px', ...addSt(inR),
           toggle: () => h.hcps.length ? this.sheet('choose', h.id) : this.toggleRoute(h.id),
-          open: () => this.go('hco', h.id), hasFlag: h.leak !== '—', flag:'Leaking ' + h.leak + ' since 2022', flagBg:'#FDEDE4', flagFg:'#A94D1B',
-          metrics:[{ k:'OPPORTUNITY', v:h.opp, c:'#22409F' }, { k:WORKSPACE.metric || 'PROCEDURES', v:h.listProc || h.proc, c:'#0B1220' }, { k:'YOY', v:h.listYoy || h.yoy, c:(h.listYoyN == null ? h.yoyN : h.listYoyN) < 0 ? '#A94D1B' : '#1C7A4E' }] };
+          open: () => this.go('hco', h.id), hasFlag: !WORKSPACE.drugAccount && WORKSPACE.view !== 'hema_sales' && has(h.leak), flag:'Leaking ' + h.leak + ' since 2022', flagBg:'#FDEDE4', flagFg:'#A94D1B',
+          metrics:[...(!WORKSPACE.companyId || WORKSPACE.explore?.opportunity ? [{ k:'OPPORTUNITY', v:h.opp, c:'#22409F' }] : []), { k:WORKSPACE.metric || 'PROCEDURES', v:h.listProc || h.proc, c:'#0B1220' }, { k:'YOY', v:h.listYoy || h.yoy, c:(h.listYoyN == null ? h.yoyN : h.listYoyN) < 0 ? '#A94D1B' : '#1C7A4E' }] };
       });
     } else {
       items = Object.values(HCPS).filter(p => s.scope === 'explore' || p.mine).filter(p => this.areaOk(this.milesFrom(HCOS[p.hco], p.distN), HCOS[p.hco].boro)).filter(p => matches(p.name,p.id,p.spec,HCOS[p.hco].name)).filter(specOk);
@@ -2174,6 +2339,9 @@ class Component extends DCLogic {
     const H = HCOS[hId] || NO_HCO;
     const pId = scr === 'hcp' ? top.id : Object.keys(HCPS)[0];
     const P = HCPS[pId] || NO_HCP;
+    const pVisitBrief = !ins && !!WORKSPACE.hcpMetric && /^\d{10}$/.test(pId);
+    const visitBrief = P.visitBrief;
+    const pYear = WORKSPACE.explore?.year || 2025;
     const pTarget = ins ? tlist.profiles?.[pId] : null;
     const pHistory = pTarget ? (pTarget.activity || []) : s.visits.filter(v => this.whoOf(v).includes(pId));
     const pEntries = pTarget && s.pSeg !== 'followups' ? pHistory.filter(v => String(v.id).includes(':' + s.pSeg + ':')) : pTarget ? [] : pHistory;
@@ -2208,8 +2376,6 @@ class Component extends DCLogic {
     const nextPending = runList.find(id => !s.runDone.includes(id) && !s.runSkip.includes(id));
 
 
-    const epId = (s.sheet === 'email' && s.sheetData) || pId;
-    const EP = HCPS[epId] || HCPS[Object.keys(HCPS)[0]] || NO_HCP;
     const chId = (s.sheet === 'choose' && s.sheetData) || Object.keys(HCOS)[0];
 
     // insight detail
@@ -2377,6 +2543,12 @@ class Component extends DCLogic {
       ],
       pSegs: (pTarget ? [['overview','Overview'],['insight','Insights'],['meeting','Meetings'],['note','Notes'],['followups','Follow-ups']] : [['overview','Overview'],['activity','Activity']]).map(([k,label]) => ({ label,...seg(s.pSeg === k),go:() => this.setState({ pSeg:k }) })),
       pOverview:s.pSeg === 'overview',pActivity:s.pSeg !== 'overview',
+      pVisitBrief,pBriefBasis:visitBrief?.basis || '',pBriefMessage:visitBrief?.message || (!visitBrief ? 'Reading the visit figures…' : ''),
+      pBriefSections:visitBrief?.sections || [],pCanWriteBrief:!!visitBrief?.write,pWriteBrief:visitBrief?.write,pBriefAction:visitBrief?.sections?.length ? 'Write again' : 'Try again',
+      pPanels:(P.profilePanels || []).map(panel => ({ ...panel,rows:(panel.rows || []).map(row => {
+        const org = row.org && HCOS[row.org], person = row.npi && HCPS[row.npi];
+        return { ...row,linked:!!(org || person),plain:!(org || person),open:() => { if (org) this.go('hco',row.org); else if (person) this.go('hcp',row.npi); } };
+      }) })),
       pStats: (pTarget ? [
         { k:'LAST MEETING',v:pTarget.lastMeeting || '—',s:pTarget.lastMeeting ? '' : 'No meetings yet',c:'#0B1220' },
         { k:'MEETINGS',v:pTarget.meetings12 + ' / ' + pTarget.meetings,s:'12mo / all time',c:'#0B1220' },
@@ -2390,14 +2562,14 @@ class Component extends DCLogic {
         { k:'INSIGHTS', v:String(this.convCount(pId)), s: this.convCount(pId) === 1 ? 'conversation logged' : 'conversations logged', c:'#22409F', on: SH.insightCount },
         { k:'FOLLOW-UPS', v:String(pFuOpen.length), s: pFuOpen.some(f => f.dueN < 0) ? 'one overdue' : 'none overdue', c: pFuOpen.some(f => f.dueN < 0) ? '#A94D1B' : '#0B1220', on: SH.followUps }
       ] : [
-        { k:WORKSPACE.hcpMetric || 'CLAIMS',v:or(P.profileClaims ?? (profileMetrics ? '…' : P.claims)),s:(has(profileGrowth) ? profileGrowth + ' · ' : '') + '2025',c:'#0B1220',on:SH.claims },
-        { k:'LIGHTEST DAY', v:or(P.dayL), s:'fewest visits · 2025', c:'#22409F', on: SH.lightest },
-        { k:has(P.top) ? WORKSPACE.topCodeLabel || 'TOP PROCEDURE' : 'TOP CODE',v:or(P.top),s:'selected codes',c:'#0B1220',on:SH.topCode },
+        { k:WORKSPACE.hcpMetric || 'CLAIMS',v:or(P.profileClaims ?? (profileMetrics ? '…' : P.claims)),s:[has(profileGrowth) ? profileGrowth : '',String(pYear),P.profilePrior != null ? P.profilePrior.toLocaleString('en-US') + ' in ' + (pYear - 1) : ''].filter(Boolean).join(' · '),c:'#0B1220',on:SH.claims },
+        { k:P.profileBusiest ? 'BUSIEST DAY' : 'LIGHTEST DAY', v:or(P.dayL), s:(P.profileBusiest ? 'most visits' : 'fewest visits') + ' · ' + pYear, c:'#22409F', on: SH.lightest },
+        { k:WORKSPACE.topCodeLabel || 'TOP CODE',v:or(P.top),s:P.profileTopDetail || 'selected codes',c:'#0B1220',on:SH.topCode },
         { k:'REFERRED IN', v:or(P.ref), s:P.refOn || 'selected diagnoses', c:'#0B1220', on: SH.referred }
       ]).filter(x => x.on !== false),
-      showBrief:SH.brief && (ins ? (pTarget ? !!pTarget.brief : !tlist.id) : !WORKSPACE.companyId),hasBriefText:pTarget ? !!pTarget.brief : !!(ins ? P.iBrief : P.brief),showDraftEmail:SH.draftEmail,
-      showPhone: SH.phone, showEmail: SH.email, showContact: SH.phone || SH.email,
-      pEmail: () => has(P.email) && P.email !== 'Restricted' ? this.openEmail(pId) : this.toast(P.email === 'Restricted' ? 'Email restricted for your account' : 'No email on record'), pAsk: () => this.ask('Brief me on ' + P.name), pCall: () => this.call(P.phone), pLog: () => this.openLog(pId), pFu: () => this.openFu(pId),
+      showBrief:SH.brief && !pVisitBrief && (ins ? (pTarget ? !!pTarget.brief : !tlist.id) : !WORKSPACE.companyId),hasBriefText:pTarget ? !!pTarget.brief : !!(ins ? P.iBrief : P.brief),showDraftEmail:SH.draftEmail,
+      showPhone: SH.phone, showEmail: SH.email, showContact: !P.profilePanels?.length && (SH.phone || SH.email),
+      pEmail: () => this.openEmail(pId), pAsk: () => this.ask('Brief me on ' + P.name), pCall: () => this.call(P.phone), pLog: () => this.openLog(pId), pFu: () => this.openFu(pId),
       pLogLabel: '＋ Add ' + W.one.toLowerCase(),
       pFus: !pTarget || s.pSeg === 'followups' ? pScopedFus.map(f => this.fuView(f)) : [],
       pVisits:pEntries.map(v => this.visitView(v)),pNoVisits:pTarget && s.pSeg === 'followups' ? !pScopedFus.length : !pEntries.length,
@@ -2547,6 +2719,7 @@ class Component extends DCLogic {
 
       // sheets
       hasSheet: !!s.sheet, sheetTitle: titles[s.sheet] || '', closeSheet: () => {
+        if (s.sheet === 'email') this.finishEmail();
         if (s.insRec) this.toast('Recording discarded');
         else if (s.sheet === 'insight' && s.insNote.trim()) { this.keepDraft(); this.toast('Kept as a draft'); }
         this.dropRec(); this.setState({ sheet:null, insRec:false, insPaused:false, insKey:null });
@@ -2566,10 +2739,7 @@ class Component extends DCLogic {
       newTerritory: () => this.toast(ins ? 'New target list form' : 'New territory form'),
       chooseHco: (HCOS[chId] || NO_HCO).name,
       chooseRows: (HCOS[chId] || NO_HCO).hcps.map(id => { const on = s.route.includes(id); return { name:HCPS[id].name, spec:HCPS[id].spec, check: on ? '✓' : '', bg: on ? '#EDF1FB' : '#fff', bd: on ? '#2447C4' : '#E1E6F0', boxBd: on ? '#2447C4' : '#B9C3D8', boxBg: on ? '#2447C4' : '#fff', toggle: () => this.toggleRoute(id) }; }),
-      ep: EP, emailBusy: !!(s.email && s.email.busy), emailFailed: !!(s.email && !s.email.busy && s.email.error), emailError: s.email ? s.email.error : '',
-      emailReady: !!(s.email && !s.email.busy && !s.email.error), emailSubject: s.email ? s.email.subject : '', emailBody: s.email ? s.email.body : '',
-      emailBtn: s.email && s.email.error ? 'Try again' : 'Copy draft',
-      copyDraft: () => { const e = s.email; if (!e || e.busy) return; if (e.error) return this.openEmail(e.who); this.copy('Subject: ' + e.subject + '\n\n' + e.body, 'Draft copied'); this.setState({ sheet:null }); },
+      ...this.emailVals(),
       fuWhoOpts: this.people(null).map(p => ({ label:p.name.replace('Dr. ', ''), ...chip(s.fuWho === p.id), go: () => this.setState({ fuWho:p.id }) })),
       fuTask: s.fuTask, onFuTask: e => this.setState({ fuTask: e.target.value }),
       fuDueOpts: [0, 1, 4, 7].map(n => ({ label:dayOf(n), ...chip(s.fuDue === n), go: () => this.setState({ fuDue:n }) })),
