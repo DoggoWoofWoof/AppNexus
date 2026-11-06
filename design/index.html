@@ -108,18 +108,18 @@ input,textarea,button{font-family:inherit}
               </div>
             </sc-if>
             <div style="display:flex;gap:7px;overflow-x:auto;margin:0 -18px;padding:0 18px;">
+              <sc-if value="{{ isFieldPro }}" hint-placeholder-val="{{ true }}"><sc-for list="{{ kindChips }}" as="c" hint-placeholder-count="2">
+                  <button onClick="{{ c.go }}" style="flex:0 0 auto;padding:8px 13px;border-radius:999px;border:1px solid {{ c.bd }};background:{{ c.bg }};color:{{ c.fg }};font-size:13px;font-weight:650;cursor:pointer;">{{ c.label }}</button>
+              </sc-for></sc-if>
               <button onClick="{{ openTerritory }}" style="flex:0 0 auto;display:flex;align-items:center;gap:6px;border:1px solid #D7DEEC;background:#fff;border-radius:999px;padding:8px 12px;font-size:13px;font-weight:650;color:#0B1220;cursor:pointer;white-space:nowrap;"><span style="width:7px;height:7px;border-radius:50%;background:#2447C4;"></span>{{ territoryChip }}<span style="color:#7A839A;">▾</span></button>
               <sc-if value="{{ isFieldPro }}" hint-placeholder-val="{{ true }}">
-                <sc-for list="{{ kindChips }}" as="c" hint-placeholder-count="2">
-                  <button onClick="{{ c.go }}" style="flex:0 0 auto;padding:8px 13px;border-radius:999px;border:1px solid {{ c.bd }};background:{{ c.bg }};color:{{ c.fg }};font-size:13px;font-weight:650;cursor:pointer;">{{ c.label }}</button>
-                </sc-for>
                 <span style="flex:0 0 1px;background:#D7DEEC;margin:6px 2px;"></span>
                 <button onClick="{{ openArea }}" style="flex:0 0 auto;display:flex;align-items:center;gap:5px;padding:8px 12px;border-radius:999px;border:1px solid #D7DEEC;background:#fff;color:#0B1220;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#2447C4" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"></path><circle cx="12" cy="9.5" r="2.5"></circle></svg>{{ areaChip }} ▾</button>
                 <sc-if value="{{ showTypeChip }}" hint-placeholder-val="{{ true }}"><button onClick="{{ openArea }}" style="flex:0 0 auto;padding:8px 12px;border-radius:999px;border:1px solid #D7DEEC;background:#fff;color:#0B1220;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;"><span style="color:#7A839A;">Type</span> {{ omType }} ▾</button></sc-if>
-                <button onClick="{{ openFilter }}" style="flex:0 0 auto;padding:8px 12px;border-radius:999px;border:1px solid #D7DEEC;background:#fff;color:#0B1220;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;"><span style="color:#7A839A;">Specialty</span> {{ spec }} ▾</button>
-                <button onClick="{{ openFilter }}" style="flex:0 0 auto;padding:8px 12px;border-radius:999px;border:1px solid #D7DEEC;background:#fff;color:#0B1220;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;">{{ groupsChip }}</button>
+                <sc-if value="{{ showTargetSort }}" hint-placeholder-val="{{ true }}"><button onClick="{{ openFilter }}" style="flex:0 0 auto;padding:8px 12px;border-radius:999px;border:1px solid #D7DEEC;background:#fff;color:#0B1220;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;"><span style="color:#7A839A;">Specialty</span> {{ spec }} ▾</button></sc-if>
+                <sc-if value="{{ showTargetSort }}" hint-placeholder-val="{{ true }}"><button onClick="{{ openFilter }}" style="flex:0 0 auto;padding:8px 12px;border-radius:999px;border:1px solid #D7DEEC;background:#fff;color:#0B1220;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;">{{ groupsChip }}</button></sc-if>
               </sc-if>
-              <button onClick="{{ openFilter }}" style="flex:0 0 auto;padding:8px 12px;border-radius:999px;border:1px solid #D7DEEC;background:#fff;color:#0B1220;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;"><span style="color:#7A839A;">Sort</span> {{ sortNow }} ▾</button>
+              <sc-if value="{{ showTargetSort }}" hint-placeholder-val="{{ true }}"><button onClick="{{ openFilter }}" style="flex:0 0 auto;padding:8px 12px;border-radius:999px;border:1px solid #D7DEEC;background:#fff;color:#0B1220;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;"><span style="color:#7A839A;">Sort</span> {{ sortNow }} ▾</button></sc-if>
             </div>
             <div style="display:flex;align-items:baseline;justify-content:space-between;padding:2px 2px 0;">
               <span style="font-size:13px;font-weight:650;color:#3C4557;">{{ targetCount }}</span>
@@ -132,7 +132,7 @@ input,textarea,button{font-family:inherit}
                     <span data-kit="avatar" data-photo="{{ t.photo }}" data-npi="{{ t.npi }}" data-initials="{{ t.ini }}" style="width:42px;height:42px;flex:0 0 42px;border-radius:{{ t.avR }};background:{{ t.avBg }};color:{{ t.avFg }};display:grid;place-items:center;font-size:12.5px;font-weight:700;">{{ t.ini }}</span>
                     <span style="flex:1;min-width:0;">
                       <span style="display:block;font-size:15px;font-weight:650;line-height:1.25;">{{ t.name }}</span>
-                      <span style="display:block;font-size:12.5px;color:#5B6478;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ t.sub }}</span>
+                      <span style="display:block;font-size:12.5px;color:#5B6478;margin-top:2px;line-height:1.3;">{{ t.sub }}</span>
                     </span>
                   </button>
                   <button onClick="{{ t.toggle }}" style="width:44px;height:44px;flex:0 0 44px;border-radius:13px;border:1px solid {{ t.addBd }};background:{{ t.addBg }};color:{{ t.addFg }};font-size:18px;font-weight:600;cursor:pointer;">{{ t.addIcon }}</button>
@@ -152,9 +152,9 @@ input,textarea,button{font-family:inherit}
             </sc-for>
             <sc-if value="{{ hasTargetPages }}" hint-placeholder-val="{{ false }}">
               <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
-                <button onClick="{{ previousTargets }}" style="padding:10px 14px;border:1px solid #D7DEEC;border-radius:11px;background:#fff;color:#2447C4;font-size:13px;cursor:pointer;">Previous</button>
+                <sc-if value="{{ hasPreviousTargets }}" hint-placeholder-val="{{ true }}"><button onClick="{{ previousTargets }}" style="padding:10px 14px;border:1px solid #D7DEEC;border-radius:11px;background:#fff;color:#2447C4;font-size:13px;cursor:pointer;">Previous</button></sc-if>
                 <span style="font-size:12px;color:#5B6478;">{{ targetPageLabel }}</span>
-                <button onClick="{{ nextTargets }}" style="padding:10px 14px;border:1px solid #D7DEEC;border-radius:11px;background:#fff;color:#2447C4;font-size:13px;cursor:pointer;">Next</button>
+                <sc-if value="{{ hasNextTargets }}" hint-placeholder-val="{{ true }}"><button onClick="{{ nextTargets }}" style="padding:10px 14px;border:1px solid #D7DEEC;border-radius:11px;background:#fff;color:#2447C4;font-size:13px;cursor:pointer;">Next</button></sc-if>
               </div>
             </sc-if>
             <sc-if value="{{ noTargets }}" hint-placeholder-val="{{ false }}">
@@ -1315,6 +1315,7 @@ const ANSWERS_INS = {
   'Summarise my week': { a:'3 visits planned today and 2 follow-ups open, one overdue for Dr. Jun Park.{adv}', tags:['This week'], rows:['jun'] }
 };
 const TYPES = ['All types','Hospital','Surgery center','Physician group','Clinic'];
+const TARGET_PAGE_SIZE = 20;
 const TAGS = ['Clinical trial','KOL','Competitor','Training'];
 const SIX_TYPES = ['1:1','Third Party','Conference','Advisory Board','Consulting','Observation'];
 const SHORT_TYPES = ['1:1','Ad Board','Conference','Consulting'];
@@ -1488,10 +1489,46 @@ class Component extends DCLogic {
     const key = s.tab + '|' + s.stack.map(x => x.s + (x.id || '')).join('/') + '|' + s.targetPage;
     if (this._k !== undefined && this._k !== key && this.scrollRef.current) this.scrollRef.current.scrollTop = 0;
     this._k = key;
+    this.loadExplore();
     const na = (this.props || {}).account;
     if (na !== this._pa) { this._pa = na; if (ACCOUNTS[na]) this.setAccount(na); }
   }
-  componentWillUnmount() { if (SERVICE.hush) SERVICE.hush(); clearTimeout(this._t); clearTimeout(this._a); clearTimeout(this._m); clearTimeout(this._s); clearInterval(this._i); this._at.forEach(clearTimeout); }
+  componentWillUnmount() { this._exploreKey = null; clearTimeout(this._exploreTimer); if (SERVICE.hush) SERVICE.hush(); clearTimeout(this._t); clearTimeout(this._a); clearTimeout(this._m); clearTimeout(this._s); clearInterval(this._i); this._at.forEach(clearTimeout); }
+
+  exploreRequest() {
+    const s = this.state;
+    if (!WORKSPACE.explore?.geographic || !WORKSPACE.explore.hasCodes || !SERVICE.explore ||
+      s.scope !== 'explore' || (s.stack[s.stack.length - 1]?.s || s.tab) !== 'targets') return null;
+    const start = s.omMode === 'near' ? this.startPoint() : null;
+    const request = {
+      kind:s.kind, query:s.q.trim(), type:s.kind === 'hco' ? s.exploreType || 'Hospital' : '',
+      city:s.omMode === 'city' ? s.omCity : 'All cities',
+      near:start ? { lat:start.lat,lng:start.lng,miles:s.omRadius } : null
+    };
+    const filterKey = JSON.stringify([s.territory,request]);
+    const page = s.targetPageKey === filterKey ? s.targetPage || 0 : 0;
+    return { filterKey,key:JSON.stringify([filterKey,page]),request:{ ...request,page } };
+  }
+
+  loadExplore() {
+    const query = this.exploreRequest();
+    const key = query?.key ?? null;
+    if (key === this._exploreKey) return;
+    clearTimeout(this._exploreTimer);
+    this._exploreKey = key;
+    if (!query || this.state.explorePage?.key === key) return;
+    const wanted = () => this._exploreKey === key;
+    const read = () => {
+      const explore = SERVICE.explore;
+      if (!explore || !wanted()) return;
+      explore(query.request, wanted).then(
+        page => { if (wanted()) this.setState({ explorePage:{ ...page,key } }); },
+        () => { if (wanted()) this.setState({ explorePage:{ key,failed:true } }); }
+      );
+    };
+    if (query.request.query) this._exploreTimer = setTimeout(read, 300);
+    else read();
+  }
 
   // customer account: same flow everywhere, the views change where an account needs it
   acct() { return ACCOUNTS[this.state.account]; }
@@ -2039,6 +2076,16 @@ class Component extends DCLogic {
     // targets
     let items;
     const ql = s.q.trim().toLowerCase();
+    const words = ql.split(/\s+/).filter(Boolean);
+    const matches = (...fields) => {
+      const text = fields.filter(Boolean).join(' ').toLowerCase();
+      return words.every(word => text.includes(word));
+    };
+    const exploreMode = !ins && s.scope === 'explore' && !!WORKSPACE.explore;
+    const exploreQuery = this.exploreRequest();
+    const explorePage = exploreQuery && s.explorePage?.key === exploreQuery.key ? s.explorePage : null;
+    const measure = WORKSPACE.hcpMetric || 'VOLUME';
+    const targetType = exploreMode ? s.exploreType || 'Hospital' : s.omType;
     const sortNow = ins ? s.iSort : s.sort;
     const tlist = TLISTS.find(t => (t.id || t.name) === s.tlist) || TLISTS[0] || { name:'', meta:'', ids:[] };
     const cgOn = CODE_GROUPS.filter(g => s.cgs.includes(g.name)), cgSpecs = cgOn.flatMap(g => g.specs);
@@ -2046,7 +2093,7 @@ class Component extends DCLogic {
     const codesOff = !ins && (s.spec !== 'All codes' || s.cgs.length < CODE_GROUPS.length);
     if (scr !== 'targets') items = [];
     else if (ins) {
-      items = tlist.ids.map(id => HCPS[id]).filter(p => !ql || p.name.toLowerCase().includes(ql) || HCOS[p.hco].name.toLowerCase().includes(ql));
+      items = tlist.ids.map(id => HCPS[id]).filter(p => p && matches(p.name, p.id, p.spec, HCOS[p.hco]?.name));
       const advN = id => this.advOf(id) || 0, lastName = p => p.name.split(' ').pop();
       items.sort((a, b) => sortNow === 'Relevance' ? this.relevance(b.id) - this.relevance(a.id) : sortNow === 'Name' ? lastName(a).localeCompare(lastName(b)) : sortNow === 'Last met' ? this.lastOf(b.id).n - this.lastOf(a.id).n : advN(b.id) - advN(a.id));
       items = items.map(p => {
@@ -2057,8 +2104,23 @@ class Component extends DCLogic {
             ? [{ k:'ADVOCACY', v: adv ? adv + '/5' : '—', c: adv >= 4 ? '#1C7A4E' : adv && adv <= 2 ? '#A94D1B' : '#0B1220' }, { k:'LAST MET', v:this.lastOf(p.id).label, c:'#0B1220' }, { k:'INSIGHTS', v:String(this.convCount(p.id)), c:'#22409F' }]
             : [{ k:'LAST MET', v:this.lastOf(p.id).label, c:'#0B1220' }, { k:'INSIGHTS', v:String(this.convCount(p.id)), c:'#22409F' }, this.fuMetric(p.id)] };
       });
+    } else if (exploreMode) {
+      const hcp = s.kind === 'hcp';
+      items = (explorePage?.rows || []).flatMap(row => {
+        const entity = hcp ? HCPS[row.id] : HCOS[row.id];
+        if (!entity) return [];
+        const flag = entity.mine ? 'On this list' :
+          TERRS.some(t => (hcp ? t.hcpIds : t.hcoIds)?.includes(row.id)) ? 'On another list' : '';
+        return [{
+          name:entity.name, photo:entity.photo, npi:hcp ? entity.id : '', sub:row.detail, ini:entity.ini,
+          avBg:hcp ? '#E7ECFA' : '#EEF1F7', avFg:hcp ? '#22409F' : '#3C4557', avR:hcp ? '50%' : '13px', ...addSt(inRoute(entity.id)),
+          open:() => this.go(s.kind, entity.id), toggle:() => this.toggleRoute(entity.id),
+          hasFlag:!!flag, flag, flagBg:'#E7ECFA', flagFg:'#22409F',
+          metrics:[{ k:measure + ' · ' + WORKSPACE.explore.year, v:row.value, c:'#0B1220' }]
+        }];
+      });
     } else if (s.kind === 'hco') {
-      items = Object.values(HCOS).filter(h => s.scope === 'explore' || h.mine).filter(h => this.areaOk(this.milesFrom(h, h.distN), h.boro) && this.typeOk(h.type)).filter(h => !ql || h.name.toLowerCase().includes(ql)).filter(specOk);
+      items = Object.values(HCOS).filter(h => s.scope === 'explore' || h.mine).filter(h => this.areaOk(this.milesFrom(h, h.distN), h.boro) && this.typeOk(h.type)).filter(h => matches(h.name,h.city,h.type)).filter(specOk);
       const key = { Opportunity:'oppN', Volume:'volN', Growth:'listYoyN', Distance:'distN' }[s.sort];
       const orderValue = h => s.sort === 'Growth' ? (h.listYoyN == null ? h.yoyN : h.listYoyN) : h[key];
       items.sort((a, b) => s.sort === 'Relevance' ? this.relevance(b.id) - this.relevance(a.id) : s.sort === 'Distance' ? orderValue(a) - orderValue(b) : orderValue(b) - orderValue(a));
@@ -2070,29 +2132,39 @@ class Component extends DCLogic {
           metrics:[{ k:'OPPORTUNITY', v:h.opp, c:'#22409F' }, { k:WORKSPACE.metric || 'PROCEDURES', v:h.listProc || h.proc, c:'#0B1220' }, { k:'YOY', v:h.listYoy || h.yoy, c:(h.listYoyN == null ? h.yoyN : h.listYoyN) < 0 ? '#A94D1B' : '#1C7A4E' }] };
       });
     } else {
-      items = Object.values(HCPS).filter(p => s.scope === 'explore' || p.mine).filter(p => this.areaOk(this.milesFrom(HCOS[p.hco], p.distN), HCOS[p.hco].boro)).filter(p => !ql || p.name.toLowerCase().includes(ql) || HCOS[p.hco].name.toLowerCase().includes(ql)).filter(specOk);
+      items = Object.values(HCPS).filter(p => s.scope === 'explore' || p.mine).filter(p => this.areaOk(this.milesFrom(HCOS[p.hco], p.distN), HCOS[p.hco].boro)).filter(p => matches(p.name,p.id,p.spec,HCOS[p.hco].name)).filter(specOk);
       const key = { Opportunity:'claimsN', Volume:'claimsN', Growth:'yoyN', Distance:'distN' }[s.sort];
       items.sort((a, b) => s.sort === 'Relevance' ? this.relevance(b.id) - this.relevance(a.id) : s.sort === 'Distance' ? a[key] - b[key] : b[key] - a[key]);
       items = items.map(p => {
         const f = this.flagOf(p.id);
         return { name:p.name, photo:p.photo, npi:p.id, sub:p.spec + ' · ' + HCOS[p.hco].name, ini:p.ini, avBg:'#E7ECFA', avFg:'#22409F', avR:'50%', ...addSt(s.route.includes(p.id)),
           toggle: () => this.toggleRoute(p.id), open: () => this.go('hcp', p.id), hasFlag: !!f, flag: f ? f.label : '', flagBg: f ? f.bg : '', flagFg: f ? f.fg : '',
-          metrics:[{ k:'CLAIMS', v:p.claims, c:'#0B1220' }, { k:'YOY', v:p.yoy, c: p.yoyN < 0 ? '#A94D1B' : '#1C7A4E' }, { k:'LIGHTEST', v:p.day, c:'#22409F' }] };
+          metrics:[{ k:measure, v:or(p.claims), c:'#0B1220' }, { k:'YOY', v:or(p.yoy), c: p.yoyN < 0 ? '#A94D1B' : '#1C7A4E' }, { k:'LIGHTEST', v:or(p.day), c:'#22409F' }] };
       });
     }
-    const unit = !ins && s.kind === 'hco' ? ['account','accounts'] : ['clinician','clinicians'];
+    const unit = ins ? ['clinician','clinicians'] : s.kind === 'hco' ? ['account','accounts'] : ['HCP','HCPs'];
     const territoryName = (TERRS.find(t => (t.id || t.name) === s.territory) || {}).name || s.territory;
-    const targetPageKey = JSON.stringify([s.account,s.territory,s.tlist,s.q,s.scope,s.kind,s.spec,s.cgs,s.sort,s.iSort,s.omType,s.omMode,s.omRadius,s.omCity]);
-    const targetPage = s.targetPageKey === targetPageKey ? Math.max(0, Math.min(s.targetPage || 0, Math.ceil(items.length / 24) - 1)) : 0;
-    const resetArea = () => this.setState({ omMode:AREA.mode || 'near', omRadius:5, omStart:AREA.centre, omCity:AREA.city, omType:'All types' });
+    const targetPageKey = exploreQuery?.filterKey || JSON.stringify([s.account,s.territory,s.tlist,s.q,s.scope,s.kind,s.spec,s.cgs,s.sort,s.iSort,s.omType,s.omMode,s.omRadius,s.omCity]);
+    const targetPage = exploreQuery ? exploreQuery.request.page : s.targetPageKey === targetPageKey ? Math.max(0, Math.min(s.targetPage || 0, Math.ceil(items.length / TARGET_PAGE_SIZE) - 1)) : 0;
+    const hasPreviousTargets = targetPage > 0;
+    const hasNextTargets = exploreMode ? !!explorePage?.hasNext : (targetPage + 1) * TARGET_PAGE_SIZE < items.length;
+    const resetArea = () => this.setState({ omMode:AREA.mode || 'near', omRadius:5, omStart:AREA.centre, omCity:AREA.city, omType:'All types', exploreType:null });
     const toExploreFirst = !ins && s.scope === 'mine';
-    const openingTargets = !!this.props?.loading || !!tlist.loading || (!ins && s.scope === 'mine' && s.kind === 'hcp' && !!WORKSPACE.hcpTargetsPending);
-    const empty = openingTargets ? { emptyTitle:'Loading targets…',emptySub:tlist.name ? 'Opening ' + tlist.name : '',hasEmptyA:ins && TLISTS.length > 1,emptyA:'Change list',emptyAGo:() => this.sheet('territory'),hasEmptyB:false } : ql
+    const savedHcps = !ins && s.scope === 'mine' && s.kind === 'hcp';
+    const savedState = toExploreFirst ? (savedHcps ? WORKSPACE.hcpTargetsState : WORKSPACE.hcoTargetsState) : null;
+    const openingTargets = !!this.props?.loading || !!tlist.loading || savedState === 'loading' || (!!exploreQuery && !explorePage);
+    const empty = openingTargets ? { emptyTitle:exploreMode ? 'Loading Explore…' : 'Loading targets…',emptySub:ins && tlist.name ? 'Opening ' + tlist.name : '',hasEmptyA:ins && TLISTS.length > 1,emptyA:'Change list',emptyAGo:() => this.sheet('territory'),hasEmptyB:false }
+      : explorePage?.failed ? { emptyTitle:'Explore couldn’t load',emptySub:'Try the same search again.',emptyA:'Try again',emptyAGo:() => { this._exploreKey = null; this.setState({ explorePage:null }); },hasEmptyB:false }
+      : savedState === 'failed' ? { emptyTitle:savedHcps ? 'Saved HCPs couldn’t load' : 'Saved HCOs couldn’t load',emptySub:'Refresh the workspace to try again.',emptyA:'Try again',emptyAGo:() => AUTH.refreshWorkspace?.(),hasEmptyA:!!AUTH.refreshWorkspace,hasEmptyB:false }
+      : exploreMode && !WORKSPACE.explore.geographic ? { emptyTitle:'Choose a geographic territory',emptySub:territoryName + ' has no geographic area.',emptyA:'Change territory',emptyAGo:() => this.sheet('territory'),hasEmptyB:false }
+      : exploreMode && !WORKSPACE.explore.hasCodes ? { emptyTitle:'No measurement codes are configured',emptySub:'Choose a territory and a configured account to explore.',hasEmptyA:false,hasEmptyB:false }
+      : exploreMode && ql.length === 1 ? { emptyTitle:'Keep typing to search',emptySub:'Enter at least two characters.',hasEmptyA:false,hasEmptyB:false } : ql
       ? { emptyTitle:'No matches for “' + s.q.trim() + '”', emptySub: toExploreFirst ? 'Try Explore, or ask about it.' : 'Check the spelling, or ask about it.',
           emptyA: toExploreFirst ? 'Search Explore' : 'Clear search', emptyAGo: toExploreFirst ? () => this.setState({ scope:'explore' }) : () => this.setState({ q:'' }), emptyB:'Ask about it', emptyBGo: () => this.ask(s.q) }
       : codesOff ? { emptyTitle:'Nothing for these codes', emptySub:'Change the specialty or the code groups.', emptyA:'Change filters', emptyAGo: () => this.sheet('filter'), emptyB:'Reset filters', emptyBGo: () => this.setState({ spec:'All codes', cgs: CODE_GROUPS.map(g => g.name) }) }
       : ins ? { emptyTitle:tlist.loading ? 'Loading targets…' : tlist.name && tlist.name !== 'No target lists' ? 'No one on ' + tlist.name : 'No target lists yet',emptySub:tlist.loading ? 'Opening ' + tlist.name : 'Targets added on the website show here.',
           emptyA:'Change list', emptyAGo: () => this.sheet('territory'), hasEmptyA: TLISTS.length > 1, emptyB:'', emptyBGo: () => {}, hasEmptyB: false }
+      : savedHcps ? { emptyTitle:'No HCPs on this list',emptySub:'Explore the territory to find HCPs.',emptyA:'Explore HCPs',emptyAGo:() => this.setState({ scope:'explore' }),hasEmptyB:false }
       : { emptyTitle:'Nothing in this area', emptySub: s.kind === 'hco' ? 'Widen the area or change the type.' : 'Widen the area.',
           emptyA:'Change area', emptyAGo: () => this.sheet('range', 'targets'), emptyB:'Reset filters', emptyBGo: resetArea };
     const rangeType = s.sheetData === 'targets' ? !ins && s.kind === 'hco' : s.omKind === 'acc';
@@ -2245,16 +2317,19 @@ class Component extends DCLogic {
       toAsk: () => s.q.trim() ? this.ask(s.q) : this.setTab('ask'),
       scopeSeg: [['mine','My targets'], ['explore','Explore']].map(([k, label]) => ({ label, ...seg(s.scope === k), go: () => this.setState({ scope:k }) })),
       kindChips: [['hco','HCOs'], ['hcp','HCPs']].map(([k, label]) => ({ label, ...chip(s.kind === k), go: () => this.setState({ kind:k }) })),
-      isFieldPro: !ins, showTypeChip: s.kind === 'hco', omType: s.omType, openArea: () => this.sheet('range', 'targets'),
+      isFieldPro: !ins, showTypeChip: s.kind === 'hco', showTargetSort:!exploreMode, omType: targetType, openArea: () => this.sheet('range', 'targets'),
       areaChip: s.omMode === 'near' ? 'Within ' + s.omRadius + ' mi' : s.omCity === 'All cities' ? AREA.state : s.omCity,
       spec: s.spec, sortNow, openFilter: () => this.sheet('filter'),
       groupsChip: cgOn.length + (cgOn.length === 1 ? ' group · ' : ' groups · ') + cgOn.reduce((n, g) => n + g.codes, 0) + ' codes',
-      targetItems: items.slice(targetPage * 24, (targetPage + 1) * 24), noTargets: items.length === 0, hasEmptyA: true, hasEmptyB: true, ...empty,
-      hasTargetPages: items.length > 24, targetPageLabel: (targetPage * 24 + 1) + '–' + Math.min(items.length, (targetPage + 1) * 24) + ' of ' + items.length,
-      previousTargets: () => this.setState({ targetPage:Math.max(0, targetPage - 1), targetPageKey }),
-      nextTargets: () => this.setState({ targetPage:Math.min(Math.ceil(items.length / 24) - 1, targetPage + 1), targetPageKey }),
-      targetCount: openingTargets ? '' : items.length + ' ' + (items.length === 1 ? unit[0] : unit[1]) + (ins ? ' on this list' : s.scope === 'explore' ? ' nearby' : ' in your book'),
-      targetHint: 'by ' + sortNow.toLowerCase(),
+      targetItems: exploreMode ? items : items.slice(targetPage * TARGET_PAGE_SIZE, (targetPage + 1) * TARGET_PAGE_SIZE), noTargets: items.length === 0, hasEmptyA: true, hasEmptyB: true, ...empty,
+      hasPreviousTargets, hasNextTargets, hasTargetPages: hasPreviousTargets || hasNextTargets,
+      targetPageLabel: exploreMode
+        ? items.length ? (targetPage * TARGET_PAGE_SIZE + 1) + '–' + (targetPage * TARGET_PAGE_SIZE + items.length) : 'Page ' + (targetPage + 1)
+        : (targetPage * TARGET_PAGE_SIZE + 1) + '–' + Math.min(items.length, (targetPage + 1) * TARGET_PAGE_SIZE) + ' of ' + items.length,
+      previousTargets: () => { if (hasPreviousTargets) this.setState({ targetPage:targetPage - 1, targetPageKey }); },
+      nextTargets: () => { if (hasNextTargets) this.setState({ targetPage:targetPage + 1, targetPageKey }); },
+      targetCount: openingTargets || exploreMode || savedState === 'failed' ? '' : items.length + ' ' + (items.length === 1 ? unit[0] : unit[1]) + (ins ? ' on this list' : s.scope === 'explore' ? ' nearby' : ' in your book'),
+      targetHint: exploreMode ? [CODE_GROUPS[0]?.name, WORKSPACE.explore.year].filter(Boolean).join(' · ') : 'by ' + sortNow.toLowerCase(),
 
       // pill
       showPill: routeN > 0 && ['targets','hco','hcp'].includes(scr) && !s.sheet,
@@ -2604,7 +2679,10 @@ class Component extends DCLogic {
 
       ...omv,
       rangeShowType: rangeType,
-      omTypeOpts: TYPES.map(t => ({ label:t, ...chip(s.omType === t), go: () => this.setState({ omType:t }) })),
+      omTypeOpts: TYPES.map(t => {
+        const exploreType = exploreMode && s.sheetData === 'targets';
+        return { label:t, ...chip((exploreType ? targetType : s.omType) === t), go: () => this.setState(exploreType ? { exploreType:t } : { omType:t }) };
+      }),
       omApplyLabel: s.sheetData === 'targets' ? 'Show ' + items.length + ' ' + (items.length === 1 ? unit[0] : unit[1]) : omv.omApplyLabel,
       // the app passes loading while an account's data loads (at sign-in, and after Me → Account)
       hasToast: !!s.toast || !!(this.props || {}).loading, toast: s.toast || ((this.props || {}).loading ? 'Loading ' + (PICKS.find(p => ME.pick ? p.id === ME.pick : p.account === s.account) || A).name + '…' : ''),
