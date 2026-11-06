@@ -1945,14 +1945,24 @@ class Component extends DCLogic {
     const points = [this.startKnown() ? START : null,...groups.map(g => g.place)];
     const valid = points.filter(onEarth);
     if (valid.length < 2) return;
-    miles(valid).then(matrix => {
+    const store = legs => {
       if (this._routeLegKey !== key) return;
-      const legs = groups.map((_,i) => {
-        const from = valid.indexOf(points[i]), to = valid.indexOf(points[i + 1]);
-        return from >= 0 && to >= 0 ? matrix[from]?.[to] : null;
-      });
       this.setState({ routeLegs:{ key,legs } });
-    },() => {});
+    };
+    miles(valid).then(matrix => {
+      store(groups.map((_,i) => {
+        const from = valid.indexOf(points[i]), to = valid.indexOf(points[i + 1]);
+        return from >= 0 && to >= 0 ? matrix[from]?.[to] : undefined;
+      }));
+    },async () => {
+      // A disconnected start can make the whole matrix fail. Keep each independently routable leg.
+      const legs = [];
+      for (let i = 0; i < groups.length && this._routeLegKey === key; i++) {
+        const from = points[i], to = points[i + 1];
+        legs.push(onEarth(from) && onEarth(to) ? await miles([from,to]).then(m => m[0]?.[1],() => undefined) : undefined);
+        store([...legs]);
+      }
+    });
   }
   groupsOf(list) {
     const groups = new Map();
@@ -1981,7 +1991,9 @@ class Component extends DCLogic {
     if (SERVICE.routeStop) {
       const pins = groups.flatMap((g,i) => onEarth(g.place) ? [{ id:g.place.id,lat:g.place.lat,lng:g.place.lng,n:i+1,size:29,bg:'#2447C4',fg:'#fff',sel:false,label:g.place.name,
         go:() => this.go(this.stopOf(g.ids[0]).isHco ? 'hco' : 'hcp',g.ids[0]) }] : []);
-      const start = this.startKnown() ? { lat:START.lat,lng:START.lng } : null;
+      const legs = this.state.routeLegs;
+      const disconnected = legs?.key === this.routeLegKey(groups) && legs.legs[0] === null;
+      const start = this.startKnown() && !disconnected ? { lat:START.lat,lng:START.lng } : null;
       return { routeMapOn:!!pins.length,routePins:[],routeStartOn:false,routeGeoMap:pins.length ? { pins,start,radiusMi:null,halos:[],sel:null,cmd:{ kind:'',n:0 },
         fitKey:JSON.stringify([pins.map(p => [p.id,p.lat,p.lng]),start]),fitAll:true,inset:{ top:0,bottom:0 } } : null };
     }
@@ -2293,7 +2305,10 @@ class Component extends DCLogic {
     const groups = this.groups();
     const viewKey = s.day === 'tomorrow' ? 'tomorrow' : 'route', viewList = s[viewKey], viewGroups = this.groupsOf(viewList), routeMap = this.routeMapOf(viewGroups);
     const routeLegs = s.routeLegs?.key === this.routeLegKey(viewGroups) ? s.routeLegs.legs : [];
-    const routeUrl = SERVICE.routeStop ? this.directionsFor(viewGroups.map(g => g.place),this.startKnown() ? START : null) : '';
+    const routePlaces = viewGroups.map(g => g.place);
+    const disconnectedStart = routeLegs[0] === null && routePlaces.length > 1;
+    const routeUrl = SERVICE.routeStop && !routeLegs.slice(1).includes(null)
+      ? this.directionsFor(disconnectedStart ? routePlaces.slice(1) : routePlaces,disconnectedStart ? routePlaces[0] : this.startKnown() ? START : null) : '';
     const headline = list => { const n = list.length, g = this.groupsOf(list).length; return n ? n + (n === 1 ? ' visit' : ' visits') + ' · ' + g + (g === 1 ? ' stop' : ' stops') : 'No route yet'; };
     const inRoute = id => s.route.includes(id) || (!!HCOS[id] && HCOS[id].hcps.some(x => s.route.includes(x)));
     const runList = groups.flatMap(g => g.ids);
@@ -2680,7 +2695,7 @@ class Component extends DCLogic {
         const ready = onEarth(from) && onEarth(g.place);
         const road = routeLegs[i];
         const miles = Number.isFinite(road) ? road : ready ? earthMiles(from,g.place) : null;
-        const dist = SERVICE.routeStop ? (miles == null ? '' : (miles < 10 ? Math.round(miles * 10) / 10 : Math.round(miles)) + (Number.isFinite(road) ? ' mi driving' : ' mi straight-line')) : milesApart(from,g.place);
+        const dist = SERVICE.routeStop ? (road === null ? 'No driving route' : miles == null ? '' : (miles < 10 ? Math.round(miles * 10) / 10 : Math.round(miles)) + (Number.isFinite(road) ? ' mi driving' : ' mi straight-line')) : milesApart(from,g.place);
         const location = SERVICE.routeStop ? (g.place?.city || (g.place === undefined ? 'Finding location…' : 'Location unavailable')) : '';
         return { n:i+1,name:g.place?.name || (HCOS[g.hco] || NO_HCO).name,dist,location,rows:g.ids.map(id => {
           const st = this.stopOf(id);
