@@ -84,7 +84,6 @@ input,textarea,button{font-family:inherit}
           <div style="padding:6px 18px 0;display:flex;flex-direction:column;gap:12px;">
             <div style="display:flex;align-items:center;gap:8px;">
               <span style="flex:1;font-family:'Source Serif 4',Georgia,serif;font-size:30px;line-height:1.1;letter-spacing:-.02em;">Targets</span>
-              <button onClick="{{ openTerritory }}" style="display:flex;align-items:center;gap:6px;border:1px solid #D7DEEC;background:#fff;border-radius:999px;padding:8px 12px;font-size:12.5px;font-weight:650;color:#0B1220;cursor:pointer;"><span style="width:7px;height:7px;border-radius:50%;background:#2447C4;"></span>{{ territoryChip }}<span style="color:#7A839A;">▾</span></button>
               <button onClick="{{ openMe }}" style="width:38px;height:38px;border-radius:50%;background:#DCE3F5;color:#22409F;border:0;font-size:12.5px;font-weight:700;cursor:pointer;">{{ meIni }}</button>
             </div>
             <div style="display:flex;align-items:center;gap:12px;padding:12px 10px 12px 14px;border-radius:16px;color:#fff;background:radial-gradient(120% 140% at 10% 0%,#2F59DE 0%,#22409F 60%,#16276A 100%);">
@@ -109,6 +108,7 @@ input,textarea,button{font-family:inherit}
               </div>
             </sc-if>
             <div style="display:flex;gap:7px;overflow-x:auto;margin:0 -18px;padding:0 18px;">
+              <button onClick="{{ openTerritory }}" style="flex:0 0 auto;display:flex;align-items:center;gap:6px;border:1px solid #D7DEEC;background:#fff;border-radius:999px;padding:8px 12px;font-size:13px;font-weight:650;color:#0B1220;cursor:pointer;white-space:nowrap;"><span style="width:7px;height:7px;border-radius:50%;background:#2447C4;"></span>{{ territoryChip }}<span style="color:#7A839A;">▾</span></button>
               <sc-if value="{{ isFieldPro }}" hint-placeholder-val="{{ true }}">
                 <sc-for list="{{ kindChips }}" as="c" hint-placeholder-count="2">
                   <button onClick="{{ c.go }}" style="flex:0 0 auto;padding:8px 13px;border-radius:999px;border:1px solid {{ c.bd }};background:{{ c.bg }};color:{{ c.fg }};font-size:13px;font-weight:650;cursor:pointer;">{{ c.label }}</button>
@@ -129,7 +129,7 @@ input,textarea,button{font-family:inherit}
               <div style="background:#fff;border:1px solid #E1E6F0;border-radius:16px;overflow:hidden;">
                 <div style="display:flex;gap:10px;align-items:center;padding:12px 12px 10px 14px;">
                   <button onClick="{{ t.open }}" style="flex:1;min-width:0;display:flex;gap:12px;align-items:center;text-align:left;border:0;background:none;padding:0;cursor:pointer;color:#0B1220;">
-                    <span style="width:42px;height:42px;flex:0 0 42px;border-radius:{{ t.avR }};background:{{ t.avBg }};color:{{ t.avFg }};display:grid;place-items:center;font-size:12.5px;font-weight:700;">{{ t.ini }}</span>
+                    <span data-kit="avatar" data-photo="{{ t.photo }}" data-npi="{{ t.npi }}" data-initials="{{ t.ini }}" style="width:42px;height:42px;flex:0 0 42px;border-radius:{{ t.avR }};background:{{ t.avBg }};color:{{ t.avFg }};display:grid;place-items:center;font-size:12.5px;font-weight:700;">{{ t.ini }}</span>
                     <span style="flex:1;min-width:0;">
                       <span style="display:block;font-size:15px;font-weight:650;line-height:1.25;">{{ t.name }}</span>
                       <span style="display:block;font-size:12.5px;color:#5B6478;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ t.sub }}</span>
@@ -150,6 +150,13 @@ input,textarea,button{font-family:inherit}
                 </button>
               </div>
             </sc-for>
+            <sc-if value="{{ hasTargetPages }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+                <button onClick="{{ previousTargets }}" style="padding:10px 14px;border:1px solid #D7DEEC;border-radius:11px;background:#fff;color:#2447C4;font-size:13px;cursor:pointer;">Previous</button>
+                <span style="font-size:12px;color:#5B6478;">{{ targetPageLabel }}</span>
+                <button onClick="{{ nextTargets }}" style="padding:10px 14px;border:1px solid #D7DEEC;border-radius:11px;background:#fff;color:#2447C4;font-size:13px;cursor:pointer;">Next</button>
+              </div>
+            </sc-if>
             <sc-if value="{{ noTargets }}" hint-placeholder-val="{{ false }}">
               <div style="text-align:center;padding:28px 10px;background:#fff;border:1px dashed #C9D2E4;border-radius:16px;">
                 <div style="font-size:15px;font-weight:650;">{{ emptyTitle }}</div>
@@ -168,19 +175,19 @@ input,textarea,button{font-family:inherit}
           <div style="display:flex;flex-direction:column;">
             <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 14px 6px;">
               <button onClick="{{ back }}" style="display:flex;align-items:center;gap:4px;border:0;background:none;color:#2447C4;font-size:15px;font-weight:600;cursor:pointer;padding:6px 4px;"><span style="font-size:22px;line-height:1;">‹</span>{{ backLabel }}</button>
-              <button onClick="{{ hcoReport }}" style="width:38px;height:38px;border-radius:50%;border:1px solid #D7DEEC;background:#fff;cursor:pointer;color:#3C4557;font-size:15px;">⋯</button>
+              <sc-if value="{{ hCanReport }}" hint-placeholder-val="{{ true }}"><button onClick="{{ hcoReport }}" style="width:38px;height:38px;border-radius:50%;border:1px solid #D7DEEC;background:#fff;cursor:pointer;color:#3C4557;font-size:15px;">⋯</button></sc-if>
             </div>
             <div style="padding:4px 18px 0;">
               <div style="display:flex;gap:13px;align-items:center;">
-                <span style="width:56px;height:56px;flex:0 0 56px;border-radius:16px;background:#E7ECFA;color:#22409F;display:grid;place-items:center;font-size:15px;font-weight:700;">{{ h.ini }}</span>
+                <span data-kit="avatar" data-photo="{{ h.photo }}" data-initials="{{ h.ini }}" style="width:56px;height:56px;flex:0 0 56px;border-radius:16px;background:#E7ECFA;color:#22409F;display:grid;place-items:center;font-size:15px;font-weight:700;">{{ h.ini }}</span>
                 <div style="flex:1;min-width:0;">
                   <div style="font-family:'Source Serif 4',Georgia,serif;font-size:25px;line-height:1.12;letter-spacing:-.015em;">{{ h.name }}</div>
-                  <div style="font-size:13px;color:#5B6478;margin-top:3px;">{{ h.type }} · {{ h.city }} · {{ h.dist }}</div>
+                  <div style="font-size:13px;color:#5B6478;margin-top:3px;">{{ hIdentity }}</div>
                 </div>
               </div>
               <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:12px;">
                 <span style="font-size:11.5px;font-weight:650;padding:4px 8px;border-radius:7px;background:{{ hTagBg }};color:{{ hTagFg }};">{{ hTag }}</span>
-                <span style="font-size:11.5px;font-weight:600;padding:4px 8px;border-radius:7px;background:#EEF1F7;color:#3C4557;">{{ spec }} · 2025</span>
+                <sc-if value="{{ hCodeLabel }}" hint-placeholder-val="{{ true }}"><span style="font-size:11.5px;font-weight:600;padding:4px 8px;border-radius:7px;background:#EEF1F7;color:#3C4557;">{{ hCodeLabel }}</span></sc-if>
               </div>
             </div>
             <div style="display:flex;gap:4px;padding:16px 12px 0;">
@@ -191,18 +198,20 @@ input,textarea,button{font-family:inherit}
                 </button>
               </sc-for>
             </div>
-            <div style="padding:18px 18px 0;">
-              <div style="display:grid;grid-template-columns:1fr 1fr;background:#fff;border:1px solid #E1E6F0;border-radius:16px;overflow:hidden;">
-                <sc-for list="{{ hcoStats }}" as="st" hint-placeholder-count="4">
+            <sc-for list="{{ hcoSections }}" as="sec" hint-placeholder-count="1"><div style="padding:18px 18px 0;">
+              <sc-if value="{{ sec.title }}" hint-placeholder-val="{{ true }}"><div style="margin-bottom:8px;font-size:15px;font-weight:700;">{{ sec.title }}</div></sc-if>
+              <sc-if value="{{ sec.message }}" hint-placeholder-val="{{ false }}"><div style="padding:12px 14px;border:1px solid #E1E6F0;border-radius:12px;background:#fff;color:#5B6478;font-size:13px;">{{ sec.message }}</div></sc-if>
+              <sc-if value="{{ sec.stats.length }}" hint-placeholder-val="{{ true }}"><div style="display:grid;grid-template-columns:1fr 1fr;background:#fff;border:1px solid #E1E6F0;border-radius:16px;overflow:hidden;">
+                <sc-for list="{{ sec.stats }}" as="st" hint-placeholder-count="4">
                   <div style="padding:13px 14px;border-right:1px solid #F0F3F8;border-bottom:1px solid #F0F3F8;">
                     <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.08em;color:#7A839A;">{{ st.k }}</div>
                     <div style="font-family:'Source Serif 4',Georgia,serif;font-size:26px;line-height:1.05;margin-top:6px;color:{{ st.c }};">{{ st.v }}</div>
                     <div style="font-size:11.5px;color:#5B6478;margin-top:3px;">{{ st.s }}</div>
                   </div>
                 </sc-for>
-              </div>
-            </div>
-            <div style="padding:12px 18px 0;">
+              </div></sc-if>
+            </div></sc-for>
+            <sc-if value="{{ hShowLeak }}" hint-placeholder-val="{{ true }}"><div style="padding:12px 18px 0;">
               <div style="background:#fff;border:1px solid #E1E6F0;border-radius:16px;padding:14px;">
                 <div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="font-size:15px;font-weight:700;">Where patients go</span><span style="font-size:12px;color:#5B6478;">all cohort codes</span></div>
                 <div style="display:flex;height:10px;border-radius:6px;overflow:hidden;margin-top:12px;background:#F0F3F8;">
@@ -210,24 +219,25 @@ input,textarea,button{font-family:inherit}
                 </div>
                 <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:12.5px;">
                   <span><span style="color:#2447C4;font-weight:700;">{{ h.stayed }}</span> stayed</span>
-                  <span><span style="color:#A94D1B;font-weight:700;">{{ h.left }}</span> left · {{ h.leak }} since 2022</span>
+                  <span><span style="color:#A94D1B;font-weight:700;">{{ h.left }}</span> left{{ hLeakLabel }}</span>
                 </div>
               </div>
-            </div>
-            <div style="padding:20px 18px 0;">
-              <div style="display:flex;justify-content:space-between;align-items:baseline;padding:0 2px;"><span style="font-size:17px;font-weight:700;">HCPs here</span><span style="font-size:12px;color:#5B6478;">ranked by claims</span></div>
+            </div></sc-if>
+            <sc-if value="{{ hShowPeople }}" hint-placeholder-val="{{ true }}"><div style="padding:20px 18px 0;">
+              <div style="display:flex;justify-content:space-between;align-items:baseline;padding:0 2px;"><span style="font-size:17px;font-weight:700;">{{ hPeopleTitle }}</span><span style="font-size:12px;color:#5B6478;">{{ hPeopleMeta }}</span></div>
               <div style="margin-top:9px;background:#fff;border:1px solid #E1E6F0;border-radius:16px;overflow:hidden;">
                 <sc-for list="{{ hHcps }}" as="r" hint-placeholder-count="2">
                   <div style="display:flex;align-items:center;gap:11px;padding:11px 12px 11px 14px;border-bottom:1px solid #F0F3F8;">
                     <button onClick="{{ r.open }}" style="flex:1;min-width:0;display:flex;gap:11px;align-items:center;border:0;background:none;padding:0;cursor:pointer;text-align:left;color:#0B1220;">
-                      <span style="width:36px;height:36px;flex:0 0 36px;border-radius:50%;background:#E7ECFA;color:#22409F;display:grid;place-items:center;font-size:11.5px;font-weight:700;">{{ r.ini }}</span>
+                      <span data-kit="avatar" data-photo="{{ r.photo }}" data-npi="{{ r.npi }}" data-initials="{{ r.ini }}" style="width:36px;height:36px;flex:0 0 36px;border-radius:50%;background:#E7ECFA;color:#22409F;display:grid;place-items:center;font-size:11.5px;font-weight:700;">{{ r.ini }}</span>
                       <span style="flex:1;min-width:0;"><span style="display:block;font-size:14px;font-weight:650;">{{ r.name }}</span><span style="display:block;font-size:12px;color:#5B6478;margin-top:1px;">{{ r.meta }}</span></span>
                     </button>
                     <button onClick="{{ r.toggle }}" style="width:38px;height:38px;border-radius:11px;border:1px solid {{ r.addBd }};background:{{ r.addBg }};color:{{ r.addFg }};font-size:16px;cursor:pointer;">{{ r.addIcon }}</button>
                   </div>
                 </sc-for>
               </div>
-            </div>
+              <sc-if value="{{ hMorePeople }}" hint-placeholder-val="{{ false }}"><button onClick="{{ hShowMore }}" style="margin-top:8px;padding:9px 12px;border:1px solid #D7DEEC;border-radius:10px;background:#fff;color:#2447C4;font-size:13px;cursor:pointer;">Show more HCPs</button></sc-if>
+            </div></sc-if>
             <div style="height:170px;"></div>
           </div>
         </sc-if>
@@ -236,21 +246,24 @@ input,textarea,button{font-family:inherit}
           <div style="display:flex;flex-direction:column;">
             <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 14px 6px;">
               <button onClick="{{ back }}" style="display:flex;align-items:center;gap:4px;border:0;background:none;color:#2447C4;font-size:15px;font-weight:600;cursor:pointer;padding:6px 4px;"><span style="font-size:22px;line-height:1;">‹</span>{{ backLabel }}</button>
-              <button onClick="{{ pDetails }}" style="width:38px;height:38px;border-radius:50%;border:1px solid #D7DEEC;background:#fff;cursor:pointer;color:#3C4557;font-size:15px;">⋯</button>
+              <sc-if value="{{ pCanCopyContact }}" hint-placeholder-val="{{ true }}"><button onClick="{{ pDetails }}" style="width:38px;height:38px;border-radius:50%;border:1px solid #D7DEEC;background:#fff;cursor:pointer;color:#3C4557;font-size:15px;">⋯</button></sc-if>
             </div>
             <div style="padding:4px 18px 0;">
               <div style="display:flex;gap:13px;align-items:center;">
-                <span style="width:58px;height:58px;flex:0 0 58px;border-radius:50%;background:#E7ECFA;color:#22409F;display:grid;place-items:center;font-size:17px;font-weight:700;">{{ p.ini }}</span>
+                <span data-kit="avatar" data-photo="{{ p.photo }}" data-npi="{{ p.id }}" data-initials="{{ p.ini }}" style="width:58px;height:58px;flex:0 0 58px;border-radius:50%;background:#E7ECFA;color:#22409F;display:grid;place-items:center;font-size:17px;font-weight:700;">{{ p.ini }}</span>
                 <div style="flex:1;min-width:0;">
                   <div style="font-family:'Source Serif 4',Georgia,serif;font-size:26px;line-height:1.1;letter-spacing:-.015em;">{{ p.name }}</div>
-                  <button onClick="{{ pOpenHco }}" style="border:0;background:none;padding:0;margin-top:3px;font-size:13px;color:#5B6478;cursor:pointer;text-align:left;">{{ p.spec }} · <span style="color:{{ p.hcoFg }};font-weight:{{ p.hcoW }};">{{ p.hcoName }}</span></button>
+                  <sc-if value="{{ pCanOpenHco }}" hint-placeholder-val="{{ true }}"><button onClick="{{ pOpenHco }}" style="border:0;background:none;padding:0;margin-top:3px;font-size:13px;color:#5B6478;cursor:pointer;text-align:left;">{{ p.spec }} · <span style="color:#2447C4;font-weight:600;">{{ p.hcoName }}</span></button></sc-if>
+                  <sc-if value="{{ pNoHcoLink }}" hint-placeholder-val="{{ false }}"><div style="margin-top:3px;font-size:13px;color:#5B6478;">{{ pIdentity }}</div></sc-if>
+                  <sc-if value="{{ pMeta }}" hint-placeholder-val="{{ true }}"><div style="margin-top:3px;font-size:12px;color:#7A839A;">{{ pMeta }}</div></sc-if>
                 </div>
               </div>
               <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:12px;">
                 <span style="font-size:11.5px;font-weight:650;padding:4px 8px;border-radius:7px;background:{{ p.tagBg }};color:{{ p.tagFg }};">{{ p.tag }}</span>
-                <span style="font-size:11.5px;font-weight:600;padding:4px 8px;border-radius:7px;background:#EEF1F7;color:#3C4557;">Last contact · {{ p.last }}</span>
+                <sc-if value="{{ pShowContactDate }}" hint-placeholder-val="{{ true }}"><span style="font-size:11.5px;font-weight:600;padding:4px 8px;border-radius:7px;background:#EEF1F7;color:#3C4557;">Last contact · {{ p.last }}</span></sc-if>
                 <sc-if value="{{ p.hasFlag }}" hint-placeholder-val="{{ false }}"><span style="font-size:11.5px;font-weight:650;padding:4px 8px;border-radius:7px;background:{{ p.flagBg }};color:{{ p.flagFg }};">{{ p.flag }}</span></sc-if>
               </div>
+              <sc-if value="{{ pTags }}" hint-placeholder-val="{{ false }}"><div style="margin-top:8px;font-size:12px;color:#5B6478;">Tags · {{ pTags }}</div></sc-if>
             </div>
             <div style="display:flex;gap:4px;padding:16px 12px 0;">
               <sc-for list="{{ hcpActions }}" as="a" hint-placeholder-count="5">
@@ -319,7 +332,7 @@ input,textarea,button{font-family:inherit}
                     <sc-if value="{{ v.hasChips }}" hint-placeholder-val="{{ false }}"><span style="display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;"><sc-for list="{{ v.chips }}" as="c" hint-placeholder-count="2"><span style="font-size:11px;font-weight:600;padding:3px 7px;border-radius:6px;background:#EEF1F7;color:#3C4557;">{{ c }}</span></sc-for></span></sc-if>
                   </button>
                 </sc-for>
-                <sc-if value="{{ pNoVisits }}" hint-placeholder-val="{{ false }}"><div style="font-size:13px;color:#5B6478;padding:8px 2px;">No visits logged yet.</div></sc-if>
+                <sc-if value="{{ pNoVisits }}" hint-placeholder-val="{{ false }}"><div style="font-size:13px;color:#5B6478;padding:8px 2px;">{{ pEmptyHistory }}</div></sc-if>
                 <div style="display:flex;gap:8px;">
                   <button onClick="{{ pLog }}" style="flex:1;padding:13px;border:1px dashed #B9C3D8;border-radius:14px;background:#EDF1FB;color:#22409F;font-size:13.5px;font-weight:700;cursor:pointer;">{{ pLogLabel }}</button>
                   <button onClick="{{ pFu }}" style="flex:1;padding:13px;border:1px dashed #B9C3D8;border-radius:14px;background:#EDF1FB;color:#22409F;font-size:13.5px;font-weight:700;cursor:pointer;">＋ Follow-up</button>
@@ -402,7 +415,7 @@ input,textarea,button{font-family:inherit}
               <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#3C4557;">{{ rc.time }}</span>
             </div>
             <div style="padding:16px 18px 0;display:flex;gap:13px;align-items:center;">
-              <span style="width:58px;height:58px;flex:0 0 58px;border-radius:50%;background:#E7ECFA;color:#22409F;display:grid;place-items:center;font-size:17px;font-weight:700;">{{ rc.ini }}</span>
+                <span data-kit="avatar" data-photo="{{ rc.photo }}" data-npi="{{ rc.npi }}" data-initials="{{ rc.ini }}" style="width:58px;height:58px;flex:0 0 58px;border-radius:50%;background:#E7ECFA;color:#22409F;display:grid;place-items:center;font-size:17px;font-weight:700;">{{ rc.ini }}</span>
               <div style="flex:1;min-width:0;">
                 <div style="font-family:'Source Serif 4',Georgia,serif;font-size:26px;line-height:1.1;letter-spacing:-.015em;">{{ rc.name }}</div>
                 <div style="font-size:13px;color:#5B6478;margin-top:3px;">{{ rc.sub }}</div>
@@ -518,7 +531,7 @@ input,textarea,button{font-family:inherit}
                     <sc-for list="{{ m.rows }}" as="r" hint-placeholder-count="0">
                       <div style="display:flex;align-items:center;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid #F0F3F8;">
                         <button onClick="{{ r.open }}" style="flex:1;min-width:0;display:flex;gap:10px;align-items:center;border:0;background:none;padding:0;cursor:pointer;text-align:left;color:#0B1220;">
-                          <span style="width:32px;height:32px;flex:0 0 32px;border-radius:50%;background:#FDEDE4;color:#A94D1B;display:grid;place-items:center;font-size:11px;font-weight:700;">{{ r.ini }}</span>
+                          <span data-kit="avatar" data-photo="{{ r.photo }}" data-npi="{{ r.npi }}" data-initials="{{ r.ini }}" style="width:32px;height:32px;flex:0 0 32px;border-radius:50%;background:#FDEDE4;color:#A94D1B;display:grid;place-items:center;font-size:11px;font-weight:700;">{{ r.ini }}</span>
                           <span style="flex:1;min-width:0;"><span style="display:block;font-size:13.5px;font-weight:650;">{{ r.name }}</span><span style="display:block;font-size:11.5px;color:#5B6478;">{{ r.meta }}</span></span>
                         </button>
                         <sc-if value="{{ r.isDoc }}" hint-placeholder-val="{{ true }}"><span style="display:flex;gap:6px;"><button onClick="{{ r.log }}" style="width:32px;height:32px;border-radius:9px;border:1px solid #D7DEEC;background:#fff;color:#2447C4;font-size:13px;cursor:pointer;padding:0;">✎</button><button onClick="{{ r.fu }}" style="width:32px;height:32px;border-radius:9px;border:1px solid #D7DEEC;background:#fff;color:#2447C4;font-size:13px;cursor:pointer;padding:0;">◷</button></span></sc-if>
@@ -647,7 +660,7 @@ input,textarea,button{font-family:inherit}
                 </sc-for>
                 <sc-for list="{{ visitList }}" as="v" hint-placeholder-count="2">
                   <button onClick="{{ v.open }}" style="display:flex;gap:12px;text-align:left;background:#fff;border:1px solid #E1E6F0;border-radius:16px;padding:13px 14px;cursor:pointer;color:#0B1220;">
-                    <span style="width:38px;height:38px;flex:0 0 38px;border-radius:50%;background:#E7ECFA;color:#22409F;display:grid;place-items:center;font-size:11.5px;font-weight:700;">{{ v.ini }}</span>
+                    <span data-kit="avatar" data-photo="{{ v.photo }}" data-npi="{{ v.npi }}" data-initials="{{ v.ini }}" style="width:38px;height:38px;flex:0 0 38px;border-radius:50%;background:#E7ECFA;color:#22409F;display:grid;place-items:center;font-size:11.5px;font-weight:700;">{{ v.ini }}</span>
                     <span style="flex:1;min-width:0;">
                       <span style="display:flex;justify-content:space-between;align-items:center;gap:8px;"><span style="font-size:14.5px;font-weight:650;">{{ v.name }}</span><span style="font-size:11.5px;color:#7A839A;white-space:nowrap;">{{ v.date }}</span></span>
                       <span style="display:block;font-size:12px;color:#5B6478;margin-top:1px;">{{ v.type }} · {{ v.topic }}</span>
@@ -960,7 +973,7 @@ input,textarea,button{font-family:inherit}
                         <sc-for list="{{ insAttendees }}" as="a" hint-placeholder-count="1">
                           <div style="border:1px solid #E1E6F0;border-radius:14px;padding:11px 12px;">
                             <div style="display:flex;align-items:center;gap:10px;">
-                              <span style="width:32px;height:32px;flex:0 0 32px;border-radius:50%;background:#E7ECFA;color:#22409F;display:grid;place-items:center;font-size:11px;font-weight:700;">{{ a.ini }}</span>
+                              <span data-kit="avatar" data-photo="{{ a.photo }}" data-npi="{{ a.npi }}" data-initials="{{ a.ini }}" style="width:32px;height:32px;flex:0 0 32px;border-radius:50%;background:#E7ECFA;color:#22409F;display:grid;place-items:center;font-size:11px;font-weight:700;">{{ a.ini }}</span>
                               <span style="flex:1;min-width:0;"><span style="display:block;font-size:14px;font-weight:650;">{{ a.name }}</span><span style="display:block;font-size:12px;color:#5B6478;">{{ a.spec }}</span></span>
                               <sc-if value="{{ a.canRemove }}" hint-placeholder-val="{{ false }}"><button onClick="{{ a.remove }}" style="width:28px;height:28px;border-radius:50%;border:0;background:#EEF1F7;color:#5B6478;cursor:pointer;font-size:11px;">✕</button></sc-if>
                             </div>
@@ -1142,7 +1155,7 @@ input,textarea,button{font-family:inherit}
                     <div style="margin-top:8px;border:1px solid #E1E6F0;border-radius:14px;overflow:hidden;">
                       <sc-for list="{{ vd.people }}" as="r" hint-placeholder-count="1">
                         <button onClick="{{ r.open }}" style="display:flex;align-items:center;gap:10px;width:100%;padding:11px 12px;border:0;border-bottom:1px solid #F0F3F8;background:#fff;cursor:pointer;text-align:left;">
-                          <span style="width:32px;height:32px;flex:0 0 32px;border-radius:50%;background:#E7ECFA;color:#22409F;display:grid;place-items:center;font-size:11px;font-weight:700;">{{ r.ini }}</span>
+                          <span data-kit="avatar" data-photo="{{ r.photo }}" data-npi="{{ r.npi }}" data-initials="{{ r.ini }}" style="width:32px;height:32px;flex:0 0 32px;border-radius:50%;background:#E7ECFA;color:#22409F;display:grid;place-items:center;font-size:11px;font-weight:700;">{{ r.ini }}</span>
                           <span style="flex:1;min-width:0;"><span style="display:block;font-size:14px;font-weight:650;color:#0B1220;">{{ r.name }}</span><span style="display:block;font-size:12px;color:#5B6478;">{{ r.meta }}</span></span>
                           <span style="color:#C3CAD8;">›</span>
                         </button>
@@ -1314,6 +1327,7 @@ const DRAFT_KEYS = ['insKey','insRef','insWho','insAdv','insNote','insTopics','i
 // the signed-in rep; the app fills it from the session. The sample rep is DocNexus staff, so Me shows the account switch.
 // pick: the account-switch row the app loaded (empty: the row for the account)
 const ME = { name:'Rowan Quill', ini:'RQ', staff:true, pick:'' };
+const WORKSPACE = {};
 // sign-in, password and account calls. These stand-ins say yes; the app asks Cognito, and signIn
 // answers { next:'newPassword', missing:['given_name', …] } when a first sign-in must set a password
 const later = v => new Promise(r => setTimeout(() => r(v), 700));
@@ -1456,12 +1470,12 @@ class Component extends DCLogic {
     return {
     account,
     tab: this.tabsFor({ account }).includes(pr.startTab) ? pr.startTab : 'targets', stack: [], sheet: null, sheetData: null,
-    scope: 'mine', kind: ACCOUNTS[account].fieldPro ? 'hco' : 'hcp', q: '', spec: 'All codes', cgs: CODE_GROUPS.map(g => g.name), sort: 'Relevance', iSort: 'Relevance', omType: 'All types', tlist: TLISTS[0] ? TLISTS[0].name : '',
+    scope: 'mine', kind: ACCOUNTS[account].fieldPro ? 'hco' : 'hcp', q: '', spec: 'All codes', cgs: CODE_GROUPS.map(g => g.name), sort: WORKSPACE.lens === 'hcp' || WORKSPACE.drugAccount ? 'Volume' : 'Opportunity', iSort: 'Relevance', omType: 'All types', tlist: TLISTS[0] ? TLISTS[0].id || TLISTS[0].name : '',
     route: [], tomorrow: [], day: 'today', runIdx: 0, runDone: [], runSkip: [], logged: [],
     ...seed(A),
     thread: [], askIn: '', listening: false, email: null, switching: null,
     actSeg: 'visits', pSeg: 'overview', logFu: false,
-    territory: TERRS[0] ? TERRS[0].name : '', toast: null, toastUndo: null, omKind:'acc', omRadius:5, omMode:AREA.mode || 'near', omStart:AREA.centre, omCity:AREA.city, omGroup:'all', omSel:null, omExpanded:false, omLayer:'Pins', omCmd:{ kind:'', n:0 }, speaking: null, fuTask: '', fuWho: null, fuDue: 1,
+    territory: seed(A).territory || (TERRS[0] ? TERRS[0].id || TERRS[0].name : ''), targetPage:0, targetPageKey:'', toast: null, toastUndo: null, omKind:'acc', omRadius:5, omMode:AREA.mode || 'near', omStart:AREA.centre, omCity:AREA.city, omGroup:'all', omSel:null, omExpanded:false, omLayer:'Pins', omCmd:{ kind:'', n:0 }, speaking: null, fuTask: '', fuWho: null, fuDue: 1,
     ...this.insFresh([], A),
     smySeg:'new', smyQ:'', smyTag:'All', smySel:[], smyName:'', smyBusy:false, smyOpen:null,
     signedIn: !pr.signedOut, authEmail:'', ...this.authFresh()
@@ -1471,7 +1485,7 @@ class Component extends DCLogic {
   // the runtime passes only prevProps, so keep the last screen and props here
   componentDidUpdate() {
     const s = this.state;
-    const key = s.tab + '|' + s.stack.map(x => x.s + (x.id || '')).join('/');
+    const key = s.tab + '|' + s.stack.map(x => x.s + (x.id || '')).join('/') + '|' + s.targetPage;
     if (this._k !== undefined && this._k !== key && this.scrollRef.current) this.scrollRef.current.scrollTop = 0;
     this._k = key;
     const na = (this.props || {}).account;
@@ -1528,7 +1542,7 @@ class Component extends DCLogic {
   openFu(id) { this.setState({ sheet:'fu', sheetData:null, fuWho: id || null, fuTask:'', fuDue:1 }); }
   // who can be picked: the account's doctors first, then the rest of the book (insights accounts: the target list)
   people(hco) {
-    const s = this.state, pool = this.acct().fieldPro ? Object.values(HCPS) : (TLISTS.find(t => t.name === s.tlist) || TLISTS[0] || { ids:[] }).ids.map(id => HCPS[id]);
+    const s = this.state, pool = this.acct().fieldPro ? Object.values(HCPS) : (TLISTS.find(t => (t.id || t.name) === s.tlist) || TLISTS[0] || { ids:[] }).ids.map(id => HCPS[id]);
     return hco ? [...pool.filter(p => p.hco === hco), ...pool.filter(p => p.hco !== hco)] : pool;
   }
   // who Record tags: the doctor on screen, or the one at the current visit
@@ -1609,12 +1623,12 @@ class Component extends DCLogic {
   visitView(v) {
     const ids = this.whoOf(v), p = HCPS[ids[0]];
     const A = this.acct();
-    const advs = v.advs && Object.keys(v.advs).length ? ids.filter(id => v.advs[id]).map(id => [id, v.advs[id]]) : v.adv && p ? [[ids[0], v.adv]] : [];
+    const advs = !A.adv ? [] : v.advs && Object.keys(v.advs).length ? ids.filter(id => v.advs[id]).map(id => [id, v.advs[id]]) : v.adv && p ? [[ids[0], v.adv]] : [];
     const advChip = ([id, n]) => (advs.length > 1 ? HCPS[id].first + ' ' : 'Advocacy ') + n + (A.advLabels ? ' · ' + A.advLabels[n - 1] : '/5');
     const chips = [...advs.map(advChip), ...(v.area ? [v.area] : []), ...(v.stage ? [v.stage, v.prio + ' priority'] : []),
       ...(v.vendor ? [v.vendor + (v.vendorSub ? ' · ' + v.vendorSub : '')] : []), ...(v.count ? [v.count + ' attendees'] : []), ...(v.conf ? [v.conf] : []),
       ...(v.topics || []), ...(v.subs || []), ...(v.tags || [])];
-    return { ...v, name: p ? p.name + (ids.length > 1 ? ' +' + (ids.length - 1) : '') : v.vendor || v.type.split(' · ')[0], ini: p ? p.ini : '3P', chips, hasChips: chips.length > 0 || !!v.src, hasSrc: !!v.src,
+    return { ...v, photo:p && p.photo, npi:p && p.id, name: p ? p.name + (ids.length > 1 ? ' +' + (ids.length - 1) : '') : v.vendor || v.type.split(' · ')[0], ini: p ? p.ini : '3P', chips, hasChips: chips.length > 0 || !!v.src, hasSrc: !!v.src,
       srcLabel: v.conv === 'Note' ? 'Note' : v.src === 'Notes' ? wordsOf(A).one : v.src ? 'From ' + v.src.toLowerCase() : '', open: () => this.sheet('visit', v.id) };
   }
   themes(list) {
@@ -1649,7 +1663,7 @@ class Component extends DCLogic {
     });
   }
 
-  go(s, id) { this.setState(st => ({ stack: [...st.stack, { s, id }], sheet: null, pSeg: 'overview' })); }
+  go(s, id) { if (s === 'hco' && !this.acct().fieldPro) return; this.setState(st => ({ stack: [...st.stack, { s, id }], sheet:null,pSeg:'overview',hPeopleLimit:24 })); }
   replaceTop(s, id) { this.setState(st => ({ stack: [...st.stack.slice(0, -1), { s, id }] })); }
   setTab(t, extra) { this.setState({ tab: t, stack: [], sheet: null, ...(extra || {}) }); }
   sheet(sheet, data) { this.setState({ sheet, sheetData: data == null ? null : data }); }
@@ -1690,7 +1704,7 @@ class Component extends DCLogic {
   toast(msg, undo) { clearTimeout(this._t); this.setState({ toast: msg, toastUndo: undo || null }); this._t = setTimeout(() => this.setState({ toast: null, toastUndo: null }), undo ? 4000 : 2000); }
   // the one Add: a visit goes where it adds the least driving; a doctor at a hospital already on the route joins that stop
   hcoOf(id) { return HCPS[id] ? HCPS[id].hco : id; }
-  stopOf(id) { if (HCPS[id]) return HCPS[id]; const h = HCOS[id] || NO_HCO; return { id, name:h.name, ini:h.ini, spec:h.type, hco:id, isHco:true }; }
+  stopOf(id) { if (HCPS[id]) return HCPS[id]; const h = HCOS[id] || NO_HCO; return { id, name:h.name, ini:h.ini, photo:h.photo, spec:h.type, hco:id, isHco:true }; }
   groupsOf(list) {
     const order = [], map = {};
     list.forEach(id => { const h = this.hcoOf(id); if (!map[h]) { map[h] = []; order.push(h); } map[h].push(id); });
@@ -1859,7 +1873,7 @@ class Component extends DCLogic {
   }
   fuView(f) {
     const p = HCPS[f.who], over = f.dueN < 0;
-    return { ...f, whoName: p.name, dueBg: f.done ? '#EEF1F7' : over ? '#FDEDE4' : '#E7ECFA', dueFg: f.done ? '#7A839A' : over ? '#A94D1B' : '#22409F', due: f.done ? 'Done' : over ? 'Overdue · ' + dateOf(f.dueN) : dayOf(f.dueN),
+    return { ...f, whoName: p?.name || 'Clinician unavailable', dueBg: f.done ? '#EEF1F7' : over ? '#FDEDE4' : '#E7ECFA', dueFg: f.done ? '#7A839A' : over ? '#A94D1B' : '#22409F', due: f.done ? 'Done' : over ? 'Overdue · ' + dateOf(f.dueN) : dayOf(f.dueN),
       toggle: () => {
         this.setState(st => ({ fus: st.fus.map(x => x.id === f.id ? { ...x, done: !x.done } : x) })); if (!f.done) this.toast('Follow-up done');
         if (SERVICE.followUpDone) SERVICE.followUpDone(f, !f.done).then(null, e => { this.setState(st => ({ fus: st.fus.map(x => x.id === f.id ? { ...x, done: f.done } : x) })); this.toast((e && e.message) || 'That didn’t save · try again'); });
@@ -2026,17 +2040,18 @@ class Component extends DCLogic {
     let items;
     const ql = s.q.trim().toLowerCase();
     const sortNow = ins ? s.iSort : s.sort;
-    const tlist = TLISTS.find(t => t.name === s.tlist) || TLISTS[0] || { name:'', meta:'', ids:[] };
+    const tlist = TLISTS.find(t => (t.id || t.name) === s.tlist) || TLISTS[0] || { name:'', meta:'', ids:[] };
     const cgOn = CODE_GROUPS.filter(g => s.cgs.includes(g.name)), cgSpecs = cgOn.flatMap(g => g.specs);
     const specOk = x => !x.specs.length || ((s.spec === 'All codes' || x.specs.includes(s.spec)) && x.specs.some(sp => cgSpecs.includes(sp)));
     const codesOff = !ins && (s.spec !== 'All codes' || s.cgs.length < CODE_GROUPS.length);
-    if (ins) {
+    if (scr !== 'targets') items = [];
+    else if (ins) {
       items = tlist.ids.map(id => HCPS[id]).filter(p => !ql || p.name.toLowerCase().includes(ql) || HCOS[p.hco].name.toLowerCase().includes(ql));
       const advN = id => this.advOf(id) || 0, lastName = p => p.name.split(' ').pop();
       items.sort((a, b) => sortNow === 'Relevance' ? this.relevance(b.id) - this.relevance(a.id) : sortNow === 'Name' ? lastName(a).localeCompare(lastName(b)) : sortNow === 'Last met' ? this.lastOf(b.id).n - this.lastOf(a.id).n : advN(b.id) - advN(a.id));
       items = items.map(p => {
         const f = this.flagOf(p.id), adv = this.advOf(p.id);
-        return { name:p.name, sub:p.spec + ' · ' + HCOS[p.hco].name, ini:p.ini, avBg:'#E7ECFA', avFg:'#22409F', avR:'50%', ...addSt(s.route.includes(p.id)),
+        return { name:p.name, photo:p.photo, npi:p.id, sub:p.spec + ' · ' + HCOS[p.hco].name, ini:p.ini, avBg:'#E7ECFA', avFg:'#22409F', avR:'50%', ...addSt(s.route.includes(p.id)),
           toggle: () => this.toggleRoute(p.id), open: () => this.go('hcp', p.id), hasFlag: !!f, flag: f ? f.label : '', flagBg: f ? f.bg : '', flagFg: f ? f.fg : '',
           metrics: A.adv
             ? [{ k:'ADVOCACY', v: adv ? adv + '/5' : '—', c: adv >= 4 ? '#1C7A4E' : adv && adv <= 2 ? '#A94D1B' : '#0B1220' }, { k:'LAST MET', v:this.lastOf(p.id).label, c:'#0B1220' }, { k:'INSIGHTS', v:String(this.convCount(p.id)), c:'#22409F' }]
@@ -2044,14 +2059,15 @@ class Component extends DCLogic {
       });
     } else if (s.kind === 'hco') {
       items = Object.values(HCOS).filter(h => s.scope === 'explore' || h.mine).filter(h => this.areaOk(this.milesFrom(h, h.distN), h.boro) && this.typeOk(h.type)).filter(h => !ql || h.name.toLowerCase().includes(ql)).filter(specOk);
-      const key = { Opportunity:'oppN', Volume:'volN', Growth:'yoyN', Distance:'distN' }[s.sort];
-      items.sort((a, b) => s.sort === 'Relevance' ? this.relevance(b.id) - this.relevance(a.id) : s.sort === 'Distance' ? a[key] - b[key] : b[key] - a[key]);
+      const key = { Opportunity:'oppN', Volume:'volN', Growth:'listYoyN', Distance:'distN' }[s.sort];
+      const orderValue = h => s.sort === 'Growth' ? (h.listYoyN == null ? h.yoyN : h.listYoyN) : h[key];
+      items.sort((a, b) => s.sort === 'Relevance' ? this.relevance(b.id) - this.relevance(a.id) : s.sort === 'Distance' ? orderValue(a) - orderValue(b) : orderValue(b) - orderValue(a));
       items = items.map(h => {
         const inR = inRoute(h.id);
-        return { name:h.name, sub:h.type + ' · ' + h.dist + ' away', ini:h.ini, avBg:'#EEF1F7', avFg:'#3C4557', avR:'13px', ...addSt(inR),
+        return { name:h.name, photo:h.photo, sub:h.type + ' · ' + h.dist + ' away', ini:h.ini, avBg:'#EEF1F7', avFg:'#3C4557', avR:'13px', ...addSt(inR),
           toggle: () => h.hcps.length ? this.sheet('choose', h.id) : this.toggleRoute(h.id),
           open: () => this.go('hco', h.id), hasFlag: h.leak !== '—', flag:'Leaking ' + h.leak + ' since 2022', flagBg:'#FDEDE4', flagFg:'#A94D1B',
-          metrics:[{ k:'OPPORTUNITY', v:h.opp, c:'#22409F' }, { k:'PROCEDURES', v:h.proc, c:'#0B1220' }, { k:'YOY', v:h.yoy, c:'#1C7A4E' }] };
+          metrics:[{ k:'OPPORTUNITY', v:h.opp, c:'#22409F' }, { k:WORKSPACE.metric || 'PROCEDURES', v:h.listProc || h.proc, c:'#0B1220' }, { k:'YOY', v:h.listYoy || h.yoy, c:(h.listYoyN == null ? h.yoyN : h.listYoyN) < 0 ? '#A94D1B' : '#1C7A4E' }] };
       });
     } else {
       items = Object.values(HCPS).filter(p => s.scope === 'explore' || p.mine).filter(p => this.areaOk(this.milesFrom(HCOS[p.hco], p.distN), HCOS[p.hco].boro)).filter(p => !ql || p.name.toLowerCase().includes(ql) || HCOS[p.hco].name.toLowerCase().includes(ql)).filter(specOk);
@@ -2059,19 +2075,23 @@ class Component extends DCLogic {
       items.sort((a, b) => s.sort === 'Relevance' ? this.relevance(b.id) - this.relevance(a.id) : s.sort === 'Distance' ? a[key] - b[key] : b[key] - a[key]);
       items = items.map(p => {
         const f = this.flagOf(p.id);
-        return { name:p.name, sub:p.spec + ' · ' + HCOS[p.hco].name, ini:p.ini, avBg:'#E7ECFA', avFg:'#22409F', avR:'50%', ...addSt(s.route.includes(p.id)),
+        return { name:p.name, photo:p.photo, npi:p.id, sub:p.spec + ' · ' + HCOS[p.hco].name, ini:p.ini, avBg:'#E7ECFA', avFg:'#22409F', avR:'50%', ...addSt(s.route.includes(p.id)),
           toggle: () => this.toggleRoute(p.id), open: () => this.go('hcp', p.id), hasFlag: !!f, flag: f ? f.label : '', flagBg: f ? f.bg : '', flagFg: f ? f.fg : '',
           metrics:[{ k:'CLAIMS', v:p.claims, c:'#0B1220' }, { k:'YOY', v:p.yoy, c: p.yoyN < 0 ? '#A94D1B' : '#1C7A4E' }, { k:'LIGHTEST', v:p.day, c:'#22409F' }] };
       });
     }
     const unit = !ins && s.kind === 'hco' ? ['account','accounts'] : ['clinician','clinicians'];
+    const territoryName = (TERRS.find(t => (t.id || t.name) === s.territory) || {}).name || s.territory;
+    const targetPageKey = JSON.stringify([s.account,s.territory,s.tlist,s.q,s.scope,s.kind,s.spec,s.cgs,s.sort,s.iSort,s.omType,s.omMode,s.omRadius,s.omCity]);
+    const targetPage = s.targetPageKey === targetPageKey ? Math.max(0, Math.min(s.targetPage || 0, Math.ceil(items.length / 24) - 1)) : 0;
     const resetArea = () => this.setState({ omMode:AREA.mode || 'near', omRadius:5, omStart:AREA.centre, omCity:AREA.city, omType:'All types' });
     const toExploreFirst = !ins && s.scope === 'mine';
-    const empty = ql
+    const openingTargets = !!this.props?.loading || !!tlist.loading || (!ins && s.scope === 'mine' && s.kind === 'hcp' && !!WORKSPACE.hcpTargetsPending);
+    const empty = openingTargets ? { emptyTitle:'Loading targets…',emptySub:tlist.name ? 'Opening ' + tlist.name : '',hasEmptyA:ins && TLISTS.length > 1,emptyA:'Change list',emptyAGo:() => this.sheet('territory'),hasEmptyB:false } : ql
       ? { emptyTitle:'No matches for “' + s.q.trim() + '”', emptySub: toExploreFirst ? 'Try Explore, or ask about it.' : 'Check the spelling, or ask about it.',
           emptyA: toExploreFirst ? 'Search Explore' : 'Clear search', emptyAGo: toExploreFirst ? () => this.setState({ scope:'explore' }) : () => this.setState({ q:'' }), emptyB:'Ask about it', emptyBGo: () => this.ask(s.q) }
       : codesOff ? { emptyTitle:'Nothing for these codes', emptySub:'Change the specialty or the code groups.', emptyA:'Change filters', emptyAGo: () => this.sheet('filter'), emptyB:'Reset filters', emptyBGo: () => this.setState({ spec:'All codes', cgs: CODE_GROUPS.map(g => g.name) }) }
-      : ins ? { emptyTitle: s.tlist ? 'No one on ' + s.tlist : 'No target lists yet', emptySub: 'Targets added on the website show here.',
+      : ins ? { emptyTitle:tlist.loading ? 'Loading targets…' : tlist.name && tlist.name !== 'No target lists' ? 'No one on ' + tlist.name : 'No target lists yet',emptySub:tlist.loading ? 'Opening ' + tlist.name : 'Targets added on the website show here.',
           emptyA:'Change list', emptyAGo: () => this.sheet('territory'), hasEmptyA: TLISTS.length > 1, emptyB:'', emptyBGo: () => {}, hasEmptyB: false }
       : { emptyTitle:'Nothing in this area', emptySub: s.kind === 'hco' ? 'Widen the area or change the type.' : 'Widen the area.',
           emptyA:'Change area', emptyAGo: () => this.sheet('range', 'targets'), emptyB:'Reset filters', emptyBGo: resetArea };
@@ -2082,6 +2102,13 @@ class Component extends DCLogic {
     const H = HCOS[hId] || NO_HCO;
     const pId = scr === 'hcp' ? top.id : Object.keys(HCPS)[0];
     const P = HCPS[pId] || NO_HCP;
+    const pTarget = ins ? tlist.profiles?.[pId] : null;
+    const pHistory = pTarget ? (pTarget.activity || []) : s.visits.filter(v => this.whoOf(v).includes(pId));
+    const pEntries = pTarget && s.pSeg !== 'followups' ? pHistory.filter(v => String(v.id).includes(':' + s.pSeg + ':')) : pTarget ? [] : pHistory;
+    const historyState = pTarget?.activityState?.[s.pSeg];
+    const remoteHistory = s.pSeg === 'meeting' || s.pSeg === 'insight';
+    const profileMetrics = SH.profileMetrics && /^\d{10}$/.test(pId);
+    const profileGrowth = P.profileYoy ?? (profileMetrics ? '' : P.yoy);
     const pIn = s.route.includes(pId);
     const hIn = inRoute(H.id);
     const act = (icon, label, go, on) => ({ icon, label, go, bg: on ? '#2447C4' : '#E7ECFA', fg: on ? '#fff' : '#22409F' });
@@ -2114,9 +2141,9 @@ class Component extends DCLogic {
     const chId = (s.sheet === 'choose' && s.sheetData) || Object.keys(HCOS)[0];
 
     // insight detail
-    const VD = s.sheet === 'visit' && s.visits.find(v => v.id === s.sheetData), VV = VD && this.visitView(VD);
+    const VD = s.sheet === 'visit' && (s.visits.find(v => v.id === s.sheetData) || pHistory.find(v => v.id === s.sheetData)), VV = VD && this.visitView(VD);
     const visitDetail = VD ? { ...VV, hasTags: VV.chips.length > 0, hasPeople: this.whoOf(VD).length > 0,
-      people: this.whoOf(VD).map(id => { const p = HCPS[id]; return { ini:p.ini, name:p.name, meta:p.spec + ' · ' + HCOS[p.hco].name, open: () => this.go('hcp', id) }; }) }
+      people: this.whoOf(VD).map(id => { const p = HCPS[id]; return { ini:p.ini, photo:p.photo, npi:p.id, name:p.name, meta:p.spec + ' · ' + HCOS[p.hco].name, open: () => this.go('hcp', id) }; }) }
       : { date:'', type:'', topic:'', note:'', chips:[], hasTags:false, hasSrc:false, srcLabel:'', hasPeople:false, people:[] };
 
     const titles = { visit: VD && VD.conv === 'Note' ? 'Note' : W.one, range: rangeType ? 'Area and type' : 'Search area', filter:'Filter and sort', territory: ins ? 'Target lists' : 'Territories', choose:'Who will you see?', email:'Draft email', fu:'New follow-up', me:'Your workspace', account:'Account', insight: s.insRec ? 'Recording' : 'Add ' + W.one.toLowerCase(), summary:'Build your summary' };
@@ -2145,7 +2172,31 @@ class Component extends DCLogic {
     // hcp, insights account
     const pf = this.flagOf(pId), pLast = this.lastOf(pId), pAdv = this.advOf(pId);
     const pMine = ins ? tlist.ids.includes(pId) : P.mine;
-    const pFuOpen = s.fus.filter(f => f.who === pId && !f.done);
+    const pScopedFus = s.fus.filter(f => f.who === pId && (!pTarget || (f.ref?.listId || f.targetListId) === tlist.id));
+    const pFuOpen = pScopedFus.filter(f => !f.done);
+    const pSite = (HCOS[P.hco] || NO_HCO).name;
+    const pCanOpenHco = !ins && !!HCOS[P.hco] && !String(P.hco).startsWith('org:') && (!P.profileSite || P.profileSite === pSite);
+    const hCanReport = !!SH.reports && !WORKSPACE.drugAccount && !String(H.id).startsWith('org:');
+    const hPeople = H.profilePeople || (WORKSPACE.companyId ? [] : H.hcps.map(id => ({ id,count:HCPS[id]?.claimsN || 0 })).sort((a,b) => b.count - a.count));
+    const hPeopleLimit = s.hPeopleLimit || 24;
+    const hProfile = { ...H,...H.profileLeak,share:H.profileMarket?.share ?? H.share };
+    const hLeakPeriod = H.profileLeak ? (H.profileLeak.since ? 'since ' + H.profileLeak.since : 'all years on file') : 'since 2022';
+    const hcoStats = WORKSPACE.drugAccount ? [] : [
+      { k:H.metric || WORKSPACE.metric || 'PROCEDURES',v:H.proc,s:has(H.yoy) ? H.yoy + ' vs 2024' : '2025',c:'#0B1220' },
+      { k:'LEFT THE ACCOUNT',v:hProfile.left,s:'all cohort codes · 2025',c:'#A94D1B' },
+      { k:'OPPORTUNITY',v:H.opp,s:'billed charges · 2025',c:'#22409F' },
+      { k:'IN-RADIUS SHARE',v:hProfile.share,s:'within ' + (H.profileMarket?.miles || 100) + ' miles',c:'#0B1220' },
+      ...(has(hProfile.leak) ? [{ k:'LEAKING $',v:hProfile.leak,s:'billed charges of cases that left · ' + hLeakPeriod,c:'#A94D1B' }] : []),
+    ];
+    const hcoSections = [];
+    if (WORKSPACE.view === 'cardiac_sales' || WORKSPACE.drugAccount) hcoSections.push({
+      title:WORKSPACE.drugAccount ? ((WORKSPACE.drug || {}).label || 'Drug') + ' at this account' : 'Cardiac patients · All cardiac diagnoses',
+      stats:H.profileFigures || [],
+      message:WORKSPACE.drugAccount && !WORKSPACE.drug ? 'No drug is configured for this company.'
+        : H.profileFiguresFailed ? 'Account figures are temporarily unavailable.'
+          : !H.profileFigures ? 'Loading account figures…' : !H.profileFigures.length ? 'No figures available for this account.' : '',
+    });
+    if (hcoStats.length) hcoSections.push({ title:WORKSPACE.view === 'cardiac_sales' ? (CODE_GROUPS[0]?.name || 'Selected codes') : '',stats:hcoStats,message:'' });
     const pLastV = s.visits.find(v => this.whoOf(v).includes(pId));
     const cLast = C.isHco ? { label:'—', n:999 } : this.lastOf(curId), cAdv = C.isHco ? null : this.advOf(curId);
     const advC = a => a >= 4 ? '#1C7A4E' : a && a <= 2 ? '#A94D1B' : '#0B1220';
@@ -2172,21 +2223,22 @@ class Component extends DCLogic {
       modeNotes: A.notes,
       isTargets: scr === 'targets', isSumTab: scr === 'summaries', isAsk: scr === 'ask', isMap: scr === 'map', isActivity: scr === 'activity',
       isListPage: scr === 'activity' || scr === 'summaries',
-      isHco: scr === 'hco', isHcp: scr === 'hcp', isRoute: scr === 'route', isRun, isSummary: scr === 'summary', isReports: scr === 'reports',
+      isHco: !ins && scr === 'hco', isHcp: scr === 'hcp', isRoute: scr === 'route', isRun, isSummary: scr === 'summary', isReports: scr === 'reports',
       back: () => this.setState(st => ({ stack: st.stack.slice(0, -1) })), backLabel: LABEL[prevTop] || 'Back',
       showTabs: !isRun, tc, tl, showMapTab: tabs.includes('map'), showSumTab: tabs.includes('summaries'),
       centreGo: () => this.recordNow(), centreIsRecord: A.record, centreIsNote: !A.record, centreLabel: A.record ? 'Record' : W.one,
       centreBg: 'radial-gradient(120% 120% at 20% 10%,#3D6BF0 0%,#22409F 70%)', centreFg: s.sheet === 'insight' ? '#2447C4' : '#7A839A',
       goTargets: () => this.setTab('targets'), goAsk: () => this.setTab('ask'), goMap: () => this.setTab('map'), goActivity: () => this.setTab('activity'), goSummaries: () => this.setTab('summaries'),
       hasFuBadge: fuOpen.length > 0, fuOpenCount: fuOpen.length,
-      territory: ins ? s.tlist : s.territory, territoryChip: ins ? s.tlist : s.territory,
+      territory: ins ? tlist.name : territoryName, territoryChip: ins ? tlist.name : territoryName,
       openMe: () => this.sheet('me'), openTerritory: () => this.sheet('territory'),
       meIni: ME.ini, meName: ME.name, ...this.authVals(),
-      accountRows: PICKS.map((p, i) => { const on = ME.pick ? ME.pick === p.id : s.account === p.account; return { hasHead: i === 0 || PICKS[i - 1].kind !== p.kind, head: p.kind.toUpperCase(),
+      accountRows: ME.staff ? PICKS.map((p, i) => { const on = p.action ? !!p.selected : ME.pick ? ME.pick === p.id : s.account === p.account; return { hasHead: i === 0 || PICKS[i - 1].kind !== p.kind, head: p.kind.toUpperCase(),
         name:p.name, meta: s.switching === p.id ? 'Opening…' : p.meta, check: on ? '✓' : '', bg: on || s.switching === p.id ? '#EDF1FB' : '#fff', bd: on ? '#2447C4' : '#E1E6F0',
-        go: () => { if (s.switching || on) return; this.setState({ switching: p.id });
-          AUTH.pickAccount(p.id).then(() => { ME.pick = p.id; this.setAccount(p.account); this.setState({ switching: null }); this.toast('Switched to ' + p.name); },
-            e => { this.setState({ switching: null }); this.toast((e && e.message) || 'That account didn’t open · try again'); }); } }; }),
+        go: () => { if (!ME.staff || s.switching || on) return; this.setState({ switching: p.id });
+          const change = p.action === 'view' ? AUTH.pickView : p.action === 'unit' ? AUTH.pickUnit : AUTH.pickAccount;
+          Promise.resolve(change && change(p.value || p.id)).then(() => { this.setState({ switching: null, sheet:null }); },
+            e => { this.setState({ switching: null }); this.toast((e && e.message) || 'That account didn’t open · try again'); }); } }; }) : [],
 
       // targets
       q: s.q, hasQ: !!s.q, onQ: e => this.setState({ q: e.target.value }), clearQ: () => this.setState({ q:'' }),
@@ -2197,8 +2249,11 @@ class Component extends DCLogic {
       areaChip: s.omMode === 'near' ? 'Within ' + s.omRadius + ' mi' : s.omCity === 'All cities' ? AREA.state : s.omCity,
       spec: s.spec, sortNow, openFilter: () => this.sheet('filter'),
       groupsChip: cgOn.length + (cgOn.length === 1 ? ' group · ' : ' groups · ') + cgOn.reduce((n, g) => n + g.codes, 0) + ' codes',
-      targetItems: items, noTargets: items.length === 0, hasEmptyA: true, hasEmptyB: true, ...empty,
-      targetCount: items.length + ' ' + (items.length === 1 ? unit[0] : unit[1]) + (ins ? ' on this list' : s.scope === 'explore' ? ' nearby' : ' in your book'),
+      targetItems: items.slice(targetPage * 24, (targetPage + 1) * 24), noTargets: items.length === 0, hasEmptyA: true, hasEmptyB: true, ...empty,
+      hasTargetPages: items.length > 24, targetPageLabel: (targetPage * 24 + 1) + '–' + Math.min(items.length, (targetPage + 1) * 24) + ' of ' + items.length,
+      previousTargets: () => this.setState({ targetPage:Math.max(0, targetPage - 1), targetPageKey }),
+      nextTargets: () => this.setState({ targetPage:Math.min(Math.ceil(items.length / 24) - 1, targetPage + 1), targetPageKey }),
+      targetCount: openingTargets ? '' : items.length + ' ' + (items.length === 1 ? unit[0] : unit[1]) + (ins ? ' on this list' : s.scope === 'explore' ? ' nearby' : ' in your book'),
       targetHint: 'by ' + sortNow.toLowerCase(),
 
       // pill
@@ -2207,29 +2262,37 @@ class Component extends DCLogic {
       clearRoute: () => { this.setState({ route: [], runDone: [], runSkip: [] }); this.toast('Route cleared'); },
 
       // hco
-      h: H, hTag: H.mine ? ['Target', s.territory].filter(Boolean).join(' · ') : 'Not yet a target', hTagBg: H.mine ? '#E7ECFA' : '#EEF1F7', hTagFg: H.mine ? '#22409F' : '#3C4557',
+      h:hProfile, hTag: H.mine ? ['Target', territoryName].filter(Boolean).join(' · ') : 'Not yet a target', hTagBg: H.mine ? '#E7ECFA' : '#EEF1F7', hTagFg: H.mine ? '#22409F' : '#3C4557',
+      hIdentity:[H.type,H.city].filter(has).join(' · '),
       hcoReport: () => this.leakReport(H.id),
+      hCanReport,hShowLeak:!WORKSPACE.drugAccount && WORKSPACE.view !== 'hema_sales' && has(hProfile.left),
+      hLeakLabel:has(hProfile.leak) ? ' · ' + hProfile.leak + ' ' + hLeakPeriod : '',
+      hCodeLabel:WORKSPACE.drugAccount ? WORKSPACE.drug?.label || '' : CODE_GROUPS.length ? CODE_GROUPS.map(g => g.name).join(', ') + ' · 2025' : '',
+      hShowPeople:WORKSPACE.drugAccount ? !!H.profilePeople?.length : WORKSPACE.showAccountPeople !== false && (!!WORKSPACE.hcpMetric || hPeople.length > 0),
+      hPeopleTitle:WORKSPACE.drugAccount ? 'Prescribers' : 'HCPs at this account',
+      hPeopleMeta:H.profilePeople ? (H.profilePeopleCount > hPeople.length ? hPeople.length + ' of ' + H.profilePeopleCount : String(hPeople.length)) : H.profilePeopleFailed ? 'Clinicians unavailable' : hPeople.length ? 'Ranked by volume' : 'Loading HCPs…',
+      hMorePeople:hPeople.length > hPeopleLimit, hShowMore:() => this.setState({ hPeopleLimit:hPeopleLimit + 24 }),
       hcoActions: [
-        act('▤', 'Report', () => this.leakReport(H.id)),
+        ...(hCanReport ? [act('▤', 'Report', () => this.leakReport(H.id))] : []),
         act('✎', W.one, () => this.openInsight([], 'notes', H.id)),
         act('◎', 'Map', () => this.setTab('map', { omMode:'near', omStart:H.name, omSel:H.id })),
         act(hIn ? '✓' : '+', hIn ? 'In route' : 'Add', () => H.hcps.length ? this.sheet('choose', H.id) : this.toggleRoute(H.id), hIn),
         act('✳', 'Ask', () => this.ask('Brief me on ' + H.name))
       ],
-      hcoStats: [
-        { k:'PROCEDURES', v:H.proc, s:H.yoy + ' vs 2024', c:'#0B1220' },
-        { k:'LEFT THE ACCOUNT', v:H.left, s:'all cohort codes · 2025', c:'#A94D1B' },
-        { k:'OPPORTUNITY', v:H.opp, s:'billed charges · 2025', c:'#22409F' },
-        { k:'IN-RADIUS SHARE', v:H.share, s:'within 100 miles', c:'#0B1220' }
-      ],
-      hHcps: H.hcps.slice().sort((a, b) => HCPS[b].claimsN - HCPS[a].claimsN).map(id => { const p = HCPS[id]; return { name:p.name, ini:p.ini, meta:p.spec + ' · ' + p.claims + ' claims', ...addSt(s.route.includes(id)), open: () => this.go('hcp', id), toggle: () => this.toggleRoute(id) }; }),
+      hcoStats,hcoSections,
+      hHcps: hPeople.slice(0,hPeopleLimit).flatMap(({id,count}) => { const p = HCPS[id]; return p ? [{ name:p.name,photo:p.photo,npi:p.id,ini:p.ini,meta:[p.spec,count.toLocaleString() + ' ' + (WORKSPACE.drugAccount ? 'fills since 2022' : (WORKSPACE.hcpMetric || 'claims').toLowerCase())].filter(Boolean).join(' · '),...addSt(s.route.includes(id)),open:() => this.go('hcp',id),toggle:() => this.toggleRoute(id) }] : []; }),
 
       // hcp
-      p: { ...P, last: pLast.label, hcoName: (HCOS[P.hco] || NO_HCO).name, hcoFg: ins ? '#5B6478' : '#2447C4', hcoW: ins ? 400 : 600,
-        tag: pMine ? ['Target', ins ? s.tlist : s.territory].filter(Boolean).join(' · ') : ins ? 'Not on this list' : 'Not yet a target', tagBg: pMine ? '#E7ECFA' : '#EEF1F7', tagFg: pMine ? '#22409F' : '#3C4557',
-        open: or(ins ? P.iOpen : P.open) === '—' ? 'No brief for ' + P.name + ' yet.' : (ins ? P.iOpen : P.open), brief: (ins ? P.iBrief : P.brief) || '', phone: or(P.phone), email: or(P.email), hasFlag: !!pf, flag: pf ? pf.label : '', flagBg: pf ? pf.bg : '', flagFg: pf ? pf.fg : '' },
-      pOpenHco: () => { if (!ins) this.go('hco', P.hco); },
-      pDetails: () => this.copy([P.name, P.spec, (HCOS[P.hco] || NO_HCO).name, has(P.phone) ? P.phone : '', has(P.email) && P.email !== 'Restricted' ? P.email : ''].filter(x => x && x !== '—').join('\n'), 'Contact card copied'),
+      p: { ...P, spec:pTarget?.specialty || P.spec,last:pTarget?.lastMeeting || pLast.label,hcoName:pTarget?.site || (HCOS[P.hco] || NO_HCO).name,
+        tag:pMine ? [pTarget?.status || 'Target',ins ? tlist.name : territoryName].filter(Boolean).join(' · ') : ins ? 'Not on this list' : 'Not yet a target',tagBg:pMine ? '#E7ECFA' : '#EEF1F7',tagFg:pMine ? '#22409F' : '#3C4557',
+        open:pTarget ? pTarget.talkingPoint : (ins ? P.iOpen : P.open) || 'No brief for ' + P.name + ' yet.',brief:pTarget ? pTarget.brief : (ins ? P.iBrief : P.brief) || '',phone:or(P.phone),email:or(P.email),hasFlag:!pTarget && !!pf,flag:pf ? pf.label : '',flagBg:pf ? pf.bg : '',flagFg:pf ? pf.fg : '' },
+      pCanOpenHco,pNoHcoLink:!pCanOpenHco,pOpenHco:() => { if (pCanOpenHco) this.go('hco',P.hco); },
+      pIdentity:[pTarget?.specialty || P.spec,pTarget ? pTarget.site : P.profileSite || pSite].filter(has).join(' · '),
+      pMeta:[pTarget?.place || P.profilePlace || '',/^\d{10}$/.test(pId) ? 'NPI ' + pId : ''].filter(Boolean).join(' · '),
+      pTags:pTarget ? pTarget.tags?.join(', ') || 'No tags' : '',
+      pShowContactDate:!pTarget && pLast.n < 999,
+      pCanCopyContact:!ins && (SH.phone || SH.email),
+      pDetails:() => this.copy([P.name,P.spec,(HCOS[P.hco] || NO_HCO).name,SH.phone && has(P.phone) ? P.phone : '',SH.email && has(P.email) && P.email !== 'Restricted' ? P.email : ''].filter(x => x && x !== '—').join('\n'),'Contact card copied'),
       hcpActions: [
         ...(SH.phone && has(P.phone) ? [act('☎', 'Call', () => this.call(P.phone))] : []),
         ...(SH.draftEmail ? [act('✉', 'Email', () => this.openEmail(pId))] : []),
@@ -2237,26 +2300,34 @@ class Component extends DCLogic {
         act(pIn ? '✓' : '+', pIn ? 'In route' : 'Add', () => this.toggleRoute(pId), pIn),
         act('✳', 'Ask', () => this.ask('Brief me on ' + P.name))
       ],
-      pSegs: [['overview','Overview'], ['activity','Activity']].map(([k, label]) => ({ label, ...seg(s.pSeg === k), go: () => this.setState({ pSeg:k }) })),
-      pOverview: s.pSeg === 'overview', pActivity: s.pSeg === 'activity',
-      pStats: (ins ? [
+      pSegs: (pTarget ? [['overview','Overview'],['insight','Insights'],['meeting','Meetings'],['note','Notes'],['followups','Follow-ups']] : [['overview','Overview'],['activity','Activity']]).map(([k,label]) => ({ label,...seg(s.pSeg === k),go:() => this.setState({ pSeg:k }) })),
+      pOverview:s.pSeg === 'overview',pActivity:s.pSeg !== 'overview',
+      pStats: (pTarget ? [
+        { k:'LAST MEETING',v:pTarget.lastMeeting || '—',s:pTarget.lastMeeting ? '' : 'No meetings yet',c:'#0B1220' },
+        { k:'MEETINGS',v:pTarget.meetings12 + ' / ' + pTarget.meetings,s:'12mo / all time',c:'#0B1220' },
+        ...(A.adv ? [{ k:'ADVOCACY',v:pTarget.advocacy ? pTarget.advocacy + ' / 5' : '—',s:pTarget.advocacy ? (A.advLabels || [])[pTarget.advocacy - 1] || '' : 'Not scored',c:advC(pTarget.advocacy) }] : []),
+        { k:'SENTIMENT',v:pTarget.sentiment == null ? '—' : String(pTarget.sentiment),s:pTarget.sentiment == null ? 'No sentiment yet' : pTarget.sentiment >= 75 ? 'Positive' : pTarget.sentiment >= 50 ? 'Neutral' : 'Negative',c:'#22409F' },
+        { k:'PRIORITY',v:pTarget.priority == null ? '—' : String(pTarget.priority),s:pTarget.priority == null ? 'Not set' : 'out of 5',c:'#0B1220' },
+      ] : ins ? [
         A.adv ? { k:'ADVOCACY', v: pAdv ? pAdv + ' / 5' : '—', s: pAdv ? (A.advLabels ? A.advLabels[pAdv - 1] : 'last rated ' + pLast.label) : 'not rated yet', c:advC(pAdv) }
           : { k:'LAST MEETING', v: pLastV ? pLastV.type.split(' · ')[0] : '—', s: pLastV ? pLastV.topic : 'none logged', c:'#0B1220', on: SH.lastMeeting },
         { k:'LAST MET', v:pLast.label, s: pLast.n === 0 ? 'today' : pLast.n < 999 ? pLast.n + ' days ago' : 'not met yet', c:'#0B1220', on: SH.lastMet },
         { k:'INSIGHTS', v:String(this.convCount(pId)), s: this.convCount(pId) === 1 ? 'conversation logged' : 'conversations logged', c:'#22409F', on: SH.insightCount },
         { k:'FOLLOW-UPS', v:String(pFuOpen.length), s: pFuOpen.some(f => f.dueN < 0) ? 'one overdue' : 'none overdue', c: pFuOpen.some(f => f.dueN < 0) ? '#A94D1B' : '#0B1220', on: SH.followUps }
       ] : [
-        { k:'CLAIMS', v:or(P.claims), s:(has(P.yoy) ? P.yoy + ' · ' : '') + '2025', c:'#0B1220', on: SH.claims },
+        { k:WORKSPACE.hcpMetric || 'CLAIMS',v:or(P.profileClaims ?? (profileMetrics ? '…' : P.claims)),s:(has(profileGrowth) ? profileGrowth + ' · ' : '') + '2025',c:'#0B1220',on:SH.claims },
         { k:'LIGHTEST DAY', v:or(P.dayL), s:'fewest visits · 2025', c:'#22409F', on: SH.lightest },
-        { k:'TOP PROCEDURE', v:or(P.top), s:'selected codes', c:'#0B1220', on: SH.topCode },
+        { k:has(P.top) ? WORKSPACE.topCodeLabel || 'TOP PROCEDURE' : 'TOP CODE',v:or(P.top),s:'selected codes',c:'#0B1220',on:SH.topCode },
         { k:'REFERRED IN', v:or(P.ref), s:P.refOn || 'selected diagnoses', c:'#0B1220', on: SH.referred }
       ]).filter(x => x.on !== false),
-      showBrief: SH.brief, hasBriefText: !!(ins ? P.iBrief : P.brief), showDraftEmail: SH.draftEmail,
+      showBrief:SH.brief && (ins ? (pTarget ? !!pTarget.brief : !tlist.id) : !WORKSPACE.companyId),hasBriefText:pTarget ? !!pTarget.brief : !!(ins ? P.iBrief : P.brief),showDraftEmail:SH.draftEmail,
       showPhone: SH.phone, showEmail: SH.email, showContact: SH.phone || SH.email,
       pEmail: () => has(P.email) && P.email !== 'Restricted' ? this.openEmail(pId) : this.toast(P.email === 'Restricted' ? 'Email restricted for your account' : 'No email on record'), pAsk: () => this.ask('Brief me on ' + P.name), pCall: () => this.call(P.phone), pLog: () => this.openLog(pId), pFu: () => this.openFu(pId),
       pLogLabel: '＋ Add ' + W.one.toLowerCase(),
-      pFus: s.fus.filter(f => f.who === pId).map(f => this.fuView(f)),
-      pVisits: s.visits.filter(v => this.whoOf(v).includes(pId)).map(v => this.visitView(v)), pNoVisits: !s.visits.some(v => this.whoOf(v).includes(pId)),
+      pFus: !pTarget || s.pSeg === 'followups' ? pScopedFus.map(f => this.fuView(f)) : [],
+      pVisits:pEntries.map(v => this.visitView(v)),pNoVisits:pTarget && s.pSeg === 'followups' ? !pScopedFus.length : !pEntries.length,
+      pEmptyHistory:pTarget && s.pSeg === 'followups' ? 'No follow-ups yet.' : !pTarget ? 'No visits logged yet.'
+        : remoteHistory && !historyState ? 'Loading activity…' : historyState === 'unavailable' ? 'Activity is temporarily unavailable.' : 'Nothing logged in this section.',
 
       // route
       noRoute: viewList.length === 0,
@@ -2270,7 +2341,7 @@ class Component extends DCLogic {
       toTargets: () => this.setTab('targets'),
       routeDate: dayFull(s.day === 'tomorrow' ? 1 : 0), hasTomorrow: s.tomorrow.length > 0, routeIsToday: viewKey === 'route', canStart: viewKey === 'route' && routeN > 0,
       daySegs: [['today','Today'], ['tomorrow','Tomorrow']].map(([k, label]) => ({ label, ...seg(s.day === k), go: () => this.setState({ day:k }) })),
-      routeFrom: this.startKnown() && (AREA.here || s.territory) ? ' · from ' + (AREA.here ? 'your location' : s.territory) : '',
+      routeFrom: this.startKnown() && (AREA.here || s.territory) ? ' · from ' + (AREA.here ? 'your location' : territoryName) : '',
       ...routeMap,
       routeGroups: viewGroups.map((g, i) => ({ n: i + 1, name: HCOS[g.hco].name, dist: i ? milesApart(HCOS[viewGroups[i - 1].hco], HCOS[g.hco]) : this.startKnown() ? milesApart(START, HCOS[g.hco]) : '', rows: g.ids.map(id => { const st = this.stopOf(id); return { name: st.name, spec: st.spec, time: TIMES[id] || 'Flexible', remove: () => this.toggleRoute(id, viewKey) }; }) })),
       startRun: () => { this.setState({ runIdx:0, runDone:[], runSkip:[] }); this.replaceTop('run'); },
@@ -2279,10 +2350,10 @@ class Component extends DCLogic {
       runPos: (idx + 1) + ' OF ' + Math.max(runList.length, 1),
       rc: C.isHco
         ? { ...C, stopN, hcoName: CH.name, time: 'Flexible', sub: CH.type + ' · ' + CH.dist + ' away', open: 'Meet the team at ' + CH.name + ' and find out who sends patients elsewhere.', brief: CH.left + ' of patients leave the account, ' + CH.leak + ' since 2022.' }
-        : { ...C, stopN, hcoName: CH.name, time: TIMES[curId] || 'Flexible',
+        : { ...C, npi:C.id, stopN, hcoName: CH.name, time: TIMES[curId] || 'Flexible',
         sub: ins ? C.spec + ' · ' + (cLast.n >= 999 ? 'not met yet' : 'last met ' + cLast.label) : C.spec + ' · lightest day ' + C.day,
         ...(ins ? { open:C.iOpen, brief:C.iBrief } : {}) },
-      rcStats: C.isHco ? [{ k:'PROCEDURES', v:CH.proc, c:'#0B1220' }, { k:'YOY', v:CH.yoy, c: CH.yoyN < 0 ? '#A94D1B' : '#1C7A4E' }, { k:'LEFT', v:CH.left, c:'#A94D1B' }]
+      rcStats: C.isHco ? [{ k:CH.metric || WORKSPACE.metric || 'PROCEDURES', v:CH.proc, c:'#0B1220' }, { k:'YOY', v:CH.yoy, c: CH.yoyN < 0 ? '#A94D1B' : '#1C7A4E' }, { k:'LEFT', v:CH.left, c:'#A94D1B' }]
         : ins
         ? [...(A.adv ? [{ k:'ADVOCACY', v: cAdv ? cAdv + '/5' : '—', c:advC(cAdv) }] : []), { k:'LAST MET', v:cLast.label, c:'#0B1220' }, { k:'INSIGHTS', v:String(this.convCount(curId)), c:'#22409F' }, ...(A.adv ? [] : [this.fuMetric(curId)])]
         : [{ k:'CLAIMS', v:C.claims, c:'#0B1220' }, { k:'YOY', v:C.yoy, c: C.yoyN < 0 ? '#A94D1B' : '#1C7A4E' }, { k:'REFERRED IN', v:C.ref, c:'#0B1220' }],
@@ -2311,7 +2382,7 @@ class Component extends DCLogic {
       },
 
       // reports
-      reports: s.reports.map(r => ({ name:HCOS[r.hco].name, meta: r.busy ? 'Usually 3–5 minutes' : r.group + ' · ' + r.date + ' · PDF',
+      reports: s.reports.filter(r => HCOS[r.hco]).map(r => ({ name:HCOS[r.hco].name, meta: r.busy ? 'Usually 3–5 minutes' : r.group + ' · ' + r.date + ' · PDF',
         status: r.busy ? 'Generating…' : 'Ready', bg: r.busy ? '#E7ECFA' : '#E3F5EC', fg: r.busy ? '#22409F' : '#1C7A4E',
         open: () => r.busy ? this.toast('Still generating') : this.openLink(r.url), share: () => r.busy ? this.toast('Still generating') : r.url ? this.share({ title: HCOS[r.hco].name + ' · ' + r.group, url: r.url }) : this.toast('The link isn’t ready yet') })),
 
@@ -2323,7 +2394,7 @@ class Component extends DCLogic {
         hasLink: !!(m.link && m.link.url), linkLabel: m.link ? m.link.label : '', openLink: () => m.link && this.openLink(m.link.url),
         hasListen: !m.pending && !!m.a, listenLabel: s.speaking === m.id ? '■ Stop' : '▶ Listen', listenBg: s.speaking === m.id ? '#2447C4' : '#fff', listenFg: s.speaking === m.id ? '#fff' : '#22409F', listen: () => this.say(m.id, m.a),
         rows: m.rows.map(id => { const st = this.stopOf(id), isDoc = !st.isHco, f = isDoc && this.flagOf(id), h = HCOS[st.hco];
-          return { name:st.name, ini:st.ini, isDoc, meta: isDoc ? st.spec + ' · ' + (f ? f.label : ins ? 'Last met ' + this.lastOf(id).label : st.claims + ' claims') : st.spec + ' · ' + h.dist,
+          return { name:st.name, ini:st.ini, photo:st.photo, npi:isDoc ? st.id : '', isDoc, meta: isDoc ? st.spec + ' · ' + (f ? f.label : ins ? 'Last met ' + this.lastOf(id).label : st.claims + ' claims') : st.spec + ' · ' + h.dist,
             open: () => this.go(isDoc ? 'hcp' : 'hco', id), toggle: () => !isDoc && h.hcps.length ? this.sheet('choose', id) : this.toggleRoute(id),
             log: () => this.openLog(id), fu: () => this.openFu(id), ...addSt(inRoute(id)) }; }) })),
       askReset: () => { this.hush(); this.setState({ thread: [] }); },
@@ -2405,17 +2476,17 @@ class Component extends DCLogic {
         else if (s.sheet === 'insight' && s.insNote.trim()) { this.keepDraft(); this.toast('Kept as a draft'); }
         this.dropRec(); this.setState({ sheet:null, insRec:false, insPaused:false, insKey:null });
       },
-      shInsight: s.sheet === 'insight', shFilter: s.sheet === 'filter', shTerritory: s.sheet === 'territory', shChoose: s.sheet === 'choose', shEmail: s.sheet === 'email', shFu: s.sheet === 'fu', shSummary: s.sheet === 'summary', shMe: s.sheet === 'me', shAccount: s.sheet === 'account', shVisit: s.sheet === 'visit', vd: visitDetail,
+      shInsight: s.sheet === 'insight', shFilter: s.sheet === 'filter', shTerritory: s.sheet === 'territory', shChoose: s.sheet === 'choose', shEmail: s.sheet === 'email', shFu: s.sheet === 'fu', shSummary: s.sheet === 'summary', shMe: s.sheet === 'me', shAccount: !!ME.staff && s.sheet === 'account', shVisit: s.sheet === 'visit', vd: visitDetail,
       toggleLogFu: () => this.setState({ logFu: !s.logFu }), logFuTrack: s.logFu ? '#2447C4' : '#D3D9E6', logFuKnob: s.logFu ? '21px' : '3px',
       sortOpts: (ins ? ['Relevance', ...(A.adv ? ['Advocacy'] : []), 'Last met', 'Name'] : SORTS).map(o => ({ label:o, ...chip(sortNow === o), go: () => this.setState(ins ? { iSort:o } : { sort:o }) })),
       specOpts: ['All codes', ...[...new Set(CODE_GROUPS.flatMap(g => g.specs))].sort()].map(o => ({ label:o, ...chip(s.spec === o), go: () => this.setState({ spec:o }) })),
       codeGroups: CODE_GROUPS.map(g => { const on = s.cgs.includes(g.name);
         return { label:g.name, ...chip(on), go: () => on && s.cgs.length === 1 ? this.toast('Keep at least one code group') : this.setState(st => ({ cgs: on ? st.cgs.filter(x => x !== g.name) : [...st.cgs, g.name] })) }; }),
       cgCodesLabel: cgOn.reduce((n, g) => n + g.codes, 0) + ' · HCPCS / CPT',
-      resetFilter: () => this.setState(ins ? { iSort:'Relevance' } : { sort:'Relevance', spec:'All codes', cgs: CODE_GROUPS.map(g => g.name) }),
+      resetFilter: () => this.setState(ins ? { iSort:'Relevance' } : { sort:WORKSPACE.lens === 'hcp' ? 'Volume' : 'Opportunity', spec:'All codes', cgs: CODE_GROUPS.map(g => g.name) }),
       territories: ins
-        ? TLISTS.map(t => { const on = s.tlist === t.name; return { name:t.name, meta:t.meta, check: on ? '✓' : '', bg: on ? '#EDF1FB' : '#fff', bd: on ? '#2447C4' : '#E1E6F0', go: () => { this.setState({ tlist:t.name, sheet:null }); this.toast('Switched to ' + t.name); } }; })
-        : TERRS.map(t => { const on = s.territory === t.name; return { ...t, check: on ? '✓' : '', bg: on ? '#EDF1FB' : '#fff', bd: on ? '#2447C4' : '#E1E6F0', go: () => { this.setState({ territory:t.name, sheet:null }); this.toast('Switched to ' + t.name); } }; }),
+        ? TLISTS.map(t => { const id = t.id || t.name, on = s.tlist === id; return { name:t.name, meta:t.meta, check: on ? '✓' : '', bg: on ? '#EDF1FB' : '#fff', bd: on ? '#2447C4' : '#E1E6F0', go: () => { this.setState({ tlist:id, sheet:null }); this.toast('Switched to ' + t.name); } }; })
+        : TERRS.map(t => { const id = t.id || t.name, on = s.territory === id; return { ...t, check: on ? '✓' : '', bg: on ? '#EDF1FB' : '#fff', bd: on ? '#2447C4' : '#E1E6F0', go: () => { this.setState({ sheet:null }); if (AUTH.pickTerritory) AUTH.pickTerritory(id).catch(e => this.toast(e.message || 'That list didn’t open')); else this.setState({ territory:id }); } }; }),
       newItemLabel: ins ? '＋ New target list' : '＋ New territory',
       newTerritory: () => this.toast(ins ? 'New target list form' : 'New territory form'),
       chooseHco: (HCOS[chId] || NO_HCO).name,
@@ -2431,15 +2502,16 @@ class Component extends DCLogic {
       saveFu: () => {
         if (!s.fuWho) return this.toast('Pick who it is for');
         if (!s.fuTask.trim()) return this.toast('Add a task first');
-        const fu = { id:Date.now(), t:s.fuTask.trim(), who:s.fuWho, dueN:s.fuDue, done:false };
+        const targetListId = ins && tlist.profiles?.[s.fuWho] ? tlist.id : undefined;
+        const fu = { id:Date.now(), t:s.fuTask.trim(), who:s.fuWho, dueN:s.fuDue, done:false, targetListId };
         this.setState(st => ({ sheet:null, fuTask:'', actSeg:'fus', fus:[...st.fus, fu] }));
         this.toast('Follow-up added · ' + dayOf(s.fuDue));
         this.storeFu(fu);
       },
-      meSub: [A.role || 'MSL', A.name, ins ? s.tlist : s.territory].filter(Boolean).join(' · '),
+      meSub: [A.role || 'MSL', ins ? A.name : WORKSPACE.company || A.name, ins ? tlist.name : territoryName, WORKSPACE.viewLabel].filter(Boolean).join(' · '),
       meRows: [
         ...(ins || !SH.reports ? [] : [{ icon:'▤', label:'Reports', meta:s.reports.filter(r => !r.busy).length + ' ready', go: () => this.setState(st => ({ sheet:null, stack:[...st.stack, { s:'reports' }] })) }]),
-        { icon:'◎', label: ins ? 'Target lists' : 'Territories', meta: ins ? s.tlist : s.territory, go: () => this.sheet('territory') },
+        { icon:'◎', label: ins ? 'Target lists' : 'Territories', meta: ins ? tlist.name : territoryName, go: () => this.sheet('territory') },
         { icon:'◷', label:'History & follow-ups', meta:fuOpen.length + ' open', go: () => this.setTab('activity', { actSeg:'fus' }) },
         ...(ME.staff ? [{ icon:'⇄', label:'Account', meta:(PICKS.find(p => ME.pick ? p.id === ME.pick : p.account === s.account) || A).name, go: () => this.sheet('account') }] : []),
         { icon:'↪', label:'Sign out', meta:'', go: () => this.signOut() }
@@ -2452,7 +2524,7 @@ class Component extends DCLogic {
       insShowConv: !!A.conv, insConvNote: s.insConv === 'Note',
       insConvOpts: (A.conv || []).map(t => ({ label:t, ...chip(s.insConv === t), go: () => this.setState({ insConv:t }) })),
       insShowAdv: !!A.adv,
-      insAttendees: s.insWho.map(id => { const p = HCPS[id]; return { ini:p.ini, name:p.name, spec:p.spec, canRemove:true,
+      insAttendees: s.insWho.map(id => { const p = HCPS[id]; return { ini:p.ini, photo:p.photo, npi:p.id, name:p.name, spec:p.spec, canRemove:true,
         hasAdvLabel: !!(A.advLabels && s.insAdv[id]), advLabel: A.advLabels && s.insAdv[id] ? A.advLabels[s.insAdv[id] - 1] : '',
         remove: () => this.setState(st => ({ insWho: st.insWho.filter(x => x !== id) })),
         scores: [1, 2, 3, 4, 5].map(n => ({ n, ...advDot(s.insAdv[id] === n), go: () => this.setState(st => ({ insAdv: { ...st.insAdv, [id]: n } })) })) }; }),
