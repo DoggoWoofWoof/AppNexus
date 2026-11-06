@@ -399,11 +399,12 @@ input,textarea,button{font-family:inherit}
               </div>
             </sc-if>
             <sc-if value="{{ routeMapOn }}" hint-placeholder-val="{{ true }}">
-              <div style="margin:14px 18px 0;height:150px;border-radius:18px;position:relative;overflow:hidden;border:1px solid #DDE3EC;background-color:#EEF1F4;background-image:repeating-linear-gradient(28deg,transparent 0 22px,#E1E6EE 22px 23.5px),repeating-linear-gradient(118deg,transparent 0 30px,#E1E6EE 30px 31.5px);">
+              <div data-kit="map" data-map="{{ routeGeoMap }}" style="margin:14px 18px 0;height:150px;border-radius:18px;position:relative;overflow:hidden;border:1px solid #DDE3EC;background:#EEF1F4;">
                 <sc-if value="{{ routeStartOn }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;left:{{ routeStartX }};top:{{ routeStartY }};width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:#2447C4;border:3px solid #fff;box-sizing:border-box;box-shadow:0 0 0 4px rgba(36,71,196,.18);"></span></sc-if>
                 <sc-for list="{{ routePins }}" as="p" hint-placeholder-count="2"><span style="position:absolute;left:{{ p.x }};top:{{ p.y }};width:28px;height:28px;margin:-17px 0 0 -17px;border-radius:50%;background:#2447C4;color:#fff;display:grid;place-items:center;font-size:12px;font-weight:700;border:3px solid #fff;box-shadow:0 4px 10px rgba(11,18,32,.25);">{{ p.n }}</span></sc-for>
               </div>
             </sc-if>
+            <sc-if value="{{ routeDirectionsOn }}" hint-placeholder-val="{{ false }}"><button onClick="{{ routeDirections }}" aria-label="Open route in Maps" style="margin:12px 18px 0;padding:11px;border:1px solid #D7DEEC;border-radius:13px;background:#fff;color:#2447C4;font-size:13px;font-weight:700;cursor:pointer;">Open route in Maps</button></sc-if>
             <div style="padding:16px 18px 0;display:flex;flex-direction:column;gap:0;">
               <sc-for list="{{ routeGroups }}" as="g" hint-placeholder-count="2">
                 <div style="display:flex;gap:12px;">
@@ -412,7 +413,8 @@ input,textarea,button{font-family:inherit}
                     <span style="flex:1;width:2px;background:#D7DEEC;margin:4px 0;"></span>
                   </div>
                   <div style="flex:1;min-width:0;padding-bottom:16px;">
-                    <div style="display:flex;align-items:baseline;justify-content:space-between;"><span style="font-size:15px;font-weight:700;">{{ g.name }}</span><span style="font-size:12px;color:#7A839A;">{{ g.dist }}</span></div>
+                    <div style="display:flex;align-items:baseline;justify-content:space-between;gap:6px;"><span style="flex:1;font-size:15px;font-weight:700;">{{ g.name }}</span><span style="font-size:12px;color:#5B6478;">{{ g.dist }}</span></div>
+                    <sc-if value="{{ g.location }}" hint-placeholder-val="{{ false }}"><div style="font-size:12px;color:#5B6478;margin-top:3px;">{{ g.location }}</div></sc-if>
                     <div style="margin-top:8px;background:#fff;border:1px solid #E1E6F0;border-radius:14px;overflow:hidden;">
                       <sc-for list="{{ g.rows }}" as="r" hint-placeholder-count="2">
                         <div style="display:flex;align-items:center;gap:10px;padding:11px 10px 11px 13px;border-bottom:1px solid #F0F3F8;">
@@ -461,6 +463,7 @@ input,textarea,button{font-family:inherit}
                 <div style="font-size:13px;color:#5B6478;margin-top:3px;">{{ rc.sub }}</div>
               </div>
             </div>
+            <sc-if value="{{ runDirectionsOn }}" hint-placeholder-val="{{ false }}"><button onClick="{{ runDirections }}" aria-label="Directions to this stop" style="margin:12px 18px 0;padding:11px;border:1px solid #D7DEEC;border-radius:13px;background:#fff;color:#2447C4;font-size:13px;font-weight:700;cursor:pointer;">Directions to this stop</button></sc-if>
             <sc-if value="{{ runHasRecord }}" hint-placeholder-val="{{ true }}">
               <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:14px 18px 0;">
                 <button onClick="{{ runRecord }}" style="padding:13px 6px;border:1px solid #D7DEEC;border-radius:14px;background:#fff;font-size:13px;font-weight:650;cursor:pointer;color:#0B1220;display:flex;flex-direction:column;align-items:center;gap:5px;"><span style="color:#DD6134;font-size:16px;">●</span>Record</button>
@@ -911,6 +914,7 @@ input,textarea,button{font-family:inherit}
 
             <sc-if value="{{ shTerritory }}" hint-placeholder-val="{{ false }}">
               <div style="padding:12px 18px 0;display:flex;flex-direction:column;gap:8px;">
+                <sc-if value="{{ territoryLoading }}" hint-placeholder-val="{{ false }}"><div style="font-size:13px;color:#5B6478;">Loading territories…</div></sc-if>
                 <sc-for list="{{ territories }}" as="t" hint-placeholder-count="3">
                   <button onClick="{{ t.go }}" style="display:flex;align-items:center;gap:12px;padding:13px 14px;border:1.5px solid {{ t.bd }};border-radius:14px;background:{{ t.bg }};cursor:pointer;text-align:left;">
                     <span style="flex:1;"><span style="display:block;font-size:14.5px;font-weight:650;color:#0B1220;">{{ t.name }}</span><span style="display:block;font-size:12px;color:#5B6478;margin-top:2px;">{{ t.meta }}</span></span>
@@ -1327,10 +1331,10 @@ const dayOf = n => n === 0 ? 'Today' : n === 1 ? 'Tomorrow' : n === -1 ? 'Yester
 const ordinal = n => n + (n % 10 === 1 && n % 100 !== 11 ? 'st' : n % 10 === 2 && n % 100 !== 12 ? 'nd' : n % 10 === 3 && n % 100 !== 13 ? 'rd' : 'th');
 // where the day starts (the territory's centre) on the map, and rough driving: 1% of the map is about 0.08 mi, 4 minutes a mile
 const START = { x:'50%', y:'40%' };
-const driveMin = (a, b) => Math.hypot(parseFloat(a.x) - parseFloat(b.x), parseFloat(a.y) - parseFloat(b.y)) * (AREA.miPerPct || 0.08) * 4;
+const driveMin = (a, b) => (onEarth(a) && onEarth(b) ? earthMiles(a,b) : Math.hypot(parseFloat(a.x) - parseFloat(b.x), parseFloat(a.y) - parseFloat(b.y)) * (AREA.miPerPct || 0.08)) * 4;
 // a place the app couldn't put on the map has lat null; the sample's places have no lat at all
 const placed = h => !!h && h.lat !== null && h.x != null;
-const onEarth = h => h.lat != null && h.lng != null;
+const onEarth = h => !!h && Number.isFinite(h.lat) && Number.isFinite(h.lng) && Math.abs(h.lat) <= 90 && Math.abs(h.lng) <= 180 && h.lat !== 0 && h.lng !== 0;
 const earthMiles = (a, b) => {
   const r = d => d * Math.PI / 180, dLat = r(b.lat - a.lat), dLng = r(b.lng - a.lng);
   return 7917.5 * Math.asin(Math.sqrt(Math.sin(dLat / 2) ** 2 + Math.cos(r(a.lat)) * Math.cos(r(b.lat)) * Math.sin(dLng / 2) ** 2));
@@ -1517,6 +1521,7 @@ const addSt = (on) => on ? { addBg:'#2447C4', addFg:'#fff', addBd:'#2447C4', add
 class Component extends DCLogic {
   scrollRef = React.createRef();
   _at = [];
+  _routeWork = new Map();
   state = (() => {
     const pr = this.props || {};
     const account = ACCOUNTS[pr.account] ? pr.account : 'ottava', A = ACCOUNTS[account];
@@ -1543,11 +1548,13 @@ class Component extends DCLogic {
     const key = s.tab + '|' + s.stack.map(x => x.s + (x.id || '')).join('/') + '|' + s.targetPage;
     if (this._k !== undefined && this._k !== key && this.scrollRef.current) this.scrollRef.current.scrollTop = 0;
     this._k = key;
+    this.loadRouteSites();
+    this.loadRouteMiles();
     this.loadExplore();
     const na = (this.props || {}).account;
     if (na !== this._pa) { this._pa = na; if (ACCOUNTS[na]) this.setAccount(na); }
   }
-  componentWillUnmount() { this.finishEmail(); this._exploreKey = null; clearTimeout(this._exploreTimer); if (SERVICE.hush) SERVICE.hush(); clearTimeout(this._t); clearTimeout(this._a); clearTimeout(this._m); clearTimeout(this._s); clearInterval(this._i); this._at.forEach(clearTimeout); }
+  componentWillUnmount() { this.finishEmail(); this._routeWork.clear(); this._routeLegKey = null; this._exploreKey = null; clearTimeout(this._exploreTimer); if (SERVICE.hush) SERVICE.hush(); clearTimeout(this._t); clearTimeout(this._a); clearTimeout(this._m); clearTimeout(this._s); clearInterval(this._i); this._at.forEach(clearTimeout); }
 
   exploreRequest() {
     const s = this.state;
@@ -1898,14 +1905,67 @@ class Component extends DCLogic {
   // the one Add: a visit goes where it adds the least driving; a doctor at a hospital already on the route joins that stop
   hcoOf(id) { return HCPS[id] ? HCPS[id].hco : id; }
   stopOf(id) { if (HCPS[id]) return HCPS[id]; const h = HCOS[id] || NO_HCO; return { id, name:h.name, ini:h.ini, photo:h.photo, spec:h.type, hco:id, isHco:true }; }
+  routeStopOf(id, fromOrg) {
+    const stop = this.stopOf(id), org = stop.isHco || fromOrg ? HCOS[fromOrg || id] : null;
+    return { name:stop.name,kind:stop.isHco ? 'hco' : 'hcp',spec:stop.spec || '',...(fromOrg ? { fromOrg } : {}),
+      ...(onEarth(org) ? { place:{ id:org.id,name:org.name,city:org.city,lat:org.lat,lng:org.lng } } : {}) };
+  }
+  routePlaceOf(id) {
+    if (!SERVICE.routeStop) return HCOS[this.hcoOf(id)];
+    return (this.state.routeStops?.[id] || this.routeStopOf(id)).place;
+  }
+  loadRouteSites() {
+    const resolve = SERVICE.routeStop;
+    if (!resolve) return;
+    for (const id of new Set([...this.state.route,...this.state.tomorrow])) {
+      const stop = this.state.routeStops?.[id] || this.routeStopOf(id);
+      if (stop.place !== undefined || this._routeWork.has(id)) continue;
+      const ticket = {};
+      this._routeWork.set(id,ticket);
+      const finish = place => {
+        if (this._routeWork.get(id) !== ticket) return;
+        this._routeWork.delete(id);
+        this.setState(s => s.route.includes(id) || s.tomorrow.includes(id)
+          ? { routeStops:{ ...s.routeStops,[id]:{ ...stop,place } } } : null);
+      };
+      resolve(id,stop).then(finish,() => finish(null));
+    }
+  }
+  routeLegKey(groups) {
+    const point = p => onEarth(p) ? [p.lat,p.lng] : null;
+    return JSON.stringify([this.startKnown() ? point(START) : null,...groups.map(g => point(g.place))]);
+  }
+  loadRouteMiles() {
+    const miles = SERVICE.routeMiles, state = this.state;
+    if (!miles || state.stack.at(-1)?.s !== 'route') return;
+    const groups = this.groupsOf(state[state.day === 'tomorrow' ? 'tomorrow' : 'route']);
+    const key = this.routeLegKey(groups);
+    if (this._routeLegKey === key) return;
+    this._routeLegKey = key;
+    const points = [this.startKnown() ? START : null,...groups.map(g => g.place)];
+    const valid = points.filter(onEarth);
+    if (valid.length < 2) return;
+    miles(valid).then(matrix => {
+      if (this._routeLegKey !== key) return;
+      const legs = groups.map((_,i) => {
+        const from = valid.indexOf(points[i]), to = valid.indexOf(points[i + 1]);
+        return from >= 0 && to >= 0 ? matrix[from]?.[to] : null;
+      });
+      this.setState({ routeLegs:{ key,legs } });
+    },() => {});
+  }
   groupsOf(list) {
-    const order = [], map = {};
-    list.forEach(id => { const h = this.hcoOf(id); if (!map[h]) { map[h] = []; order.push(h); } map[h].push(id); });
-    return order.map(h => ({ hco: h, ids: map[h] }));
+    const groups = new Map();
+    for (const id of list) {
+      const hco = this.hcoOf(id), place = this.routePlaceOf(id), key = place?.id || (SERVICE.routeStop ? id : hco);
+      if (!groups.has(key)) groups.set(key,{ hco,place,ids:[] });
+      groups.get(key).ids.push(id);
+    }
+    return [...groups.values()];
   }
   groups() { return this.groupsOf(this.state.route); }
   // the day starts at the territory's centre; an account with no territory (or no map) has no start
-  startKnown() { return !!this.acct().fieldPro && (!!AREA.here || TERRS.length > 0); }
+  startKnown() { return !!this.acct().fieldPro && (SERVICE.routeStop ? onEarth(START) : (!!AREA.here || TERRS.length > 0)); }
   // where "Near a place" measures from: the territory's centre, the phone's location, an account or the first stop
   startPoint() {
     const o = this.state.omStart;
@@ -1918,7 +1978,14 @@ class Component extends DCLogic {
   milesFrom(h, fallback) { const a = this.startPoint(); return a && h && onEarth(h) ? earthMiles(a, h) : fallback; }
   // the route's stops on a small map, fitted to the stops (and the start): one scale both ways, so it keeps their shape
   routeMapOf(groups) {
-    const pins = groups.map((g, i) => ({ n: i + 1, h: HCOS[g.hco] })).filter(o => placed(o.h));
+    if (SERVICE.routeStop) {
+      const pins = groups.flatMap((g,i) => onEarth(g.place) ? [{ id:g.place.id,lat:g.place.lat,lng:g.place.lng,n:i+1,size:29,bg:'#2447C4',fg:'#fff',sel:false,label:g.place.name,
+        go:() => this.go(this.stopOf(g.ids[0]).isHco ? 'hco' : 'hcp',g.ids[0]) }] : []);
+      const start = this.startKnown() ? { lat:START.lat,lng:START.lng } : null;
+      return { routeMapOn:!!pins.length,routePins:[],routeStartOn:false,routeGeoMap:pins.length ? { pins,start,radiusMi:null,halos:[],sel:null,cmd:{ kind:'',n:0 },
+        fitKey:JSON.stringify([pins.map(p => [p.id,p.lat,p.lng]),start]),fitAll:true,inset:{ top:0,bottom:0 } } : null };
+    }
+    const pins = groups.map((g, i) => ({ n: i + 1, h: g.place })).filter(o => placed(o.h));
     const st = this.startKnown() && placed(START) ? START : null, all = [...pins.map(o => o.h), ...(st ? [st] : [])];
     if (!pins.length) return { routeMapOn: false, routePins: [], routeStartOn: false, routeStartX: '50%', routeStartY: '50%' };
     const geo = all.every(onEarth), lat0 = geo ? all.reduce((t, h) => t + h.lat, 0) / all.length * Math.PI / 180 : 0;
@@ -1931,10 +1998,12 @@ class Component extends DCLogic {
     const at = st ? put(st) : { x: '50%', y: '50%' };
     return { routeMapOn: true, routePins: pins.map(o => ({ n: o.n, ...put(o.h) })), routeStartOn: !!st, routeStartX: at.x, routeStartY: at.y };
   }
-  placeIn(list, id, mins = driveMin) {
-    const groups = this.groupsOf(list), h = this.hcoOf(id), at = groups.findIndex(g => g.hco === h);
+  placeIn(list, id, mins = driveMin, point = this.routePlaceOf(id)) {
+    const groups = this.groupsOf(list), h = this.hcoOf(id);
+    const at = groups.findIndex(g => SERVICE.routeStop ? !!point && g.place?.id === point.id : g.hco === h);
     if (at >= 0) { const i = list.indexOf(groups[at].ids[groups[at].ids.length - 1]) + 1; return { list: [...list.slice(0, i), id, ...list.slice(i)], stop: at + 1, extra: 0 }; }
-    const stops = groups.map(g => HCOS[g.hco]), P = HCOS[h], from = this.startKnown() ? START : null;
+    const stops = groups.map(g => g.place), P = point, from = this.startKnown() ? START : null;
+    if (SERVICE.routeStop && (!onEarth(P) || !stops.every(onEarth))) return { list:[...list,id],stop:groups.length+1,extra:0 };
     let best = 0, cost = Infinity;
     for (let k = 0; k <= stops.length; k++) {
       const a = k ? stops[k - 1] : from, b = stops[k], c = (a ? mins(a, P) : 0) + (b ? mins(P, b) : 0) - (a && b ? mins(a, b) : 0);
@@ -1942,23 +2011,33 @@ class Component extends DCLogic {
     }
     return { list: [...groups.slice(0, best).flatMap(g => g.ids), id, ...groups.slice(best).flatMap(g => g.ids)], stop: best + 1, extra: Math.round(cost) };
   }
-  toggleRoute(id, key = 'route') {
+  toggleRoute(id, key = 'route', fromOrg) {
     const prev = this.state[key], undo = () => this.setState({ [key]: prev });
-    if (prev.includes(id)) { this.setState({ [key]: prev.filter(x => x !== id) }); return this.toast(this.stopOf(id).name + ' removed', undo); }
+    if (prev.includes(id)) { this._routeWork.delete(id); this.setState({ [key]: prev.filter(x => x !== id) }); return this.toast(this.stopOf(id).name + ' removed', undo); }
     // driving minutes from the app's maps (SERVICE.drive); without them the stop goes where the map is closest, with no minutes
+    const stop = SERVICE.routeStop ? this.routeStopOf(id,fromOrg) : null;
     const add = mins => {
       const now = this.state[key];
       if (now.includes(id)) return;
-      const r = this.placeIn(now, id, mins || driveMin);
-      this.setState({ [key]: r.list });
+      const r = this.placeIn(now, id, mins || driveMin, stop?.place);
+      this.setState({ [key]:r.list,...(stop ? { routeStops:{ ...this.state.routeStops,[id]:stop } } : {}) });
       this.toast('Added: ' + ordinal(r.stop) + ' stop' + (mins ? ', ' + (r.extra > 0 ? '+' + r.extra + ' min' : 'no extra drive') : ''), () => this.setState({ [key]: now }));
     };
     const groups = this.groupsOf(prev), h = this.hcoOf(id);
-    if (groups.some(g => g.hco === h)) return add(() => 0);
-    const pts = [...(this.startKnown() ? [START] : []), ...groups.map(g => HCOS[g.hco]), HCOS[h]];
-    if (!SERVICE.drive || pts.length < 2) return add(null);
+    if (groups.some(g => SERVICE.routeStop ? !!stop?.place && g.place?.id === stop.place.id : g.hco === h)) return add(() => 0);
+    const pts = [...(this.startKnown() ? [START] : []), ...groups.map(g => g.place), stop ? stop.place : HCOS[h]];
+    if (!SERVICE.drive || pts.length < 2 || (SERVICE.routeStop && !pts.every(onEarth))) return add(null);
     SERVICE.drive(pts).then(m => add((a, b) => m[pts.indexOf(a)][pts.indexOf(b)]), () => add(null));
   }
+  directionsFor(places, start) {
+    const at = p => onEarth(p) ? p.lat + ',' + p.lng : p?.city ? p.name + ', ' + p.city : '';
+    const points = places.map(at);
+    if (!SERVICE.open || !points.length || points.some(p => !p) || points.length > 4) return '';
+    const origin = start ? at(start) : '';
+    return 'https://www.google.com/maps/dir/?api=1&travelmode=driving&destination=' + encodeURIComponent(points.at(-1)) +
+      (origin ? '&origin=' + encodeURIComponent(origin) : '') + (points.length > 1 ? '&waypoints=' + encodeURIComponent(points.slice(0,-1).join('|')) : '');
+  }
+  openDirections(url) { if (url && SERVICE.open) SERVICE.open(url).catch(() => this.toast('Couldn’t open Maps')); }
   // the app's one score (priorityOf), in points; a point is about 5 minutes of driving. Insights accounts have no claims.
   relevance(id) {
     const s = this.state, A = this.acct(), p = HCPS[id], h = p ? null : HCOS[id];
@@ -2213,6 +2292,8 @@ class Component extends DCLogic {
     const scr = top.s;
     const groups = this.groups();
     const viewKey = s.day === 'tomorrow' ? 'tomorrow' : 'route', viewList = s[viewKey], viewGroups = this.groupsOf(viewList), routeMap = this.routeMapOf(viewGroups);
+    const routeLegs = s.routeLegs?.key === this.routeLegKey(viewGroups) ? s.routeLegs.legs : [];
+    const routeUrl = SERVICE.routeStop ? this.directionsFor(viewGroups.map(g => g.place),this.startKnown() ? START : null) : '';
     const headline = list => { const n = list.length, g = this.groupsOf(list).length; return n ? n + (n === 1 ? ' visit' : ' visits') + ' · ' + g + (g === 1 ? ' stop' : ' stops') : 'No route yet'; };
     const inRoute = id => s.route.includes(id) || (!!HCOS[id] && HCOS[id].hcps.some(x => s.route.includes(x)));
     const runList = groups.flatMap(g => g.ids);
@@ -2308,7 +2389,8 @@ class Component extends DCLogic {
       });
     }
     const unit = ins ? ['clinician','clinicians'] : s.kind === 'hco' ? ['account','accounts'] : ['HCP','HCPs'];
-    const territoryName = (TERRS.find(t => (t.id || t.name) === s.territory) || {}).name || s.territory;
+    const pickedTerritory = s.territory || WORKSPACE.pendingTerritory || TERRS[0]?.id || TERRS[0]?.name;
+    const territoryName = (TERRS.find(t => (t.id || t.name) === pickedTerritory) || {}).name || (this.props?.loading ? 'Territories' : s.territory);
     const targetPageKey = exploreQuery?.filterKey || JSON.stringify([s.account,s.territory,s.tlist,s.q,s.scope,s.kind,s.spec,s.cgs,s.sort,s.iSort,s.omType,s.omMode,s.omRadius,s.omCity]);
     const targetPage = exploreQuery ? exploreQuery.request.page : s.targetPageKey === targetPageKey ? Math.max(0, Math.min(s.targetPage || 0, Math.ceil(items.length / TARGET_PAGE_SIZE) - 1)) : 0;
     const hasPreviousTargets = targetPage > 0;
@@ -2357,6 +2439,8 @@ class Component extends DCLogic {
     const idx = Math.min(s.runIdx, Math.max(runList.length - 1, 0));
     const curId = runList[idx] || Object.keys(HCPS)[0];
     const C = curId ? this.stopOf(curId) : NO_HCP, CH = HCOS[C.hco] || NO_HCO;
+    const runPlace = curId && SERVICE.routeStop ? this.routePlaceOf(curId) : null;
+    const runUrl = runPlace ? this.directionsFor([runPlace],null) : '';
     const stopN = groups.findIndex(g => g.ids.includes(curId)) + 1 || 1;
     const runSegs = (runList.length ? runList : ['x','y','z']).map((id, i) => {
       const done = s.runDone.includes(id), skip = s.runSkip.includes(id), cur = isRun && i === idx;
@@ -2521,7 +2605,7 @@ class Component extends DCLogic {
         act('✳', 'Ask', () => this.ask('Brief me on ' + H.name))
       ],
       hcoStats,hcoSections,
-      hHcps: hPeople.slice(0,hPeopleLimit).flatMap(({id,count}) => { const p = HCPS[id]; return p ? [{ name:p.name,photo:p.photo,npi:p.id,ini:p.ini,meta:[p.spec,count.toLocaleString() + ' ' + (WORKSPACE.drugAccount ? 'fills since 2022' : (WORKSPACE.hcpMetric || 'claims').toLowerCase())].filter(Boolean).join(' · '),...addSt(s.route.includes(id)),open:() => this.go('hcp',id),toggle:() => this.toggleRoute(id) }] : []; }),
+      hHcps: hPeople.slice(0,hPeopleLimit).flatMap(({id,count}) => { const p = HCPS[id]; return p ? [{ name:p.name,photo:p.photo,npi:p.id,ini:p.ini,meta:[p.spec,count.toLocaleString() + ' ' + (WORKSPACE.drugAccount ? 'fills since 2022' : (WORKSPACE.hcpMetric || 'claims').toLowerCase())].filter(Boolean).join(' · '),...addSt(s.route.includes(id)),open:() => this.go('hcp',id),toggle:() => this.toggleRoute(id,'route',H.id) }] : []; }),
 
       // hcp
       p: { ...P, spec:pTarget?.specialty || P.spec,last:pTarget?.lastMeeting || pLast.label,hcoName:pTarget?.site || (HCOS[P.hco] || NO_HCO).name,
@@ -2590,14 +2674,27 @@ class Component extends DCLogic {
       daySegs: [['today','Today'], ['tomorrow','Tomorrow']].map(([k, label]) => ({ label, ...seg(s.day === k), go: () => this.setState({ day:k }) })),
       routeFrom: this.startKnown() && (AREA.here || s.territory) ? ' · from ' + (AREA.here ? 'your location' : territoryName) : '',
       ...routeMap,
-      routeGroups: viewGroups.map((g, i) => ({ n: i + 1, name: HCOS[g.hco].name, dist: i ? milesApart(HCOS[viewGroups[i - 1].hco], HCOS[g.hco]) : this.startKnown() ? milesApart(START, HCOS[g.hco]) : '', rows: g.ids.map(id => { const st = this.stopOf(id); return { name: st.name, spec: st.spec, time: TIMES[id] || 'Flexible', remove: () => this.toggleRoute(id, viewKey) }; }) })),
+      routeDirectionsOn:!!routeUrl,routeDirections:() => this.openDirections(routeUrl),
+      routeGroups: viewGroups.map((g, i) => {
+        const from = i ? viewGroups[i - 1].place : this.startKnown() ? START : null;
+        const ready = onEarth(from) && onEarth(g.place);
+        const road = routeLegs[i];
+        const miles = Number.isFinite(road) ? road : ready ? earthMiles(from,g.place) : null;
+        const dist = SERVICE.routeStop ? (miles == null ? '' : (miles < 10 ? Math.round(miles * 10) / 10 : Math.round(miles)) + (Number.isFinite(road) ? ' mi driving' : ' mi straight-line')) : milesApart(from,g.place);
+        const location = SERVICE.routeStop ? (g.place?.city || (g.place === undefined ? 'Finding location…' : 'Location unavailable')) : '';
+        return { n:i+1,name:g.place?.name || (HCOS[g.hco] || NO_HCO).name,dist,location,rows:g.ids.map(id => {
+          const st = this.stopOf(id);
+          return { name:st.name,spec:st.spec,time:TIMES[id] || 'Flexible',remove:() => this.toggleRoute(id,viewKey) };
+        }) };
+      }),
       startRun: () => { this.setState({ runIdx:0, runDone:[], runSkip:[] }); this.replaceTop('run'); },
 
       // run
       runPos: (idx + 1) + ' OF ' + Math.max(runList.length, 1),
+      runDirectionsOn:!!runUrl,runDirections:() => this.openDirections(runUrl),
       rc: C.isHco
-        ? { ...C, stopN, hcoName: CH.name, time: 'Flexible', sub: CH.type + ' · ' + CH.dist + ' away', open: 'Meet the team at ' + CH.name + ' and find out who sends patients elsewhere.', brief: CH.left + ' of patients leave the account, ' + CH.leak + ' since 2022.' }
-        : { ...C, npi:C.id, stopN, hcoName: CH.name, time: TIMES[curId] || 'Flexible',
+        ? { ...C, stopN, hcoName:runPlace?.name || CH.name, time: 'Flexible', sub: [CH.type,runPlace?.city].filter(Boolean).join(' · '), open: 'Meet the team at ' + CH.name + ' and find out who sends patients elsewhere.', brief: CH.left + ' of patients leave the account, ' + CH.leak + ' since 2022.' }
+        : { ...C, npi:C.id, stopN, hcoName:runPlace?.name || CH.name, time: TIMES[curId] || 'Flexible',
         sub: ins ? C.spec + ' · ' + (cLast.n >= 999 ? 'not met yet' : 'last met ' + cLast.label) : C.spec + ' · lightest day ' + C.day,
         ...(ins ? { open:C.iOpen, brief:C.iBrief } : {}) },
       rcStats: C.isHco ? [{ k:CH.metric || WORKSPACE.metric || 'PROCEDURES', v:CH.proc, c:'#0B1220' }, { k:'YOY', v:CH.yoy, c: CH.yoyN < 0 ? '#A94D1B' : '#1C7A4E' }, { k:'LEFT', v:CH.left, c:'#A94D1B' }]
@@ -2732,13 +2829,14 @@ class Component extends DCLogic {
         return { label:g.name, ...chip(on), go: () => on && s.cgs.length === 1 ? this.toast('Keep at least one code group') : this.setState(st => ({ cgs: on ? st.cgs.filter(x => x !== g.name) : [...st.cgs, g.name] })) }; }),
       cgCodesLabel: cgOn.reduce((n, g) => n + g.codes, 0) + ' · HCPCS / CPT',
       resetFilter: () => this.setState(ins ? { iSort:'Relevance' } : { sort:WORKSPACE.lens === 'hcp' ? 'Volume' : 'Opportunity', spec:'All codes', cgs: CODE_GROUPS.map(g => g.name) }),
+      territoryLoading:!ins && !TERRS.length && !!this.props?.loading,
       territories: ins
         ? TLISTS.map(t => { const id = t.id || t.name, on = s.tlist === id; return { name:t.name, meta:t.meta, check: on ? '✓' : '', bg: on ? '#EDF1FB' : '#fff', bd: on ? '#2447C4' : '#E1E6F0', go: () => { this.setState({ tlist:id, sheet:null }); this.toast('Switched to ' + t.name); } }; })
-        : TERRS.map(t => { const id = t.id || t.name, on = s.territory === id; return { ...t, check: on ? '✓' : '', bg: on ? '#EDF1FB' : '#fff', bd: on ? '#2447C4' : '#E1E6F0', go: () => { this.setState({ sheet:null }); if (AUTH.pickTerritory) AUTH.pickTerritory(id).catch(e => this.toast(e.message || 'That list didn’t open')); else this.setState({ territory:id }); } }; }),
+        : TERRS.map(t => { const id = t.id || t.name, on = pickedTerritory === id; return { ...t, check: on ? '✓' : '', bg: on ? '#EDF1FB' : '#fff', bd: on ? '#2447C4' : '#E1E6F0', go: () => { this.setState({ sheet:null }); if (AUTH.pickTerritory) AUTH.pickTerritory(id,{ kind:s.kind,scope:s.scope }).catch(e => this.toast(e.message || 'That list didn’t open')); else this.setState({ territory:id }); } }; }),
       newItemLabel: ins ? '＋ New target list' : '＋ New territory',
       newTerritory: () => this.toast(ins ? 'New target list form' : 'New territory form'),
       chooseHco: (HCOS[chId] || NO_HCO).name,
-      chooseRows: (HCOS[chId] || NO_HCO).hcps.map(id => { const on = s.route.includes(id); return { name:HCPS[id].name, spec:HCPS[id].spec, check: on ? '✓' : '', bg: on ? '#EDF1FB' : '#fff', bd: on ? '#2447C4' : '#E1E6F0', boxBd: on ? '#2447C4' : '#B9C3D8', boxBg: on ? '#2447C4' : '#fff', toggle: () => this.toggleRoute(id) }; }),
+      chooseRows: (HCOS[chId] || NO_HCO).hcps.map(id => { const on = s.route.includes(id); return { name:HCPS[id].name, spec:HCPS[id].spec, check: on ? '✓' : '', bg: on ? '#EDF1FB' : '#fff', bd: on ? '#2447C4' : '#E1E6F0', boxBd: on ? '#2447C4' : '#B9C3D8', boxBg: on ? '#2447C4' : '#fff', toggle: () => this.toggleRoute(id,'route',chId) }; }),
       ...this.emailVals(),
       fuWhoOpts: this.people(null).map(p => ({ label:p.name.replace('Dr. ', ''), ...chip(s.fuWho === p.id), go: () => this.setState({ fuWho:p.id }) })),
       fuTask: s.fuTask, onFuTask: e => this.setState({ fuTask: e.target.value }),
