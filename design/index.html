@@ -148,6 +148,12 @@ input,textarea,button{font-family:inherit}
                     </span>
                   </sc-for>
                 </button>
+                <sc-if value="{{ t.hasWide }}" hint-placeholder-val="{{ false }}">
+                  <button onClick="{{ t.open }}" style="display:block;width:100%;text-align:left;border:0;border-top:1px solid #EEF1F7;background:#FAFBFE;padding:10px 14px 11px;cursor:pointer;color:#0B1220;">
+                    <span style="display:block;font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.08em;color:#7A839A;">{{ t.wideK }}</span>
+                    <span style="display:block;font-size:13.5px;line-height:1.35;margin-top:4px;color:#0B1220;">{{ t.wideV }}</span>
+                  </button>
+                </sc-if>
               </div>
             </sc-for>
             <sc-if value="{{ hasTargetPages }}" hint-placeholder-val="{{ false }}">
@@ -2146,8 +2152,9 @@ class Component extends DCLogic {
       ? ins ? { ...ins, a: ins.a.replace('{themes}', this.themes(this.state.visits).join(' and ')).replace('{adv}', A.adv ? ' Advocacy is highest with Dr. Maya Patel and Dr. Daniel Okafor.' : '') } : { a:'From your insights: nothing matched “' + q + '” exactly. Dr. Maya Patel is the closest result on ' + this.state.tlist + '.', tags:['Search'], rows:['maya'] }
       : ANSWERS[q] || { a:'From your book: nothing matched “' + q + '” exactly. Dr. Maya Patel and Mount Sinai Hospital are the closest results in ' + this.state.territory + '.', tags:['Search'], rows:['maya'] };
   }
-  fuMetric(id) {
-    const open = this.state.fus.filter(f => f.who === id && !f.done);
+  // on a target list, only that list's follow-ups, as the profile and the website's row count them
+  fuMetric(id, listId) {
+    const open = this.state.fus.filter(f => f.who === id && !f.done && (!listId || (f.ref?.listId || f.targetListId) === listId));
     return { k:'FOLLOW-UPS', v:String(open.length), c: open.some(f => f.dueN < 0) ? '#A94D1B' : '#0B1220' };
   }
   storeFu(fu) {
@@ -2349,12 +2356,26 @@ class Component extends DCLogic {
       const advN = id => this.advOf(id) || 0, lastName = p => p.name.split(' ').pop();
       items.sort((a, b) => sortNow === 'Relevance' ? this.relevance(b.id) - this.relevance(a.id) : sortNow === 'Name' ? lastName(a).localeCompare(lastName(b)) : sortNow === 'Last met' ? this.lastOf(b.id).n - this.lastOf(a.id).n : advN(b.id) - advN(a.id));
       items = items.map(p => {
-        const f = this.flagOf(p.id), adv = this.advOf(p.id);
-        return { name:p.name, photo:p.photo, npi:p.id, sub:p.spec + ' · ' + HCOS[p.hco].name, ini:p.ini, avBg:'#E7ECFA', avFg:'#22409F', avR:'50%', ...addSt(s.route.includes(p.id)),
-          toggle: () => this.toggleRoute(p.id), open: () => this.go('hcp', p.id), hasFlag: !!f, flag: f ? f.label : '', flagBg: f ? f.bg : '', flagFg: f ? f.fg : '',
-          metrics: A.adv
-            ? [{ k:'ADVOCACY', v: adv ? adv + '/5' : '—', c: adv >= 4 ? '#1C7A4E' : adv && adv <= 2 ? '#A94D1B' : '#0B1220' }, { k:'LAST MET', v:this.lastOf(p.id).label, c:'#0B1220' }, { k:'INSIGHTS', v:String(this.convCount(p.id)), c:'#22409F' }]
-            : [{ k:'LAST MET', v:this.lastOf(p.id).label, c:'#0B1220' }, { k:'INSIGHTS', v:String(this.convCount(p.id)), c:'#22409F' }, this.fuMetric(p.id)] };
+        const f = this.flagOf(p.id), adv = this.advOf(p.id), pr = tlist.profiles?.[p.id];
+        // the website's row: priority, status, last meeting, meetings (last 12 months / all) and the top topic
+        const tone = { New:['#E7ECFA','#22409F'], Engaged:['#E3F4EA','#1C7A4E'], Declined:['#FDEDE4','#A94D1B'], Inactive:['#EEF1F7','#5B6478'] }[pr?.status] || ['#E7ECFA','#22409F'];
+        const status = pr?.status ? { label:pr.status + (pr.priority ? ' · priority ' + pr.priority : ''), bg:tone[0], fg:tone[1] } : f;
+        const meetings = pr ? { k:'MEETINGS', v:(pr.meetings12 ?? 0) + ' / ' + (pr.meetings ?? 0), c:'#22409F' } : { k:'INSIGHTS', v:String(this.convCount(p.id)), c:'#22409F' };
+        const place = pr ? pr.site || pr.place : HCOS[p.hco]?.name;
+        const notes = pr?.notes?.length || 0;
+        // the website's extra column: Kura's advocacy, or Stemline's sentiment tracker once someone on the list is scored
+        const extra = A.adv ? { k:'ADVOCACY', v: adv ? adv + '/5' : '—', c: adv >= 4 ? '#1C7A4E' : adv && adv <= 2 ? '#A94D1B' : '#0B1220' }
+          : tlist.trackerKey && pr ? { k:tlist.trackerKey, v:pr.tracker || '—', c: pr.trackerBand === 'green' ? '#1C7A4E' : pr.trackerBand === 'red' ? '#A94D1B' : '#0B1220' } : null;
+        // then the topics take a line of their own on every list row: two, most discussed first, as the website's chips
+        const tops = pr?.topics || [];
+        const topicLine = tops.slice(0, 2).map((t, i) => t + (pr.topicN?.[i] ? ' ×' + pr.topicN[i] : '')).join(' · ') + (tops.length > 2 ? ' +' + (tops.length - 2) : '');
+        // the first specialty only, as the website writes it, and the notes on them
+        return { name:p.name, photo:p.photo, npi:p.id, sub:[String(p.spec || '').split(',')[0].trim(), place, notes ? notes + (notes === 1 ? ' note' : ' notes') : ''].filter(has).join(' · '), ini:p.ini, avBg:'#E7ECFA', avFg:'#22409F', avR:'50%', ...addSt(s.route.includes(p.id)),
+          toggle: () => this.toggleRoute(p.id), open: () => this.go('hcp', p.id), hasFlag: !!status, flag: status ? status.label : '', flagBg: status ? status.bg : '', flagFg: status ? status.fg : '',
+          metrics: extra
+            ? [extra, { k:'LAST MET', v:this.lastOf(p.id).label, c:'#0B1220' }, meetings]
+            : [{ k:'LAST MET', v:this.lastOf(p.id).label, c:'#0B1220' }, meetings, this.fuMetric(p.id, pr ? tlist.id : undefined)],
+          hasWide: !!pr, wideK:'TOP TOPICS', wideV: topicLine || 'No topics tagged' };
       });
     } else if (exploreMode) {
       const hcp = s.kind === 'hcp';
@@ -2384,13 +2405,22 @@ class Component extends DCLogic {
       items = Object.values(HCOS).filter(h => s.scope === 'explore' || h.mine).filter(h => this.areaOk(this.milesFrom(h, h.distN), h.boro) && this.typeOk(h.type)).filter(h => matches(h.name,h.city,h.type)).filter(specOk);
       const key = { Opportunity:'oppN', Volume:'volN', Growth:'listYoyN', Distance:'distN' }[s.sort];
       const orderValue = h => s.sort === 'Growth' ? (h.listYoyN == null ? h.yoyN : h.listYoyN) : h[key];
-      items.sort((a, b) => s.sort === 'Relevance' ? this.relevance(b.id) - this.relevance(a.id) : s.sort === 'Distance' ? orderValue(a) - orderValue(b) : orderValue(b) - orderValue(a));
+      // as the website orders the book: the sort's figure, then the volume, then the name
+      const byVolume = (a, b) => (b.volN || 0) - (a.volN || 0) || a.name.localeCompare(b.name);
+      items.sort((a, b) => s.sort === 'Relevance' ? this.relevance(b.id) - this.relevance(a.id) : (s.sort === 'Distance' ? orderValue(a) - orderValue(b) : orderValue(b) - orderValue(a)) || byVolume(a, b));
+      // the website's columns: claims, share, YoY, stayed/left, opportunity and leaking for a procedure book;
+      // patients, share of the list, change and 340B for a drug book
+      const leakCols = !WORKSPACE.drugAccount && WORKSPACE.view !== 'hema_sales';
       items = items.map(h => {
-        const inR = inRoute(h.id);
-        return { name:h.name, photo:h.photo, sub:h.type + ' · ' + h.dist + ' away', ini:h.ini, avBg:'#EEF1F7', avFg:'#3C4557', avR:'13px', ...addSt(inR),
+        const inR = inRoute(h.id), yoyN = h.listYoyN == null ? h.yoyN : h.listYoyN;
+        const volume = { k:WORKSPACE.metric || 'PROCEDURES', v:h.listProc || h.proc, c:'#0B1220' }, yoy = { k:'YOY', v:h.listYoy || h.yoy, c:yoyN < 0 ? '#A94D1B' : '#1C7A4E' };
+        const metrics = WORKSPACE.drugAccount
+          ? [volume, { k:'% OF LIST', v:or(h.listShare), c:'#22409F' }, yoy, { k:'CHANGE', v:or(h.delta), c:yoyN < 0 ? '#A94D1B' : '#1C7A4E' }, { k:'340B', v:or(h.is340b), c:'#0B1220' }]
+          : [...(!WORKSPACE.companyId || WORKSPACE.explore?.opportunity ? [{ k:'OPPORTUNITY', v:h.opp, c:'#22409F' }] : []), volume, yoy,
+            ...(leakCols ? [{ k:'SHARE', v:or(h.share), c:'#0B1220' }, { k:'LEFT', v:or(h.left), c:'#A94D1B' }, { k:'LEAKING', v:or(h.leak), c:'#A94D1B' }] : [])];
+        return { name:h.name, photo:h.photo, sub:[h.type, h.city, has(h.dist) ? h.dist + ' away' : ''].filter(has).join(' · '), ini:h.ini, avBg:'#EEF1F7', avFg:'#3C4557', avR:'13px', ...addSt(inR),
           toggle: () => h.hcps.length ? this.sheet('choose', h.id) : this.toggleRoute(h.id),
-          open: () => this.go('hco', h.id), hasFlag: !WORKSPACE.drugAccount && WORKSPACE.view !== 'hema_sales' && has(h.leak), flag:'Leaking ' + h.leak + ' since 2022', flagBg:'#FDEDE4', flagFg:'#A94D1B',
-          metrics:[...(!WORKSPACE.companyId || WORKSPACE.explore?.opportunity ? [{ k:'OPPORTUNITY', v:h.opp, c:'#22409F' }] : []), { k:WORKSPACE.metric || 'PROCEDURES', v:h.listProc || h.proc, c:'#0B1220' }, { k:'YOY', v:h.listYoy || h.yoy, c:(h.listYoyN == null ? h.yoyN : h.listYoyN) < 0 ? '#A94D1B' : '#1C7A4E' }] };
+          open: () => this.go('hco', h.id), hasFlag:false, flag:'', flagBg:'#FDEDE4', flagFg:'#A94D1B', metrics };
       });
     } else {
       items = Object.values(HCPS).filter(p => s.scope === 'explore' || p.mine).filter(p => this.areaOk(this.milesFrom(HCOS[p.hco], p.distN), HCOS[p.hco].boro)).filter(p => matches(p.name,p.id,p.spec,HCOS[p.hco].name)).filter(specOk);
@@ -2426,7 +2456,9 @@ class Component extends DCLogic {
       : codesOff ? { emptyTitle:'Nothing for these codes', emptySub:'Change the specialty or the code groups.', emptyA:'Change filters', emptyAGo: () => this.sheet('filter'), emptyB:'Reset filters', emptyBGo: () => this.setState({ spec:'All codes', cgs: CODE_GROUPS.map(g => g.name) }) }
       : ins ? { emptyTitle:tlist.loading ? 'Loading targets…' : tlist.name && tlist.name !== 'No target lists' ? 'No one on ' + tlist.name : 'No target lists yet',emptySub:tlist.loading ? 'Opening ' + tlist.name : 'Targets added on the website show here.',
           emptyA:'Change list', emptyAGo: () => this.sheet('territory'), hasEmptyA: TLISTS.length > 1, emptyB:'', emptyBGo: () => {}, hasEmptyB: false }
-      : savedHcps ? { emptyTitle:'No HCPs on this list',emptySub:'Explore the territory to find HCPs.',emptyA:'Explore HCPs',emptyAGo:() => this.setState({ scope:'explore' }),hasEmptyB:false }
+      // the website's wording for an empty book (its "Add your targets" upload isn't in the app; Explore is)
+      : savedHcps ? { emptyTitle:'No target HCPs in ' + territoryName + ' yet.',emptySub:'',emptyA:'Explore HCPs',emptyAGo:() => this.setState({ scope:'explore' }),hasEmptyB:false }
+      : toExploreFirst && s.kind === 'hco' && !Object.values(HCOS).some(h => h.mine) ? { emptyTitle:'No target accounts in ' + territoryName + ' yet.',emptySub:'',emptyA:'Explore accounts',emptyAGo:() => this.setState({ scope:'explore' }),hasEmptyB:false }
       : { emptyTitle:'Nothing in this area', emptySub: s.kind === 'hco' ? 'Widen the area or change the type.' : 'Widen the area.',
           emptyA:'Change area', emptyAGo: () => this.sheet('range', 'targets'), emptyB:'Reset filters', emptyBGo: resetArea };
     const rangeType = s.sheetData === 'targets' ? !ins && s.kind === 'hco' : s.omKind === 'acc';
@@ -2587,7 +2619,7 @@ class Component extends DCLogic {
       isFieldPro: !ins, showTypeChip: s.kind === 'hco', showTargetSort:!exploreMode, omType: targetType, openArea: () => this.sheet('range', 'targets'),
       areaChip: s.omMode === 'near' ? 'Within ' + s.omRadius + ' mi' : s.omCity === 'All cities' ? AREA.state : s.omCity,
       spec: s.spec, sortNow, openFilter: () => this.sheet('filter'),
-      groupsChip: cgOn.length + (cgOn.length === 1 ? ' group · ' : ' groups · ') + cgOn.reduce((n, g) => n + g.codes, 0) + ' codes',
+      groupsChip: cgOn.length + (cgOn.length === 1 ? ' group · ' : ' groups · ') + cgOn.reduce((n, g) => n + g.codes, 0) + (cgOn.reduce((n, g) => n + g.codes, 0) === 1 ? ' code' : ' codes'),
       targetItems: exploreMode ? items : items.slice(targetPage * TARGET_PAGE_SIZE, (targetPage + 1) * TARGET_PAGE_SIZE), noTargets: items.length === 0, hasEmptyA: true, hasEmptyB: true, ...empty,
       hasPreviousTargets, hasNextTargets, hasTargetPages: hasPreviousTargets || hasNextTargets,
       targetPageLabel: exploreMode
