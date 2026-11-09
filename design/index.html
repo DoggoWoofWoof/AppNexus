@@ -61,7 +61,6 @@ input,textarea,button{font-family:inherit}
         <div>Each account's setup (Record on or off, topics, meeting types, extra fields) should come from the server. Insights keeps it in the web client today, keyed by email domain.</div>
         <div>Some of it is per person, not per account: Kura MSLs get the KOMET topic list, and Stemline has view-only users, who should not see the centre button.</div>
         <div>Recording on a phone has to keep going when the screen locks or the rep switches apps, and the audio has to wait on the phone until there is signal to upload it.</div>
-        <div>Relevance is the app's one score. The server has to return its parts per person: follow-ups due, patients leaving, volume for the chosen code groups, last contact and drive time.</div>
       </div>
     </div>
   </div>
@@ -103,7 +102,6 @@ input,textarea,button{font-family:inherit}
                 <span style="display:block;font-size:15px;font-weight:700;margin-top:3px;">{{ trkCardHeadline }}</span>
                 <span style="display:flex;height:4px;border-radius:2px;overflow:hidden;margin-top:8px;background:rgba(255,255,255,.22);"><sc-for list="{{ trkCardSegs }}" as="sg" hint-placeholder-count="3"><span style="height:4px;width:{{ sg.w }};background:{{ sg.bg }};"></span></sc-for></span>
               </div>
-              <sc-if value="{{ trkCardBtn }}" hint-placeholder-val="{{ true }}"><button onClick="{{ trkCardGo }}" style="flex:0 0 auto;padding:11px 14px;border:0;border-radius:12px;background:#fff;color:#22409F;font-size:13px;font-weight:700;cursor:pointer;">{{ trkCardLabel }}</button></sc-if>
             </div>
             </sc-if>
             <div style="display:flex;align-items:center;gap:9px;padding:0 6px 0 13px;height:46px;border-radius:13px;border:1px solid #D7DEEC;background:#fff;">
@@ -480,7 +478,7 @@ input,textarea,button{font-family:inherit}
               <sc-if value="{{ noRoute }}" hint-placeholder-val="{{ false }}">
                 <div style="padding:24px 16px;text-align:center;background:#fff;border:1px dashed #C9D2E4;border-radius:16px;font-size:13.5px;color:#5B6478;">No visits yet. Add doctors from Targets.</div>
               </sc-if>
-              <sc-if value="{{ routeIsToday }}" hint-placeholder-val="{{ true }}"><button onClick="{{ toTargets }}" style="margin-top:2px;width:100%;padding:13px;border:1px dashed #B9C3D8;border-radius:14px;background:#EDF1FB;color:#22409F;font-size:13.5px;font-weight:700;cursor:pointer;">＋ Add visits from Targets</button></sc-if>
+              <button onClick="{{ toTargets }}" style="margin-top:2px;width:100%;padding:13px;border:1px dashed #B9C3D8;border-radius:14px;background:#EDF1FB;color:#22409F;font-size:13.5px;font-weight:700;cursor:pointer;">＋ Add visits from Targets</button>
               <sc-if value="{{ canStart }}" hint-placeholder-val="{{ true }}">
                 <button onClick="{{ startRun }}" style="margin-top:12px;padding:15px;border:0;border-radius:14px;background:#2447C4;color:#fff;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 10px 22px -10px rgba(36,71,196,.8);">Start route · {{ routeCountLabel }}</button>
               </sc-if>
@@ -1571,17 +1569,17 @@ input,textarea,button{font-family:inherit}
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;account&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;ottava&quot;,&quot;stemline&quot;,&quot;kura&quot;,&quot;b1&quot;,&quot;targetedoncology&quot;,&quot;gilead&quot;],&quot;default&quot;:&quot;ottava&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;startTab&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;targets&quot;,&quot;ask&quot;,&quot;map&quot;,&quot;summaries&quot;,&quot;activity&quot;],&quot;default&quot;:&quot;targets&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;tabLabels&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;always&quot;,&quot;active&quot;],&quot;default&quot;:&quot;always&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
 const HCOS = {
-  msh: { id:'msh', name:'Mount Sinai Hospital', ini:'MS', type:'Hospital', city:'New York, NY', boro:'Manhattan', proc:'12,480', yoy:'+11.2%', share:'23.5%', opp:'$1.5M', leak:'$5.7M', left:'9%', stayed:'91%', dist:'0.8 mi', mine:true, hcps:['maya','alex','jun'], oppN:1.5, volN:12480, yoyN:11.2, distN:0.8, x:'44%', y:'44%', specs:['Appendectomy','Bariatric','Cholecystectomy','Hernia','Urology'] },
-  msw: { id:'msw', name:'Mount Sinai West', ini:'MW', type:'Hospital', city:'New York, NY', boro:'Manhattan', proc:'6,210', yoy:'+4.8%', share:'18.1%', opp:'$0.9M', leak:'$3.8M', left:'12%', stayed:'88%', dist:'2.3 mi', mine:true, hcps:['daniel','elena'], oppN:0.9, volN:6210, yoyN:4.8, distN:2.3, x:'28%', y:'64%', specs:['Bariatric','Colectomy','Hernia','OB-GYN'] },
-  nyu: { id:'nyu', name:'NYU Langone Tisch', ini:'NY', type:'Hospital', city:'New York, NY', boro:'Manhattan', proc:'9,870', yoy:'+2.1%', share:'14.6%', opp:'$2.2M', leak:'$6.1M', left:'15%', stayed:'85%', dist:'3.9 mi', mine:false, hcps:[], oppN:2.2, volN:9870, yoyN:2.1, distN:3.9, x:'70%', y:'78%', specs:['Colectomy','OB-GYN','Urology'] },
-  mssc: { id:'mssc', name:'Midtown Surgery Center', ini:'MC', type:'Surgery center', city:'New York, NY', boro:'Manhattan', proc:'2,140', yoy:'+21.4%', share:'6.2%', opp:'$0.6M', leak:'$1.1M', left:'7%', stayed:'93%', dist:'1.2 mi', mine:false, hcps:[], oppN:0.6, volN:2140, yoyN:21.4, distN:1.2, x:'40%', y:'52%', specs:['Hernia','Cholecystectomy'] }
+  msh: { id:'msh', name:'Mount Sinai Hospital', ini:'MS', type:'Hospital', city:'New York, NY', boro:'Manhattan', proc:'12,480', yoy:'+11.2%', share:'23.5%', opp:'$1.5M', leak:'$5.7M', left:'9%', stayed:'91%', dist:'0.8 mi', mine:true, hcps:['maya','alex','jun'], leftN:9, leakN:5700000, oppN:1.5, volN:12480, yoyN:11.2, distN:0.8, x:'44%', y:'44%', specs:['Appendectomy','Bariatric','Cholecystectomy','Hernia','Urology'] },
+  msw: { id:'msw', name:'Mount Sinai West', ini:'MW', type:'Hospital', city:'New York, NY', boro:'Manhattan', proc:'6,210', yoy:'+4.8%', share:'18.1%', opp:'$0.9M', leak:'$3.8M', left:'12%', stayed:'88%', dist:'2.3 mi', mine:true, hcps:['daniel','elena'], leftN:12, leakN:3800000, oppN:0.9, volN:6210, yoyN:4.8, distN:2.3, x:'28%', y:'64%', specs:['Bariatric','Colectomy','Hernia','OB-GYN'] },
+  nyu: { id:'nyu', name:'NYU Langone Tisch', ini:'NY', type:'Hospital', city:'New York, NY', boro:'Manhattan', proc:'9,870', yoy:'+2.1%', share:'14.6%', opp:'$2.2M', leak:'$6.1M', left:'15%', stayed:'85%', dist:'3.9 mi', mine:false, hcps:[], leftN:15, leakN:6100000, oppN:2.2, volN:9870, yoyN:2.1, distN:3.9, x:'70%', y:'78%', specs:['Colectomy','OB-GYN','Urology'] },
+  mssc: { id:'mssc', name:'Midtown Surgery Center', ini:'MC', type:'Surgery center', city:'New York, NY', boro:'Manhattan', proc:'2,140', yoy:'+21.4%', share:'6.2%', opp:'$0.6M', leak:'$1.1M', left:'7%', stayed:'93%', dist:'1.2 mi', mine:false, hcps:[], leftN:7, leakN:1100000, oppN:0.6, volN:2140, yoyN:21.4, distN:1.2, x:'40%', y:'52%', specs:['Hernia','Cholecystectomy'] }
 };
 const HCPS = {
-  maya: { id:'maya', name:'Dr. Maya Patel', first:'Maya', ini:'MP', spec:'General Surgery', hco:'msh', claims:'860', yoy:'+14%', day:'Wed', dayL:'Wednesday', ref:'998', top:'44970', email:'maya.patel@example.com', phone:'(212) 555-0101', last:'22 Oct', lastN:7, adv:4, iOpen:'Bring the one-page referral summary she asked for.', iBrief:'Last met 22 Oct: wants a one-page referral summary before the OR committee. Advocacy 4/5 and rising.', mine:true, claimsN:860, yoyN:14, distN:0.8, x:'46%', y:'38%', specs:['Cholecystectomy','Hernia','Appendectomy'], leak:true, open:'Bring the one-page referral summary she asked for.', brief:'860 selected-code claims in 2025, up 14%. 19 referral events went outside the system — up from 11 in 2024.' },
-  alex: { id:'alex', name:'Dr. Alex Morgan', first:'Alex', ini:'AM', spec:'General Surgery', hco:'msh', claims:'640', yoy:'+9%', day:'Tue', dayL:'Tuesday', ref:'512', top:'47562', email:'alex.morgan@example.com', phone:'(212) 555-0144', last:'30 Sep', lastN:29, adv:3, iOpen:'Ask how the November OR block changes affect his plans.', iBrief:'Met 30 Sep. Interested but cautious: waiting on the November OR block changes and wants peer outcome data. Advocacy 3/5.', mine:true, claimsN:640, yoyN:9, distN:0.8, x:'52%', y:'47%', specs:['Hernia','Bariatric','Cholecystectomy'], open:'Ask how the November OR block changes affect his case volume.', brief:'Steady grower with few outbound referrals. Strong candidate for a case-volume conversation.' },
-  daniel: { id:'daniel', name:'Dr. Daniel Okafor', first:'Daniel', ini:'DO', spec:'Colorectal Surgery', hco:'msw', claims:'410', yoy:'+6%', day:'Thu', dayL:'Thursday', ref:'288', top:'44140', email:'daniel.okafor@example.com', phone:'(212) 555-0172', last:'9 Oct', lastN:20, adv:4, iOpen:'Pick up the procedure-mix review he agreed to on 9 Oct.', iBrief:'Agreed on 9 Oct to review his procedure mix on the next visit. Advocacy 4/5.', mine:true, claimsN:410, yoyN:6, distN:2.3, x:'24%', y:'60%', specs:['Colectomy'], leak:true, open:'Walk through his colectomy mix against regional peers.', brief:'Agreed on 9 Oct to review the procedure mix on the next visit. 12% of his cases leave Mount Sinai West.' },
-  jun: { id:'jun', name:'Dr. Jun Park', first:'Jun', ini:'JP', spec:'General Surgery', hco:'msh', claims:'530', yoy:'−3%', day:'Mon', dayL:'Monday', ref:'340', top:'49650', email:'jun.park@example.com', phone:'(212) 555-0190', last:'2 Sep', lastN:57, adv:2, iOpen:'Deliver the account brief he requested on 27 Oct.', iBrief:'Asked for an account brief on 27 Oct, still not sent. Prefers email to visits. Advocacy 2/5 and cooling.', mine:false, claimsN:530, yoyN:-3, distN:0.8, x:'39%', y:'50%', specs:['Appendectomy','Cholecystectomy','Hernia'], leak:true, open:'Deliver the account brief he requested on 27 Oct.', brief:'Volume dipped 3% while outbound referrals rose — the highest leakage risk in your territory.' },
-  elena: { id:'elena', name:'Dr. Elena Rossi', first:'Elena', ini:'ER', spec:'General Surgery', hco:'msw', claims:'275', yoy:'+18%', day:'Wed', dayL:'Wednesday', ref:'319', top:'44970', email:'elena.rossi@example.com', phone:'(212) 555-0128', last:'—', lastN:999, adv:null, iOpen:'Introduce yourself and learn what she needs.', iBrief:'Not met yet. No insights logged.', mine:false, claimsN:275, yoyN:18, distN:2.3, x:'32%', y:'68%', specs:['Hernia','Bariatric'], open:'Introduce yourself — she is the fastest-growing surgeon at Mount Sinai West.', brief:'Up 18% YoY with 319 referred-in patients. Not yet contacted.' }
+  maya: { id:'maya', name:'Dr. Maya Patel', first:'Maya', ini:'MP', spec:'General Surgery', hco:'msh', claims:'860', yoy:'+14%', day:'Wed', dayL:'Wednesday', ref:'998', top:'44970', email:'maya.patel@example.com', phone:'(212) 555-0101', last:'22 Oct', lastN:7, adv:4, iOpen:'Bring the one-page referral summary she asked for.', iBrief:'Last met 22 Oct: wants a one-page referral summary before the OR committee. Advocacy 4/5 and rising.', mine:true, priorN:754, claimsN:860, yoyN:14, distN:0.8, x:'46%', y:'38%', specs:['Cholecystectomy','Hernia','Appendectomy'], leak:true, open:'Bring the one-page referral summary she asked for.', brief:'860 selected-code claims in 2025, up 14%. 19 referral events went outside the system — up from 11 in 2024.' },
+  alex: { id:'alex', name:'Dr. Alex Morgan', first:'Alex', ini:'AM', spec:'General Surgery', hco:'msh', claims:'640', yoy:'+9%', day:'Tue', dayL:'Tuesday', ref:'512', top:'47562', email:'alex.morgan@example.com', phone:'(212) 555-0144', last:'30 Sep', lastN:29, adv:3, iOpen:'Ask how the November OR block changes affect his plans.', iBrief:'Met 30 Sep. Interested but cautious: waiting on the November OR block changes and wants peer outcome data. Advocacy 3/5.', mine:true, priorN:587, claimsN:640, yoyN:9, distN:0.8, x:'52%', y:'47%', specs:['Hernia','Bariatric','Cholecystectomy'], open:'Ask how the November OR block changes affect his case volume.', brief:'Steady grower with few outbound referrals. Strong candidate for a case-volume conversation.' },
+  daniel: { id:'daniel', name:'Dr. Daniel Okafor', first:'Daniel', ini:'DO', spec:'Colorectal Surgery', hco:'msw', claims:'410', yoy:'+6%', day:'Thu', dayL:'Thursday', ref:'288', top:'44140', email:'daniel.okafor@example.com', phone:'(212) 555-0172', last:'9 Oct', lastN:20, adv:4, iOpen:'Pick up the procedure-mix review he agreed to on 9 Oct.', iBrief:'Agreed on 9 Oct to review his procedure mix on the next visit. Advocacy 4/5.', mine:true, priorN:387, claimsN:410, yoyN:6, distN:2.3, x:'24%', y:'60%', specs:['Colectomy'], leak:true, open:'Walk through his colectomy mix against regional peers.', brief:'Agreed on 9 Oct to review the procedure mix on the next visit. 12% of his cases leave Mount Sinai West.' },
+  jun: { id:'jun', name:'Dr. Jun Park', first:'Jun', ini:'JP', spec:'General Surgery', hco:'msh', claims:'530', yoy:'−3%', day:'Mon', dayL:'Monday', ref:'340', top:'49650', email:'jun.park@example.com', phone:'(212) 555-0190', last:'2 Sep', lastN:57, adv:2, iOpen:'Deliver the account brief he requested on 27 Oct.', iBrief:'Asked for an account brief on 27 Oct, still not sent. Prefers email to visits. Advocacy 2/5 and cooling.', mine:false, priorN:546, claimsN:530, yoyN:-3, distN:0.8, x:'39%', y:'50%', specs:['Appendectomy','Cholecystectomy','Hernia'], leak:true, open:'Deliver the account brief he requested on 27 Oct.', brief:'Volume dipped 3% while outbound referrals rose — the highest leakage risk in your territory.' },
+  elena: { id:'elena', name:'Dr. Elena Rossi', first:'Elena', ini:'ER', spec:'General Surgery', hco:'msw', claims:'275', yoy:'+18%', day:'Wed', dayL:'Wednesday', ref:'319', top:'44970', email:'elena.rossi@example.com', phone:'(212) 555-0128', last:'—', lastN:999, adv:null, iOpen:'Introduce yourself and learn what she needs.', iBrief:'Not met yet. No insights logged.', mine:false, priorN:233, claimsN:275, yoyN:18, distN:2.3, x:'32%', y:'68%', specs:['Hernia','Bariatric'], open:'Introduce yourself — she is the fastest-growing surgeon at Mount Sinai West.', brief:'Up 18% YoY with 319 referred-in patients. Not yet contacted.' }
 };
 // stand-ins while a table is empty, so an account with nothing in it yet still opens
 const NO_HCO = { id:'', name:'—', ini:'', type:'', city:'', mine:false, hcps:[], specs:[], x:'50%', y:'50%' };
@@ -1610,7 +1608,6 @@ const OM_UNIT = { acc:'$K', doc:'$K' };
 const omColor = v => v >= 100 ? ['#22409F','#fff'] : v >= 50 ? ['#3F74D6','#fff'] : v >= 25 ? ['#7FCBBE','#0B1220'] : ['#BFE6DC','#0B1220'];
 const TONES = { blue:['#E7ECFA','#22409F'], orange:['#FDEDE4','#A94D1B'], green:['#E3F5EC','#1C7A4E'] };
 const TIMES = { maya:'10:00', alex:'11:30' };
-const SORTS = ['Relevance','Opportunity','Volume','Growth','Distance'];
 // code groups, each covering some specialties: 123 HCPCS / CPT codes in all
 const CODE_GROUPS = [
   { name:'Ottava-field-pro', specs:['Appendectomy','Bariatric','Cholecystectomy'], codes:48 },
@@ -2144,24 +2141,20 @@ class Component extends DCLogic {
       ...(on ? { iFilterChipBg:'#2447C4', iFilterChipFg:'#fff', iFilterChipBd:'#2447C4' } : { iFilterChipBg:'#fff', iFilterChipFg:'#0B1220', iFilterChipBd:'#D7DEEC' }),
     };
   }
-  // the list's people on the Sentiment Tracker, where Field Pro has the day's route: how many are scored, how
-  // many are in red, and the list in that order on a tap
+  // the list's people on the Sentiment Tracker, where Field Pro has the day's route: how many are scored and
+  // how many are in red
   trackerCard(tlist) {
-    const s = this.state;
-    if (!tlist) return { trkCardOn:false, trkCardNote:'', trkCardHeadline:'', trkCardSegs:[], trkCardBtn:false, trkCardLabel:'', trkCardGo: () => {} };
+    if (!tlist) return { trkCardOn:false, trkCardNote:'', trkCardHeadline:'', trkCardSegs:[] };
     const rows = tlist.ids.map(id => tlist.profiles?.[id]).filter(Boolean), n = tlist.ids.length;
     const count = b => rows.filter(r => r.trackerBand === b).length, red = count('red'), yellow = count('yellow'), green = count('green'), scored = red + yellow + green;
     const state = !SERVICE.tracker ? 'off' : tlist.trackerState || 'loading';
     const pct = k => (n ? Math.round(k / n * 1000) / 10 : 0) + '%';
-    const sorted = s.iSort === 'Tracker';
     return {
       trkCardOn: true,
       trkCardNote: state === 'on' && red ? red + ' in red' : '',
       trkCardHeadline: state === 'off' ? 'Not connected for this account' : state === 'loading' || tlist.loading ? 'Reading scores…' : !n ? 'No one on this list yet'
         : scored ? scored + ' of ' + n + ' scored' : 'No one on this list scored yet',
       trkCardSegs: state === 'on' ? [['#FF9C7A', red], ['#FFD166', yellow], ['#6EE0A6', green]].filter(([, k]) => k).map(([bg, k]) => ({ bg, w:pct(k) })) : [],
-      trkCardBtn: state === 'on' && scored > 0, trkCardLabel: sorted ? '✓ Lowest first' : 'Lowest first',
-      trkCardGo: () => this.setState({ iSort: sorted ? 'Last met' : 'Tracker', targetPage:0 }),
     };
   }
   // Activity's search: Insights searches the team's transcripts as My Insights does (Transcripts.tsx:580-607);
@@ -2783,7 +2776,7 @@ class Component extends DCLogic {
     }
     return { list: [...groups.slice(0, best).flatMap(g => g.ids), id, ...groups.slice(best).flatMap(g => g.ids)], stop: best + 1, extra: Math.round(cost) };
   }
-  toggleRoute(id, key = 'route', fromOrg) {
+  toggleRoute(id, key = this.state.day === 'tomorrow' ? 'tomorrow' : 'route', fromOrg) {
     if (!showOf(this.acct()).route) return;
     const prev = this.state[key], undo = () => this.setState({ [key]: prev });
     if (prev.includes(id)) { this._routeWork.delete(id); this.setState({ [key]: prev.filter(x => x !== id) }); return this.toast(this.stopOf(id).name + ' removed', undo); }
@@ -2794,7 +2787,7 @@ class Component extends DCLogic {
       if (now.includes(id)) return;
       const r = this.placeIn(now, id, mins || driveMin, stop?.place);
       this.setState({ [key]:r.list,...(stop ? { routeStops:{ ...this.state.routeStops,[id]:stop } } : {}) });
-      this.toast('Added: ' + ordinal(r.stop) + ' stop' + (mins ? ', ' + (r.extra > 0 ? '+' + r.extra + ' min' : 'no extra drive') : ''), () => this.setState({ [key]: now }));
+      this.toast('Added: ' + ordinal(r.stop) + ' stop' + (key === 'tomorrow' ? ' tomorrow' : '') + (mins ? ', ' + (r.extra > 0 ? '+' + r.extra + ' min' : 'no extra drive') : ''), () => this.setState({ [key]: now }));
     };
     const groups = this.groupsOf(prev), h = this.hcoOf(id);
     if (groups.some(g => SERVICE.routeStop ? !!stop?.place && g.place?.id === stop.place.id : g.hco === h)) return add(() => 0);
@@ -2811,16 +2804,6 @@ class Component extends DCLogic {
       (origin ? '&origin=' + encodeURIComponent(origin) : '') + (points.length > 1 ? '&waypoints=' + encodeURIComponent(points.slice(0,-1).join('|')) : '');
   }
   openDirections(url) { if (url && SERVICE.open) SERVICE.open(url).catch(() => this.toast('Couldn’t open Maps')); }
-  // the app's one score (priorityOf), in points; a point is about 5 minutes of driving. Insights accounts have no claims.
-  relevance(id) {
-    const s = this.state, A = this.acct(), p = HCPS[id], h = p ? null : HCOS[id];
-    const f = p && s.fus.find(x => x.who === id && !x.done);
-    const year = A.fieldPro ? (p ? p.claimsN : h.volN) : 0, yoy = p ? p.yoyN : h.yoyN, grew = year * yoy / (100 + yoy);
-    const since = p ? this.lastOf(id).n : Math.min(999, ...h.hcps.map(x => this.lastOf(x).n));
-    return (f && f.dueN <= 0 ? 40 : 0) + (A.fieldPro && (p ? p.leak : h.leak !== '—') ? 30 : 0)
-      + Math.min(30, 6 * Math.log2(1 + year / 25)) + Math.min(20, Math.max(0, grew) / 5) + Math.min(25, since * 25 / 30)
-      + ((p ? !A.fieldPro || p.mine : h.mine) ? 5 : 0) - (p ? p.distN : h.distN) * 4 / 5;
-  }
   // adding someone from the map puts them in the book
   makeHco(r) {
     const ini = r.name.split(/[\s-]+/).filter(w => /^[A-Z]/.test(w)).slice(0, 2).map(w => w[0]).join('');
@@ -3045,7 +3028,7 @@ class Component extends DCLogic {
       omSummary: src.length + ' ' + (src.length === 1 ? noun[0] : noun[1]) + ' · ' + zips.length + ' ZIPs · ' + fmt(total) + ' value',
       omGroups: [['all','All'], ['zip','By ZIP']].map(([k, label]) => ({ label, ...segOf(s.omGroup === k), go: () => this.setState({ omGroup:k, omSel:null }) })),
       omIsAll: s.omGroup === 'all', omIsZip: s.omGroup === 'zip',
-      omRows: src.map((r, i) => { const [bg, fg] = omColor(vn(r.v)); const inR = s.route.includes(r.id) || (!!HCOS[r.id] && HCOS[r.id].hcps.some(x => s.route.includes(x))); const on = s.omSel === r.id;
+      omRows: src.map((r, i) => { const [bg, fg] = omColor(vn(r.v)); const dayList = s[s.day === 'tomorrow' ? 'tomorrow' : 'route'], inR = dayList.includes(r.id) || (!!HCOS[r.id] && HCOS[r.id].hcps.some(x => dayList.includes(x))); const on = s.omSel === r.id;
         return { n:i + 1, bg, fg, name:r.name, meta:r.area + (r.type && r.type !== 'Hospital' ? ' · ' + r.type : '') + ' · ' + r.dist + ' mi', value:fmt(r.v), rowBg: on ? '#EEF3FD' : '#fff',
           select: () => on ? openRow(r) : this.setState({ omSel:r.id }),
           toggle: () => this.addFromMap(r), ...addSt(inR) }; }),
@@ -3072,7 +3055,7 @@ class Component extends DCLogic {
     const routeUrl = SERVICE.routeStop && !routeLegs.slice(1).includes(null)
       ? this.directionsFor(disconnectedStart ? routePlaces.slice(1) : routePlaces,disconnectedStart ? routePlaces[0] : this.startKnown() ? START : null) : '';
     const headline = list => { const n = list.length, g = this.groupsOf(list).length; return n ? n + (n === 1 ? ' visit' : ' visits') + ' · ' + g + (g === 1 ? ' stop' : ' stops') : 'No route yet'; };
-    const inRoute = id => s.route.includes(id) || (!!HCOS[id] && HCOS[id].hcps.some(x => s.route.includes(x)));
+    const inRoute = id => viewList.includes(id) || (!!HCOS[id] && HCOS[id].hcps.some(x => viewList.includes(x)));
     const runList = groups.flatMap(g => g.ids);
     const routeN = s.route.length;
     const prevTop = s.stack.length > 1 ? s.stack[s.stack.length - 2].s : s.tab;
@@ -3100,7 +3083,19 @@ class Component extends DCLogic {
     const explorePage = exploreQuery && s.explorePage?.key === exploreQuery.key ? s.explorePage : null;
     const measure = WORKSPACE.hcpMetric || 'VOLUME';
     const targetType = exploreMode ? s.exploreType || 'Hospital' : s.omType;
-    const sortNow = ins ? s.iSort : s.sort;
+    // each list sorts as its website does: Field Pro's book (fe:AccountWorkspace/lib/homeLists.ts) and the
+    // Insights list (TargetListDetail.tsx). A sort whose figures aren't there isn't offered; the default is the website's.
+    const hasOpp = !WORKSPACE.drugAccount && (!WORKSPACE.companyId || !!WORKSPACE.explore?.opportunity);
+    const hasLeak = !WORKSPACE.drugAccount && WORKSPACE.view !== 'hema_sales' && Object.values(HCOS).some(h => h.leftN != null || h.leakN != null);
+    const sortKeys = ins ? ['Last met', 'Meetings', 'Name']
+      : s.kind === 'hco' ? [...(hasOpp ? ['Opportunity'] : []), 'Volume', 'Year on year', ...(hasLeak ? ['Left %', 'Leaking $'] : []), 'Name']
+      : ['Volume', ...(Object.values(HCPS).some(p => p.priorN != null) ? ['Last year', 'Year on year'] : []), 'Name'];
+    const sortKey = ins ? (sortKeys.includes(s.iSort) ? s.iSort : 'Last met') : sortKeys.includes(s.sort) ? s.sort : sortKeys[0] === 'Opportunity' ? 'Opportunity' : 'Volume';
+    const volWord = String(s.kind === 'hcp' ? measure : WORKSPACE.metric || 'PROCEDURES').toLowerCase().replace(/^./, c => c.toUpperCase());
+    const sortLabel = k => ins ? k : k === 'Volume' ? volWord : k === 'Last year' ? volWord + ' last year' : k;
+    const sortNow = sortLabel(sortKey);
+    // highest first, and a row without the figure last
+    const desc = (x, y) => x == null ? (y == null ? 0 : 1) : y == null ? -1 : y - x;
     const tlist = TLISTS.find(t => (t.id || t.name) === s.tlist) || TLISTS[0] || { name:'', meta:'', ids:[] };
     const cgOn = CODE_GROUPS.filter(g => s.cgs.includes(g.name)), cgSpecs = cgOn.flatMap(g => g.specs);
     const specOk = x => !x.specs.length || ((s.spec === 'All codes' || x.specs.includes(s.spec)) && x.specs.some(sp => cgSpecs.includes(sp)));
@@ -3112,11 +3107,9 @@ class Component extends DCLogic {
         return (s.iSpec === 'All' || pr.specialty === s.iSpec) && (s.iState === 'All' || pr.state === s.iState) && (s.iStatus === 'All' || pr.status === s.iStatus)
           && (!s.iTopics.length || (pr.topics || []).some(t => s.iTopics.includes(t))); };
       items = tlist.ids.map(id => HCPS[id]).filter(p => p && kept(p) && matches(p.name, p.id, p.spec, HCOS[p.hco]?.name, prOf(p.id)?.site, prOf(p.id)?.place));
-      const advN = id => this.advOf(id) || 0, lastName = p => p.name.split(' ').pop(), metN = id => this.lastOf(id).n ?? 999;
-      const band = id => ({ red:0, yellow:1, green:2 })[prOf(id)?.trackerBand] ?? 3;
-      items.sort((a, b) => sortNow === 'Relevance' ? this.relevance(b.id) - this.relevance(a.id) : sortNow === 'Name' ? lastName(a).localeCompare(lastName(b))
-        : sortNow === 'Last met' ? metN(a.id) - metN(b.id) || lastName(a).localeCompare(lastName(b))
-        : sortNow === 'Tracker' ? band(a.id) - band(b.id) || metN(a.id) - metN(b.id) : advN(b.id) - advN(a.id));
+      // the website's three: the last meeting (newest first), meetings in the last 12 months, or the name
+      const metN = id => this.lastOf(id).n ?? 999, meetN = id => prOf(id)?.meetings12 ?? 0;
+      items.sort((a, b) => sortKey === 'Name' ? a.name.localeCompare(b.name) : sortKey === 'Meetings' ? meetN(b.id) - meetN(a.id) : metN(a.id) - metN(b.id));
       items = items.map(p => {
         const f = this.flagOf(p.id), adv = this.advOf(p.id), pr = tlist.profiles?.[p.id];
         // the website's row: priority, status, last meeting, meetings (last 12 months / all) and the top topic
@@ -3132,7 +3125,7 @@ class Component extends DCLogic {
         const tops = pr?.topics || [];
         const topicLine = tops.slice(0, 2).map((t, i) => t + (pr.topicN?.[i] ? ' ×' + pr.topicN[i] : '')).join(' · ') + (tops.length > 2 ? ' +' + (tops.length - 2) : '');
         // the first specialty only, as the website writes it, and the notes on them
-        return { name:p.name, photo:p.photo, npi:p.id, sub:[String(p.spec || '').split(',')[0].trim(), place, notes ? notes + (notes === 1 ? ' note' : ' notes') : ''].filter(has).join(' · '), ini:p.ini, avBg:'#E7ECFA', avFg:'#22409F', avR:'50%', ...addSt(s.route.includes(p.id)),
+        return { name:p.name, photo:p.photo, npi:p.id, sub:[String(p.spec || '').split(',')[0].trim(), place, notes ? notes + (notes === 1 ? ' note' : ' notes') : ''].filter(has).join(' · '), ini:p.ini, avBg:'#E7ECFA', avFg:'#22409F', avR:'50%', ...addSt(inRoute(p.id)),
           toggle: () => this.toggleRoute(p.id), open: () => this.go('hcp', p.id), hasFlag: !!status, flag: status ? status.label : '', flagBg: status ? status.bg : '', flagFg: status ? status.fg : '',
           flagTap: !!pr?.status, flagGo: () => this.openStatus(p.id),
           metrics: extra
@@ -3166,11 +3159,11 @@ class Component extends DCLogic {
       });
     } else if (s.kind === 'hco') {
       items = Object.values(HCOS).filter(h => s.scope === 'explore' || h.mine).filter(h => this.areaOk(this.milesFrom(h, h.distN), h.boro) && this.typeOk(h.type)).filter(h => matches(h.name,h.city,h.type)).filter(specOk);
-      const key = { Opportunity:'oppN', Volume:'volN', Growth:'listYoyN', Distance:'distN' }[s.sort];
-      const orderValue = h => s.sort === 'Growth' ? (h.listYoyN == null ? h.yoyN : h.listYoyN) : h[key];
       // as the website orders the book: the sort's figure, then the volume, then the name
-      const byVolume = (a, b) => (b.volN || 0) - (a.volN || 0) || a.name.localeCompare(b.name);
-      items.sort((a, b) => s.sort === 'Relevance' ? this.relevance(b.id) - this.relevance(a.id) : (s.sort === 'Distance' ? orderValue(a) - orderValue(b) : orderValue(b) - orderValue(a)) || byVolume(a, b));
+      const fig = { Opportunity:h => h.oppN, Volume:h => h.volN, 'Year on year':h => h.listYoy != null ? (has(h.listYoy) ? h.listYoyN : null) : has(h.yoy) ? h.yoyN : null,
+        'Left %':h => h.leftN ?? null, 'Leaking $':h => h.leakN ?? null };
+      const byVolume = (a, b) => desc(a.volN, b.volN) || a.name.localeCompare(b.name);
+      items.sort((a, b) => sortKey === 'Name' ? a.name.localeCompare(b.name) : desc(fig[sortKey](a), fig[sortKey](b)) || byVolume(a, b));
       // the website's columns: claims, share, YoY, stayed/left, opportunity and leaking for a procedure book;
       // patients, share of the list, change and 340B for a drug book
       const leakCols = !WORKSPACE.drugAccount && WORKSPACE.view !== 'hema_sales';
@@ -3187,11 +3180,16 @@ class Component extends DCLogic {
       });
     } else {
       items = Object.values(HCPS).filter(p => s.scope === 'explore' || p.mine).filter(p => this.areaOk(this.milesFrom(HCOS[p.hco], p.distN), HCOS[p.hco].boro)).filter(p => matches(p.name,p.id,p.spec,HCOS[p.hco].name)).filter(specOk);
-      const key = { Opportunity:'claimsN', Volume:'claimsN', Growth:'yoyN', Distance:'distN' }[s.sort];
-      items.sort((a, b) => s.sort === 'Relevance' ? this.relevance(b.id) - this.relevance(a.id) : s.sort === 'Distance' ? a[key] - b[key] : b[key] - a[key]);
+      // as the website orders doctors: the count, then the name; the change puts new first (no count a year
+      // earlier), then the biggest rise down to the biggest fall, then none
+      const byCount = (a, b) => b.claimsN - a.claimsN || a.name.localeCompare(b.name);
+      const trend = p => p.priorN == null ? [3, 0] : p.priorN > 0 ? [1, (p.priorN - p.claimsN) / p.priorN] : p.claimsN > 0 ? [0, 0] : [2, 0];
+      items.sort((a, b) => sortKey === 'Name' ? a.name.localeCompare(b.name)
+        : sortKey === 'Last year' ? desc(a.priorN ?? null, b.priorN ?? null) || byCount(a, b)
+        : sortKey === 'Year on year' ? trend(a)[0] - trend(b)[0] || trend(a)[1] - trend(b)[1] || byCount(a, b) : byCount(a, b));
       items = items.map(p => {
         const f = this.flagOf(p.id);
-        return { name:p.name, photo:p.photo, npi:p.id, sub:p.spec + ' · ' + HCOS[p.hco].name, ini:p.ini, avBg:'#E7ECFA', avFg:'#22409F', avR:'50%', ...addSt(s.route.includes(p.id)),
+        return { name:p.name, photo:p.photo, npi:p.id, sub:p.spec + ' · ' + HCOS[p.hco].name, ini:p.ini, avBg:'#E7ECFA', avFg:'#22409F', avR:'50%', ...addSt(inRoute(p.id)),
           toggle: () => this.toggleRoute(p.id), open: () => this.go('hcp', p.id), hasFlag: !!f, flag: f ? f.label : '', flagBg: f ? f.bg : '', flagFg: f ? f.fg : '',
           metrics:[{ k:measure, v:or(p.claims), c:'#0B1220' }, { k:'YOY', v:or(p.yoy), c: p.yoyN < 0 ? '#A94D1B' : '#1C7A4E' }, { k:'LIGHTEST', v:or(p.day), c:'#22409F' }] };
       });
@@ -3242,7 +3240,7 @@ class Component extends DCLogic {
     const remoteHistory = s.pSeg === 'meeting' || s.pSeg === 'insight';
     const profileMetrics = SH.profileMetrics && /^\d{10}$/.test(pId);
     const profileGrowth = P.profileYoy ?? (profileMetrics ? '' : P.yoy);
-    const pIn = s.route.includes(pId);
+    const pIn = viewList.includes(pId);
     const hIn = inRoute(H.id);
     const act = (icon, label, go, on) => ({ icon, label, go, bg: on ? '#2447C4' : '#E7ECFA', fg: on ? '#fff' : '#22409F' });
 
@@ -3424,7 +3422,7 @@ class Component extends DCLogic {
         act('✳', 'Ask', () => this.ask('Brief me on ' + H.name))
       ],
       hcoStats,hcoSections,
-      hHcps: hPeople.slice(0,hPeopleLimit).flatMap(({id,count}) => { const p = HCPS[id]; return p ? [{ name:p.name,photo:p.photo,npi:p.id,ini:p.ini,meta:[p.spec,count.toLocaleString() + ' ' + (H.profilePeopleBasis || (WORKSPACE.drugAccount ? 'fills since 2022' : (WORKSPACE.hcpMetric || 'claims').toLowerCase()))].filter(Boolean).join(' · '),...addSt(s.route.includes(id)),open:() => this.go('hcp',id),toggle:() => this.toggleRoute(id,'route',H.id) }] : []; }),
+      hHcps: hPeople.slice(0,hPeopleLimit).flatMap(({id,count}) => { const p = HCPS[id]; return p ? [{ name:p.name,photo:p.photo,npi:p.id,ini:p.ini,meta:[p.spec,count.toLocaleString() + ' ' + (H.profilePeopleBasis || (WORKSPACE.drugAccount ? 'fills since 2022' : (WORKSPACE.hcpMetric || 'claims').toLowerCase()))].filter(Boolean).join(' · '),...addSt(viewList.includes(id)),open:() => this.go('hcp',id),toggle:() => this.toggleRoute(id,'route',H.id) }] : []; }),
 
       // hcp
       p: { ...P, spec:pTarget?.specialty || P.spec,last:pTarget?.lastMeeting || pLast.label,hcoName:pTarget?.site || (HCOS[P.hco] || NO_HCO).name,
@@ -3493,7 +3491,7 @@ class Component extends DCLogic {
       runSegs,
       openRoute: () => { this.setState({ day:'today' }); this.go('route'); },
       toTargets: () => this.setTab('targets'),
-      routeDate: dayFull(s.day === 'tomorrow' ? 1 : 0), hasTomorrow: s.tomorrow.length > 0, routeIsToday: viewKey === 'route', canStart: viewKey === 'route' && routeN > 0,
+      routeDate: dayFull(s.day === 'tomorrow' ? 1 : 0), hasTomorrow: s.tomorrow.length > 0 || s.day === 'tomorrow', canStart: viewKey === 'route' && routeN > 0,
       daySegs: [['today','Today'], ['tomorrow','Tomorrow']].map(([k, label]) => ({ label, ...seg(s.day === k), go: () => this.setState({ day:k }) })),
       routeFrom: this.startKnown() && (AREA.here || s.territory) ? ' · from ' + (AREA.here ? 'your location' : territoryName) : '',
       ...routeMap,
@@ -3538,15 +3536,8 @@ class Component extends DCLogic {
       sumDone: routeDone + '/' + routeN, sumSkipped: s.runSkip.length, sumLoggedK: W.many.toUpperCase(), sumLogged: runList.filter(id => s.logged.includes(id)).length,
       sumRows: runList.map((id, i) => { const d = s.runDone.includes(id), k = s.runSkip.includes(id); return { name: this.stopOf(id).name, status: d ? (s.logged.includes(id) ? 'Done · ' + W.one.toLowerCase() + ' logged' : 'Done · no ' + W.one.toLowerCase()) : k ? 'Not today' : 'Not visited', mark: d ? '✓' : k ? '–' : i + 1, dotBg: d ? '#1C7A4E' : k ? '#C3CAD8' : '#2447C4', canContinue: !d, canLog: d && !s.logged.includes(id), log: () => HCPS[id] ? this.openLog(id) : this.openInsight([], 'notes', id), go: () => { this.setState({ runIdx: i }); this.replaceTop('run'); } }; }),
       toActivity: () => this.setTab('activity'),
-      // tomorrow: the three most relevant people not already seen or planned today, placed by least driving
-      planTomorrow: () => {
-        const pool = (ins ? tlist.ids : Object.keys(HCPS)).filter(id => !s.route.includes(id) && !s.runDone.includes(id));
-        const list = pool.sort((a, b) => this.relevance(b) - this.relevance(a)).slice(0, 3).reduce((l, id) => this.placeIn(l, id).list, []);
-        if (!list.length) return this.toast('Everyone worth seeing is on today\'s route');
-        this.setState({ tomorrow: list, day:'tomorrow' });
-        this.toast('Tomorrow: ' + list.length + (list.length === 1 ? ' visit' : ' visits') + ' planned');
-        this.replaceTop('route');
-      },
+      // as the Field website's Plan tomorrow: back to Targets to pick the day's visits; Add puts them on tomorrow's route
+      planTomorrow: () => { this.setTab('targets', { day:'tomorrow' }); this.toast('Adding to tomorrow\'s route'); },
 
       // reports
       reports: s.reports.filter(r => HCOS[r.hco]).map(r => ({ name:HCOS[r.hco].name, meta: r.busy ? 'Usually 3–5 minutes' : r.group + ' · ' + r.date + ' · PDF',
@@ -3666,7 +3657,7 @@ class Component extends DCLogic {
       meetSaveBg: s.meetBusy ? '#9AA6C4' : '#2447C4', meetSaveLabel: s.meetBusy ? 'Saving…' : 'Log meeting', saveMeet: () => this.saveMeet(tlist.id),
       toggleLogFu: () => this.setState({ logFu: !s.logFu }), logFuTrack: s.logFu ? '#2447C4' : '#D3D9E6', logFuKnob: s.logFu ? '21px' : '3px',
       ...this.listFilterView(ins && scr === 'targets' ? tlist : null),
-      sortOpts: (ins ? ['Last met', 'Relevance', ...(A.adv ? ['Advocacy'] : []), 'Name', ...(SH.tracker && tlist.trackerState === 'on' ? ['Tracker'] : [])] : SORTS).map(o => ({ label:o, ...chip(sortNow === o), go: () => this.setState(ins ? { iSort:o } : { sort:o }) })),
+      sortOpts: sortKeys.map(k => ({ label:sortLabel(k), ...chip(sortKey === k), go: () => this.setState(ins ? { iSort:k } : { sort:k }) })),
       specOpts: ['All codes', ...[...new Set(CODE_GROUPS.flatMap(g => g.specs))].sort()].map(o => ({ label:o, ...chip(s.spec === o), go: () => this.setState({ spec:o }) })),
       codeGroups: CODE_GROUPS.map(g => { const on = s.cgs.includes(g.name);
         return { label:g.name, ...chip(on), go: () => on && s.cgs.length === 1 ? this.toast('Keep at least one code group') : this.setState(st => ({ cgs: on ? st.cgs.filter(x => x !== g.name) : [...st.cgs, g.name] })) }; }),
@@ -3679,7 +3670,7 @@ class Component extends DCLogic {
       newItemLabel: ins ? '＋ New target list' : '＋ New territory',
       newTerritory: () => this.toast('Making territories is not connected'),
       chooseHco: (HCOS[chId] || NO_HCO).name,
-      chooseRows: (HCOS[chId] || NO_HCO).hcps.map(id => { const on = s.route.includes(id); return { name:HCPS[id].name, spec:HCPS[id].spec, check: on ? '✓' : '', bg: on ? '#EDF1FB' : '#fff', bd: on ? '#2447C4' : '#E1E6F0', boxBd: on ? '#2447C4' : '#B9C3D8', boxBg: on ? '#2447C4' : '#fff', toggle: () => this.toggleRoute(id,'route',chId) }; }),
+      chooseRows: (HCOS[chId] || NO_HCO).hcps.map(id => { const on = viewList.includes(id); return { name:HCPS[id].name, spec:HCPS[id].spec, check: on ? '✓' : '', bg: on ? '#EDF1FB' : '#fff', bd: on ? '#2447C4' : '#E1E6F0', boxBd: on ? '#2447C4' : '#B9C3D8', boxBg: on ? '#2447C4' : '#fff', toggle: () => this.toggleRoute(id,viewKey,chId) }; }),
       ...this.emailVals(),
       fuWhoOpts: this.people(null).map(p => ({ label:p.name.replace('Dr. ', ''), ...chip(s.fuWho === p.id), go: () => this.setState({ fuWho:p.id }) })),
       fuTask: s.fuTask, onFuTask: e => this.setState({ fuTask: e.target.value }),
