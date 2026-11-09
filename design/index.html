@@ -121,9 +121,36 @@ input,textarea,button{font-family:inherit}
               </sc-if>
               <sc-if value="{{ showTargetSort }}" hint-placeholder-val="{{ true }}"><button onClick="{{ openFilter }}" style="flex:0 0 auto;padding:8px 12px;border-radius:999px;border:1px solid #D7DEEC;background:#fff;color:#0B1220;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;"><span style="color:#7A839A;">Sort</span> {{ sortNow }} ▾</button></sc-if>
               </div></div>
-            <div style="display:flex;align-items:baseline;justify-content:space-between;padding:2px 2px 0;">
+            <sc-if value="{{ chOn }}" hint-placeholder-val="{{ false }}">
+              <div style="background:#fff;border:1px solid #E1E6F0;border-radius:16px;padding:12px 14px;display:flex;flex-direction:column;gap:10px;">
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <span style="color:#2447C4;font-size:14px;">✦</span>
+                  <span style="flex:1;min-width:0;"><span style="display:block;font-size:13.5px;font-weight:700;color:#0B1220;">What changed</span><span style="display:block;font-size:12px;color:#5B6478;margin-top:1px;">{{ chSub }}</span></span>
+                  <button onClick="{{ chRefresh }}" style="flex:0 0 auto;padding:5px 9px;border:0;border-radius:8px;background:#F0F3F8;color:#3C4557;font-size:12px;font-weight:650;cursor:pointer;">{{ chRefreshLabel }}</button>
+                  <button onClick="{{ chHide }}" style="flex:0 0 auto;padding:5px 9px;border:0;border-radius:8px;background:#F0F3F8;color:#3C4557;font-size:12px;font-weight:650;cursor:pointer;">Hide</button>
+                </div>
+                <sc-for list="{{ chStories }}" as="c" hint-placeholder-count="2">
+                  <button onClick="{{ c.go }}" style="text-align:left;border:1px solid #E7EBF3;background:#F7F9FC;border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:4px;cursor:pointer;">
+                    <span style="display:flex;align-items:center;gap:6px;"><span style="width:6px;height:6px;border-radius:50%;background:{{ c.dot }};"></span><span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.08em;color:#7A839A;">{{ c.label }}</span></span>
+                    <span style="font-size:13.5px;font-weight:650;color:#0B1220;line-height:1.3;">{{ c.headline }}</span>
+                    <span style="font-size:12.5px;color:#5B6478;line-height:1.4;">{{ c.story }}</span>
+                    <sc-if value="{{ c.hasImpact }}" hint-placeholder-val="{{ true }}"><span style="font-size:12px;font-weight:650;color:#2447C4;">{{ c.impact }}</span></sc-if>
+                  </button>
+                </sc-for>
+                <sc-if value="{{ chHasLines }}" hint-placeholder-val="{{ true }}">
+                  <div style="border-top:1px solid #EEF1F7;padding-top:8px;">
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.09em;color:#7A839A;margin-bottom:2px;">ALSO WORTH A LOOK</div>
+                    <sc-for list="{{ chLines }}" as="l" hint-placeholder-count="3">
+                      <button onClick="{{ l.go }}" style="display:flex;align-items:center;gap:8px;width:100%;text-align:left;border:0;background:none;padding:5px 0;cursor:pointer;"><span style="flex:0 0 6px;height:6px;border-radius:50%;background:{{ l.dot }};"></span><span style="font-size:12.5px;color:#0B1220;line-height:1.35;">{{ l.message }}</span></button>
+                    </sc-for>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-if>
+            <div style="display:flex;align-items:center;gap:10px;padding:2px 2px 0;">
               <span style="font-size:13px;font-weight:650;color:#3C4557;">{{ targetCount }}</span>
-              <span style="font-size:12px;color:#7A839A;">{{ targetHint }}</span>
+              <span style="flex:1;font-size:12px;color:#7A839A;text-align:right;">{{ targetHint }}</span>
+              <sc-if value="{{ canAddPeople }}" hint-placeholder-val="{{ true }}"><button onClick="{{ openPeople }}" style="flex:0 0 auto;padding:6px 10px;border:1px solid #D7DEEC;border-radius:999px;background:#fff;color:#22409F;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap;">{{ addPeopleLabel }}</button></sc-if>
             </div>
             <sc-for list="{{ targetItems }}" as="t" hint-placeholder-count="3">
               <div style="background:#fff;border:1px solid #E1E6F0;border-radius:16px;overflow:hidden;">
@@ -299,12 +326,64 @@ input,textarea,button{font-family:inherit}
                   </sc-for>
                 </div>
                 </sc-if>
+                <sc-if value="{{ trkOn }}" hint-placeholder-val="{{ false }}">
+                  <div style="background:#fff;border:1px solid #E1E6F0;border-radius:16px;padding:13px 14px;display:flex;flex-direction:column;gap:11px;">
+                    <div style="display:flex;align-items:flex-start;gap:8px;">
+                      <span style="flex:1;min-width:0;"><span style="display:block;font-size:14px;font-weight:700;color:#0B1220;">Sentiment Tracker</span><span style="display:block;font-size:11.5px;color:#5B6478;margin-top:2px;">Field assessment · shared with your team</span></span>
+                      <sc-if value="{{ trkCanNew }}" hint-placeholder-val="{{ true }}"><button onClick="{{ trkNew }}" style="flex:0 0 auto;padding:7px 11px;border-radius:999px;border:0;background:#2447C4;color:#fff;font-size:12px;font-weight:700;cursor:pointer;">＋ Assessment</button></sc-if>
+                    </div>
+                    <sc-if value="{{ trkStatus }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:10px;font-size:12.5px;color:#5B6478;line-height:1.45;">{{ trkStatus }}<sc-if value="{{ trkFailed }}" hint-placeholder-val="{{ false }}"><button onClick="{{ trkRetry }}" style="padding:5px 10px;border-radius:999px;border:1px solid #D7DEEC;background:#fff;color:#22409F;font-size:12px;font-weight:650;cursor:pointer;">Try again</button></sc-if></div></sc-if>
+                    <sc-if value="{{ trkHas }}" hint-placeholder-val="{{ true }}">
+                      <div style="display:flex;flex-direction:column;gap:11px;">
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                          <sc-for list="{{ trkGroups }}" as="g" hint-placeholder-count="2">
+                            <div style="border-radius:13px;padding:10px 12px;background:{{ g.bg }};display:flex;flex-direction:column;gap:2px;">
+                              <span style="font-size:11px;font-weight:650;color:{{ g.fg }};">{{ g.label }}</span>
+                              <span style="font-family:'Source Serif 4',Georgia,serif;font-size:26px;line-height:1.1;color:{{ g.fg }};">{{ g.mean }}</span>
+                              <span style="font-size:11px;color:#5B6478;">{{ g.sub }}</span>
+                            </div>
+                          </sc-for>
+                        </div>
+                        <span style="font-size:12px;color:#5B6478;">{{ trkLast }}</span>
+                        <div style="display:flex;flex-direction:column;">
+                          <sc-for list="{{ trkRows }}" as="q" hint-placeholder-count="3">
+                            <div style="display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-top:1px solid #EEF1F7;">
+                              <span style="flex:1;min-width:0;font-size:13px;color:#0B1220;line-height:1.4;"><span style="font-weight:700;color:#7A839A;">{{ q.n }}</span>{{ q.text }}
+                                <span style="display:block;font-size:11px;color:{{ q.changeC }};margin-top:3px;">{{ q.change }}<span style="color:#7A839A;">{{ q.on }}</span></span></span>
+                              <span style="flex:0 0 30px;height:28px;border-radius:8px;background:{{ q.bg }};color:{{ q.fg }};display:grid;place-items:center;font-size:13px;font-weight:700;">{{ q.score }}</span>
+                            </div>
+                          </sc-for>
+                        </div>
+                        <button onClick="{{ trkHistToggle }}" style="align-self:flex-start;padding:6px 11px;border-radius:999px;border:1px solid #D7DEEC;background:#fff;color:#22409F;font-size:12px;font-weight:650;cursor:pointer;">{{ trkHistLabel }}</button>
+                        <sc-for list="{{ trkEntries }}" as="e" hint-placeholder-count="1">
+                          <div style="border:1px solid #E7EBF3;border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:8px;">
+                            <div style="display:flex;align-items:center;gap:8px;">
+                              <span style="flex:1;min-width:0;font-size:13px;font-weight:650;color:#0B1220;">{{ e.date }} <span style="font-weight:500;color:#5B6478;font-size:12px;">· {{ e.who }}</span></span>
+                              <sc-if value="{{ e.acts }}" hint-placeholder-val="{{ false }}"><span style="display:flex;gap:6px;"><button onClick="{{ e.edit }}" style="padding:4px 9px;border-radius:999px;border:1px solid #D7DEEC;background:#fff;color:#22409F;font-size:11.5px;font-weight:650;cursor:pointer;">Edit</button><button onClick="{{ e.del }}" style="padding:4px 9px;border-radius:999px;border:1px solid #F2D3C4;background:#fff;color:#A94D1B;font-size:11.5px;font-weight:650;cursor:pointer;">Delete</button></span></sc-if>
+                            </div>
+                            <sc-if value="{{ e.asking }}" hint-placeholder-val="{{ false }}">
+                              <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;"><span style="font-size:12px;color:#3C4557;">Delete this assessment? This can’t be undone.</span>
+                                <button onClick="{{ e.yes }}" style="padding:4px 10px;border-radius:999px;border:0;background:#A94D1B;color:#fff;font-size:11.5px;font-weight:700;cursor:pointer;">{{ e.yesLabel }}</button>
+                                <button onClick="{{ e.no }}" style="padding:4px 10px;border-radius:999px;border:1px solid #D7DEEC;background:#fff;color:#3C4557;font-size:11.5px;font-weight:650;cursor:pointer;">Keep</button></div>
+                            </sc-if>
+                            <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:4px 12px;">
+                              <sc-for list="{{ e.scores }}" as="x" hint-placeholder-count="4">
+                                <span style="display:flex;align-items:center;gap:6px;min-width:0;"><span style="flex:1;min-width:0;font-size:11.5px;color:#5B6478;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ x.title }}</span><span style="flex:0 0 22px;height:20px;border-radius:6px;background:{{ x.bg }};color:{{ x.fg }};display:grid;place-items:center;font-size:11px;font-weight:700;">{{ x.v }}</span></span>
+                              </sc-for>
+                            </div>
+                            <span style="font-size:11px;color:#7A839A;text-align:right;">{{ e.groups }}</span>
+                          </div>
+                        </sc-for>
+                      </div>
+                    </sc-if>
+                  </div>
+                </sc-if>
                 <sc-if value="{{ pVisitBrief }}" hint-placeholder-val="{{ false }}">
                   <div style="background:#fff;border:1px solid #D9E2F6;border-radius:16px;overflow:hidden;">
                     <div style="display:flex;flex-direction:column;gap:7px;padding:14px 15px;background:#F1F5FE;">
                       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
                         <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.08em;color:#fff;background:#2447C4;padding:3px 7px;border-radius:6px;">AI BRIEF</span>
-                        <span style="font-size:12px;color:#5B6478;">Read this first</span>
+                        <span style="font-size:12px;color:#5B6478;">{{ pBriefHead }}</span>
                       </div>
                       <span style="font-size:11.5px;color:#5B6478;">{{ pBriefBasis }}</span>
                       <sc-if value="{{ pBriefMessage }}" hint-placeholder-val="{{ false }}"><span style="font-size:13px;color:#3C4557;">{{ pBriefMessage }}</span></sc-if>
@@ -312,9 +391,9 @@ input,textarea,button{font-family:inherit}
                     </div>
                     <sc-for list="{{ pBriefSections }}" as="section" hint-placeholder-count="3">
                       <div style="display:flex;flex-direction:column;gap:8px;padding:12px 15px;border-top:1px solid #EEF1F7;">
-                        <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.08em;color:#5B6478;">{{ section.title }}</span>
+                        <sc-if value="{{ section.title }}" hint-placeholder-val="{{ true }}"><span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.08em;color:#5B6478;">{{ section.title }}</span></sc-if>
                         <sc-if value="{{ section.text }}" hint-placeholder-val="{{ true }}"><span style="font-family:'Source Serif 4',Georgia,serif;font-size:19px;line-height:1.32;color:#0B1220;">{{ section.text }}</span></sc-if>
-                        <sc-for list="{{ section.points }}" as="point" hint-placeholder-count="2"><div style="display:flex;flex-direction:column;gap:2px;font-size:13px;line-height:1.5;color:#1B2333;"><div style="font-weight:700;">{{ point.lead }}</div><div>{{ point.text }}</div></div></sc-for>
+                        <sc-for list="{{ section.points }}" as="point" hint-placeholder-count="2"><div style="display:flex;flex-direction:column;gap:2px;font-size:13px;line-height:1.5;color:#1B2333;"><sc-if value="{{ point.lead }}" hint-placeholder-val="{{ true }}"><div style="font-weight:700;">{{ point.lead }}</div></sc-if><sc-if value="{{ point.text }}" hint-placeholder-val="{{ true }}"><div>{{ point.text }}</div></sc-if></div></sc-for>
                       </div>
                     </sc-for>
                     <sc-if value="{{ showDraftEmail }}" hint-placeholder-val="{{ true }}"><button onClick="{{ pEmail }}" style="margin:0 15px 14px;padding:10px;border:1px solid #D7DEEC;border-radius:11px;background:#fff;font-size:12.5px;font-weight:650;color:#22409F;cursor:pointer;">Email to send</button></sc-if>
@@ -374,7 +453,7 @@ input,textarea,button{font-family:inherit}
                   <button onClick="{{ v.open }}" style="display:block;width:100%;text-align:left;background:#fff;border:1px solid #E1E6F0;border-radius:14px;padding:13px 14px;cursor:pointer;color:#0B1220;">
                     <span style="display:flex;justify-content:space-between;align-items:center;gap:8px;"><span style="font-size:12px;color:#5B6478;">{{ v.date }} · {{ v.type }}</span><sc-if value="{{ v.hasSrc }}" hint-placeholder-val="{{ false }}"><span style="margin-left:auto;font-size:11px;font-weight:650;padding:3px 7px;border-radius:6px;background:#E7ECFA;color:#22409F;">{{ v.srcLabel }}</span></sc-if><span style="font-size:11px;font-weight:650;padding:3px 7px;border-radius:6px;background:#E3F5EC;color:#1C7A4E;">Met</span></span>
                     <span style="display:block;font-size:14.5px;font-weight:650;margin-top:6px;">{{ v.topic }}</span>
-                    <span style="display:block;font-size:13px;color:#3C4557;line-height:1.5;margin-top:3px;">{{ v.note }}</span>
+                    <span style="display:block;font-size:13px;color:#3C4557;line-height:1.5;margin-top:3px;">{{ v.cardNote }}</span>
                     <sc-if value="{{ v.hasChips }}" hint-placeholder-val="{{ false }}"><span style="display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;"><sc-for list="{{ v.chips }}" as="c" hint-placeholder-count="2"><span style="font-size:11px;font-weight:600;padding:3px 7px;border-radius:6px;background:#EEF1F7;color:#3C4557;">{{ c }}</span></sc-for></span></sc-if>
                   </button>
                 </sc-for>
@@ -701,27 +780,102 @@ input,textarea,button{font-family:inherit}
             </div>
             <sc-if value="{{ actVisits }}" hint-placeholder-val="{{ true }}">
               <div style="display:flex;flex-direction:column;gap:10px;">
+                <div style="display:flex;align-items:center;gap:9px;padding:0 13px;height:44px;border-radius:13px;border:1px solid #D7DEEC;background:#fff;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7A839A" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg>
+                  <input value="{{ actQ }}" onChange="{{ onActQ }}" placeholder="{{ actHint }}" aria-label="{{ actHint }}" style="flex:1;min-width:0;border:0;outline:0;font-size:14.5px;background:transparent;color:#0B1220;">
+                  <sc-if value="{{ hasActQ }}" hint-placeholder-val="{{ false }}"><button onClick="{{ clearActQ }}" style="width:26px;height:26px;border-radius:50%;border:0;background:#EEF1F7;color:#5B6478;cursor:pointer;font-size:12px;">✕</button></sc-if>
+                </div>
+                <sc-if value="{{ actStatus }}" hint-placeholder-val="{{ false }}"><div style="font-size:12.5px;color:#5B6478;">{{ actStatus }}</div></sc-if>
+                <sc-if value="{{ actNoQ }}" hint-placeholder-val="{{ true }}"><div style="display:flex;flex-direction:column;gap:10px;">
                 <sc-for list="{{ draftRows }}" as="d" hint-placeholder-count="1">
                   <button onClick="{{ d.open }}" style="display:flex;align-items:center;gap:11px;padding:12px 14px;border:1px dashed #B9C3D8;border-radius:14px;background:#EDF1FB;cursor:pointer;text-align:left;">
                     <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.08em;color:#fff;background:#7A839A;padding:3px 7px;border-radius:6px;">DRAFT</span>
                     <span style="flex:1;font-size:13.5px;font-weight:650;color:#22409F;">{{ d.label }}</span><span style="color:#8DA0D6;">›</span>
                   </button>
                 </sc-for>
+                </div></sc-if>
                 <sc-for list="{{ visitList }}" as="v" hint-placeholder-count="2">
                   <button onClick="{{ v.open }}" style="display:flex;gap:12px;text-align:left;background:#fff;border:1px solid #E1E6F0;border-radius:16px;padding:13px 14px;cursor:pointer;color:#0B1220;">
                     <span data-kit="avatar" data-photo="{{ v.photo }}" data-npi="{{ v.npi }}" data-initials="{{ v.ini }}" style="width:38px;height:38px;flex:0 0 38px;border-radius:50%;background:#E7ECFA;color:#22409F;display:grid;place-items:center;font-size:11.5px;font-weight:700;">{{ v.ini }}</span>
                     <span style="flex:1;min-width:0;">
                       <span style="display:flex;justify-content:space-between;align-items:center;gap:8px;"><span style="font-size:14.5px;font-weight:650;">{{ v.name }}</span><span style="font-size:11.5px;color:#7A839A;white-space:nowrap;">{{ v.date }}</span></span>
                       <span style="display:block;font-size:12px;color:#5B6478;margin-top:1px;">{{ v.type }} · {{ v.topic }}</span>
-                      <span style="display:block;font-size:13px;color:#3C4557;line-height:1.5;margin-top:6px;">{{ v.note }}</span>
+                      <span style="display:block;font-size:13px;color:#3C4557;line-height:1.5;margin-top:6px;">{{ v.cardNote }}</span>
                       <sc-if value="{{ v.hasChips }}" hint-placeholder-val="{{ false }}"><span style="display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;"><sc-if value="{{ v.hasSrc }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px;font-weight:650;padding:3px 7px;border-radius:6px;background:#E7ECFA;color:#22409F;">{{ v.srcLabel }}</span></sc-if><sc-for list="{{ v.chips }}" as="c" hint-placeholder-count="2"><span style="font-size:11px;font-weight:600;padding:3px 7px;border-radius:6px;background:#EEF1F7;color:#3C4557;">{{ c }}</span></sc-for></span></sc-if>
                     </span>
                   </button>
                 </sc-for>
               </div>
             </sc-if>
+            <sc-if value="{{ actDash }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;gap:12px;">
+                <sc-if value="{{ dashStatus }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:10px;font-size:13px;color:#5B6478;">{{ dashStatus }}<sc-if value="{{ dashFailed }}" hint-placeholder-val="{{ false }}"><button onClick="{{ dashRetry }}" style="padding:5px 10px;border-radius:999px;border:1px solid #D7DEEC;background:#fff;color:#22409F;font-size:12px;font-weight:650;cursor:pointer;">Try again</button></sc-if></div></sc-if>
+                <sc-if value="{{ dashReady }}" hint-placeholder-val="{{ true }}">
+                  <div style="display:flex;flex-direction:column;gap:12px;">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                      <sc-for list="{{ dashTiles }}" as="t" hint-placeholder-count="4">
+                        <div style="background:{{ t.bg }};border-radius:16px;padding:12px 13px;display:flex;flex-direction:column;gap:3px;">
+                          <span style="font-size:11.5px;font-weight:650;color:{{ t.fg }};">{{ t.label }}</span>
+                          <span style="font-family:'Source Serif 4',Georgia,serif;font-size:28px;line-height:1.1;color:#0B1220;">{{ t.value }}</span>
+                          <span style="font-size:11.5px;color:#5B6478;">{{ t.sub }}</span>
+                        </div>
+                      </sc-for>
+                    </div>
+                    <div style="background:#fff;border:1px solid #E1E6F0;border-radius:16px;padding:12px 14px;display:flex;flex-direction:column;gap:9px;">
+                      <span style="font-size:13.5px;font-weight:700;color:#0B1220;">Sentiment <span style="font-weight:500;color:#5B6478;font-size:12px;">· across all meetings</span></span>
+                      <div style="display:flex;height:10px;border-radius:999px;overflow:hidden;background:#EEF1F7;"><sc-for list="{{ dashSent }}" as="x" hint-placeholder-count="3"><span style="width:{{ x.w }};background:{{ x.color }};"></span></sc-for></div>
+                      <div style="display:flex;flex-wrap:wrap;gap:12px;"><sc-for list="{{ dashSent }}" as="x" hint-placeholder-count="3"><span style="display:flex;align-items:center;gap:5px;font-size:12px;color:#3C4557;"><span style="width:8px;height:8px;border-radius:50%;background:{{ x.color }};"></span>{{ x.label }}</span></sc-for></div>
+                    </div>
+                    <div style="background:#fff;border:1px solid #E1E6F0;border-radius:16px;padding:12px 14px;display:flex;flex-direction:column;gap:10px;">
+                      <span style="font-size:13.5px;font-weight:700;color:#0B1220;">Territory coverage</span>
+                      <sc-if value="{{ dashCoverage }}" hint-placeholder-val="{{ false }}"><span style="font-size:12.5px;color:#5B6478;">{{ dashCoverage }}</span></sc-if>
+                      <sc-for list="{{ dashStates }}" as="x" hint-placeholder-count="3">
+                        <div style="display:flex;gap:10px;align-items:flex-start;">
+                          <span style="flex:0 0 26px;height:26px;border-radius:8px;background:#E7ECFA;color:#22409F;display:grid;place-items:center;font-size:12px;font-weight:700;">{{ x.rank }}</span>
+                          <span style="flex:1;min-width:0;"><span style="display:block;font-size:13.5px;font-weight:650;color:#0B1220;">{{ x.name }}</span><span style="display:block;font-size:11.5px;color:#5B6478;margin-top:1px;">{{ x.meta }}</span>
+                            <span style="display:block;height:4px;border-radius:999px;background:#EEF1F7;margin-top:6px;"><span style="display:block;height:4px;border-radius:999px;background:#2447C4;width:{{ x.w }};"></span></span></span>
+                        </div>
+                      </sc-for>
+                    </div>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ boardOn }}" hint-placeholder-val="{{ true }}">
+                  <div style="background:#fff;border:1px solid #E1E6F0;border-radius:16px;padding:12px 14px;display:flex;flex-direction:column;gap:10px;">
+                    <div style="display:flex;align-items:center;gap:8px;"><span style="flex:1;font-size:13.5px;font-weight:700;color:#0B1220;">Pipeline</span></div>
+                    <sc-if value="{{ boardNew }}" hint-placeholder-val="{{ false }}">
+                      <div style="display:flex;flex-direction:column;gap:8px;padding:10px 12px;border-radius:12px;background:#F7F9FC;border:1px solid #E1E6F0;">
+                        <input value="{{ boardTitle }}" onChange="{{ onBoardTitle }}" placeholder="Task title" aria-label="Task title" style="border:1px solid #D7DEEC;border-radius:10px;padding:10px 12px;font-size:14px;background:#fff;color:#0B1220;outline:0;">
+                        <div style="display:flex;gap:6px;"><sc-for list="{{ boardPrios }}" as="o" hint-placeholder-count="3"><button onClick="{{ o.go }}" style="padding:6px 11px;border-radius:999px;border:1px solid {{ o.bd }};background:{{ o.bg }};color:{{ o.fg }};font-size:12px;font-weight:650;cursor:pointer;">{{ o.label }}</button></sc-for></div>
+                        <div style="display:flex;gap:8px;"><button onClick="{{ boardAdd }}" style="flex:1;padding:10px;border:0;border-radius:11px;background:{{ boardAddBg }};color:#fff;font-size:13.5px;font-weight:700;cursor:pointer;">{{ boardAddLabel }}</button><button onClick="{{ closeBoardNew }}" style="padding:10px 12px;border:1px solid #D7DEEC;border-radius:11px;background:#fff;color:#3C4557;font-size:13.5px;font-weight:650;cursor:pointer;">Cancel</button></div>
+                      </div>
+                    </sc-if>
+                    <div style="display:flex;gap:6px;overflow-x:auto;margin:0 -14px;padding:0 14px;"><sc-for list="{{ boardCols }}" as="o" hint-placeholder-count="4"><button onClick="{{ o.go }}" style="flex:0 0 auto;padding:6px 11px;border-radius:999px;border:1px solid {{ o.bd }};background:{{ o.bg }};color:{{ o.fg }};font-size:12px;font-weight:650;cursor:pointer;white-space:nowrap;">{{ o.label }}</button></sc-for></div>
+                    <sc-if value="{{ boardStatus }}" hint-placeholder-val="{{ false }}"><span style="font-size:12.5px;color:#5B6478;">{{ boardStatus }}</span></sc-if>
+                    <sc-if value="{{ boardEmpty }}" hint-placeholder-val="{{ false }}"><span style="font-size:12.5px;color:#5B6478;">{{ boardEmpty }}</span></sc-if>
+                    <sc-for list="{{ boardRows }}" as="t" hint-placeholder-count="2">
+                      <div style="border:1px solid #E7EBF3;border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:7px;">
+                        <div style="display:flex;gap:8px;align-items:flex-start;"><span style="flex:1;min-width:0;font-size:13.5px;font-weight:650;color:#0B1220;line-height:1.3;">{{ t.title }}</span><span style="flex:0 0 auto;font-size:11px;font-weight:650;padding:3px 7px;border-radius:6px;background:{{ t.pbg }};color:{{ t.pfg }};">{{ t.prio }}</span></div>
+                        <sc-if value="{{ t.hasMeta }}" hint-placeholder-val="{{ true }}"><span style="font-size:11.5px;color:#5B6478;">{{ t.meta }}</span></sc-if>
+                        <sc-if value="{{ t.hasActs }}" hint-placeholder-val="{{ true }}">
+                          <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                            <sc-for list="{{ t.moves }}" as="m" hint-placeholder-count="3"><button onClick="{{ m.go }}" style="padding:4px 9px;border-radius:999px;border:1px solid #D7DEEC;background:#fff;color:#22409F;font-size:11.5px;font-weight:650;cursor:pointer;">{{ m.label }}</button></sc-for>
+                            <button onClick="{{ t.del }}" style="padding:4px 9px;border-radius:999px;border:1px solid #F2D3C4;background:#fff;color:#A94D1B;font-size:11.5px;font-weight:650;cursor:pointer;">Delete</button>
+                          </div>
+                        </sc-if>
+                        <sc-if value="{{ t.asking }}" hint-placeholder-val="{{ false }}">
+                          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;"><span style="font-size:12px;color:#3C4557;">Delete this task? This can’t be undone.</span>
+                            <button onClick="{{ t.yes }}" style="padding:4px 10px;border-radius:999px;border:0;background:#A94D1B;color:#fff;font-size:11.5px;font-weight:700;cursor:pointer;">Delete</button>
+                            <button onClick="{{ t.no }}" style="padding:4px 10px;border-radius:999px;border:1px solid #D7DEEC;background:#fff;color:#3C4557;font-size:11.5px;font-weight:650;cursor:pointer;">Cancel</button></div>
+                        </sc-if>
+                      </div>
+                    </sc-for>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-if>
             <sc-if value="{{ actFus }}" hint-placeholder-val="{{ false }}">
               <div style="display:flex;flex-direction:column;gap:10px;">
+                <sc-if value="{{ fuNone }}" hint-placeholder-val="{{ false }}"><div style="font-size:12.5px;color:#5B6478;">No follow-ups yet.</div></sc-if>
                 <sc-for list="{{ fuAll }}" as="f" hint-placeholder-count="2">
                   <div style="display:flex;align-items:center;gap:11px;padding:13px 14px;background:#fff;border:1px solid #E1E6F0;border-radius:16px;">
                     <button onClick="{{ f.toggle }}" style="width:26px;height:26px;flex:0 0 26px;border-radius:50%;border:2px solid {{ f.ringBd }};background:{{ f.ringBg }};color:#fff;font-size:12px;cursor:pointer;padding:0;">{{ f.check }}</button>
@@ -920,14 +1074,62 @@ input,textarea,button{font-family:inherit}
 
             <sc-if value="{{ shTerritory }}" hint-placeholder-val="{{ false }}">
               <div style="padding:12px 18px 0;display:flex;flex-direction:column;gap:8px;">
-                <sc-if value="{{ territoryLoading }}" hint-placeholder-val="{{ false }}"><div style="font-size:13px;color:#5B6478;">Loading territories…</div></sc-if>
-                <sc-for list="{{ territories }}" as="t" hint-placeholder-count="3">
-                  <button onClick="{{ t.go }}" style="display:flex;align-items:center;gap:12px;padding:13px 14px;border:1.5px solid {{ t.bd }};border-radius:14px;background:{{ t.bg }};cursor:pointer;text-align:left;">
-                    <span style="flex:1;"><span style="display:block;font-size:14.5px;font-weight:650;color:#0B1220;">{{ t.name }}</span><span style="display:block;font-size:12px;color:#5B6478;margin-top:2px;">{{ t.meta }}</span></span>
-                    <span style="color:#2447C4;font-weight:700;">{{ t.check }}</span>
-                  </button>
-                </sc-for>
-                <button onClick="{{ newTerritory }}" style="padding:13px;border:1px dashed #B9C3D8;border-radius:14px;background:#EDF1FB;color:#22409F;font-size:13.5px;font-weight:700;cursor:pointer;">{{ newItemLabel }}</button>
+                <sc-if value="{{ territoriesOn }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;flex-direction:column;gap:8px;">
+                    <sc-if value="{{ territoryLoading }}" hint-placeholder-val="{{ false }}"><div style="font-size:13px;color:#5B6478;">Loading territories…</div></sc-if>
+                    <sc-for list="{{ territories }}" as="t" hint-placeholder-count="3">
+                      <button onClick="{{ t.go }}" style="display:flex;align-items:center;gap:12px;padding:13px 14px;border:1.5px solid {{ t.bd }};border-radius:14px;background:{{ t.bg }};cursor:pointer;text-align:left;">
+                        <span style="flex:1;"><span style="display:block;font-size:14.5px;font-weight:650;color:#0B1220;">{{ t.name }}</span><span style="display:block;font-size:12px;color:#5B6478;margin-top:2px;">{{ t.meta }}</span></span>
+                        <span style="color:#2447C4;font-weight:700;">{{ t.check }}</span>
+                      </button>
+                    </sc-for>
+                    <button onClick="{{ newTerritory }}" style="padding:13px;border:1px dashed #B9C3D8;border-radius:14px;background:#EDF1FB;color:#22409F;font-size:13.5px;font-weight:700;cursor:pointer;">{{ newItemLabel }}</button>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ listsOn }}" hint-placeholder-val="{{ true }}">
+                  <div style="display:flex;flex-direction:column;gap:8px;">
+                    <div style="display:flex;padding:3px;border-radius:12px;background:#E6EAF2;">
+                      <sc-for list="{{ listTabs }}" as="o" hint-placeholder-count="4"><button onClick="{{ o.go }}" style="flex:1;padding:8px 4px;border:0;border-radius:10px;background:{{ o.bg }};color:{{ o.fg }};box-shadow:{{ o.sh }};font-size:12.5px;font-weight:650;cursor:pointer;white-space:nowrap;">{{ o.label }}</button></sc-for>
+                    </div>
+                    <sc-if value="{{ listEmpty }}" hint-placeholder-val="{{ false }}"><div style="font-size:13px;color:#5B6478;padding:6px 2px;">{{ listEmpty }}</div></sc-if>
+                    <sc-for list="{{ listRows }}" as="t" hint-placeholder-count="3">
+                      <div style="border:1.5px solid {{ t.bd }};border-radius:14px;background:{{ t.bg }};overflow:hidden;">
+                        <button onClick="{{ t.go }}" style="width:100%;display:flex;align-items:center;gap:12px;padding:13px 14px 10px;border:0;background:none;cursor:pointer;text-align:left;">
+                          <span style="flex:1;min-width:0;"><span style="display:block;font-size:14.5px;font-weight:650;color:#0B1220;">{{ t.name }}</span><span style="display:block;font-size:12px;color:#5B6478;margin-top:2px;">{{ t.meta }}</span>
+                            <sc-if value="{{ t.hasCallout }}" hint-placeholder-val="{{ true }}"><span style="display:block;font-size:12.5px;font-weight:600;color:#22409F;margin-top:5px;">{{ t.callout }}</span></sc-if></span>
+                          <span style="color:#2447C4;font-weight:700;">{{ t.check }}</span>
+                        </button>
+                        <sc-if value="{{ t.hasActs }}" hint-placeholder-val="{{ true }}">
+                          <div style="display:flex;gap:6px;padding:0 14px 12px;">
+                            <sc-if value="{{ t.hasPin }}" hint-placeholder-val="{{ true }}"><button onClick="{{ t.pin }}" style="padding:5px 10px;border-radius:999px;border:1px solid {{ t.abd }};background:{{ t.abg }};color:{{ t.afg }};font-size:12px;font-weight:650;cursor:pointer;">{{ t.pinLabel }}</button></sc-if>
+                            <button onClick="{{ t.arc }}" style="padding:5px 10px;border-radius:999px;border:1px solid {{ t.abd }};background:{{ t.abg }};color:{{ t.afg }};font-size:12px;font-weight:650;cursor:pointer;">{{ t.arcLabel }}</button>
+                          </div>
+                        </sc-if>
+                        <sc-if value="{{ t.asking }}" hint-placeholder-val="{{ false }}">
+                          <div style="display:flex;flex-direction:column;gap:8px;padding:0 14px 12px;">
+                            <span style="font-size:12.5px;color:#3C4557;">{{ t.askText }}</span>
+                            <div style="display:flex;gap:6px;">
+                              <button onClick="{{ t.yes }}" style="padding:6px 12px;border-radius:999px;border:0;background:#A94D1B;color:#fff;font-size:12px;font-weight:700;cursor:pointer;">{{ t.yesLabel }}</button>
+                              <button onClick="{{ t.no }}" style="padding:6px 12px;border-radius:999px;border:1px solid #D7DEEC;background:#fff;color:#3C4557;font-size:12px;font-weight:650;cursor:pointer;">Cancel</button>
+                            </div>
+                          </div>
+                        </sc-if>
+                      </div>
+                    </sc-for>
+                    <sc-if value="{{ listNew }}" hint-placeholder-val="{{ false }}">
+                      <div style="display:flex;flex-direction:column;gap:8px;padding:12px 14px;border:1px solid #D7DEEC;border-radius:14px;background:#F7F9FC;">
+                        <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.09em;color:#7A839A;">NEW TARGET LIST</div>
+                        <input value="{{ listName }}" onChange="{{ onListName }}" placeholder="List name" aria-label="List name" style="border:1px solid #D7DEEC;border-radius:11px;padding:11px 12px;font-size:14.5px;background:#fff;color:#0B1220;outline:0;">
+                        <input value="{{ listDesc }}" onChange="{{ onListDesc }}" placeholder="Description (optional)" aria-label="Description" style="border:1px solid #D7DEEC;border-radius:11px;padding:11px 12px;font-size:14px;background:#fff;color:#0B1220;outline:0;">
+                        <div style="display:flex;gap:8px;">
+                          <button onClick="{{ createList }}" style="flex:1;padding:12px;border:0;border-radius:12px;background:{{ createBg }};color:#fff;font-size:14px;font-weight:700;cursor:pointer;">{{ createLabel }}</button>
+                          <button onClick="{{ closeListNew }}" style="padding:12px 14px;border:1px solid #D7DEEC;border-radius:12px;background:#fff;color:#3C4557;font-size:14px;font-weight:650;cursor:pointer;">Cancel</button>
+                        </div>
+                      </div>
+                    </sc-if>
+                    <sc-if value="{{ listNewClosed }}" hint-placeholder-val="{{ true }}"><button onClick="{{ openListNew }}" style="padding:13px;border:1px dashed #B9C3D8;border-radius:14px;background:#EDF1FB;color:#22409F;font-size:13.5px;font-weight:700;cursor:pointer;">＋ New target list</button></sc-if>
+                  </div>
+                </sc-if>
               </div>
             </sc-if>
 
@@ -1007,6 +1209,84 @@ input,textarea,button{font-family:inherit}
                   <div style="display:flex;gap:6px;margin-top:8px;"><sc-for list="{{ fuDueOpts }}" as="o" hint-placeholder-count="4"><button onClick="{{ o.go }}" style="flex:1;padding:10px;border-radius:12px;border:1px solid {{ o.bd }};background:{{ o.bg }};color:{{ o.fg }};font-size:13px;font-weight:650;cursor:pointer;">{{ o.label }}</button></sc-for></div>
                 </div>
                 <button onClick="{{ saveFu }}" style="padding:14px;border:0;border-radius:13px;background:{{ fuSaveBg }};color:#fff;font-size:14.5px;font-weight:700;cursor:pointer;">Add follow-up</button>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ shMeet }}" hint-placeholder-val="{{ false }}">
+              <div style="padding:14px 18px 0;display:flex;flex-direction:column;gap:14px;">
+                <div style="font-size:12.5px;color:#5B6478;">{{ meetWho }} · no insight required</div>
+                <div>
+                  <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.09em;color:#7A839A;">DATE · {{ meetDateLabel }}</div>
+                  <div style="display:flex;gap:6px;overflow-x:auto;margin:8px -18px 0;padding:0 18px;"><sc-for list="{{ meetDateOpts }}" as="o" hint-placeholder-count="7"><button onClick="{{ o.go }}" style="flex:0 0 auto;padding:7px 11px;border-radius:999px;border:1px solid {{ o.bd }};background:{{ o.bg }};color:{{ o.fg }};font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap;">{{ o.label }}</button></sc-for></div>
+                </div>
+                <div>
+                  <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.09em;color:#7A839A;">MEETING TYPE</div>
+                  <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;"><sc-for list="{{ meetTypeOpts }}" as="o" hint-placeholder-count="5"><button onClick="{{ o.go }}" style="padding:7px 11px;border-radius:999px;border:1px solid {{ o.bd }};background:{{ o.bg }};color:{{ o.fg }};font-size:12.5px;font-weight:600;cursor:pointer;">{{ o.label }}</button></sc-for></div>
+                </div>
+                <div>
+                  <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.09em;color:#7A839A;">SENTIMENT</div>
+                  <div style="display:flex;gap:6px;margin-top:8px;"><sc-for list="{{ meetSentOpts }}" as="o" hint-placeholder-count="3"><button onClick="{{ o.go }}" style="flex:1;padding:9px;border-radius:12px;border:1px solid {{ o.bd }};background:{{ o.bg }};color:{{ o.fg }};font-size:13px;font-weight:650;cursor:pointer;">{{ o.label }}</button></sc-for></div>
+                </div>
+                <textarea value="{{ meetNote }}" onChange="{{ onMeetNote }}" placeholder="What happened, in a line or two." aria-label="Note" style="width:100%;box-sizing:border-box;min-height:80px;border:1px solid #D7DEEC;border-radius:14px;padding:12px;font-size:14px;line-height:1.5;background:#F7F9FC;outline:0;resize:vertical;font-family:inherit;"></textarea>
+                <button onClick="{{ saveMeet }}" style="padding:14px;border:0;border-radius:13px;background:{{ meetSaveBg }};color:#fff;font-size:14.5px;font-weight:700;cursor:pointer;">{{ meetSaveLabel }}</button>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ shTracker }}" hint-placeholder-val="{{ false }}">
+              <div style="padding:14px 18px 0;display:flex;flex-direction:column;gap:14px;">
+                <div style="font-size:12.5px;color:#5B6478;">{{ trkWho }} · shared with your team</div>
+                <sc-if value="{{ trkNewForm }}" hint-placeholder-val="{{ true }}">
+                  <div>
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.09em;color:#7A839A;">DATE OF THE CONVERSATION · {{ trkDateLabel }}</div>
+                    <div style="display:flex;gap:6px;overflow-x:auto;margin:8px -18px 0;padding:0 18px;"><sc-for list="{{ trkDateOpts }}" as="o" hint-placeholder-count="7"><button onClick="{{ o.go }}" style="flex:0 0 auto;padding:7px 11px;border-radius:999px;border:1px solid {{ o.bd }};background:{{ o.bg }};color:{{ o.fg }};font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap;">{{ o.label }}</button></sc-for></div>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ trkEdit }}" hint-placeholder-val="{{ false }}"><div style="font-size:12.5px;color:#3C4557;line-height:1.45;"><b>{{ trkFixedDate }}</b> · the date can’t be changed; delete this entry and add a new one instead.</div></sc-if>
+                <div style="display:flex;flex-wrap:wrap;gap:10px;"><sc-for list="{{ trkLegend }}" as="b" hint-placeholder-count="3"><span style="display:flex;align-items:center;gap:5px;font-size:11.5px;color:#3C4557;"><span style="width:9px;height:9px;border-radius:3px;background:{{ b.color }};"></span>{{ b.label }}</span></sc-for></div>
+                <sc-for list="{{ trkGroupsForm }}" as="g" hint-placeholder-count="2">
+                  <div style="display:flex;flex-direction:column;">
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.09em;color:#7A839A;margin-bottom:4px;">{{ g.label }}</div>
+                    <sc-for list="{{ g.rows }}" as="q" hint-placeholder-count="2">
+                      <div style="display:flex;flex-direction:column;gap:8px;padding:10px 0;border-top:1px solid #EEF1F7;">
+                        <span style="font-size:13.5px;color:#0B1220;line-height:1.45;"><span style="font-weight:700;color:#7A839A;">{{ q.n }}</span>{{ q.text }}</span>
+                        <div style="display:flex;gap:6px;"><sc-for list="{{ q.opts }}" as="o" hint-placeholder-count="5"><button onClick="{{ o.go }}" style="flex:1;height:38px;border-radius:10px;border:1.5px solid {{ o.bd }};background:{{ o.bg }};color:{{ o.fg }};font-size:14px;font-weight:700;cursor:pointer;">{{ o.label }}</button></sc-for></div>
+                      </div>
+                    </sc-for>
+                  </div>
+                </sc-for>
+                <div style="font-size:12px;color:#5B6478;">{{ trkCount }}</div>
+                <button onClick="{{ trkSave }}" style="padding:14px;border:0;border-radius:13px;background:{{ trkSaveBg }};color:#fff;font-size:14.5px;font-weight:700;cursor:pointer;">{{ trkSaveLabel }}</button>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ shPeople }}" hint-placeholder-val="{{ false }}">
+              <div style="padding:14px 18px 0;display:flex;flex-direction:column;gap:12px;">
+                <sc-if value="{{ peopleShowScope }}" hint-placeholder-val="{{ true }}">
+                  <div style="display:flex;padding:3px;border-radius:12px;background:#E6EAF2;">
+                    <sc-for list="{{ peopleScopes }}" as="o" hint-placeholder-count="2"><button onClick="{{ o.go }}" style="flex:1;padding:8px;border:0;border-radius:10px;background:{{ o.bg }};color:{{ o.fg }};box-shadow:{{ o.sh }};font-size:13px;font-weight:650;cursor:pointer;">{{ o.label }}</button></sc-for>
+                  </div>
+                </sc-if>
+                <div style="display:flex;align-items:center;gap:8px;border:1px solid #D7DEEC;border-radius:13px;padding:0 12px;background:#F7F9FC;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7A839A" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg>
+                  <input value="{{ peopleQ }}" onChange="{{ onPeopleQ }}" placeholder="{{ peopleHint }}" aria-label="{{ peopleHint }}" style="flex:1;min-width:0;border:0;outline:0;padding:12px 0;font-size:15px;background:transparent;color:#0B1220;">
+                </div>
+                <sc-if value="{{ peopleShowTypes }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;gap:6px;overflow-x:auto;margin:0 -18px;padding:0 18px;"><sc-for list="{{ peopleTypeOpts }}" as="o" hint-placeholder-count="4"><button onClick="{{ o.go }}" style="flex:0 0 auto;padding:6px 10px;border-radius:999px;border:1px solid {{ o.bd }};background:{{ o.bg }};color:{{ o.fg }};font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">{{ o.label }}</button></sc-for></div>
+                </sc-if>
+                <sc-if value="{{ peopleFilters }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;flex-direction:column;gap:6px;">
+                    <div style="display:flex;gap:6px;overflow-x:auto;margin:0 -18px;padding:0 18px;"><sc-for list="{{ peopleSpecOpts }}" as="o" hint-placeholder-count="4"><button onClick="{{ o.go }}" style="flex:0 0 auto;padding:6px 10px;border-radius:999px;border:1px solid {{ o.bd }};background:{{ o.bg }};color:{{ o.fg }};font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">{{ o.label }}</button></sc-for></div>
+                    <div style="display:flex;gap:6px;overflow-x:auto;margin:0 -18px;padding:0 18px;"><sc-for list="{{ peopleStateOpts }}" as="o" hint-placeholder-count="4"><button onClick="{{ o.go }}" style="flex:0 0 auto;padding:6px 10px;border-radius:999px;border:1px solid {{ o.bd }};background:{{ o.bg }};color:{{ o.fg }};font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">{{ o.label }}</button></sc-for></div>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ peopleStatus }}" hint-placeholder-val="{{ true }}"><div style="font-size:12.5px;color:#5B6478;">{{ peopleStatus }}</div></sc-if>
+                <sc-for list="{{ peopleRows }}" as="r" hint-placeholder-count="3">
+                  <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #EEF1F7;">
+                    <span style="flex:1;min-width:0;"><span style="display:block;font-size:14px;font-weight:650;color:#0B1220;">{{ r.label }}</span><span style="display:block;font-size:12px;color:#5B6478;margin-top:2px;">{{ r.meta }}</span></span>
+                    <button onClick="{{ r.go }}" style="flex:0 0 auto;padding:7px 12px;border-radius:10px;border:1px solid {{ r.bd }};background:{{ r.bg }};color:{{ r.fg }};font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap;">{{ r.btn }}</button>
+                  </div>
+                </sc-for>
+                <sc-if value="{{ peopleCanTyped }}" hint-placeholder-val="{{ false }}"><button onClick="{{ peopleAddTyped }}" style="padding:12px;border:1px dashed #B9C3D8;border-radius:13px;background:#EDF1FB;color:#22409F;font-size:13px;font-weight:700;cursor:pointer;">{{ peopleTypedLabel }}</button></sc-if>
               </div>
             </sc-if>
 
@@ -1413,11 +1693,36 @@ const SERVICE = {
   transcript: (who, sample, media) => later({ text: sample, ref: null }),
   summary: (list, item, sample) => new Promise(r => setTimeout(() => r(sample()), 2500)),
   report: (hco, group) => new Promise(r => setTimeout(() => r({}), 4000)),
-  // the writes; the screen changes at once, and each resolves with the stored ids (`id`, `ref`) once saved
+  // the writes; the screen changes at once, and each resolves with the stored ids (`id`, `ref`) once saved,
+  // and `warn` when the main save went in but a part of it didn't
   save: (visit, form) => later({}),
   followUp: fu => later({}),
   followUpDone: (fu, done) => later({}),
   addTarget: row => later({}),
+  // Insights' pre-call brief for someone on a target list, written on the server from their recorded meetings;
+  // it resolves once their target row carries it (`briefDoc`)
+  brief: (listId, id) => later(null).then(() => {
+    const t = TLISTS.find(l => l.id === listId)?.profiles?.[id];
+    if (t) t.briefDoc = { at:new Date().toISOString(), snapshot:t.brief || '', points:[t.talkingPoint].filter(Boolean), objections:[], quotes:[] };
+  }),
+  // Insights' Log meeting on a target: a meeting with no write-up ({ meetingDate:'YYYY-MM-DD', meetingType, sentiment,
+  // notes }); it resolves once the target's Meetings carry it
+  meet: (listId, id, meeting) => later(null),
+  // the provider directory both websites search to add someone: by name, or a 10-digit NPI (US), or by name
+  // abroad ({ intl:true }); rows { npi, name, label, spec, site, city, state }. The stand-in searches the sample
+  directory: (q, opts) => later(Object.values(HCPS).filter(p => p.name.toLowerCase().includes(q.toLowerCase())).map(p => ({ npi:p.id, name:p.name, label:p.name, spec:p.spec, site:(HCOS[p.hco] || {}).name || '', city:'', state:'' }))),
+  // Insights' "Add HCP to list": someone from the directory (or typed in) onto a target list; resolves with their id
+  addToList: (listId, row) => later(row.npi),
+  changes: (listId) => later(null),
+  searchActivity: null,
+  dashboard: null,
+  tasks: null,
+  tracker: null,
+  listCreate: (name, description) => { const id = 'l' + Date.now(); TLISTS.splice(0, 0, { id, name, meta:'0 HCPs', ids:[], owner:true, callout:'Add HCPs to start tracking' }); return later(id); },
+  listPin: (listId, pinned) => { const l = TLISTS.find(t => t.id === listId); if (l) l.pinned = pinned; return later(null); },
+  listArchive: (listId) => { const l = TLISTS.find(t => t.id === listId); if (l) l.archived = true; return later(null); },
+  listRestore: (listId) => { const l = TLISTS.find(t => t.id === listId); if (l) l.archived = false; return later(null); },
+  directoryOrgs: (q, type) => later(Object.values(HCOS).filter(h => h.name.toLowerCase().includes(q.toLowerCase())).map(h => ({ id:h.id, name:h.name, label:h.name, type:h.type, kind:h.type, city:h.boro || '', state:'', lat:null, lng:null }))),
   // the phone's own: the clipboard, the share sheet ({ title, text, url }; resolves with what to tell the rep, if
   // anything), the dialler and opening a link (a report's PDF)
   copy: text => Promise.resolve(),
@@ -1536,7 +1841,7 @@ class Component extends DCLogic {
     return {
     account,
     tab: this.tabsFor({ account }).includes(pr.startTab) ? pr.startTab : 'targets', stack: [], sheet: null, sheetData: null,
-    scope: 'mine', kind: ACCOUNTS[account].fieldPro ? 'hco' : 'hcp', q: '', spec: 'All codes', cgs: CODE_GROUPS.map(g => g.name), sort: WORKSPACE.lens === 'hcp' || WORKSPACE.drugAccount ? 'Volume' : 'Opportunity', iSort: 'Relevance', omType: 'All types', tlist: TLISTS[0] ? TLISTS[0].id || TLISTS[0].name : '',
+    scope: 'mine', kind: ACCOUNTS[account].fieldPro ? 'hco' : 'hcp', q: '', spec: 'All codes', cgs: CODE_GROUPS.map(g => g.name), sort: WORKSPACE.lens === 'hcp' || WORKSPACE.drugAccount ? 'Volume' : 'Opportunity', iSort: 'Relevance', briefing: null, peopleAdding: [], peopleAdded: [], listTab: 'all', listConfirm: null, listNew: false, listName: '', listDesc: '', listBusy: null, changes: {}, chBusy: {}, chHidden: {}, actQ: '', actHits: null, actBusy: false, actErr: false, dash: null, board: null, boardCol: 'todo', boardNew: false, boardTitle: '', boardPrio: 'medium', boardBusy: null, boardAsk: null, trk: {}, trkHist: false, trkForm: null, trkDateN: 0, trkBusy: false, trkAsk: null, omType: 'All types', tlist: TLISTS[0] ? TLISTS[0].id || TLISTS[0].name : '',
     route: [], tomorrow: [], day: 'today', runIdx: 0, runDone: [], runSkip: [], logged: [],
     ...seed(A),
     thread: [], askIn: '', listening: false, email: null, switching: null,
@@ -1557,6 +1862,10 @@ class Component extends DCLogic {
     this.loadRouteSites();
     this.loadRouteMiles();
     this.loadExplore();
+    this.loadChanges();
+    if (this.state.actSeg === 'dash' && !this.state.dash) this.loadDash();
+    const pTop = s.stack[s.stack.length - 1];
+    if (SERVICE.tracker && pTop && pTop.s === 'hcp' && /^\d{10}$/.test(pTop.id)) this.loadTracker(pTop.id);
     const na = (this.props || {}).account;
     if (na !== this._pa) { this._pa = na; if (ACCOUNTS[na]) this.setAccount(na); }
   }
@@ -1659,6 +1968,347 @@ class Component extends DCLogic {
   }
   openDraft(d) { this.dropRec(); this.setState({ ...this.insFresh([]), ...d.form, insDraft: d.id, sheet:'insight', sheetData:null, insMode:'notes' }); }
   openFu(id) { this.setState({ sheet:'fu', sheetData:null, fuWho: id || null, fuTask:'', fuDue:1 }); }
+  // Add HCP: the provider directory both websites search, one sheet for both; Insights adds to the open
+  // list (AddTargetDialog.tsx), Field Pro to the rep's targets (AddTargetHcpsDialog.tsx)
+  // Field Pro's accounts view adds organizations instead (TargetListUpload.tsx, "Add target accounts")
+  openPeople() { this.setState({ sheet:'people', sheetData:null, peopleQ:'', peopleIntl:false, peopleRows:null, peopleBusy:false, peopleErr:false, peopleSpec:'', peopleState:'', peopleAdded:[],
+    peopleOrgs:!!this.acct().fieldPro && this.state.kind === 'hco', peopleType:'' }); }
+  peopleSearch(q, intl, type) {
+    clearTimeout(this._peopleT);
+    const seq = this._peopleSeq = (this._peopleSeq || 0) + 1;
+    if (q.replace(/\s+/g, ' ').trim().length < 2) { this.setState({ peopleRows:null, peopleBusy:false, peopleErr:false }); return; }
+    this.setState({ peopleBusy:true, peopleErr:false, peopleSpec:'', peopleState:'' });
+    this._peopleT = setTimeout(() => {
+      const orgs = this.state.peopleOrgs, find = orgs ? SERVICE.directoryOrgs : SERVICE.directory;
+      if (!find) { this.setState({ peopleBusy:false, peopleErr:true }); return; }
+      (orgs ? find(q, type == null ? this.state.peopleType || '' : type) : find(q, { intl })).then(rows => { if (seq === this._peopleSeq) this.setState({ peopleRows:rows, peopleBusy:false }); },
+        () => { if (seq === this._peopleSeq) this.setState({ peopleRows:null, peopleBusy:false, peopleErr:true }); });
+    }, 300);
+  }
+  // Field Pro: a doctor found in the directory joins the book as the Map's add makes one, at their site
+  dirPerson(row) {
+    if (HCPS[row.npi]) return HCPS[row.npi];
+    const place = [row.city, row.state].filter(Boolean).join(', '), site = row.site || place || '—', hid = 'org:' + site.toLowerCase();
+    HCOS[hid] = HCOS[hid] || { id:hid, name:site, ini:site.split(/[\s-]+/).filter(w => /^[A-Z]/.test(w)).slice(0, 2).map(w => w[0]).join(''), type:'', city:place, boro:row.city || '',
+      proc:'', yoy:'', share:'', opp:'', leak:'—', left:'', stayed:'', dist:'', mine:false, hcps:[], oppN:0, volN:0, yoyN:0, distN:0, x:'50%', y:'50%', specs:[] };
+    if (!HCOS[hid].hcps.includes(row.npi)) HCOS[hid].hcps.push(row.npi);
+    const name = row.label, first = name.split(' ')[0], ini = name.split(' ').map(w => w[0]).slice(0, 2).join('');
+    HCPS[row.npi] = { id:row.npi, name, first, ini, spec:row.spec, hco:hid, claims:'—', yoy:'—', day:'—', dayL:'—', ref:'—', top:'—', email:'—', phone:'—', last:'—', lastN:999, adv:null,
+      iOpen:'', iBrief:'Not met yet.', open:'', brief:'', mine:false, claimsN:0, yoyN:0, distN:0, x:'50%', y:'50%', specs:[] };
+    return HCPS[row.npi];
+  }
+  dirOrg(row) {
+    if (HCOS[row.id]) return HCOS[row.id];
+    const place = [row.city, row.state].filter(Boolean).join(', ');
+    HCOS[row.id] = { id:row.id, name:row.label, ini:row.label.split(/[\s-]+/).filter(w => /^[A-Z]/.test(w)).slice(0, 2).map(w => w[0]).join(''), type:row.kind, city:place, boro:row.city || '',
+      proc:'', yoy:'', share:'', opp:'', leak:'—', left:'', stayed:'', dist:'', mine:false, hcps:[], oppN:0, volN:0, yoyN:0, distN:0, x:'50%', y:'50%', lat:row.lat, lng:row.lng, specs:[] };
+    return HCOS[row.id];
+  }
+  addPerson(row) {
+    const A = this.acct(), ins = !A.fieldPro, s = this.state, key = (s.peopleOrgs && row.id) || row.npi || row.name;
+    if (s.peopleAdding.includes(key)) return;
+    const tl = TLISTS.find(t => (t.id || t.name) === s.tlist) || TLISTS[0];
+    const done = () => { this.setState(st => ({ peopleAdding:st.peopleAdding.filter(k => k !== key), peopleAdded:[...st.peopleAdded, key] })); this.toast(row.label + ' added to ' + (ins ? tl.name : 'your targets')); };
+    const failed = e => { this.setState(st => ({ peopleAdding:st.peopleAdding.filter(k => k !== key) })); this.toast((e && e.message) || 'That didn’t save · try again'); };
+    if (ins) {
+      if (!SERVICE.addToList || !tl || !tl.id) { this.toast('Adding to lists is not connected'); return; }
+      this.setState(st => ({ peopleAdding:[...st.peopleAdding, key] }));
+      SERVICE.addToList(tl.id, row).then(done, failed);
+      return;
+    }
+    if (!SERVICE.addTarget) { this.toast('Adding targets is not connected'); return; }
+    if (s.peopleOrgs) {
+      const h = this.dirOrg(row), was = h.mine;
+      h.mine = true;
+      this.setState(st => ({ peopleAdding:[...st.peopleAdding, key] }));
+      SERVICE.addTarget({ id:row.id, name:row.name, type:row.type, org:true }).then(done, e => { h.mine = was; failed(e); });
+      return;
+    }
+    const p = this.dirPerson(row);
+    p.mine = true;
+    this.setState(st => ({ peopleAdding:[...st.peopleAdding, key] }));
+    SERVICE.addTarget({ id:row.npi, name:row.label }).then(done, e => { p.mine = false; failed(e); });
+  }
+  peopleView(ins, tlist) {
+    const s = this.state, rows = s.peopleRows || [], q = (s.peopleQ || '').replace(/\s+/g, ' ').trim();
+    const uniq = xs => [...new Set(xs.filter(Boolean))].sort();
+    const specs = uniq(rows.map(r => r.spec)), states = uniq(rows.map(r => r.state));
+    const shown = rows.filter(r => (!s.peopleSpec || r.spec === s.peopleSpec) && (!s.peopleState || r.state === s.peopleState));
+    const orgs = !ins && !!s.peopleOrgs;
+    const onList = r => orgs ? !!(HCOS[r.id] && HCOS[r.id].mine) : ins ? tlist.ids.includes(r.npi) || tlist.ids.includes(r.name) : !!(HCPS[r.npi] && HCPS[r.npi].mine);
+    // the website's fourteen types (orgTypes.ts:13-43)
+    const types = [['', 'All organization types'], ['HOSPITALS','Hospitals'], ['ASC','ASC'], ['IDN','IDN'], ['FACILITY','Facility'], ['PROVIDER NETWORK','Provider Network'], ['PHYSICIAN GROUP','Physician Group'], ['CLINIC','Clinic'],
+      ['LABORATORIES','Laboratories'], ['EMERGENCY','Emergency'], ['RESIDENTIAL','Residential'], ['PHARMACY','Pharmacy'], ['OTHER SERVICE PROVIDERS','Other Service Providers'], ['SUPPLIERS','Suppliers'], ['INSURANCE','Insurance']];
+    const chipsOf = (all, on, key) => ['', ...all].map(v => ({ label:v || (key === 'peopleSpec' ? 'All specialties' : 'All states'), ...chip(on === v), go: () => this.setState({ [key]:v }) }));
+    return {
+      peopleShowScope: ins, peopleScopes: [['US', false], ['International', true]].map(([label, intl]) => ({ label, ...seg(!!s.peopleIntl === intl), go: () => { this.setState({ peopleIntl:intl }); this.peopleSearch(s.peopleQ || '', intl); } })),
+      peopleQ: s.peopleQ || '', onPeopleQ: e => { const v = e.target.value; this.setState({ peopleQ:v }); this.peopleSearch(v, !!s.peopleIntl); },
+      peopleHint: orgs ? 'Start typing an organization name…' : ins ? 'Search by name…' : 'Name or 10-digit NPI',
+      peopleShowTypes: orgs, peopleTypeOpts: types.map(([code, label]) => ({ label, ...chip((s.peopleType || '') === code), go: () => { this.setState({ peopleType:code }); this.peopleSearch(s.peopleQ || '', false, code); } })),
+      // the website offers these once a search finds more than ten (HCPAutocompleteInput.tsx:131-163)
+      peopleFilters: !orgs && rows.length > 10 && (specs.length > 1 || states.length > 1),
+      peopleSpecOpts: chipsOf(specs, s.peopleSpec || '', 'peopleSpec'), peopleStateOpts: chipsOf(states, s.peopleState || '', 'peopleState'),
+      // the website's lines (AddTargetHcpsDialog.tsx:238-246)
+      peopleStatus: q.length < 2 ? 'Type at least 2 characters.' : orgs ? (s.peopleBusy ? 'Searching organizations…' : s.peopleErr ? 'Organizations couldn’t be searched right now. Try again.' : s.peopleRows && !shown.length ? 'No matching organizations found.' : '')
+        : s.peopleBusy ? 'Searching the provider directory…' : s.peopleErr ? 'Providers couldn’t be searched right now. Try again.' : s.peopleRows && !shown.length ? 'No matching providers found.' : '',
+      peopleRows: shown.slice(0, 40).map(r => {
+        const key = (orgs && r.id) || r.npi || r.name, adding = s.peopleAdding.includes(key), there = s.peopleAdded.includes(key) || onList(r);
+        const place = [r.city, r.state || r.country].filter(Boolean).join(', ');
+        return { label:r.label, meta:orgs ? [place, r.kind].filter(Boolean).join(' · ') || 'Organization' : [r.spec, r.site, place, r.npi ? 'NPI ' + r.npi : ''].filter(Boolean).join(' · '),
+          btn: adding ? 'Adding…' : there ? (orgs ? 'Already in your list' : ins ? 'On this list' : 'Already targeted') : 'Add', ...(there ? { bg:'#E7ECFA', fg:'#22409F', bd:'#E7ECFA' } : { bg:'#2447C4', fg:'#fff', bd:'#2447C4' }),
+          go: () => { if (!there && !adding) this.addPerson(r); } };
+      }),
+      // the website's form takes a name alone, for someone the directory doesn't have (AddTargetDialog.tsx:99-118)
+      peopleCanTyped: ins && q.length >= 2 && !s.peopleBusy, peopleTypedLabel: 'Add “' + q + '” by name only',
+      peopleAddTyped: () => this.addPerson({ npi:'', name:q, label:q, spec:'', site:'', city:'', state:'', country:'' }),
+    };
+  }
+  // Stemline's Sentiment Tracker on a target (the website's Sentiment Tracker tab), read once a session per person
+  loadTracker(npi, force) {
+    if (!SERVICE.tracker || !npi || (!force && this.state.trk[npi] !== undefined)) return;
+    this.setState(st => ({ trk:{ ...st.trk, [npi]:'loading' } }));
+    SERVICE.tracker.read(npi).then(t => this.setState(st => ({ trk:{ ...st.trk, [npi]:t } })), () => this.setState(st => ({ trk:{ ...st.trk, [npi]:'failed' } })));
+  }
+  openTracker(npi, e) {
+    this.setState({ sheet:'tracker', sheetData:npi, trkDateN:0, trkBusy:false, trkAsk:null,
+      trkForm: e ? { mode:'edit', on:e.on, date:e.date, scores:{ ...e.scores }, revision:e.revision } : { mode:'new', scores:{} } });
+  }
+  saveTracker() {
+    const s = this.state, f = s.trkForm, npi = s.sheetData;
+    if (!f || s.trkBusy || !SERVICE.tracker || !Object.keys(f.scores).length) return;
+    const d = dateAt(-s.trkDateN), two = n => String(n).padStart(2, '0');
+    const on = f.mode === 'edit' ? f.on : d.getFullYear() + '-' + two(d.getMonth() + 1) + '-' + two(d.getDate());
+    this.setState({ trkBusy:true });
+    SERVICE.tracker.save(npi, (HCPS[npi] || NO_HCP).name, on, f.scores, f.mode === 'edit' ? f.revision : undefined)
+      .then(t => { this.setState(st => ({ trkBusy:false, sheet:null, trkForm:null, trk:{ ...st.trk, [npi]:t } })); this.toast('Assessment saved'); },
+        e => { this.setState({ trkBusy:false }); this.toast((e && e.message) || 'That assessment didn’t save · try again'); this.loadTracker(npi, true); });
+  }
+  removeTracker(npi, e) {
+    if (this.state.trkBusy || !SERVICE.tracker) return;
+    this.setState({ trkBusy:true });
+    SERVICE.tracker.remove(npi, e.on, e.revision)
+      .then(t => { this.setState(st => ({ trkBusy:false, trkAsk:null, trk:{ ...st.trk, [npi]:t } })); this.toast('Assessment deleted'); },
+        err => { this.setState({ trkBusy:false, trkAsk:null }); this.toast((err && err.message) || 'That assessment didn’t delete · try again'); this.loadTracker(npi, true); });
+  }
+  trackerView(pId, pTarget) {
+    const s = this.state, npi = /^\d{10}$/.test(pId) ? pId : '', t = npi ? s.trk[npi] : null, ready = !!t && typeof t === 'object';
+    const tone = b => b === 'green' ? ['#E3F5EC', '#1C7A4E'] : b === 'yellow' ? ['#FFF3D6', '#8A5A00'] : b === 'red' ? ['#FDEDE4', '#A94D1B'] : ['#EEF1F7', '#7A839A'];
+    const change = { up:['↑ Up', '#1C7A4E'], down:['↓ Down', '#A94D1B'], same:['→ No change', '#7A839A'], new:['• First score', '#7A839A'] };
+    const bandAt = v => ready ? (t.bands.find(b => v >= b.min && v <= b.max) || {}).id : null;
+    return {
+      trkOn: !!SERVICE.tracker && !!pTarget,
+      trkStatus: !npi ? 'This HCP has no NPI on the list, so there is nothing to track against.' : t === 'loading' || t === undefined ? 'Loading…' : t === 'failed' ? 'The Sentiment Tracker didn’t load.' : !t ? 'The Sentiment Tracker isn’t available for this account.' : !t.count ? 'No assessments yet. Score them against the ' + t.statements.length + ' statements after a conversation.' : '',
+      trkFailed: t === 'failed', trkRetry: () => this.loadTracker(npi, true),
+      trkCanNew: ready, trkNew: () => this.openTracker(npi),
+      trkHas: ready && t.count > 0,
+      trkGroups: ready ? t.groups.map(g => { const [bg, fg] = tone(g.band); return { label:g.label, mean:g.mean, sub:g.answered + ' of ' + g.of + ' scored', bg, fg }; }) : [],
+      trkLast: ready && t.count ? 'Last assessed ' + t.last + ' · ' + t.count + (t.count === 1 ? ' assessment' : ' assessments') : '',
+      trkRows: ready ? t.statements.map(q => { const [bg, fg] = tone(q.band), ch = q.change ? change[q.change] : null;
+        return { n:q.n + '. ', text:q.text, score:q.score == null ? '—' : String(q.score), bg, fg,
+          change: ch ? ch[0] + (q.was != null && q.change !== 'new' ? ' (was ' + q.was + ')' : '') : '—', changeC: ch ? ch[1] : '#7A839A', on:q.on ? ' · ' + q.on : '' }; }) : [],
+      trkHistLabel: ready ? 'History · ' + t.entries.length + (s.trkHist ? ' ▴' : ' ▾') : '', trkHistToggle: () => this.setState({ trkHist:!s.trkHist }), trkHistOpen: !!s.trkHist,
+      trkEntries: ready && s.trkHist ? t.entries.map(e => { const key = e.on + '|' + e.revision, asking = s.trkAsk === key;
+        return { date:e.date, who:e.who + (e.via ? ' · ' + e.via : ''), groups:e.groups,
+          scores: t.statements.map(q => { const v = e.scores[q.id], [bg, fg] = tone(typeof v === 'number' ? bandAt(v) : null); return { title:q.title, v:typeof v === 'number' ? String(v) : '—', bg, fg }; }),
+          acts: e.mine && !asking, edit: () => this.openTracker(npi, e), del: () => this.setState({ trkAsk:key }),
+          asking, yes: () => this.removeTracker(npi, e), no: () => this.setState({ trkAsk:null }), yesLabel: s.trkBusy ? 'Deleting…' : 'Delete' }; }) : [],
+    };
+  }
+  trackerFormView() {
+    const s = this.state, f = s.trkForm, t = s.trk[s.sheetData];
+    if (s.sheet !== 'tracker' || !f || !t || typeof t !== 'object') return { trkGroupsForm: [] };
+    const solid = { green:'#1C7A4E', yellow:'#B7791F', red:'#A94D1B' }, soft = { green:['#E3F5EC', '#1C7A4E'], yellow:['#FFF3D6', '#8A5A00'], red:['#FDEDE4', '#A94D1B'] };
+    const bandAt = v => (t.bands.find(b => v >= b.min && v <= b.max) || {}).id;
+    const values = Array.from({ length:t.scale.max - t.scale.min + 1 }, (_, i) => t.scale.min + i);
+    const n = Object.keys(f.scores).length, edit = f.mode === 'edit';
+    const setScore = (id, v) => this.setState(st => { const scores = { ...st.trkForm.scores }; if (scores[id] === v) delete scores[id]; else scores[id] = v; return { trkForm:{ ...st.trkForm, scores } }; });
+    return {
+      trkWho: (HCPS[s.sheetData] || NO_HCP).name,
+      trkEdit: edit, trkNewForm: !edit, trkFixedDate: edit ? f.date : '',
+      trkDateLabel: (s.trkDateN === 0 ? 'Today ' + dateOf(0) : s.trkDateN === 1 ? 'Yesterday ' + dateOf(-1) : dayFull(-s.trkDateN)).toUpperCase(),
+      trkDateOpts: [0, 1, 2, 3, 4, 5, 6].map(k => ({ label: k === 0 ? 'Today' : k === 1 ? 'Yesterday' : WD[dateAt(-k).getDay()] + ' ' + dateAt(-k).getDate(), ...chip(s.trkDateN === k), go: () => this.setState({ trkDateN:k }) })),
+      trkLegend: t.bands.map(b => ({ label:(b.min === b.max ? b.min : b.min + '–' + b.max) + ' · ' + b.label, color:solid[b.id] })),
+      trkGroupsForm: t.groups.map(g => ({ label:g.label.toUpperCase(), rows: t.statements.filter(q => q.group === g.id).map(q => ({ n:q.n + '. ', text:q.text,
+        opts: values.map(v => { const b = bandAt(v), on = f.scores[q.id] === v, [bg, fg] = soft[b] || ['#EEF1F7', '#3C4557'];
+          return { label:String(v), bg: on ? solid[b] || '#2447C4' : bg, fg: on ? '#fff' : fg, bd: on ? solid[b] || '#2447C4' : 'transparent', go: () => setScore(q.id, v) }; }) })) })),
+      trkCount: n + ' of ' + t.statements.length + ' scored' + (n ? '' : ' · score at least one statement'),
+      trkSave: () => this.saveTracker(), trkSaveLabel: s.trkBusy ? 'Saving…' : edit ? 'Save changes' : 'Save assessment', trkSaveBg: n && !s.trkBusy ? '#2447C4' : '#9DB0E8',
+    };
+  }
+  // Activity's search: Insights searches the team's transcripts as My Insights does (Transcripts.tsx:580-607);
+  // Field Pro looks through the rep's own notes
+  actSearch(q) {
+    clearTimeout(this._actT);
+    const seq = this._actSeq = (this._actSeq || 0) + 1;
+    if (!q.trim() || this.acct().fieldPro || !SERVICE.searchActivity) { this.setState({ actHits:null, actBusy:false, actErr:false }); return; }
+    this.setState({ actBusy:true, actErr:false });
+    this._actT = setTimeout(() => SERVICE.searchActivity(q).then(rows => { if (seq === this._actSeq) this.setState({ actHits:rows, actBusy:false }); },
+      () => { if (seq === this._actSeq) this.setState({ actHits:null, actBusy:false, actErr:true }); }), 300);
+  }
+  // Insights' Dashboard, as the Activity tab's Overview: read when first opened
+  loadDash(force) {
+    const s = this.state;
+    if (!SERVICE.dashboard || (!force && s.dash)) return;
+    this.setState({ dash:'loading' });
+    SERVICE.dashboard().then(d => this.setState({ dash:d }), () => this.setState({ dash:'failed' }));
+    if (SERVICE.tasks) {
+      this.setState({ board:'loading' });
+      SERVICE.tasks.list().then(rows => this.setState({ board:rows }), () => this.setState({ board:'failed' }));
+    }
+  }
+  boardMove(t, status) {
+    const s = this.state;
+    if (s.boardBusy || !SERVICE.tasks) return;
+    this.setState({ boardBusy:t.id });
+    SERVICE.tasks.move(t.id, status).then(() => {
+      const label = { todo:'To Do', 'in-progress':'In Progress', review:'Review', completed:'Completed' }[status];
+      // a follow-up filed as this task follows it
+      this.setState(st => ({ boardBusy:null, board:st.board.map(x => x.id === t.id ? { ...x, status } : x),
+        fus:st.fus.map(f => f.ref && f.ref.taskId === t.id ? { ...f, done:status === 'completed' } : f) }));
+      this.toast('Moved to ' + label);
+    }, e => { this.setState({ boardBusy:null }); this.toast((e && e.message) || 'That didn’t move · try again'); });
+  }
+  boardRemove(t) {
+    if (this.state.boardBusy || !SERVICE.tasks) return;
+    this.setState({ boardBusy:t.id, boardAsk:null });
+    SERVICE.tasks.remove(t.id).then(() => { this.setState(st => ({ boardBusy:null, board:st.board.filter(x => x.id !== t.id) })); this.toast('Task deleted'); },
+      e => { this.setState({ boardBusy:null }); this.toast((e && e.message) || 'That didn’t delete · try again'); });
+  }
+  boardAdd() {
+    const s = this.state, title = s.boardTitle.trim();
+    if (!title || s.boardBusy || !SERVICE.tasks) return;
+    this.setState({ boardBusy:'new' });
+    SERVICE.tasks.create(title, s.boardPrio).then(t => { this.setState(st => ({ boardBusy:null, boardNew:false, boardTitle:'', boardCol:'todo', board:[t, ...(Array.isArray(st.board) ? st.board : [])] })); this.toast('Task added'); },
+      e => { this.setState({ boardBusy:null }); this.toast((e && e.message) || 'That task didn’t save · try again'); });
+  }
+  dashView() {
+    const s = this.state, d = s.dash, b = s.board;
+    const ready = d && typeof d === 'object', tasks = Array.isArray(b) ? b : [];
+    const n = v => Number(v || 0).toLocaleString('en-US');
+    const cols = [['todo','To Do'], ['in-progress','In Progress'], ['review','Review'], ['completed','Completed']];
+    const states = ready && d.states ? d.states.slice(0, 6) : [], most = Math.max(1, ...states.map(x => x.interactions));
+    const prio = { high:['High','#FDEDE4','#A94D1B'], medium:['Medium','#E7ECFA','#22409F'], low:['Low','#EEF1F7','#5B6478'] };
+    return {
+      dashStatus: d === 'loading' ? 'Loading the dashboard…' : d === 'failed' ? 'The dashboard didn’t load.' : '', dashFailed: d === 'failed', dashRetry: () => this.loadDash(true),
+      dashReady: !!ready,
+      dashTiles: ready ? [
+        ['Total transcripts', n(d.transcripts), 'All processed recordings', '#E7ECFA', '#22409F'],
+        ['Documents generated', n(d.documents), 'PDF & PPT reports', '#F1F5FE', '#2447C4'],
+        ['Insights generated', n(d.insights), 'Completed analyses', '#EEF3FD', '#22409F'],
+        ['Positive sentiment', d.sentiment.positive + '%', 'Across all meetings', '#E3F5EC', '#1C7A4E'],
+      ].map(([label, value, sub, bg, fg]) => ({ label, value, sub, bg, fg })) : [],
+      dashSent: ready ? [['Positive', d.sentiment.positive, '#1C7A4E'], ['Neutral', d.sentiment.neutral, '#9CAACB'], ['Negative', d.sentiment.negative, '#A94D1B']]
+        .map(([label, pct, color]) => ({ label:label + ' ' + pct + '%', w:pct + '%', color })) : [],
+      dashCoverage: ready ? (d.states == null ? 'Territory coverage didn’t load.' : !d.states.length ? 'No HCP location data yet for your team.' : '') : '',
+      dashStates: states.map((x, i) => ({ rank:String(i + 1), name:x.name, meta:[[x.insights, 'insight'], [x.interactions, 'interaction'], [x.hcps, 'HCP']].map(([k, w]) => n(k) + ' ' + w + (k === 1 ? '' : 's')).join(' · '), w:Math.round(x.interactions / most * 100) + '%' })),
+      boardOn: !!SERVICE.tasks,
+      boardStatus: b === 'loading' ? 'Loading tasks…' : b === 'failed' ? 'Tasks didn’t load.' : '',
+      boardCols: cols.map(([k, label]) => ({ label:label + ' ' + tasks.filter(t => t.status === k).length, ...chip(s.boardCol === k), go: () => this.setState({ boardCol:k, boardAsk:null }) })),
+      boardEmpty: Array.isArray(b) && !tasks.some(t => t.status === s.boardCol) ? 'Nothing in ' + cols.find(c => c[0] === s.boardCol)[1] + '.' : '',
+      boardRows: tasks.filter(t => t.status === s.boardCol).map(t => {
+        const busy = s.boardBusy === t.id, asking = s.boardAsk === t.id, [pl, pbg, pfg] = prio[t.priority] || prio.medium;
+        return { title:t.title, meta:[t.due ? 'Due ' + t.due : '', t.assignee].filter(Boolean).join(' · '), hasMeta:!!(t.due || t.assignee), prio:pl, pbg, pfg,
+          moves: busy ? [] : cols.filter(([k]) => k !== t.status).map(([k, label]) => ({ label:'→ ' + label, go: () => this.boardMove(t, k) })),
+          busy, hasActs:!asking, del: () => this.setState({ boardAsk:t.id }), asking, yes: () => this.boardRemove(t), no: () => this.setState({ boardAsk:null }) };
+      }),
+      boardNew: !!s.boardNew, closeBoardNew: () => this.setState({ boardNew:false }),
+      boardTitle: s.boardTitle, onBoardTitle: e => this.setState({ boardTitle:e.target.value.slice(0, 200) }),
+      boardPrios: [['low','Low'], ['medium','Medium'], ['high','High']].map(([k, label]) => ({ label, ...chip(s.boardPrio === k), go: () => this.setState({ boardPrio:k }) })),
+      boardAdd: () => this.boardAdd(), boardAddLabel: s.boardBusy === 'new' ? 'Adding…' : 'Add task', boardAddBg: s.boardTitle.trim() && s.boardBusy !== 'new' ? '#2447C4' : '#9DB0E8',
+    };
+  }
+  // Insights' What changed on the open list, read once a session per list (WhispersPanel.tsx)
+  loadChanges() {
+    const s = this.state;
+    if (this.acct().fieldPro || !SERVICE.changes || (s.stack[s.stack.length - 1]?.s || s.tab) !== 'targets') return;
+    const tl = TLISTS.find(t => (t.id || t.name) === s.tlist) || TLISTS[0];
+    if (!tl || !tl.id) return;
+    this._chSeen = this._chSeen || {};
+    if (this._chSeen[tl.id]) return;
+    this._chSeen[tl.id] = true;
+    this.fetchChanges(tl.id);
+  }
+  fetchChanges(id) {
+    this.setState(st => ({ chBusy:{ ...st.chBusy, [id]:true } }));
+    SERVICE.changes(id).then(r => this.setState(st => ({ changes:{ ...st.changes, [id]:r }, chBusy:{ ...st.chBusy, [id]:false } })),
+      () => this.setState(st => ({ chBusy:{ ...st.chBusy, [id]:false } })));
+  }
+  changesView(ins, tlist) {
+    const s = this.state, id = tlist.id, r = id ? s.changes[id] : null;
+    if (!ins || !r || s.chHidden[id] || s.scope === 'explore') return { chOn:false, chSub:'', chStories:[], chHasLines:false, chLines:[], chRefresh: () => {}, chRefreshLabel:'', chHide: () => {} };
+    const dot = t => t === 'good' ? '#1C7A4E' : t === 'warn' ? '#A94D1B' : '#2447C4';
+    // a story or line opens the person it is about, when they are on the list
+    const open = targetId => { const who = targetId && Object.keys(tlist.profiles || {}).find(k => tlist.profiles[k].targetId === targetId); if (who && HCPS[who]) this.go('hcp', who); };
+    return {
+      chOn:true, chSub:'Last 7 days' + (r.headline ? ' · ' + r.headline : ''),
+      chStories: r.stories.map(n => ({ label:n.label.toUpperCase(), dot:dot(n.tone), headline:n.headline, story:n.story, impact:n.impact ? n.impact + ' →' : '', hasImpact:!!n.impact, go: () => open(n.targetId) })),
+      chHasLines: r.lines.length > 0,
+      chLines: r.lines.map(l => ({ message:l.message, dot:dot(l.tone), go: () => open(l.targetId) })),
+      chRefresh: () => { if (!s.chBusy[id]) this.fetchChanges(id); }, chRefreshLabel: s.chBusy[id] ? 'Refreshing…' : 'Refresh',
+      chHide: () => this.setState(st => ({ chHidden:{ ...st.chHidden, [id]:true } })),
+    };
+  }
+  // Insights' lists sheet: All, Pinned, Mine and Archived, as the website's Target Lists page (TargetLists.tsx)
+  listAct(kind, t) {
+    const s = this.state, id = t.id;
+    if (s.listBusy) return;
+    const call = { pin:SERVICE.listPin, archive:SERVICE.listArchive, restore:SERVICE.listRestore }[kind];
+    if (!call) { this.toast('Changing lists is not connected'); return; }
+    this.setState({ listBusy:id, listConfirm:null });
+    (kind === 'pin' ? call(id, !t.pinned) : call(id)).then(() => {
+      const left = kind === 'archive' && s.tlist === id ? TLISTS.find(l => !l.archived) : null;
+      this.setState({ listBusy:null, ...(left ? { tlist:left.id || left.name } : {}) });
+      this.toast(kind === 'pin' ? (t.pinned ? 'Unpinned ' : 'Pinned ') + t.name : kind === 'archive' ? 'Archived ' + t.name : 'Restored ' + t.name);
+    }, e => { this.setState({ listBusy:null }); this.toast((e && e.message) || 'That didn’t save · try again'); });
+  }
+  createList() {
+    const s = this.state, name = s.listName.trim();
+    if (!name || s.listBusy) return;
+    if (!SERVICE.listCreate) { this.toast('Making lists is not connected'); return; }
+    this.setState({ listBusy:'new' });
+    SERVICE.listCreate(name, s.listDesc).then(id => {
+      this.setState({ listBusy:null, listNew:false, listName:'', listDesc:'', listTab:'all', tlist:id, sheet:null });
+      this.toast('Created ' + name);
+    }, e => { this.setState({ listBusy:null }); this.toast((e && e.message) || 'That list didn’t save · try again'); });
+  }
+  listsView() {
+    const s = this.state, tab = s.listTab || 'all';
+    const live = TLISTS.filter(t => !t.archived);
+    const counts = { all:live.length, pinned:live.filter(t => t.pinned).length, mine:live.filter(t => t.owner !== false).length, archived:TLISTS.filter(t => t.archived).length };
+    const shown = TLISTS.filter(t => tab === 'archived' ? t.archived : !t.archived && (tab !== 'pinned' || t.pinned) && (tab !== 'mine' || t.owner !== false));
+    return {
+      listTabs: [['all','All'], ['pinned','Pinned'], ['mine','Mine'], ['archived','Archived']].map(([k, label]) => ({ label:label + ' ' + counts[k], ...seg(tab === k), go: () => this.setState({ listTab:k, listConfirm:null }) })),
+      listEmpty: shown.length ? '' : tab === 'pinned' ? 'No pinned lists. Pin a list to keep it at the top.' : tab === 'mine' ? 'No lists of your own yet.' : tab === 'archived' ? 'No archived lists.' : 'No target lists yet.',
+      listRows: shown.map(t => {
+        const id = t.id || t.name, on = s.tlist === id, owner = t.owner !== false && !!t.id, busy = s.listBusy === t.id, asking = s.listConfirm === t.id;
+        return { name:t.name, meta:[t.pinned && !t.archived ? 'Pinned' : '', t.meta].filter(Boolean).join(' · '), callout:t.callout || '', hasCallout:!!t.callout,
+          check: on ? '✓' : '', bg: on ? '#EDF1FB' : '#fff', bd: on ? '#2447C4' : '#E1E6F0',
+          go: () => { this.setState({ tlist:id, sheet:null, listConfirm:null }); this.toast('Switched to ' + t.name); },
+          hasActs: owner && !asking, asking,
+          pinLabel: busy ? 'Saving…' : t.pinned ? 'Unpin' : 'Pin', hasPin: !t.archived, pin: () => this.listAct('pin', t),
+          arcLabel: t.archived ? (busy ? 'Restoring…' : 'Restore') : 'Archive', abg:'#fff', afg:'#22409F', abd:'#D7DEEC',
+          arc: () => t.archived ? this.listAct('restore', t) : this.setState({ listConfirm:t.id }),
+          askText: 'Archive “' + t.name + '”? You can restore it later.', yes: () => this.listAct('archive', t), no: () => this.setState({ listConfirm:null }),
+          yesLabel: busy ? 'Archiving…' : 'Archive' };
+      }),
+      listNew: !!s.listNew, listNewClosed: !s.listNew, openListNew: () => this.setState({ listNew:true, listName:'', listDesc:'' }), closeListNew: () => this.setState({ listNew:false }),
+      listName: s.listName, onListName: e => this.setState({ listName:e.target.value.slice(0, 120) }),
+      listDesc: s.listDesc, onListDesc: e => this.setState({ listDesc:e.target.value.slice(0, 500) }),
+      createList: () => this.createList(), createLabel: s.listBusy === 'new' ? 'Creating…' : 'Create list', createBg: s.listName.trim() && s.listBusy !== 'new' ? '#2447C4' : '#9DB0E8',
+    };
+  }
+  // Insights' Log meeting on a target list: a meeting with no write-up, as the website's Meetings tab logs it
+  openMeet(id) { this.setState({ sheet:'meet', sheetData:id, meetDateN:0, meetType:'', meetSent:'', meetNote:'', meetBusy:false }); }
+  saveMeet(listId) {
+    const s = this.state, id = s.sheetData;
+    if (s.meetBusy) return;
+    if (!SERVICE.meet) { this.toast('Logging meetings is not connected'); return; }
+    const d = dateAt(-s.meetDateN), two = n => String(n).padStart(2, '0');
+    this.setState({ meetBusy:true });
+    SERVICE.meet(listId, id, { meetingDate:d.getFullYear() + '-' + two(d.getMonth() + 1) + '-' + two(d.getDate()), meetingType:s.meetType, sentiment:s.meetSent, notes:s.meetNote.trim() })
+      .then(() => { this.setState({ meetBusy:false, sheet:null, pSeg:'meeting' }); this.toast('Meeting logged'); },
+        e => { this.setState({ meetBusy:false }); this.toast((e && e.message) || 'Could not save the meeting · try again'); });
+  }
   // who can be picked: the account's doctors first, then the rest of the book (insights accounts: the target list)
   people(hco) {
     const s = this.state, pool = this.acct().fieldPro ? Object.values(HCPS) : (TLISTS.find(t => (t.id || t.name) === s.tlist) || TLISTS[0] || { ids:[] }).ids.map(id => HCPS[id]);
@@ -1721,6 +2371,31 @@ class Component extends DCLogic {
     });
   }
   whoOf(v) { return v.attendees || (v.who ? [v.who] : []); }
+  // Insights' pre-call brief, as the website's target page has it: Generate from the recorded meetings
+  // (hand-logged ones don't count), then the snapshot, next best action, talking points, objections and quotes
+  insBriefOf(t, listId, id) {
+    const doc = t.briefDoc, n = t.briefSources ?? t.meetings ?? 0, writing = this.state.briefing === id;
+    const ago = at => { const d = Math.floor((dateAt(0) - new Date(at)) / 864e5); return d < 1 ? 'today' : d < 2 ? 'yesterday' : d < 7 ? d + 'd ago' : d < 30 ? Math.floor(d / 7) + 'w ago' : d < 365 ? Math.floor(d / 30) + 'mo ago' : Math.floor(d / 365) + 'y ago'; };
+    const write = () => {
+      if (this.state.briefing) return;
+      if (!SERVICE.brief) { this.toast('Pre-call briefs are not connected'); return; }
+      this.setState({ briefing:id });
+      SERVICE.brief(listId, id).then(() => this.setState({ briefing:null }), e => { this.setState({ briefing:null }); this.toast((e && e.message) || 'The brief couldn’t be written · try again'); });
+    };
+    return {
+      head:'Pre-call brief',
+      basis:doc ? 'AI-generated · Updated ' + ago(doc.at) : 'Talking points, objections and quotes from ' + n + ' prior meeting' + (n === 1 ? '' : 's') + '.',
+      message:'', write:doc || n ? write : null,
+      action:writing ? (doc ? 'Regenerating…' : 'Generating…') : doc ? 'Regenerate' : 'Generate',
+      sections:doc ? [
+        ...(doc.snapshot ? [{ title:'', text:'', points:[{ lead:'', text:doc.snapshot }] }] : []),
+        ...(doc.points.length ? [{ title:'NEXT BEST ACTION', text:doc.points[0], points:[] }] : []),
+        ...(doc.points.length > 1 ? [{ title:'TALKING POINTS', text:'', points:doc.points.slice(1).map(text => ({ lead:'', text })) }] : []),
+        ...(doc.objections.length ? [{ title:'OBJECTIONS RAISED', text:'', points:doc.objections.map(o => ({ lead:o.text, text:o.date })) }] : []),
+        ...(doc.quotes.length ? [{ title:'QUOTES FROM PRIOR MEETINGS', text:'', points:doc.quotes.map(q => ({ lead:'“' + q.text + '”', text:q.date })) }] : [])
+      ] : []
+    };
+  }
   convCount(id) { return this.state.visits.filter(v => v.conv !== 'Note' && this.whoOf(v).includes(id)).length; }
   lastOf(id) {
     const v = this.state.visits.find(x => this.whoOf(x).includes(id));
@@ -1747,8 +2422,9 @@ class Component extends DCLogic {
     const chips = [...advs.map(advChip), ...(v.area ? [v.area] : []), ...(v.stage ? [v.stage, v.prio + ' priority'] : []),
       ...(v.vendor ? [v.vendor + (v.vendorSub ? ' · ' + v.vendorSub : '')] : []), ...(v.count ? [v.count + ' attendees'] : []), ...(v.conf ? [v.conf] : []),
       ...(v.topics || []), ...(v.subs || []), ...(v.tags || [])];
-    return { ...v, photo:p && p.photo, npi:p && p.id, name: p ? p.name + (ids.length > 1 ? ' +' + (ids.length - 1) : '') : v.vendor || v.type.split(' · ')[0], ini: p ? p.ini : '3P', chips, hasChips: chips.length > 0 || !!v.src, hasSrc: !!v.src,
-      srcLabel: v.conv === 'Note' ? 'Note' : v.src === 'Notes' ? wordsOf(A).one : v.src ? 'From ' + v.src.toLowerCase() : '', open: () => this.sheet('visit', v.id) };
+    const cardNote = v.note.length > 280 ? v.note.slice(0, 280).trimEnd() + '…' : v.note;
+    return { ...v, cardNote, photo:p && p.photo, npi:p && p.id, name: p ? p.name + (ids.length > 1 ? ' +' + (ids.length - 1) : '') : v.vendor || v.type.split(' · ')[0], ini: p ? p.ini : '3P', chips, hasChips: chips.length > 0 || !!v.src, hasSrc: !!v.src,
+      srcLabel: v.src === 'manual' ? 'Logged manually' : v.conv === 'Note' ? 'Note' : v.src === 'Notes' ? wordsOf(A).one : v.src ? 'From ' + v.src.toLowerCase() : '', open: () => this.sheet('visit', v.id) };
   }
   themes(list) {
     const count = {}, tagged = list.some(v => v.topics && v.topics.length);
@@ -1906,7 +2582,7 @@ class Component extends DCLogic {
     };
   }
   // the app passes a notice to show once the screens open (the account switch's, after the new account loads)
-  componentDidMount() { const n = (this.props || {}).notice; if (n) this.toast(n); this.loadExplore(); }
+  componentDidMount() { const n = (this.props || {}).notice; if (n) this.toast(n); this.loadExplore(); this.loadChanges(); }
   toast(msg, undo) { clearTimeout(this._t); this.setState({ toast: msg, toastUndo: undo || null }); this._t = setTimeout(() => this.setState({ toast: null, toastUndo: null }), undo ? 4000 : 2000); }
   // the one Add: a visit goes where it adds the least driving; a doctor at a hospital already on the route joins that stop
   hcoOf(id) { return HCPS[id] ? HCPS[id].hco : id; }
@@ -2468,10 +3144,11 @@ class Component extends DCLogic {
     const H = HCOS[hId] || NO_HCO;
     const pId = scr === 'hcp' ? top.id : Object.keys(HCPS)[0];
     const P = HCPS[pId] || NO_HCP;
-    const pVisitBrief = !ins && !!WORKSPACE.hcpMetric && /^\d{10}$/.test(pId);
-    const visitBrief = P.visitBrief;
-    const pYear = WORKSPACE.explore?.year || 2025;
     const pTarget = ins ? tlist.profiles?.[pId] : null;
+    const pInsBrief = !!pTarget && SH.brief;
+    const pVisitBrief = (!ins && !!WORKSPACE.hcpMetric && /^\d{10}$/.test(pId)) || pInsBrief;
+    const visitBrief = pInsBrief ? this.insBriefOf(pTarget, tlist.id, pId) : P.visitBrief;
+    const pYear = WORKSPACE.explore?.year || 2025;
     const pHistory = pTarget ? (pTarget.activity || []) : s.visits.filter(v => this.whoOf(v).includes(pId));
     const pEntries = pTarget && s.pSeg !== 'followups' ? pHistory.filter(v => String(v.id).includes(':' + s.pSeg + ':')) : pTarget ? [] : pHistory;
     const historyState = pTarget?.activityState?.[s.pSeg];
@@ -2510,12 +3187,12 @@ class Component extends DCLogic {
     const chId = (s.sheet === 'choose' && s.sheetData) || Object.keys(HCOS)[0];
 
     // insight detail
-    const VD = s.sheet === 'visit' && (s.visits.find(v => v.id === s.sheetData) || pHistory.find(v => v.id === s.sheetData)), VV = VD && this.visitView(VD);
+    const VD = s.sheet === 'visit' && (s.visits.find(v => v.id === s.sheetData) || (s.actHits || []).find(v => v.id === s.sheetData) || pHistory.find(v => v.id === s.sheetData)), VV = VD && this.visitView(VD);
     const visitDetail = VD ? { ...VV, hasTags: VV.chips.length > 0, hasPeople: this.whoOf(VD).length > 0,
       people: this.whoOf(VD).map(id => { const p = HCPS[id]; return { ini:p.ini, photo:p.photo, npi:p.id, name:p.name, meta:p.spec + ' · ' + HCOS[p.hco].name, open: () => this.go('hcp', id) }; }) }
       : { date:'', type:'', topic:'', note:'', chips:[], hasTags:false, hasSrc:false, srcLabel:'', hasPeople:false, people:[] };
 
-    const titles = { visit: VD && VD.conv === 'Note' ? 'Note' : W.one, range: rangeType ? 'Area and type' : 'Search area', filter:'Filter and sort', territory: ins ? 'Target lists' : 'Territories', choose:'Who will you see?', email:'Draft email', fu:'New follow-up', me:'Your workspace', account:'Account', insight: s.insRec ? 'Recording' : 'Add ' + W.one.toLowerCase(), summary:'Build your summary' };
+    const titles = { visit: VD && VD.conv === 'Note' ? 'Note' : W.one, range: rangeType ? 'Area and type' : 'Search area', filter:'Filter and sort', territory: ins ? 'Target lists' : 'Territories', choose:'Who will you see?', email:'Draft email', fu:'New follow-up', meet:'Log a meeting', tracker: s.trkForm && s.trkForm.mode === 'edit' ? 'Edit your assessment' : 'New assessment', people: ins ? 'Add HCP to ' + tlist.name : s.peopleOrgs ? 'Add target accounts' : 'Add target HCPs', me:'Your workspace', account:'Account', insight: s.insRec ? 'Recording' : 'Add ' + W.one.toLowerCase(), summary:'Build your summary' };
 
     const jumpDefs = [
       ['Sign in', () => this.signOutTo('signIn')],
@@ -2571,6 +3248,11 @@ class Component extends DCLogic {
     const pLastV = s.visits.find(v => this.whoOf(v).includes(pId));
     const cLast = C.isHco ? { label:'—', n:999 } : this.lastOf(curId), cAdv = C.isHco ? null : this.advOf(curId);
     const advC = a => a >= 4 ? '#1C7A4E' : a && a <= 2 ? '#A94D1B' : '#0B1220';
+
+    // Activity's search: the server's matches (Insights) or the rep's own notes that mention it (Field Pro)
+    const actQ = s.actQ.trim().toLowerCase();
+    const actShown = !actQ ? s.visits : ins && SERVICE.searchActivity ? (s.actHits || []).filter(v => !s.actBusy)
+      : s.visits.filter(v => (this.visitView(v).name + ' ' + v.note + ' ' + v.topic + ' ' + (v.topics || []).join(' ')).toLowerCase().includes(actQ));
 
     // summaries
     const smySource = s.visits.filter(v => v.conv !== 'Note').filter(v => {
@@ -2676,8 +3358,9 @@ class Component extends DCLogic {
       ],
       pSegs: (pTarget ? [['overview','Overview'],['insight','Insights'],['meeting','Meetings'],['note','Notes'],['followups','Follow-ups']] : [['overview','Overview'],['activity','Activity']]).map(([k,label]) => ({ label,...seg(s.pSeg === k),go:() => this.setState({ pSeg:k }) })),
       pOverview:s.pSeg === 'overview',pActivity:s.pSeg !== 'overview',
+      ...this.trackerView(pId, pTarget),
       pVisitBrief,pBriefBasis:visitBrief?.basis || '',pBriefMessage:visitBrief?.message || (!visitBrief ? 'Reading the visit figures…' : ''),
-      pBriefSections:visitBrief?.sections || [],pCanWriteBrief:!!visitBrief?.write,pWriteBrief:visitBrief?.write,pBriefAction:visitBrief?.sections?.length ? 'Write again' : 'Try again',
+      pBriefSections:visitBrief?.sections || [],pCanWriteBrief:!!visitBrief?.write,pWriteBrief:visitBrief?.write,pBriefAction:visitBrief?.action || (visitBrief?.sections?.length ? 'Write again' : 'Try again'),pBriefHead:visitBrief?.head || 'Read this first',
       pPanels:(P.profilePanels || []).map(panel => ({ ...panel,rows:(panel.rows || []).map(row => {
         const org = row.org && HCOS[row.org], person = row.npi && HCPS[row.npi];
         return { ...row,linked:!!(org || person),plain:!(org || person),open:() => { if (org) this.go('hco',row.org); else if (person) this.go('hcp',row.npi); } };
@@ -2702,8 +3385,10 @@ class Component extends DCLogic {
       ]).filter(x => x.on !== false),
       showBrief:SH.brief && !pVisitBrief && (ins ? (pTarget ? !!pTarget.brief : !tlist.id) : !WORKSPACE.companyId),hasBriefText:pTarget ? !!pTarget.brief : !!(ins ? P.iBrief : P.brief),showDraftEmail:SH.draftEmail,
       showPhone: SH.phone, showEmail: SH.email, showContact: !P.profilePanels?.length && (SH.phone || SH.email),
-      pEmail: () => this.openEmail(pId), pAsk: () => this.ask('Brief me on ' + P.name), pCall: () => this.call(P.phone), pLog: () => this.openLog(pId), pFu: () => this.openFu(pId),
-      pLogLabel: '＋ Add ' + W.one.toLowerCase(),
+      pEmail: () => this.openEmail(pId), pAsk: () => this.ask('Brief me on ' + P.name), pCall: () => this.call(P.phone), pFu: () => this.openFu(pId),
+      // on a target's Meetings, the website logs a meeting with no write-up
+      pLog: pTarget && s.pSeg === 'meeting' ? () => this.openMeet(pId) : () => this.openLog(pId),
+      pLogLabel: pTarget && s.pSeg === 'meeting' ? '＋ Log meeting' : '＋ Add ' + W.one.toLowerCase(),
       pFus: !pTarget || s.pSeg === 'followups' ? pScopedFus.map(f => this.fuView(f)) : [],
       pVisits:pEntries.map(v => this.visitView(v)),pNoVisits:pTarget && s.pSeg === 'followups' ? !pScopedFus.length : !pEntries.length,
       pEmptyHistory:pTarget && s.pSeg === 'followups' ? 'No follow-ups yet.' : !pTarget ? 'No visits logged yet.'
@@ -2805,12 +3490,16 @@ class Component extends DCLogic {
 
 
       // activity
-      actSegs: [['visits', W.many + ' · ' + s.visits.filter(v => v.conv !== 'Note').length], ...(SH.followUps ? [['fus','Follow-ups · ' + fuOpen.length]] : []), ...(ins || !SH.summaries ? [] : [['sum', 'Summaries']])].map(([k, label]) => ({ label, ...seg(s.actSeg === k), go: () => this.setState({ actSeg:k }) })),
-      actVisits: s.actSeg === 'visits', actFus: s.actSeg === 'fus',
-      actAddLabel: s.actSeg === 'fus' ? '＋ Follow-up' : s.actSeg === 'sum' ? '✳ Build summary' : '＋ ' + W.one,
-      actAdd: () => s.actSeg === 'fus' ? this.openFu(null) : s.actSeg === 'sum' ? this.smyBuild() : this.openInsight([], 'notes'),
-      visitList: s.visits.map(v => this.visitView(v)),
-      fuAll: s.fus.map(f => this.fuView(f)),
+      actSegs: [['visits', W.many + ' · ' + s.visits.filter(v => v.conv !== 'Note').length], ...(SH.followUps ? [['fus','Follow-ups · ' + fuOpen.length]] : []), ...(ins || !SH.summaries ? [] : [['sum', 'Summaries']]), ...(ins && SERVICE.dashboard ? [['dash', 'Overview']] : [])].map(([k, label]) => ({ label, ...seg(s.actSeg === k), go: () => this.setState({ actSeg:k }) })),
+      actVisits: s.actSeg === 'visits', actFus: s.actSeg === 'fus', actDash: s.actSeg === 'dash', ...(s.actSeg === 'dash' ? this.dashView() : {}),
+      actQ: s.actQ, onActQ: e => { const v = e.target.value; this.setState({ actQ:v }); this.actSearch(v); }, hasActQ: !!s.actQ, clearActQ: () => { this.setState({ actQ:'' }); this.actSearch(''); },
+      actHint: ins ? 'Search HCP, quote text, file…' : 'Search notes or HCPs',
+      actStatus: !s.actQ.trim() ? (actShown.length || s.drafts.length ? '' : 'No ' + W.many.toLowerCase() + ' yet.') : s.actBusy ? 'Searching…' : s.actErr ? 'Search didn’t work · try again' : !actShown.length ? 'Nothing matches “' + s.actQ.trim() + '”.' : '',
+      actNoQ: !s.actQ.trim(),
+      actAddLabel: s.actSeg === 'fus' ? '＋ Follow-up' : s.actSeg === 'sum' ? '✳ Build summary' : s.actSeg === 'dash' ? '＋ Task' : '＋ ' + W.one,
+      actAdd: () => s.actSeg === 'fus' ? this.openFu(null) : s.actSeg === 'sum' ? this.smyBuild() : s.actSeg === 'dash' ? this.setState({ boardNew:true, boardTitle:'', boardPrio:'medium' }) : this.openInsight([], 'notes'),
+      visitList: actShown.map(v => this.visitView(v)),
+      fuAll: s.fus.map(f => this.fuView(f)), fuNone: !s.fus.length,
       draftRows: s.drafts.map(d => { const w = (d.form.insWho || [])[0], at = d.form.insHco;
         return { label: 'Continue ' + (A.conv && d.form.insConv === 'Note' ? 'note' : W.one.toLowerCase()) + (w ? ' · ' + HCPS[w].name : at ? ' · ' + HCOS[at].name : ''), open: () => this.openDraft(d) }; }),
 
@@ -2870,7 +3559,21 @@ class Component extends DCLogic {
         else if (s.sheet === 'insight' && s.insNote.trim()) { this.keepDraft(); this.toast('Kept as a draft'); }
         this.dropRec(); this.setState({ sheet:null, insRec:false, insPaused:false, insKey:null });
       },
-      shInsight: s.sheet === 'insight', shFilter: s.sheet === 'filter', shTerritory: s.sheet === 'territory', shChoose: s.sheet === 'choose', shEmail: s.sheet === 'email', shFu: s.sheet === 'fu', shSummary: s.sheet === 'summary', shMe: s.sheet === 'me', shAccount: !!ME.staff && s.sheet === 'account', shVisit: s.sheet === 'visit', vd: visitDetail,
+      shInsight: s.sheet === 'insight', shFilter: s.sheet === 'filter', shTerritory: s.sheet === 'territory', shChoose: s.sheet === 'choose', shEmail: s.sheet === 'email', shFu: s.sheet === 'fu', shMeet: s.sheet === 'meet', shTracker: s.sheet === 'tracker', ...this.trackerFormView(), shPeople: s.sheet === 'people', shSummary: s.sheet === 'summary', shMe: s.sheet === 'me', shAccount: !!ME.staff && s.sheet === 'account', shVisit: s.sheet === 'visit', vd: visitDetail,
+      ...this.peopleView(ins, tlist),
+      ...this.changesView(ins, tlist),
+      ...this.listsView(), listsOn: ins, territoriesOn: !ins,
+      // Add HCP sits on the Targets list: Insights' manual lists, Field Pro's own doctors (Explore finds by place)
+      canAddPeople: ins ? !!tlist.id && !tlist.smart : s.scope === 'mine', openPeople: () => this.openPeople(),
+      addPeopleLabel: ins ? '＋ Add HCP' : s.kind === 'hco' ? '＋ Add target accounts' : '＋ Add target HCPs',
+      meetWho: (HCPS[s.sheetData] || NO_HCP).name,
+      meetDateLabel: (s.meetDateN === 0 ? 'Today ' + dateOf(0) : s.meetDateN === 1 ? 'Yesterday ' + dateOf(-1) : dayFull(-s.meetDateN)).toUpperCase(),
+      meetDateOpts: [0, 1, 2, 3, 4, 5, 6].map(n => ({ label: n === 0 ? 'Today' : n === 1 ? 'Yesterday' : WD[dateAt(-n).getDay()] + ' ' + dateAt(-n).getDate(), ...chip(s.meetDateN === n), go: () => this.setState({ meetDateN:n }) })),
+      // the website's list for a meeting logged by hand: Kura and BeOne's short one, everyone else's six (extraFields.ts:88-101)
+      meetTypeOpts: ['', ...(A.meetTypes === SHORT_TYPES ? SHORT_TYPES : SIX_TYPES)].map(t => ({ label:t || 'Not specified', ...chip(s.meetType === t), go: () => this.setState({ meetType:t }) })),
+      meetSentOpts: ['Positive', 'Neutral', 'Negative'].map(t => ({ label:t, ...chip(s.meetSent === t), go: () => this.setState({ meetSent: s.meetSent === t ? '' : t }) })),
+      meetNote: s.meetNote || '', onMeetNote: e => this.setState({ meetNote: e.target.value.slice(0, 2000) }),
+      meetSaveBg: s.meetBusy ? '#9AA6C4' : '#2447C4', meetSaveLabel: s.meetBusy ? 'Saving…' : 'Log meeting', saveMeet: () => this.saveMeet(tlist.id),
       toggleLogFu: () => this.setState({ logFu: !s.logFu }), logFuTrack: s.logFu ? '#2447C4' : '#D3D9E6', logFuKnob: s.logFu ? '21px' : '3px',
       sortOpts: (ins ? ['Relevance', ...(A.adv ? ['Advocacy'] : []), 'Last met', 'Name'] : SORTS).map(o => ({ label:o, ...chip(sortNow === o), go: () => this.setState(ins ? { iSort:o } : { sort:o }) })),
       specOpts: ['All codes', ...[...new Set(CODE_GROUPS.flatMap(g => g.specs))].sort()].map(o => ({ label:o, ...chip(s.spec === o), go: () => this.setState({ spec:o }) })),
@@ -2883,7 +3586,7 @@ class Component extends DCLogic {
         ? TLISTS.map(t => { const id = t.id || t.name, on = s.tlist === id; return { name:t.name, meta:t.meta, check: on ? '✓' : '', bg: on ? '#EDF1FB' : '#fff', bd: on ? '#2447C4' : '#E1E6F0', go: () => { this.setState({ tlist:id, sheet:null }); this.toast('Switched to ' + t.name); } }; })
         : TERRS.map(t => { const id = t.id || t.name, on = pickedTerritory === id; return { ...t, check: on ? '✓' : '', bg: on ? '#EDF1FB' : '#fff', bd: on ? '#2447C4' : '#E1E6F0', go: () => { this.setState({ sheet:null }); if (AUTH.pickTerritory) AUTH.pickTerritory(id,{ kind:s.kind,scope:s.scope }).catch(e => this.toast(e.message || 'That list didn’t open')); else this.setState({ territory:id }); } }; }),
       newItemLabel: ins ? '＋ New target list' : '＋ New territory',
-      newTerritory: () => this.toast(ins ? 'New target list form' : 'New territory form'),
+      newTerritory: () => this.toast('Making territories is not connected'),
       chooseHco: (HCOS[chId] || NO_HCO).name,
       chooseRows: (HCOS[chId] || NO_HCO).hcps.map(id => { const on = s.route.includes(id); return { name:HCPS[id].name, spec:HCPS[id].spec, check: on ? '✓' : '', bg: on ? '#EDF1FB' : '#fff', bd: on ? '#2447C4' : '#E1E6F0', boxBd: on ? '#2447C4' : '#B9C3D8', boxBg: on ? '#2447C4' : '#fff', toggle: () => this.toggleRoute(id,'route',chId) }; }),
       ...this.emailVals(),
@@ -2974,6 +3677,7 @@ class Component extends DCLogic {
         // the follow-up is stored once the save is; a save that fails comes back as a draft, follow-up switch and all
         SERVICE.save(visit, { ...form, media: s.insMedia }).then(r => {
           if (r && r.id) this.setState(st => ({ visits: st.visits.map(v => v.id === id ? { ...v, id: r.id } : v) }));
+          if (r && r.warn) this.toast(r.warn);
           if (fu) this.storeFu(fu);
         }, e => {
           this.setState(st => ({ visits: st.visits.filter(v => v.id !== id), fus: fu ? st.fus.filter(f => f.id !== fu.id) : st.fus, drafts: [{ id: draft || id, form }, ...st.drafts.filter(d => d.id !== draft)] }));
