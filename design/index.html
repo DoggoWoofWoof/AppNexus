@@ -387,7 +387,7 @@ input,textarea,button{font-family:inherit}
                   <div style="background:#fff;border:1px solid #D9E2F6;border-radius:16px;overflow:hidden;">
                     <div style="display:flex;flex-direction:column;gap:7px;padding:14px 15px;background:#F1F5FE;">
                       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-                        <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.08em;color:#fff;background:#2447C4;padding:3px 7px;border-radius:6px;">AI BRIEF</span>
+                        <sc-if value="{{ pBriefBadge }}" hint-placeholder-val="{{ true }}"><span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.08em;color:#fff;background:#2447C4;padding:3px 7px;border-radius:6px;">{{ pBriefBadge }}</span></sc-if>
                         <span style="font-size:12px;color:#5B6478;">{{ pBriefHead }}</span>
                       </div>
                       <span style="font-size:11.5px;color:#5B6478;">{{ pBriefBasis }}</span>
@@ -398,7 +398,7 @@ input,textarea,button{font-family:inherit}
                       <div style="display:flex;flex-direction:column;gap:8px;padding:12px 15px;border-top:1px solid #EEF1F7;">
                         <sc-if value="{{ section.title }}" hint-placeholder-val="{{ true }}"><span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.08em;color:#5B6478;">{{ section.title }}</span></sc-if>
                         <sc-if value="{{ section.text }}" hint-placeholder-val="{{ true }}"><span style="font-family:'Source Serif 4',Georgia,serif;font-size:19px;line-height:1.32;color:#0B1220;">{{ section.text }}</span></sc-if>
-                        <sc-for list="{{ section.points }}" as="point" hint-placeholder-count="2"><div style="display:flex;flex-direction:column;gap:2px;font-size:13px;line-height:1.5;color:#1B2333;"><sc-if value="{{ point.lead }}" hint-placeholder-val="{{ true }}"><div style="font-weight:700;">{{ point.lead }}</div></sc-if><sc-if value="{{ point.text }}" hint-placeholder-val="{{ true }}"><div>{{ point.text }}</div></sc-if></div></sc-for>
+                        <sc-for list="{{ section.points }}" as="point" hint-placeholder-count="2"><div style="display:flex;flex-direction:column;gap:2px;font-size:13px;line-height:1.5;color:#1B2333;"><sc-if value="{{ point.lead }}" hint-placeholder-val="{{ true }}"><div style="font-weight:700;">{{ point.lead }}</div></sc-if><sc-if value="{{ point.text }}" hint-placeholder-val="{{ true }}"><div>{{ point.text }}</div></sc-if><sc-if value="{{ point.link }}" hint-placeholder-val="{{ false }}"><button onClick="{{ point.go }}" style="align-self:flex-start;padding:2px 0;border:0;background:transparent;font-size:12px;font-weight:650;color:#2447C4;cursor:pointer;">{{ point.link }}</button></sc-if></div></sc-for>
                       </div>
                     </sc-for>
                   </div>
@@ -479,18 +479,25 @@ input,textarea,button{font-family:inherit}
             </sc-if>
             <sc-if value="{{ pActivity }}" hint-placeholder-val="{{ false }}">
               <div style="padding:12px 18px 0;display:flex;flex-direction:column;gap:10px;">
+                <sc-if value="{{ pNoteTop }}" hint-placeholder-val="{{ false }}"><button onClick="{{ pLog }}" style="padding:13px;border:1px dashed #B9C3D8;border-radius:14px;background:#EDF1FB;color:#22409F;font-size:13.5px;font-weight:700;cursor:pointer;">＋ Add note</button></sc-if>
                 <sc-if value="{{ pMtgHead }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:baseline;gap:6px;padding:2px 2px 0;"><span style="font-size:14px;font-weight:700;color:#0B1220;">Meeting history</span><span style="font-size:12.5px;color:#7A839A;">{{ pMtgCount }}</span></div></sc-if>
                 <sc-for list="{{ pMtgs }}" as="m" hint-placeholder-count="2">
                   <button onClick="{{ m.open }}" style="display:flex;flex-direction:column;gap:6px;width:100%;text-align:left;background:#fff;border:1px solid #E1E6F0;border-radius:14px;padding:12px 14px;cursor:pointer;color:#0B1220;">
                     <span style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;">
                       <span style="font-size:13px;font-weight:700;color:#0B1220;">{{ m.date }}</span>
-                      <sc-if value="{{ m.chip }}" hint-placeholder-val="{{ true }}"><span style="font-size:10.5px;font-weight:600;padding:2px 6px;border-radius:6px;background:#EEF1F7;color:#5B6478;">{{ m.chip }}</span></sc-if>
+                      <sc-if value="{{ m.chip }}" hint-placeholder-val="{{ true }}"><span style="font-size:10.5px;font-weight:600;padding:2px 6px;border-radius:6px;background:{{ m.chipBg }};color:{{ m.chipFg }};">{{ m.chip }}</span></sc-if>
                       <sc-if value="{{ m.type }}" hint-placeholder-val="{{ true }}"><span style="font-size:12px;color:#5B6478;">{{ m.type }}</span></sc-if>
                       <sc-if value="{{ m.sent }}" hint-placeholder-val="{{ false }}"><span style="font-size:10.5px;font-weight:600;padding:2px 6px;border-radius:6px;background:{{ m.sentBg }};color:{{ m.sentFg }};">{{ m.sent }}</span></sc-if>
                     </span>
                     <span style="font-size:13px;line-height:1.5;color:{{ m.textC }};font-style:{{ m.fs }};display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;">{{ m.text }}</span>
                     <sc-if value="{{ m.by }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px;color:#7A839A;">{{ m.by }}</span></sc-if>
                   </button>
+                  <sc-if value="{{ m.manual }}" hint-placeholder-val="{{ false }}">
+                    <div style="display:flex;justify-content:flex-end;gap:6px;margin-top:-6px;">
+                      <button onClick="{{ m.edit }}" aria-label="Edit this meeting" style="padding:5px 10px;border:1px solid #D7DEEC;border-radius:999px;background:#fff;color:#3C4557;font-size:12px;font-weight:600;cursor:pointer;">✎ Edit</button>
+                      <button onClick="{{ m.del }}" aria-label="Delete this meeting" style="padding:5px 10px;border:1px solid #F3C9C3;border-radius:999px;background:#fff;color:#C0392B;font-size:12px;font-weight:600;cursor:pointer;">{{ m.delLabel }}</button>
+                    </div>
+                  </sc-if>
                 </sc-for>
                 <sc-for list="{{ pNotes }}" as="n" hint-placeholder-count="2">
                   <div style="display:flex;flex-direction:column;gap:5px;background:{{ n.bg }};border:1px solid {{ n.bd }};border-radius:14px;padding:12px 14px;">
@@ -524,10 +531,10 @@ input,textarea,button{font-family:inherit}
               <div style="padding:12px 18px 0;">
                   <div style="background:#fff;border:1px solid #E1E6F0;border-radius:16px;padding:13px 14px;display:flex;flex-direction:column;gap:11px;">
                     <div style="display:flex;align-items:flex-start;gap:8px;">
-                      <span style="flex:1;min-width:0;"><span style="display:block;font-size:14px;font-weight:700;color:#0B1220;">Sentiment Tracker</span><span style="display:block;font-size:11.5px;color:#5B6478;margin-top:2px;">Field assessment · shared with your team</span></span>
-                      <sc-if value="{{ trkCanNew }}" hint-placeholder-val="{{ true }}"><button onClick="{{ trkNew }}" style="flex:0 0 auto;padding:7px 11px;border-radius:999px;border:0;background:#2447C4;color:#fff;font-size:12px;font-weight:700;cursor:pointer;">＋ Assessment</button></sc-if>
+                      <span style="flex:1;min-width:0;"><span style="display:block;font-size:14px;font-weight:700;color:#0B1220;">Sentiment Tracker</span><span style="display:block;font-size:11.5px;color:#5B6478;margin-top:2px;">Field assessment · shared with your team</span><span style="display:block;font-size:12px;color:#5B6478;margin-top:4px;line-height:1.4;">Same scores as the Sphere of Influence profile — edits in either place show in both.</span></span>
+                      <sc-if value="{{ trkCanNew }}" hint-placeholder-val="{{ true }}"><button onClick="{{ trkNew }}" style="flex:0 0 auto;padding:7px 11px;border-radius:999px;border:0;background:#2447C4;color:#fff;font-size:12px;font-weight:700;cursor:pointer;">＋ New assessment</button></sc-if>
                     </div>
-                    <sc-if value="{{ trkStatus }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:10px;font-size:12.5px;color:#5B6478;line-height:1.45;">{{ trkStatus }}<sc-if value="{{ trkFailed }}" hint-placeholder-val="{{ false }}"><button onClick="{{ trkRetry }}" style="padding:5px 10px;border-radius:999px;border:1px solid #D7DEEC;background:#fff;color:#22409F;font-size:12px;font-weight:650;cursor:pointer;">Try again</button></sc-if></div></sc-if>
+                    <sc-if value="{{ trkStatus }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:10px;font-size:12.5px;color:#5B6478;line-height:1.45;">{{ trkStatus }}</div></sc-if>
                     <sc-if value="{{ trkHas }}" hint-placeholder-val="{{ true }}">
                       <div style="display:flex;flex-direction:column;gap:11px;">
                         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
@@ -538,8 +545,12 @@ input,textarea,button{font-family:inherit}
                               <span style="font-size:11px;color:#5B6478;">{{ g.sub }}</span>
                             </div>
                           </sc-for>
+                          <div style="border:1px solid #E1E6F0;border-radius:13px;padding:10px 12px;display:flex;flex-direction:column;gap:2px;">
+                            <span style="font-size:11px;font-weight:650;color:#5B6478;">Last assessed</span>
+                            <span style="font-size:15px;font-weight:700;line-height:1.3;color:#0B1220;">{{ trkLastOn }}</span>
+                            <span style="font-size:11px;color:#5B6478;">{{ trkLastN }}</span>
+                          </div>
                         </div>
-                        <span style="font-size:12px;color:#5B6478;">{{ trkLast }}</span>
                         <div style="display:flex;flex-direction:column;">
                           <sc-for list="{{ trkRows }}" as="q" hint-placeholder-count="3">
                             <div style="display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-top:1px solid #EEF1F7;">
@@ -549,7 +560,7 @@ input,textarea,button{font-family:inherit}
                             </div>
                           </sc-for>
                         </div>
-                        <button onClick="{{ trkHistToggle }}" style="align-self:flex-start;padding:6px 11px;border-radius:999px;border:1px solid #D7DEEC;background:#fff;color:#22409F;font-size:12px;font-weight:650;cursor:pointer;">{{ trkHistLabel }}</button>
+                        <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.09em;color:#7A839A;margin-top:4px;">{{ trkHistLabel }}</div>
                         <sc-for list="{{ trkEntries }}" as="e" hint-placeholder-count="1">
                           <div style="border:1px solid #E7EBF3;border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:8px;">
                             <div style="display:flex;align-items:center;gap:8px;">
@@ -557,8 +568,7 @@ input,textarea,button{font-family:inherit}
                               <sc-if value="{{ e.acts }}" hint-placeholder-val="{{ false }}"><span style="display:flex;gap:6px;"><button onClick="{{ e.edit }}" style="padding:4px 9px;border-radius:999px;border:1px solid #D7DEEC;background:#fff;color:#22409F;font-size:11.5px;font-weight:650;cursor:pointer;">Edit</button><button onClick="{{ e.del }}" style="padding:4px 9px;border-radius:999px;border:1px solid #F2D3C4;background:#fff;color:#A94D1B;font-size:11.5px;font-weight:650;cursor:pointer;">Delete</button></span></sc-if>
                             </div>
                             <sc-if value="{{ e.asking }}" hint-placeholder-val="{{ false }}">
-                              <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;"><span style="font-size:12px;color:#3C4557;">Delete this assessment? This can’t be undone.</span>
-                                <button onClick="{{ e.yes }}" style="padding:4px 10px;border-radius:999px;border:0;background:#A94D1B;color:#fff;font-size:11.5px;font-weight:700;cursor:pointer;">{{ e.yesLabel }}</button>
+                              <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">                                <button onClick="{{ e.yes }}" style="padding:4px 10px;border-radius:999px;border:0;background:#A94D1B;color:#fff;font-size:11.5px;font-weight:700;cursor:pointer;">{{ e.yesLabel }}</button>
                                 <button onClick="{{ e.no }}" style="padding:4px 10px;border-radius:999px;border:1px solid #D7DEEC;background:#fff;color:#3C4557;font-size:11.5px;font-weight:650;cursor:pointer;">Keep</button></div>
                             </sc-if>
                             <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:4px 12px;">
@@ -911,6 +921,7 @@ input,textarea,button{font-family:inherit}
                 <sc-if value="{{ myOn }}" hint-placeholder-val="{{ false }}">
                   <div style="display:flex;flex-direction:column;gap:8px;">
                     <span style="font-size:12.5px;color:#5B6478;">{{ myCount }}</span>
+                    <span style="font-size:12.5px;color:#7A839A;line-height:1.45;">Every signal you've captured across conversations, synthesized and tagged.</span>
                     <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;">
                       <sc-for list="{{ myTiles }}" as="t" hint-placeholder-count="4">
                         <div style="background:#fff;border:1px solid #E1E6F0;border-radius:13px;padding:9px 10px;display:flex;flex-direction:column;gap:3px;">
@@ -926,7 +937,9 @@ input,textarea,button{font-family:inherit}
                   <input value="{{ actQ }}" onChange="{{ onActQ }}" placeholder="{{ actHint }}" aria-label="{{ actHint }}" style="flex:1;min-width:0;border:0;outline:0;font-size:14.5px;background:transparent;color:#0B1220;">
                   <sc-if value="{{ hasActQ }}" hint-placeholder-val="{{ false }}"><button onClick="{{ clearActQ }}" style="width:26px;height:26px;border-radius:50%;border:0;background:#EEF1F7;color:#5B6478;cursor:pointer;font-size:12px;">✕</button></sc-if>
                 </div>
+                <sc-if value="{{ myOn }}" hint-placeholder-val="{{ false }}"><div style="display:flex;gap:6px;overflow-x:auto;margin:0 -18px;padding:0 18px;"><sc-for list="{{ myChips }}" as="x" hint-placeholder-count="3"><button onClick="{{ x.go }}" style="flex:0 0 auto;padding:8px 12px;border-radius:999px;border:1px solid {{ x.bd }};background:{{ x.bg }};color:{{ x.fg }};font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;">{{ x.value }} ▾</button></sc-for></div></sc-if>
                 <sc-if value="{{ actStatus }}" hint-placeholder-val="{{ false }}"><div style="font-size:12.5px;color:#5B6478;">{{ actStatus }}</div></sc-if>
+                <sc-if value="{{ myEmptySub }}" hint-placeholder-val="{{ false }}"><div style="font-size:12.5px;color:#7A839A;margin-top:-6px;">{{ myEmptySub }}</div></sc-if>
                 <sc-if value="{{ actNoQ }}" hint-placeholder-val="{{ true }}"><div style="display:flex;flex-direction:column;gap:10px;">
                 <sc-for list="{{ draftRows }}" as="d" hint-placeholder-count="1">
                   <button onClick="{{ d.open }}" style="display:flex;align-items:center;gap:11px;padding:12px 14px;border:1px dashed #B9C3D8;border-radius:14px;background:#EDF1FB;cursor:pointer;text-align:left;">
@@ -936,6 +949,26 @@ input,textarea,button{font-family:inherit}
                 </sc-for>
                 </div></sc-if>
                 <sc-for list="{{ visitList }}" as="v" hint-placeholder-count="2">
+                  <sc-if value="{{ v.ixOn }}" hint-placeholder-val="{{ false }}">
+                  <div style="position:relative;display:flex;background:#fff;border:1px solid #E1E6F0;border-radius:16px;overflow:hidden;">
+                    <span style="width:4px;flex:0 0 4px;background:{{ v.ixTypeC }};"></span>
+                    <button onClick="{{ v.open }}" style="flex:1;min-width:0;display:flex;flex-direction:column;gap:10px;text-align:left;padding:13px 14px;border:0;background:transparent;cursor:pointer;color:#0B1220;">
+                      <span style="display:flex;align-items:center;gap:8px;padding-right:26px;">
+                        <span style="width:7px;height:7px;flex:0 0 7px;border-radius:50%;background:{{ v.ixTypeC }};"></span>
+                        <span style="flex:1;min-width:0;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;letter-spacing:.07em;color:#5B6478;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ v.ixType }}</span>
+                        <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#7A839A;white-space:nowrap;">{{ v.ixWhen }}</span>
+                      </span>
+                      <span style="font-size:15px;font-weight:500;line-height:1.4;color:{{ v.ixHeroC }};font-style:{{ v.ixHeroFs }};display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;">{{ v.ixHero }}</span>
+                      <span style="display:flex;align-items:center;gap:10px;padding-top:11px;border-top:1px solid #E1E6F0;">
+                        <span data-kit="avatar" data-photo="{{ v.photo }}" data-npi="{{ v.npi }}" data-initials="{{ v.ixIni }}" style="width:30px;height:30px;flex:0 0 30px;border-radius:50%;background:#E7ECFA;color:#22409F;display:grid;place-items:center;font-size:10.5px;font-weight:700;">{{ v.ixIni }}</span>
+                        <span style="flex:1;min-width:0;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><span style="font-weight:650;color:#0B1220;">{{ v.ixName }}</span><span style="font-size:11.5px;color:#7A839A;">{{ v.ixBy }}</span></span>
+                        <span style="display:flex;gap:5px;flex:0 0 auto;"><sc-for list="{{ v.ixChips }}" as="c" hint-placeholder-count="1"><span style="font-size:11px;font-weight:650;padding:3px 7px;border-radius:6px;background:{{ c.bg }};color:{{ c.fg }};">{{ c.label }}</span></sc-for></span>
+                      </span>
+                    </button>
+                    <button onClick="{{ v.menu }}" aria-label="More actions" style="position:absolute;top:6px;right:4px;width:30px;height:30px;border:0;border-radius:8px;background:transparent;color:#7A839A;font-size:17px;font-weight:700;cursor:pointer;">⋮</button>
+                  </div>
+                  </sc-if>
+                  <sc-if value="{{ v.plainOn }}" hint-placeholder-val="{{ true }}">
                   <button onClick="{{ v.open }}" style="display:flex;gap:12px;text-align:left;background:#fff;border:1px solid #E1E6F0;border-radius:16px;padding:13px 14px;cursor:pointer;color:#0B1220;">
                     <span data-kit="avatar" data-photo="{{ v.photo }}" data-npi="{{ v.npi }}" data-initials="{{ v.ini }}" style="width:38px;height:38px;flex:0 0 38px;border-radius:50%;background:#E7ECFA;color:#22409F;display:grid;place-items:center;font-size:11.5px;font-weight:700;">{{ v.ini }}</span>
                     <span style="flex:1;min-width:0;">
@@ -945,11 +978,26 @@ input,textarea,button{font-family:inherit}
                       <sc-if value="{{ v.hasChips }}" hint-placeholder-val="{{ false }}"><span style="display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;"><sc-if value="{{ v.hasSrc }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px;font-weight:650;padding:3px 7px;border-radius:6px;background:#E7ECFA;color:#22409F;">{{ v.srcLabel }}</span></sc-if><sc-for list="{{ v.chips }}" as="c" hint-placeholder-count="2"><span style="font-size:11px;font-weight:600;padding:3px 7px;border-radius:6px;background:#EEF1F7;color:#3C4557;">{{ c }}</span></sc-for></span></sc-if>
                     </span>
                   </button>
+                  </sc-if>
                 </sc-for>
+                <sc-if value="{{ myPagesOn }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+                    <span style="font-size:12.5px;color:#5B6478;">{{ myPageLine }}</span>
+                    <span style="display:flex;gap:4px;">
+                      <button onClick="{{ myPrev }}" aria-label="Previous page" style="width:34px;height:32px;border:1px solid #D7DEEC;border-radius:9px;background:#fff;color:{{ myPrevFg }};font-size:15px;font-weight:700;cursor:pointer;">‹</button>
+                      <button onClick="{{ myNext }}" aria-label="Next page" style="width:34px;height:32px;border:1px solid #D7DEEC;border-radius:9px;background:#fff;color:{{ myNextFg }};font-size:15px;font-weight:700;cursor:pointer;">›</button>
+                    </span>
+                  </div>
+                </sc-if>
               </div>
             </sc-if>
             <sc-if value="{{ actDash }}" hint-placeholder-val="{{ false }}">
               <div style="display:flex;flex-direction:column;gap:12px;">
+                <div style="display:flex;flex-direction:column;gap:8px;padding:2px 2px 6px;border-bottom:1px solid #E1E6F0;">
+                  <span style="font-family:'Source Serif 4',Georgia,serif;font-size:27px;line-height:1.12;color:#0B1220;">{{ dashHello }}</span>
+                  <span style="font-size:13px;line-height:1.5;color:#5B6478;">Your field intelligence at a glance — track conversations, surface insights, and map sentiment across the {{ dashBrand }} network.</span>
+                  <button onClick="{{ dashAdd }}" style="align-self:flex-start;margin:4px 0 6px;padding:10px 14px;border:0;border-radius:12px;background:#2447C4;color:#fff;font-size:13.5px;font-weight:700;cursor:pointer;">＋ Add Insight</button>
+                </div>
                 <sc-if value="{{ dashStatus }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:10px;font-size:13px;color:#5B6478;">{{ dashStatus }}<sc-if value="{{ dashFailed }}" hint-placeholder-val="{{ false }}"><button onClick="{{ dashRetry }}" style="padding:5px 10px;border-radius:999px;border:1px solid #D7DEEC;background:#fff;color:#22409F;font-size:12px;font-weight:650;cursor:pointer;">Try again</button></sc-if></div></sc-if>
                 <sc-if value="{{ dashReady }}" hint-placeholder-val="{{ true }}">
                   <div style="display:flex;flex-direction:column;gap:12px;">
@@ -973,6 +1021,7 @@ input,textarea,button{font-family:inherit}
                     <div style="background:#fff;border:1px solid #E1E6F0;border-radius:16px;padding:12px 14px;display:flex;flex-direction:column;gap:10px;">
                       <span style="font-size:13.5px;font-weight:700;color:#0B1220;">Territory Coverage</span>
                       <sc-if value="{{ dashCoverage }}" hint-placeholder-val="{{ false }}"><span style="font-size:12.5px;color:#5B6478;">{{ dashCoverage }}</span></sc-if>
+                      <sc-if value="{{ dashTopOn }}" hint-placeholder-val="{{ true }}"><span style="font-size:12.5px;font-weight:650;color:#0B1220;">Top States</span></sc-if>
                       <sc-for list="{{ dashStates }}" as="x" hint-placeholder-count="3">
                         <div style="display:flex;gap:10px;align-items:flex-start;">
                           <span style="flex:0 0 26px;height:26px;border-radius:8px;background:#E7ECFA;color:#22409F;display:grid;place-items:center;font-size:12px;font-weight:700;">{{ x.rank }}</span>
@@ -1645,6 +1694,27 @@ input,textarea,button{font-family:inherit}
               </div>
             </sc-if>
 
+            <sc-if value="{{ shMyMenu }}" hint-placeholder-val="{{ false }}">
+              <div style="padding:14px 18px 0;display:flex;flex-direction:column;gap:10px;">
+                <sc-if value="{{ myMenuOpts }}" hint-placeholder-val="{{ true }}">
+                  <div style="display:flex;flex-direction:column;gap:8px;">
+                    <button onClick="{{ myMenuOpen }}" style="padding:13px 14px;border:1px solid #E1E6F0;border-radius:14px;background:#fff;color:#0B1220;font-size:14.5px;font-weight:650;cursor:pointer;text-align:left;">Open</button>
+                    <button onClick="{{ myMenuDel }}" style="padding:13px 14px;border:1px solid #F3C9C3;border-radius:14px;background:#fff;color:#C0392B;font-size:14.5px;font-weight:650;cursor:pointer;text-align:left;">Delete</button>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ myMenuAsk }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;flex-direction:column;gap:12px;">
+                    <div style="font-size:14px;line-height:1.5;color:#3C4557;">{{ myMenuText }}</div>
+                    <sc-if value="{{ myMenuErr }}" hint-placeholder-val="{{ false }}"><div style="font-size:13px;line-height:1.45;color:#C0392B;">{{ myMenuErr }}</div></sc-if>
+                    <div style="display:flex;gap:8px;">
+                      <button onClick="{{ myMenuNo }}" style="flex:1;padding:13px;border:1px solid #D7DEEC;border-radius:13px;background:#fff;color:#0B1220;font-size:14px;font-weight:650;cursor:pointer;">Cancel</button>
+                      <button onClick="{{ myMenuYes }}" style="flex:1;padding:13px;border:0;border-radius:13px;background:#C0392B;color:#fff;font-size:14px;font-weight:700;cursor:pointer;">{{ myMenuYesLabel }}</button>
+                    </div>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-if>
+
             <sc-if value="{{ shPeople }}" hint-placeholder-val="{{ false }}">
               <div style="padding:14px 18px 0;display:flex;flex-direction:column;gap:12px;">
                 <sc-if value="{{ peopleShowScope }}" hint-placeholder-val="{{ true }}">
@@ -1687,12 +1757,12 @@ input,textarea,button{font-family:inherit}
                   <div style="display:flex;flex-direction:column;gap:14px;">
                     <sc-if value="{{ insShowConv }}" hint-placeholder-val="{{ false }}">
                       <div>
-                        <div style="display:flex;gap:6px;"><sc-for list="{{ insConvOpts }}" as="o" hint-placeholder-count="2"><button onClick="{{ o.go }}" style="flex:1;padding:9px;border-radius:12px;border:1px solid {{ o.bd }};background:{{ o.bg }};color:{{ o.fg }};font-size:13px;font-weight:650;cursor:pointer;">{{ o.label }}</button></sc-for></div>
-                        <sc-if value="{{ insConvNote }}" hint-placeholder-val="{{ false }}"><div style="font-size:12px;color:#5B6478;margin-top:6px;">Notes stay out of the Insight Summary.</div></sc-if>
+                        <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.09em;color:#7A839A;">TYPE</div>
+                        <div style="display:flex;gap:6px;margin-top:8px;"><sc-for list="{{ insConvOpts }}" as="o" hint-placeholder-count="2"><button onClick="{{ o.go }}" style="flex:1;padding:9px;border-radius:12px;border:1px solid {{ o.bd }};background:{{ o.bg }};color:{{ o.fg }};font-size:13px;font-weight:650;cursor:pointer;">{{ o.label }}</button></sc-for></div>
                       </div>
                     </sc-if>
                     <div>
-                      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.09em;color:#7A839A;">{{ insWhoHead }}</div>
+                      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.09em;color:#7A839A;">{{ insWhoLabel }}</div>
                       <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
                         <sc-for list="{{ insAttendees }}" as="a" hint-placeholder-count="1">
                           <div style="border:1px solid #E1E6F0;border-radius:14px;padding:11px 12px;">
@@ -1735,46 +1805,52 @@ input,textarea,button{font-family:inherit}
                     </sc-if>
                     <sc-if value="{{ insShowArea }}" hint-placeholder-val="{{ false }}">
                       <div>
-                        <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.09em;color:#7A839A;">THERAPEUTIC AREA</div>
-                        <div style="display:flex;gap:6px;margin-top:8px;"><sc-for list="{{ insAreaOpts }}" as="o" hint-placeholder-count="2"><button onClick="{{ o.go }}" style="flex:1;padding:9px;border-radius:12px;border:1px solid {{ o.bd }};background:{{ o.bg }};color:{{ o.fg }};font-size:13px;font-weight:650;cursor:pointer;">{{ o.label }}</button></sc-for></div>
+                        <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.09em;color:#7A839A;">THERAPEUTIC AREA *</div>
+                        <div style="font-size:12px;color:#5B6478;margin-top:4px;">Choose which BeOne product area this meeting covers — the AI uses this to tag insights with the right topic categories.</div>
+                        <div style="display:flex;gap:6px;margin-top:8px;"><sc-for list="{{ insAreaOpts }}" as="o" hint-placeholder-count="2"><button onClick="{{ o.go }}" style="flex:1;padding:9px 12px;border-radius:12px;border:1px solid {{ o.bd }};background:{{ o.bg }};color:{{ o.fg }};cursor:pointer;text-align:left;"><span style="display:block;font-size:13px;font-weight:650;">{{ o.label }}</span><span style="display:block;font-size:11.5px;opacity:.75;margin-top:2px;">{{ o.sub }}</span></button></sc-for></div>
                       </div>
                     </sc-if>
                     <sc-if value="{{ insShowTopics }}" hint-placeholder-val="{{ true }}">
                     <div>
-                      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.09em;color:#7A839A;">TOPIC</div>
+                      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.09em;color:#7A839A;">{{ insTopicHead }}</div>
                       <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;"><sc-for list="{{ insTopicOpts }}" as="o" hint-placeholder-count="5"><button onClick="{{ o.go }}" style="padding:7px 11px;border-radius:999px;border:1px solid {{ o.bd }};background:{{ o.bg }};color:{{ o.fg }};font-size:12.5px;font-weight:600;cursor:pointer;">{{ o.label }}</button></sc-for></div>
                       <sc-if value="{{ insHasSubs }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;padding-left:10px;border-left:2px solid #E1E6F0;"><sc-for list="{{ insSubOpts }}" as="o" hint-placeholder-count="4"><button onClick="{{ o.go }}" style="padding:5px 9px;border-radius:999px;border:1px solid {{ o.bd }};background:{{ o.bg }};color:{{ o.fg }};font-size:12px;font-weight:600;cursor:pointer;">{{ o.label }}</button></sc-for></div></sc-if>
                     </div>
                     </sc-if>
                     <div>
-                      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.09em;color:#7A839A;">MEETING · {{ insDateLabel }}</div>
+                      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.09em;color:#7A839A;">MEETING DATE * · {{ insDateLabel }}</div>
                       <div style="display:flex;gap:6px;overflow-x:auto;margin:8px -18px 0;padding:0 18px;"><sc-for list="{{ insDateOpts }}" as="o" hint-placeholder-count="7"><button onClick="{{ o.go }}" style="flex:0 0 auto;padding:7px 11px;border-radius:999px;border:1px solid {{ o.bd }};background:{{ o.bg }};color:{{ o.fg }};font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap;">{{ o.label }}</button></sc-for></div>
+                      <sc-if value="{{ insTypeHeadOn }}" hint-placeholder-val="{{ true }}"><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.09em;color:#7A839A;margin-top:14px;">{{ insTypeHead }}</div></sc-if>
                       <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;"><sc-for list="{{ insTypeOpts }}" as="o" hint-placeholder-count="6"><button onClick="{{ o.go }}" style="padding:7px 11px;border-radius:999px;border:1px solid {{ o.bd }};background:{{ o.bg }};color:{{ o.fg }};font-size:12.5px;font-weight:600;cursor:pointer;">{{ o.label }}</button></sc-for></div>
-                      <sc-if value="{{ insShowLive }}" hint-placeholder-val="{{ true }}">                      <div style="display:flex;gap:6px;margin-top:8px;"><sc-for list="{{ insLiveOpts }}" as="o" hint-placeholder-count="2"><button onClick="{{ o.go }}" style="flex:1;padding:9px;border-radius:12px;border:1px solid {{ o.bd }};background:{{ o.bg }};color:{{ o.fg }};font-size:13px;font-weight:650;cursor:pointer;">{{ o.label }}</button></sc-for></div></sc-if>
+                      <sc-if value="{{ insShowLive }}" hint-placeholder-val="{{ true }}"><div>
+                      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.09em;color:#7A839A;margin-top:14px;">LIVE OR VIRTUAL *</div>
+                      <div style="display:flex;gap:6px;margin-top:8px;"><sc-for list="{{ insLiveOpts }}" as="o" hint-placeholder-count="2"><button onClick="{{ o.go }}" style="flex:1;padding:9px;border-radius:12px;border:1px solid {{ o.bd }};background:{{ o.bg }};color:{{ o.fg }};font-size:13px;font-weight:650;cursor:pointer;">{{ o.label }}</button></sc-for></div></div></sc-if>
                       <sc-if value="{{ insShowVendor }}" hint-placeholder-val="{{ false }}">
                         <div style="margin-top:14px;">
-                          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.09em;color:#7A839A;">VENDOR</div>
+                          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.09em;color:#7A839A;">THIRD PARTY VENDOR *</div>
                           <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;"><sc-for list="{{ insVendorOpts }}" as="o" hint-placeholder-count="5"><button onClick="{{ o.go }}" style="padding:7px 11px;border-radius:999px;border:1px solid {{ o.bd }};background:{{ o.bg }};color:{{ o.fg }};font-size:12.5px;font-weight:600;cursor:pointer;">{{ o.label }}</button></sc-for></div>
                           <sc-if value="{{ insHasVendorSubs }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;padding-left:10px;border-left:2px solid #E1E6F0;"><sc-for list="{{ insVendorSubOpts }}" as="o" hint-placeholder-count="2"><button onClick="{{ o.go }}" style="padding:5px 9px;border-radius:999px;border:1px solid {{ o.bd }};background:{{ o.bg }};color:{{ o.fg }};font-size:12px;font-weight:600;cursor:pointer;">{{ o.label }}</button></sc-for></div></sc-if>
-                          <sc-if value="{{ insVendorOther }}" hint-placeholder-val="{{ false }}"><input value="{{ insVendorName }}" onChange="{{ onInsVendorName }}" placeholder="Vendor name" style="width:100%;box-sizing:border-box;margin-top:8px;border:1px solid #D7DEEC;border-radius:13px;padding:12px 13px;font-size:14px;background:#F7F9FC;outline:0;"></sc-if>
-                          <input value="{{ insCount }}" onChange="{{ onInsCount }}" placeholder="Number of attendees" style="width:100%;box-sizing:border-box;margin-top:8px;border:1px solid #D7DEEC;border-radius:13px;padding:12px 13px;font-size:14px;background:#F7F9FC;outline:0;">
+                          <sc-if value="{{ insVendorOther }}" hint-placeholder-val="{{ false }}"><input value="{{ insVendorName }}" onChange="{{ onInsVendorName }}" placeholder="Enter vendor name" style="width:100%;box-sizing:border-box;margin-top:8px;border:1px solid #D7DEEC;border-radius:13px;padding:12px 13px;font-size:14px;background:#F7F9FC;outline:0;"></sc-if>
+                          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.09em;color:#7A839A;margin-top:14px;">NUMBER OF ATTENDEES</div>
+                          <input value="{{ insCount }}" onChange="{{ onInsCount }}" placeholder="Enter number" style="width:100%;box-sizing:border-box;margin-top:8px;border:1px solid #D7DEEC;border-radius:13px;padding:12px 13px;font-size:14px;background:#F7F9FC;outline:0;">
                         </div>
                       </sc-if>
                       <sc-if value="{{ insShowConf }}" hint-placeholder-val="{{ false }}">
                         <div style="margin-top:14px;">
-                          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.09em;color:#7A839A;">CONFERENCE</div>
+                          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.09em;color:#7A839A;">CONFERENCE NAME *</div>
                           <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;"><sc-for list="{{ insConfOpts }}" as="o" hint-placeholder-count="4"><button onClick="{{ o.go }}" style="padding:7px 11px;border-radius:999px;border:1px solid {{ o.bd }};background:{{ o.bg }};color:{{ o.fg }};font-size:12.5px;font-weight:600;cursor:pointer;">{{ o.label }}</button></sc-for></div>
+                          <sc-if value="{{ insConfOther }}" hint-placeholder-val="{{ false }}"><input value="{{ insConfName }}" onChange="{{ onInsConfName }}" placeholder="Enter conference name" style="width:100%;box-sizing:border-box;margin-top:8px;border:1px solid #D7DEEC;border-radius:13px;padding:12px 13px;font-size:14px;background:#F7F9FC;outline:0;"></sc-if>
                         </div>
                       </sc-if>
                     </div>
                     <sc-if value="{{ insShowStage }}" hint-placeholder-val="{{ false }}">
                       <div style="display:flex;flex-direction:column;gap:14px;">
                         <div>
-                          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.09em;color:#7A839A;">STAGE</div>
+                          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.09em;color:#7A839A;">STAGE *</div>
                           <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;"><sc-for list="{{ insStageOpts }}" as="o" hint-placeholder-count="4"><button onClick="{{ o.go }}" style="padding:7px 11px;border-radius:999px;border:1px solid {{ o.bd }};background:{{ o.bg }};color:{{ o.fg }};font-size:12.5px;font-weight:600;cursor:pointer;">{{ o.label }}</button></sc-for></div>
                         </div>
                         <div>
-                          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.09em;color:#7A839A;">PRIORITY</div>
+                          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.09em;color:#7A839A;">PRIORITY *</div>
                           <div style="display:flex;gap:6px;margin-top:8px;"><sc-for list="{{ insPrioOpts }}" as="o" hint-placeholder-count="3"><button onClick="{{ o.go }}" style="flex:1;padding:9px;border-radius:12px;border:1px solid {{ o.bd }};background:{{ o.bg }};color:{{ o.fg }};font-size:13px;font-weight:650;cursor:pointer;">{{ o.label }}</button></sc-for></div>
                         </div>
                       </div>
@@ -1784,6 +1860,12 @@ input,textarea,button{font-family:inherit}
                       <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.09em;color:#7A839A;">TAGS</div>
                       <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;"><sc-for list="{{ insTagOpts }}" as="o" hint-placeholder-count="4"><button onClick="{{ o.go }}" style="padding:7px 11px;border-radius:999px;border:1px solid {{ o.bd }};background:{{ o.bg }};color:{{ o.fg }};font-size:12.5px;font-weight:600;cursor:pointer;">{{ o.label }}</button></sc-for></div>
                     </div>
+                    </sc-if>
+                    <sc-if value="{{ insProblemsOn }}" hint-placeholder-val="{{ false }}">
+                      <div style="border:1px solid #EBCB8B;background:#FDF8EE;border-radius:13px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;">
+                        <div style="font-size:13.5px;font-weight:650;color:#0B1220;">A few things to finish before generating insights</div>
+                        <sc-for list="{{ insProblems }}" as="p" hint-placeholder-count="2"><div style="display:flex;gap:8px;font-size:13px;line-height:1.45;color:#3C4557;"><span style="color:#B8892B;">•</span><span>{{ p }}</span></div></sc-for>
+                      </div>
                     </sc-if>
                     <div style="display:flex;gap:8px;">
                       <button onClick="{{ insSaveDraft }}" style="flex:1;padding:14px;border:1px solid #D7DEEC;border-radius:13px;background:#fff;font-size:14px;font-weight:650;cursor:pointer;">Save draft</button>
@@ -1873,6 +1955,139 @@ input,textarea,button{font-family:inherit}
             </sc-if>
 
             <sc-if value="{{ shVisit }}" hint-placeholder-val="{{ false }}">
+              <sc-if value="{{ vd.ixPage }}" hint-placeholder-val="{{ false }}">
+              <div style="padding:14px 18px 0;display:flex;flex-direction:column;gap:12px;">
+                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px;color:#5B6478;">
+                  <sc-if value="{{ vd.ixFile }}" hint-placeholder-val="{{ false }}"><span>{{ vd.ixFile }} ·</span></sc-if>
+                  <span>{{ vd.ixDate }}</span><span style="opacity:.5;">·</span>
+                  <span style="font-size:11px;font-weight:650;padding:3px 8px;border-radius:999px;background:{{ vd.ixKindBg }};color:{{ vd.ixKindFg }};">{{ vd.ixKind }}</span>
+                </div>
+                <sc-if value="{{ vd.ixLoading }}" hint-placeholder-val="{{ false }}"><div style="font-size:12.5px;color:#7A839A;">Loading…</div></sc-if>
+                <sc-if value="{{ vd.ixFailed }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:10px;font-size:12.5px;color:#5B6478;">This insight couldn’t be opened in full.<button onClick="{{ vd.ixRetryRead }}" style="padding:5px 10px;border-radius:999px;border:1px solid #D7DEEC;background:#fff;color:#22409F;font-size:12px;font-weight:650;cursor:pointer;">Try again</button></div></sc-if>
+                <div style="background:#fff;border:1px solid #E1E6F0;border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;">
+                  <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.09em;color:#7A839A;">{{ vd.ixHcpHead }}</div>
+                  <sc-for list="{{ vd.ixPeople }}" as="r" hint-placeholder-count="1">
+                    <button onClick="{{ r.open }}" style="display:flex;flex-direction:column;gap:2px;padding:6px 0;border:0;background:transparent;text-align:left;cursor:pointer;">
+                      <span style="font-size:15px;font-weight:650;color:#22409F;">{{ r.name }}</span>
+                      <sc-if value="{{ r.spec }}" hint-placeholder-val="{{ true }}"><span style="font-size:12px;font-weight:500;color:#3C4557;">{{ r.spec }}</span></sc-if>
+                      <sc-if value="{{ r.site }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;color:#7A839A;">{{ r.site }}</span></sc-if>
+                      <sc-if value="{{ r.place }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;color:#7A839A;">{{ r.place }}</span></sc-if>
+                      <sc-if value="{{ r.adv }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;color:#7A839A;">{{ r.adv }}</span></sc-if>
+                    </button>
+                  </sc-for>
+                  <sc-if value="{{ vd.ixMoreOn }}" hint-placeholder-val="{{ false }}"><button onClick="{{ vd.ixMoreGo }}" style="align-self:flex-start;border:0;background:transparent;padding:0;color:#2447C4;font-size:12.5px;font-weight:650;cursor:pointer;">{{ vd.ixMore }}</button></sc-if>
+                </div>
+                <div style="background:#fff;border:1px solid #E1E6F0;border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;">
+                  <div style="display:flex;align-items:center;gap:8px;"><span style="flex:1;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.09em;color:#7A839A;">TOPICS</span><sc-if value="{{ vd.ixFiled }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px;font-weight:600;padding:3px 7px;border-radius:6px;border:1px solid #D7DEEC;color:#3C4557;">{{ vd.ixFiled }}</span></sc-if></div>
+                  <sc-if value="{{ vd.ixSegLine }}" hint-placeholder-val="{{ false }}"><div style="font-size:12px;color:#7A839A;">{{ vd.ixSegLine }}</div><div style="display:flex;flex-wrap:wrap;gap:5px;"><sc-for list="{{ vd.ixSegChips }}" as="c" hint-placeholder-count="2"><span style="font-size:11px;font-weight:600;padding:3px 7px;border-radius:6px;background:#EEF1F7;color:#3C4557;">{{ c }}</span></sc-for></div></sc-if>
+                  <sc-for list="{{ vd.ixCats }}" as="c" hint-placeholder-count="1">
+                    <div style="display:flex;flex-direction:column;gap:4px;"><span style="font-size:13.5px;font-weight:600;color:#0B1220;">{{ c.cat }}</span><div style="display:flex;flex-wrap:wrap;gap:5px;"><sc-for list="{{ c.subs }}" as="x" hint-placeholder-count="1"><span style="font-size:11px;font-weight:600;padding:3px 7px;border-radius:6px;background:#EEF1F7;color:#3C4557;">{{ x }}</span></sc-for></div></div>
+                  </sc-for>
+                  <sc-if value="{{ vd.ixTopicLine }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;"><span style="font-size:13.5px;font-weight:600;">{{ vd.ixTopicLine }}</span><sc-if value="{{ vd.ixSubtopic }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px;font-weight:600;padding:3px 7px;border-radius:6px;background:#EEF1F7;color:#3C4557;">{{ vd.ixSubtopic }}</span></sc-if></div></sc-if>
+                  <sc-if value="{{ vd.ixReassignOn }}" hint-placeholder-val="{{ false }}"><button onClick="{{ vd.ixAssign }}" style="align-self:flex-start;padding:7px 12px;border-radius:999px;border:1px solid #D7DEEC;background:#fff;color:#22409F;font-size:12.5px;font-weight:650;cursor:pointer;">{{ vd.ixReassignLabel }}</button></sc-if>
+                  <sc-if value="{{ vd.ixNoTopics }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:4px 0;"><span style="font-size:13px;color:#7A839A;">No topics assigned yet</span><button onClick="{{ vd.ixAssign }}" style="align-self:flex-start;padding:7px 12px;border-radius:999px;border:1px solid #D7DEEC;background:#fff;color:#22409F;font-size:12.5px;font-weight:650;cursor:pointer;align-self:center;">{{ vd.ixAssignLabel }}</button></div></sc-if>
+                </div>
+                <sc-if value="{{ vd.ixAttOn }}" hint-placeholder-val="{{ false }}">
+                  <div style="background:#fff;border:1px solid #E1E6F0;border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;">
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.09em;color:#7A839A;">ATTENDEES</div>
+                    <div style="display:flex;flex-wrap:wrap;gap:8px;"><sc-for list="{{ vd.ixAtt }}" as="a" hint-placeholder-count="1"><div style="background:#F4F6FA;border-radius:10px;padding:9px 11px;max-width:100%;"><div style="font-size:13.5px;font-weight:600;color:#0B1220;">{{ a.name }}</div><div style="font-size:12px;color:#7A839A;">{{ a.meta }}</div></div></sc-for></div>
+                    <sc-if value="{{ vd.ixAttNone }}" hint-placeholder-val="{{ false }}"><div style="font-size:13px;color:#7A839A;">No attendees recognized</div></sc-if>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ vd.ixNotes }}" hint-placeholder-val="{{ false }}"><div style="background:#fff;border:1px solid #E1E6F0;border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;"><div style="font-size:13.5px;font-weight:650;">Notes</div><div style="font-size:13.5px;line-height:1.5;color:#5B6478;white-space:pre-line;">{{ vd.ixNotes }}</div></div></sc-if>
+                <div style="display:flex;padding:3px;border-radius:12px;background:#E6EAF2;">
+                  <sc-for list="{{ vd.ixTabs }}" as="o" hint-placeholder-count="4"><button onClick="{{ o.go }}" style="flex:1;padding:8px 2px;border:0;border-radius:10px;background:{{ o.bg }};color:{{ o.fg }};box-shadow:{{ o.sh }};font-size:12.5px;font-weight:650;cursor:pointer;">{{ o.label }}</button></sc-for>
+                </div>
+                <sc-if value="{{ vd.ixTrOn }}" hint-placeholder-val="{{ true }}">
+                  <div style="background:#fff;border:1px solid #E1E6F0;border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;gap:10px;">
+                    <div style="display:flex;align-items:center;gap:8px;"><span style="flex:1;font-family:'Source Serif 4',Georgia,serif;font-size:18px;">{{ vd.ixTrHead }}</span>
+                      <sc-if value="{{ vd.ixViewOn }}" hint-placeholder-val="{{ false }}"><span style="display:flex;gap:4px;"><sc-for list="{{ vd.ixViews }}" as="o" hint-placeholder-count="2"><button onClick="{{ o.go }}" style="padding:6px 11px;border-radius:999px;border:1px solid {{ o.bd }};background:{{ o.bg }};color:{{ o.fg }};font-size:12px;font-weight:600;cursor:pointer;">{{ o.label }}</button></sc-for></span></sc-if></div>
+                    <sc-if value="{{ vd.ixSubOn }}" hint-placeholder-val="{{ false }}"><div style="display:flex;gap:4px;"><sc-for list="{{ vd.ixSubs }}" as="o" hint-placeholder-count="2"><button onClick="{{ o.go }}" style="padding:6px 11px;border-radius:999px;border:1px solid {{ o.bd }};background:{{ o.bg }};color:{{ o.fg }};font-size:12px;font-weight:600;cursor:pointer;">{{ o.label }}</button></sc-for></div></sc-if>
+                    <sc-if value="{{ vd.ixDocOn }}" hint-placeholder-val="{{ true }}"><div style="font-size:14px;line-height:1.6;color:{{ vd.ixTextC }};white-space:pre-line;">{{ vd.ixText }}</div></sc-if>
+                    <sc-if value="{{ vd.ixHcpInsOn }}" hint-placeholder-val="{{ false }}">
+                      <div style="display:flex;flex-direction:column;gap:12px;"><sc-for list="{{ vd.ixHcpIns }}" as="h" hint-placeholder-count="1">
+                        <div style="display:flex;flex-direction:column;gap:6px;"><span style="font-size:14px;font-weight:650;">{{ h.name }}</span><sc-if value="{{ h.meta }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;color:#7A839A;">{{ h.meta }}</span></sc-if>
+                          <sc-for list="{{ h.rows }}" as="i" hint-placeholder-count="1"><div style="border:1px solid #E1E6F0;border-left:3px solid #2447C4;border-radius:10px;padding:9px 11px;display:flex;flex-direction:column;gap:6px;"><span style="font-size:13.5px;line-height:1.5;white-space:pre-line;">{{ i.text }}</span><div style="display:flex;flex-wrap:wrap;gap:5px;"><sc-for list="{{ i.chips }}" as="c" hint-placeholder-count="1"><span style="font-size:11px;font-weight:600;padding:3px 7px;border-radius:6px;background:#EEF1F7;color:#3C4557;">{{ c }}</span></sc-for></div></div></sc-for>
+                          <sc-if value="{{ h.none }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;color:#7A839A;">No insights recorded for this HCP.</span></sc-if></div>
+                      </sc-for></div>
+                    </sc-if>
+                    <sc-if value="{{ vd.ixTopicOn }}" hint-placeholder-val="{{ false }}">
+                      <div style="display:flex;flex-direction:column;gap:8px;">
+                        <div style="display:flex;flex-wrap:wrap;gap:5px;"><sc-for list="{{ vd.ixTopicChips }}" as="o" hint-placeholder-count="3"><button onClick="{{ o.go }}" style="padding:6px 11px;border-radius:999px;border:1px solid {{ o.bd }};background:{{ o.bg }};color:{{ o.fg }};font-size:12px;font-weight:600;cursor:pointer;">{{ o.label }}</button></sc-for></div>
+                        <sc-for list="{{ vd.ixSegs }}" as="g" hint-placeholder-count="2"><div style="display:flex;flex-direction:column;gap:4px;opacity:{{ g.op }};padding:4px 0;"><span style="align-self:flex-start;font-size:11px;font-weight:600;padding:3px 7px;border-radius:6px;background:#EEF1F7;color:#3C4557;">{{ g.tag }}</span><span style="font-size:13.5px;line-height:1.5;">{{ g.text }}</span></div></sc-for>
+                        <sc-if value="{{ vd.ixSegsNone }}" hint-placeholder-val="{{ false }}"><div style="font-size:13px;color:#7A839A;text-align:center;padding:8px 0;">No segments match the selected filters.</div></sc-if>
+                      </div>
+                    </sc-if>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ vd.ixSmOn }}" hint-placeholder-val="{{ false }}">
+                  <div style="background:#fff;border:1px solid #E1E6F0;border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;gap:10px;">
+                    <div><div style="font-family:'Source Serif 4',Georgia,serif;font-size:18px;">Summary</div><div style="font-size:12.5px;color:#7A839A;">AI-generated overview of your transcript</div></div>
+                    <sc-if value="{{ vd.ixSmBtnOn }}" hint-placeholder-val="{{ false }}"><button onClick="{{ vd.ixSmGo }}" style="align-self:flex-start;padding:7px 12px;border-radius:999px;border:1px solid #D7DEEC;background:#fff;color:#22409F;font-size:12.5px;font-weight:650;cursor:pointer;">{{ vd.ixSmBtn }}</button></sc-if>
+                    <sc-if value="{{ vd.ixRegenOn }}" hint-placeholder-val="{{ false }}">
+                      <div style="border:1px solid #E1E6F0;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px;background:#F7F9FC;">
+                        <div style="font-size:14px;font-weight:650;">Regenerate Summary</div>
+                        <div style="font-size:13px;line-height:1.5;color:#3C4557;">Are you sure you want to regenerate the summary? This will replace the current summary with a new AI-generated version. Any unsaved changes to the current summary will be lost.</div>
+                        <div style="display:flex;gap:8px;"><button onClick="{{ vd.ixRegenNo }}" style="flex:1;padding:11px;border:1px solid #D7DEEC;border-radius:12px;background:#fff;font-size:13.5px;font-weight:650;cursor:pointer;">Cancel</button><button onClick="{{ vd.ixRegenYes }}" style="flex:1;padding:11px;border:0;border-radius:12px;background:#2447C4;color:#fff;font-size:13.5px;font-weight:700;cursor:pointer;">Regenerate Summary</button></div>
+                      </div>
+                    </sc-if>
+                    <sc-if value="{{ vd.ixSmText }}" hint-placeholder-val="{{ true }}"><div style="font-size:14px;line-height:1.6;color:#1B2333;white-space:pre-line;">{{ vd.ixSmText }}</div></sc-if>
+                    <sc-if value="{{ vd.ixSmNone }}" hint-placeholder-val="{{ false }}"><div style="text-align:center;padding:10px 0;"><div style="font-size:14px;font-weight:650;">No Summary Available</div><div style="font-size:12.5px;color:#7A839A;margin-top:4px;">Click the "Generate Summary" button above to create a summary of this transcript.</div></div></sc-if>
+                    <div style="font-size:14px;font-weight:650;margin-top:4px;">Keywords</div>
+                    <sc-if value="{{ vd.ixConcernsOn }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;gap:5px;"><span style="font-size:12.5px;color:#7A839A;">Medical Concerns</span><div style="display:flex;flex-wrap:wrap;gap:5px;"><sc-for list="{{ vd.ixConcerns }}" as="c" hint-placeholder-count="2"><span style="font-size:11px;font-weight:600;padding:3px 7px;border-radius:6px;background:#FDECEA;color:#C0392B;">{{ c }}</span></sc-for></div></div></sc-if>
+                    <sc-if value="{{ vd.ixThemesOn }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;gap:5px;"><span style="font-size:12.5px;color:#7A839A;">Topics &amp; Themes</span><div style="display:flex;flex-wrap:wrap;gap:5px;"><sc-for list="{{ vd.ixThemes }}" as="c" hint-placeholder-count="2"><span style="font-size:11px;font-weight:600;padding:3px 7px;border-radius:6px;background:#E7ECFA;color:#22409F;">{{ c }}</span></sc-for></div></div></sc-if>
+                    <sc-if value="{{ vd.ixKwNone }}" hint-placeholder-val="{{ false }}"><div style="font-size:12.5px;color:#7A839A;">No keywords available for this transcript.</div></sc-if>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ vd.ixInOn }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;flex-direction:column;gap:10px;">
+                    <sc-if value="{{ vd.ixInWait }}" hint-placeholder-val="{{ false }}"><div style="background:#fff;border:1px solid #E1E6F0;border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;align-items:center;"><span style="font-size:14px;font-weight:650;color:#2447C4;">Generating insights and action items...</span><span style="font-size:12.5px;color:#7A839A;">This process runs automatically and may take a few moments.</span></div></sc-if>
+                    <sc-if value="{{ vd.ixInFail }}" hint-placeholder-val="{{ false }}"><div style="background:#fff;border:1px solid #E1E6F0;border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;"><span style="font-size:14px;font-weight:650;">Couldn't generate insights</span><span style="font-size:12.5px;color:#7A839A;">{{ vd.ixInErr }}</span><button onClick="{{ vd.ixRetry }}" style="align-self:flex-start;padding:7px 12px;border-radius:999px;border:1px solid #D7DEEC;background:#fff;color:#22409F;font-size:12.5px;font-weight:650;cursor:pointer;">{{ vd.ixRetryLabel }}</button></div></sc-if>
+                    <div style="background:#fff;border:1px solid #E1E6F0;border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;">
+                      <div style="font-family:'Source Serif 4',Georgia,serif;font-size:18px;">Key Insights</div>
+                      <sc-for list="{{ vd.ixKeys }}" as="k" hint-placeholder-count="2"><div style="display:flex;gap:8px;font-size:13.5px;line-height:1.5;"><span style="color:#2447C4;">•</span><span>{{ k }}</span></div></sc-for>
+                      <sc-if value="{{ vd.ixKeysNone }}" hint-placeholder-val="{{ false }}"><div style="font-size:12.5px;color:#7A839A;">{{ vd.ixKeysEmpty }}</div></sc-if>
+                    </div>
+                    <div style="background:#fff;border:1px solid #E1E6F0;border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;">
+                      <div style="font-family:'Source Serif 4',Georgia,serif;font-size:18px;">Action Items</div>
+                      <sc-for list="{{ vd.ixActs }}" as="k" hint-placeholder-count="2"><div style="display:flex;gap:8px;font-size:13.5px;line-height:1.5;"><span style="color:#2447C4;">•</span><span>{{ k }}</span></div></sc-for>
+                      <sc-if value="{{ vd.ixActsNone }}" hint-placeholder-val="{{ false }}"><div style="font-size:12.5px;color:#7A839A;">{{ vd.ixActsEmpty }}</div></sc-if>
+                    </div>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ vd.ixSeOn }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;flex-direction:column;gap:10px;">
+                    <sc-if value="{{ vd.ixSeFull }}" hint-placeholder-val="{{ true }}">
+                      <div style="background:#fff;border:1px solid #E1E6F0;border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;gap:10px;">
+                        <div style="font-family:'Source Serif 4',Georgia,serif;font-size:18px;">Overall Sentiment</div>
+                        <div style="display:flex;align-items:baseline;gap:6px;"><span style="font-family:'Source Serif 4',Georgia,serif;font-size:30px;line-height:1;">{{ vd.ixSeConfBig }}</span><span style="font-size:12px;color:#7A839A;">confidence</span></div>
+                        <div style="display:flex;height:10px;border-radius:999px;overflow:hidden;background:#EEF1F7;"><sc-for list="{{ vd.ixSeBars }}" as="b" hint-placeholder-count="3"><span style="width:{{ b.w }};background:{{ b.c }};"></span></sc-for></div>
+                        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;"><span style="font-size:11px;font-weight:600;padding:3px 7px;border-radius:6px;background:{{ vd.ixSeBg }};color:{{ vd.ixSeFg }};">{{ vd.ixSeOverall }}</span><span style="font-size:12.5px;color:#5B6478;">{{ vd.ixSeConf }}</span></div>
+                        <div style="font-size:13px;font-weight:650;">Sentiment Breakdown</div>
+                        <div style="display:flex;flex-wrap:wrap;gap:6px;"><sc-for list="{{ vd.ixSeParts }}" as="p" hint-placeholder-count="3"><span style="font-size:11px;font-weight:600;padding:3px 7px;border-radius:6px;background:{{ p.bg }};color:{{ p.fg }};">{{ p.label }}</span></sc-for></div>
+                      </div>
+                    </sc-if>
+                    <sc-if value="{{ vd.ixSeDetails }}" hint-placeholder-val="{{ false }}">
+                      <div style="background:#fff;border:1px solid #E1E6F0;border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;gap:10px;">
+                        <div style="font-family:'Source Serif 4',Georgia,serif;font-size:18px;">Sentiment Analysis Details</div>
+                        <sc-for list="{{ vd.ixSeEls }}" as="e" hint-placeholder-count="3"><div style="display:flex;flex-direction:column;gap:6px;background:{{ e.bg }};border-radius:10px;padding:10px 12px;"><span style="font-size:13px;font-weight:650;color:{{ e.fg }};">{{ e.head }}</span><sc-for list="{{ e.points }}" as="t" hint-placeholder-count="2"><div style="display:flex;gap:8px;font-size:13px;line-height:1.5;"><span style="color:{{ e.fg }};">•</span><span>{{ t }}</span></div></sc-for></div></sc-for>
+                      </div>
+                    </sc-if>
+                    <sc-if value="{{ vd.ixSePartial }}" hint-placeholder-val="{{ false }}">
+                      <div style="background:#fff;border:1px solid #E1E6F0;border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;border:2px dashed #EBCB8B;background:#FDF8EE;align-items:center;text-align:center;">
+                        <span style="font-size:14.5px;font-weight:650;color:#8A6A1F;">Incomplete Sentiment Analysis</span>
+                        <span style="font-size:12.5px;color:#8A6A1F;">Your sentiment analysis is missing some required data.</span>
+                        <span style="font-size:12.5px;color:#8A6A1F;">Current status: {{ vd.ixSeOverall }}</span>
+                        <span style="font-size:12.5px;color:#8A6A1F;">{{ vd.ixSeMissing }}</span>
+                      </div>
+                    </sc-if>
+                    <sc-if value="{{ vd.ixSeNone }}" hint-placeholder-val="{{ false }}"><div style="font-size:13px;color:#7A839A;text-align:center;padding:14px 0;">No sentiment analysis available.</div></sc-if>
+                  </div>
+                </sc-if>
+                <button onClick="{{ closeSheet }}" style="padding:14px;border:0;border-radius:13px;background:#2447C4;color:#fff;font-size:14.5px;font-weight:700;cursor:pointer;">Done</button>
+              </div>
+              </sc-if>
+              <sc-if value="{{ vd.plainPage }}" hint-placeholder-val="{{ true }}">
               <div style="padding:14px 18px 0;display:flex;flex-direction:column;gap:12px;">
                 <div style="display:flex;align-items:center;gap:8px;"><span style="font-size:12.5px;color:#5B6478;">{{ vd.date }} · {{ vd.type }}</span><sc-if value="{{ vd.hasSrc }}" hint-placeholder-val="{{ false }}"><span style="margin-left:auto;font-size:11px;font-weight:650;padding:3px 7px;border-radius:6px;background:#E7ECFA;color:#22409F;">{{ vd.srcLabel }}</span></sc-if></div>
                 <div style="font-family:'Source Serif 4',Georgia,serif;font-size:22px;line-height:1.2;letter-spacing:-.01em;">{{ vd.topic }}</div>
@@ -1894,6 +2109,7 @@ input,textarea,button{font-family:inherit}
                 </sc-if>
                 <button onClick="{{ closeSheet }}" style="padding:14px;border:0;border-radius:13px;background:#2447C4;color:#fff;font-size:14.5px;font-weight:700;cursor:pointer;">Done</button>
               </div>
+              </sc-if>
             </sc-if>
 
             <sc-if value="{{ shMe }}" hint-placeholder-val="{{ false }}">
@@ -2003,7 +2219,7 @@ const WD = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'], MO = ['Jan','Feb','Mar',
 const dateAt = n => new Date(2026, 9, 29 + n);
 // the moment the account loaded: the website counts "ago" and overdue from now, not from midnight
 const nowMs = () => new Date(2026, 9, 29, 12).getTime();
-const dateOf = n => dateAt(n).getDate() + ' ' + MO[dateAt(n).getMonth()];
+const dateOf = n => MO[dateAt(n).getMonth()] + ' ' + dateAt(n).getDate();
 const dayFull = n => WD[dateAt(n).getDay()] + ' ' + dateOf(n);
 const dayOf = n => n === 0 ? 'Today' : n === 1 ? 'Tomorrow' : n === -1 ? 'Yesterday' : dayFull(n);
 const ordinal = n => n + (n % 10 === 1 && n % 100 !== 11 ? 'st' : n % 10 === 2 && n % 100 !== 12 ? 'nd' : n % 10 === 3 && n % 100 !== 13 ? 'rd' : 'th');
@@ -2073,6 +2289,8 @@ const agoAt = at => { const t = new Date(at || '').getTime(); if (!Number.isFini
 // overdue as the website: open, with a due date before now; one with no due date never is (the design's own by its day)
 const fuOver = f => !f.done && (f.dueAt === undefined ? f.dueN < 0 : f.dueAt != null && f.dueAt < nowMs());
 // "Oct 3, 2026", as the website dates a note (DetailDrawer.tsx:107-112)
+// a due date as the website's formatMeetingDate writes it: "Oct 9, 2026", read in UTC
+const utcDay = ms => { const t = new Date(ms); return Number.isNaN(t.getTime()) ? '' : MO[t.getUTCMonth()] + ' ' + t.getUTCDate() + ', ' + t.getUTCFullYear(); };
 const noteDay = d => { const t = new Date(d); return Number.isNaN(t.getTime()) ? '' : MO[t.getMonth()] + ' ' + t.getDate() + ', ' + t.getFullYear(); };
 const SIX_TYPES = ['1:1','Third Party','Conference','Advisory Board','Consulting','Observation'];
 const SHORT_TYPES = ['1:1','Ad Board','Conference','Consulting'];
@@ -2096,7 +2314,9 @@ const EXTRA = { vendors:['ASCO','Community Health Media','Connex','Curio','DAVA 
     'Spring Conference - NOS (Nevada)','State Society Meeting','Total Health','Transplantation and Cellular Therapy Meetings of ASTCT and CIBMTR (ASTCT)','TRIO',
     'University of Kansas Breast Cancer Year in Review (Total Health)','UPenn Medicine','West Oncology Conference','25th Multidisciplinary Management of Cancers: A Case-Based Approach (ANCO)','Other'] };
 // what a draft keeps of the insight form
-const DRAFT_KEYS = ['insKey','insRef','insWho','insAdv','insQtr','insNote','insPer','insTopics','insType','insLive','insConv','insArea','insSubs','insStage','insPrio','insTags','insDateN','insVendor','insVendorSub','insVendorName','insCount','insConf','insHco','insSource'];
+// the product under each BeOne area, as the website's Therapeutic Area picker writes it
+const AREA_PRODUCT = { CLL:'Brukinsa (zanubrutinib)', MCL:'Sonrotoclax' };
+const DRAFT_KEYS = ['insKey','insRef','insWho','insAdv','insQtr','insNote','insPer','insTopics','insType','insLive','insConv','insArea','insSubs','insStage','insPrio','insTags','insDateN','insVendor','insVendorSub','insVendorName','insCount','insConf','insConfName','insHco','insSource'];
 // customer accounts: one flow everywhere; each account shows only the fields it uses (from the Insights source)
 // the signed-in rep; the app fills it from the session. The sample rep is DocNexus staff, so Me shows the account switch.
 // pick: the account-switch row the app loaded (empty: the row for the account)
@@ -2318,6 +2538,17 @@ const smyFresh = () => ({ smyF:{ conferenceTag:[], topic:[], representativeName:
 const SMY_PICK = { conferenceTag:'Select tags', topic:'Select topics', representativeName:'Select HCP names', teamEmails:'Select members' };
 const SMY_DECKS = { stemline:'#3B82F6', kura:'#A855F7', kura_msl:'#D946EF', b1:'#0EA5E9', b1_mcl:'#14B8A6', targetedoncology:'#22C55E' };
 const SMY_SENT = { positive:['#E3F5EC', '#1C7A4E'], negative:['#FDECEA', '#C0392B'], neutral:['#FBF3E2', '#8A6A1F'] };
+// My Insights' accent per meeting type (meetingTypeColor.ts): known types fixed, others hashed to a slot; 3rd party red
+const MT_FIXED = { 'meeting':'#2447C4', '1:1':'#1C7A4E', 'one-to-one':'#1C7A4E', 'one on one':'#1C7A4E', '1-on-1':'#1C7A4E', 'ad board':'#6B46C1', 'adboard':'#6B46C1',
+  'advisory':'#D9603B', 'advisory board':'#D9603B', 'conference':'#B8892B', 'congress':'#B8892B', 'in-person':'#1A3596', 'in person':'#1A3596' };
+const MT_PALETTE = ['#2447C4', '#1C7A4E', '#6B46C1', '#D9603B', '#B8892B', '#C0392B', '#1A3596'];
+const mtColor = (type, third) => { if (third) return '#C0392B'; const k = (type || 'meeting').trim().toLowerCase(); if (MT_FIXED[k]) return MT_FIXED[k];
+  let h = 0; for (let i = 0; i < k.length; i++) h = (h * 31 + k.charCodeAt(i)) >>> 0; return MT_PALETTE[h % MT_PALETTE.length]; };
+// My Insights' filters (MyInsights.tsx:270-330)
+const MY_SRC = [['team_member', 'Team Member'], ['third_party', '3rd Party']];
+const MY_DATES = [['today', 'Today'], ['week', 'Last 7 Days'], ['month', 'Last 30 Days'], ['3months', 'Last 3 Months']];
+const MY_F0 = { type:'all', src:'all', mtype:'all', date:'all' };
+const capWord = w => w ? w.charAt(0).toUpperCase() + w.slice(1) : '';
 const addSt = (on) => on ? { addBg:'#2447C4', addFg:'#fff', addBd:'#2447C4', addIcon:'✓', addLabel:'In route' } : { addBg:'#fff', addFg:'#2447C4', addBd:'#D7DEEC', addIcon:'+', addLabel:'Add' };
 
 class Component extends DCLogic {
@@ -2332,7 +2563,7 @@ class Component extends DCLogic {
     return {
     account,
     tab: this.tabsFor({ account }).includes(pr.startTab) ? pr.startTab : 'targets', stack: [], sheet: null, sheetData: null,
-    scope: 'mine', kind: ACCOUNTS[account].fieldPro ? 'hco' : 'hcp', q: '', spec: 'All codes', cgs: CODE_GROUPS.map(g => g.name), sort: WORKSPACE.lens === 'hcp' || WORKSPACE.drugAccount ? 'Volume' : 'Opportunity', iSort: 'Last met', ...I_FILTERS, briefing: null, peopleAdding: [], peopleAdded: [], listTab: 'all', listQ: '', listSort: 'recent', listConfirm: null, listNew: false, listName: '', listDesc: '', listBusy: null, changes: {}, chBusy: {}, chHidden: {}, actQ: '', dash: null, board: null, boardCol: 'todo', boardNew: false, boardTitle: '', boardPrio: 'medium', boardBusy: null, boardAsk: null, trk: {}, tlist: TLISTS[0] ? TLISTS[0].id || TLISTS[0].name : '',
+    scope: 'mine', kind: ACCOUNTS[account].fieldPro ? 'hco' : 'hcp', q: '', spec: 'All codes', cgs: CODE_GROUPS.map(g => g.name), sort: WORKSPACE.lens === 'hcp' || WORKSPACE.drugAccount ? 'Volume' : 'Opportunity', iSort: 'Last met', ...I_FILTERS, briefing: null, peopleAdding: [], peopleAdded: [], listTab: 'all', listQ: '', listSort: 'recent', listConfirm: null, listNew: false, listName: '', listDesc: '', listBusy: null, changes: {}, chBusy: {}, chHidden: {}, actQ: '', myF:MY_F0, myPage:0, myMenu:false, myDelBusy:false, myDelErr:'', ixFull:{}, ixTab:'transcript', ixView:'normal', ixSub:'document', ixTopics:[], ixHcpAll:false, ixBusy:null, ixRegen:false, meetEditId:null, dash: null, board: null, boardCol: 'todo', boardNew: false, boardTitle: '', boardPrio: 'medium', boardBusy: null, boardAsk: null, trk: {}, tlist: TLISTS[0] ? TLISTS[0].id || TLISTS[0].name : '',
     route: [], tomorrow: [], day: 'today', runIdx: 0, runDone: [], runSkip: [], logged: [],
     ...seed(A),
     thread: [], askIn: '', listening: false, email: null, switching: null,
@@ -2656,8 +2887,35 @@ class Component extends DCLogic {
   mapTypeNow() { return this.state.mapType || (OM_ACC.some(r => this.typeIs(r.type, 'Hospitals')) ? 'Hospitals' : 'All types'); }
 
   // insights
+  // what the website asks the rep to finish before an insight goes up, word for word: who, each named doctor's
+  // insight, at least one insight, and on Stemline a subtopic for each topic that has them (AddInsightSheet.tsx)
+  insProblems(insPer, thirdParty, s = this.state) {
+    const A = this.acct(), out = [], name = id => (HCPS[id] || NO_HCP).name, per = Object.fromEntries(insPer);
+    if (!thirdParty && !s.insWho.length) out.push('Add at least one HCP (name required).');
+    if (!thirdParty && s.insWho.length > 1) s.insWho.slice(1).forEach(id => { if (!per[id]) out.push(name(id) + ' has no insight — add one or remove the row.'); });
+    if (!s.insNote.trim() && !insPer.length) out.push('Enter at least one insight before generating.');
+    if (A.conv && A.subs && s.insConv === 'Insight') {
+      const half = s.insTopics.filter(t => (A.subs[t] || []).length && !(A.subs[t] || []).some(x => s.insSubs.includes(x)));
+      const carriers = insPer.length ? insPer.map(([id]) => id) : s.insWho.slice(0, 1);
+      const seen = new Set();
+      (carriers.length ? carriers : [null]).forEach(id => half.forEach(t => { const m = ((id && name(id)) || 'An insight') + ': choose a subtopic for "' + t + '" (or remove the topic).'; if (!seen.has(m)) { seen.add(m); out.push(m); } }));
+    }
+    return out;
+  }
+  // a just-saved insight, as the website's My Insights shows it before the server has read it: "Processing
+  // transcript…", the rep as its author, its meeting type and date; the next read brings the rest
+  savedInsight(who, dN, vType, s = this.state) {
+    const A = this.acct(), at = new Date(); at.setHours(0, 0, 0, 0); at.setDate(at.getDate() - dN);
+    const names = who.map(id => (HCPS[id] || NO_HCP).name), filed = A.conv ? (s.insConv === 'Insight' ? 'Insight' : s.insConv === 'Note' ? 'Notes' : '') : '';
+    return {
+      my:{ at:at.getTime(), mtype:vType, find:[names.join(', '), ...who.map(id => (HCPS[id] || NO_HCP).spec)].filter(Boolean).join('\n').toLowerCase() },
+      ix:{ id:'', title:'', day:MO[at.getMonth()] + ' ' + at.getDate() + ', ' + at.getFullYear(), created:Date.now(), mins:null, status:'pending', preview:'', summary:'',
+        by:ME.name, source:s.insSource === 'Upload' ? 'third_party' : 'team_member', hcp:names.join(', '), kind:filed || (A.areas || A.adv ? 'Insight' : ''), filed, mtype:vType,
+        sentiment:null, concerns:[], themes:[], keyInsights:[], actions:[], people:[], cats:[] },
+    };
+  }
   insPerOf(s = this.state) { return this.acct().fieldPro || s.insWho.length < 2 ? [] : s.insWho.map(id => [id, String((s.insPer || {})[id] || '').trim()]).filter(x => x[1]); }
-  insFresh(who, A = this.acct()) { return { insWho: who, insAdv:{}, insNote:'', insPer:{}, insTopics:[], insType: A.fieldPro ? A.meetTypes[0] : '', insLive:'', insConv:'', insArea: A.areas ? Object.keys(A.areas)[0] : null, insQtr:{}, insSubs:[], insStage:'Observation', insPrio:'Low', insTags:[], insFile:null, insSource:null, insPickMore:false, insRec:false, insPaused:false, insSecs:0, insMode:'notes',
+  insFresh(who, A = this.acct()) { return { insWho: who, insAdv:{}, insNote:'', insPer:{}, insTopics:[], insType: A.fieldPro ? A.meetTypes[0] : '', insLive:'', insConv:'', insArea: A.areas ? Object.keys(A.areas)[0] : null, insQtr:{}, insSubs:[], insStage:'Observation', insPrio:'Low', insTags:[], insFile:null, insSource:null, insTried:false, insConfName:'', insPickMore:false, insRec:false, insPaused:false, insSecs:0, insMode:'notes',
     insDateN:0, insVendor:null, insVendorSub:null, insVendorName:'', insCount:'', insConf:null, insHco:null, insDraft:null,
     insKey: Date.now().toString(36) + Math.random().toString(36).slice(2, 8), insRef:null, insMedia:null, insBusy:false }; }
   openLog(id) { this.openInsight(id ? [id] : [], 'notes'); }
@@ -2775,7 +3033,7 @@ class Component extends DCLogic {
   loadTracker(npi, force) {
     if (!SERVICE.tracker || !npi || (!force && this.state.trk[npi] !== undefined)) return;
     this.setState(st => ({ trk:{ ...st.trk, [npi]:'loading' } }));
-    SERVICE.tracker.read(npi).then(t => this.setState(st => ({ trk:{ ...st.trk, [npi]:t } })), () => this.setState(st => ({ trk:{ ...st.trk, [npi]:'failed' } })));
+    SERVICE.tracker.read(npi).then(t => this.setState(st => ({ trk:{ ...st.trk, [npi]:t } })), e => this.setState(st => ({ trk:{ ...st.trk, [npi]:'failed' }, trkErr:{ ...(st.trkErr || {}), [npi]:(e && e.message) || '' } })));
   }
   openTracker(npi, e) {
     this.setState({ sheet:'tracker', sheetData:npi, trkDateN:0, trkBusy:false, trkAsk:null,
@@ -2805,21 +3063,20 @@ class Component extends DCLogic {
     const bandAt = v => ready ? (t.bands.find(b => v >= b.min && v <= b.max) || {}).id : null;
     return {
       trkOn: !!SERVICE.tracker && !!pTarget,
-      trkStatus: !npi ? 'This HCP has no NPI on the list, so there is nothing to track against.' : t === 'loading' || t === undefined ? 'Loading…' : t === 'failed' ? 'The Sentiment Tracker didn’t load.' : !t ? 'The Sentiment Tracker isn’t available for this account.' : !t.count ? 'No assessments yet. Score them against the ' + t.statements.length + ' statements after a conversation.' : '',
-      trkFailed: t === 'failed', trkRetry: () => this.loadTracker(npi, true),
+      trkStatus: !npi ? 'This HCP has no NPI on the list, so there is nothing to track against.' : t === 'loading' || t === undefined ? 'Loading…' : t === 'failed' ? 'The Sentiment Tracker couldn\'t be loaded' + ((s.trkErr || {})[npi] ? ' (' + s.trkErr[npi] + ')' : '') + '.' : !t ? '' : !t.count ? 'No assessments yet. Score this HCP against the ' + t.statements.length + ' statements after a conversation.' : '',
       trkCanNew: ready, trkNew: () => this.openTracker(npi),
       trkHas: ready && t.count > 0,
       trkGroups: ready ? t.groups.map(g => { const [bg, fg] = tone(g.band); return { label:g.label, mean:g.mean, sub:g.answered + ' of ' + g.of + ' scored', bg, fg }; }) : [],
-      trkLast: ready && t.count ? 'Last assessed ' + t.last + ' · ' + t.count + (t.count === 1 ? ' assessment' : ' assessments') : '',
+      trkLastOn: ready && t.count ? t.last : '', trkLastN: ready && t.count ? t.count + (t.count === 1 ? ' assessment' : ' assessments') : '',
       trkRows: ready ? t.statements.map(q => { const [bg, fg] = tone(q.band), ch = q.change ? change[q.change] : null;
         return { n:q.n + '. ', text:q.text, score:q.score == null ? '—' : String(q.score), bg, fg,
           change: ch ? ch[0] + (q.was != null && q.change !== 'new' ? ' (was ' + q.was + ')' : '') : '—', changeC: ch ? ch[1] : '#7A839A', on:q.on ? ' · ' + q.on : '' }; }) : [],
-      trkHistLabel: ready ? 'History (' + t.entries.length + ')' + (s.trkHist ? ' ▴' : ' ▾') : '', trkHistToggle: () => this.setState({ trkHist:!s.trkHist }), trkHistOpen: !!s.trkHist,
-      trkEntries: ready && s.trkHist ? t.entries.map(e => { const key = e.on + '|' + e.revision, asking = s.trkAsk === key;
+      trkHistLabel: ready ? 'HISTORY (' + t.entries.length + ')' : '',
+      trkEntries: ready ? t.entries.map(e => { const key = e.on + '|' + e.revision, asking = s.trkAsk === key;
         return { date:e.date, who:e.who + (e.via ? ' · ' + e.via : ''), groups:e.groups,
           scores: t.statements.map(q => { const v = e.scores[q.id], [bg, fg] = tone(typeof v === 'number' ? bandAt(v) : null); return { title:q.title, v:typeof v === 'number' ? String(v) : '—', bg, fg }; }),
           acts: e.mine && !asking, edit: () => this.openTracker(npi, e), del: () => this.setState({ trkAsk:key }),
-          asking, yes: () => this.removeTracker(npi, e), no: () => this.setState({ trkAsk:null }), yesLabel: s.trkBusy ? 'Deleting…' : 'Delete' }; }) : [],
+          asking, yes: () => this.removeTracker(npi, e), no: () => this.setState({ trkAsk:null }), yesLabel: s.trkBusy ? 'Deleting…' : 'Confirm delete' }; }) : [],
     };
   }
   trackerFormView() {
@@ -2905,7 +3162,7 @@ class Component extends DCLogic {
     return {
       pRowsOn: !!(on && t),
       pRowFilt: [['all', 'All'], ['insight', 'Insights'], ['notes', 'Notes']].map(([k, label]) => ({ label: label + ' ' + n[k], ...seg(f === k), go: () => this.setState({ pRowF:k }) })),
-      pRowMsg: !on || !t ? '' : !state ? 'Loading…' : state === 'unavailable' ? 'Logged insights are temporarily unavailable.' : !rows.length ? 'No insights logged yet for this HCP.' : !shown.length ? 'No items match this filter.' : '',
+      pRowMsg: !on || !t ? '' : !state ? 'Loading…' : !rows.length ? 'No insights logged yet for this HCP.' : !shown.length ? 'No items match this filter.' : '',
       pRows: shown.map(r => { const v = meetings.find(m => m.id === 'target:' + listId + ':meeting:' + r.tid);
         return { type: r.type ? r.type.toUpperCase() : 'Untagged', chipBg: r.type === 'Insight' ? '#E7ECFA' : r.type ? '#EEF1F7' : 'transparent', chipFg: r.type === 'Insight' ? '#22409F' : '#5B6478',
           bdC: r.type ? 'transparent' : '#C9D1E0', date: r.date, text: r.verbatim ? '"' + r.text + '"' : r.text, fs: r.verbatim ? 'italic' : 'normal',
@@ -2975,13 +3232,18 @@ class Component extends DCLogic {
   dashView() {
     const s = this.state, d = s.dash, b = s.board;
     const ready = d && typeof d === 'object', tasks = Array.isArray(b) ? b : [];
-    const n = v => Number(v || 0).toLocaleString('en-US');
+    // the website writes its counts as the server sends them, with no thousands separator
+    const n = v => String(Number(v || 0));
+    const brand = { stemline:'Stemline', kura:'Kura', b1:'BeOne', targetedoncology:'Targeted Oncology', gilead:'Gilead' }[this.state.account] || 'your';
     const cols = [['todo','To Do'], ['in-progress','In Progress'], ['review','Review'], ['completed','Completed']];
     const states = ready && d.states ? d.states.slice(0, 6) : [], most = Math.max(1, ...states.map(x => x.interactions));
     const prio = { high:['High','#FDEDE4','#A94D1B'], medium:['Medium','#E7ECFA','#22409F'], low:['Low','#EEF1F7','#5B6478'] };
     return {
       dashStatus: d === 'loading' ? 'Loading the dashboard…' : d === 'failed' ? 'The dashboard didn’t load.' : '', dashFailed: d === 'failed', dashRetry: () => this.loadDash(true),
       dashReady: !!ready,
+      dashHello: 'Welcome back, ' + ((ME.name || '').trim().split(/\s+/)[0] || 'there'), dashBrand: brand,
+      // the website opens Add Insight on its upload tab
+      dashAdd: () => this.openInsight([], showOf(this.acct()).upload ? 'upload' : 'notes'),
       dashTiles: ready ? [
         ['Total Transcripts', n(d.transcripts), 'All processed recordings', '#E7ECFA', '#22409F'],
         ['Documents Generated', n(d.documents), 'PDF & PPT reports', '#F1F5FE', '#2447C4'],
@@ -2991,8 +3253,9 @@ class Component extends DCLogic {
       dashSent: ready ? [['Positive', d.sentiment.positive, '#1C7A4E'], ['Neutral', d.sentiment.neutral, '#B8892B'], ['Negative', d.sentiment.negative, '#C0392B']]
         .map(([label, pct, color]) => ({ label, pct:pct + '%', w:pct + '%', color })) : [],
       dashTotal: ready ? n(d.transcripts) : '',
-      dashCoverage: ready ? (d.states == null ? 'Territory coverage didn’t load.' : !d.states.length ? 'No HCP location data yet for your team.' : '') : '',
-      dashStates: states.map((x, i) => ({ rank:String(i + 1), name:x.name, meta:[[x.insights, 'insight'], [x.interactions, 'interaction'], [x.hcps, 'HCP']].map(([k, w]) => n(k) + ' ' + w + (k === 1 ? '' : 's')).join(' · '), w:Math.round(x.interactions / most * 100) + '%' })),
+      // a coverage read that fails shows the empty text, as the website's card does
+      dashCoverage: ready && !states.length ? 'No HCP location data yet for your team.' : '', dashTopOn: states.length > 0,
+      dashStates: states.map((x, i) => ({ rank:String(i + 1), name:x.name, meta:n(x.insights) + ' insights · ' + n(x.interactions) + ' interactions · ' + n(x.hcps) + ' HCPs', w:Math.round(x.interactions / most * 100) + '%' })),
       boardOn: !!SERVICE.tasks,
       boardStatus: b === 'loading' ? 'Loading tasks…' : b === 'failed' ? 'Tasks didn’t load.' : '',
       boardCols: cols.map(([k, label]) => ({ label:label + ' ' + tasks.filter(t => t.status === k).length, ...chip(s.boardCol === k), go: () => this.setState({ boardCol:k, boardAsk:null }) })),
@@ -3163,17 +3426,155 @@ class Component extends DCLogic {
       stYesLabel: s.stBusy === 'remove' ? 'Removing…' : 'Remove', stYes: () => this.removeTarget(), stNo: () => this.setState({ stAsk:false }),
     };
   }
+  // an insight opens as the website's transcript page: the list row at once, then its full read (GET /transcripts/:id)
+  openVisit(v) {
+    this.setState({ sheet:'visit', sheetData:v.id, ixTab:'transcript', ixView:'normal', ixSub:'document', ixTopics:[], ixHcpAll:false, ixRegen:false });
+    const full = v.ix && this.state.ixFull[v.ix.id];
+    if (v.ix && v.ix.id && !(v.mtg && v.mtg.manual) && SERVICE.insightRead && (!full || full === 'failed')) this.readInsight(v.ix.id);
+  }
+  readInsight(id) {
+    this.setState(st => ({ ixFull:{ ...st.ixFull, [id]:'loading' } }));
+    SERVICE.insightRead(id).then(full => this.setState(st => ({ ixFull:{ ...st.ixFull, [id]:full } })), () => this.setState(st => ({ ixFull:{ ...st.ixFull, [id]:'failed' } })));
+  }
+  // Generate / Regenerate Summary, the Insights tab's Retry and Assign Topics, then the page is read again (TranscriptDetail.tsx)
+  insightAct(id, what, done) {
+    if (this.state.ixBusy) return;
+    if (!SERVICE.insightAct) return this.toast('This isn’t connected for this account');
+    this.setState({ ixBusy:what, ixRegen:false });
+    SERVICE.insightAct(id, what).then(full => { this.setState(st => ({ ixBusy:null, ixFull:{ ...st.ixFull, [id]:full } })); if (done) this.toast(done); },
+      e => { this.setState({ ixBusy:null }); this.toast(what === 'summary' ? 'Failed to generate summary. Please try again.' : (e && e.message) || (what === 'retry' ? 'Could not retry insight generation' : 'Failed to assign topics')); });
+  }
+  // My Insights' Delete (MyInsights.tsx handleDeleteOne): the card leaves the list
+  deleteInsight(id) {
+    if (this.state.myDelBusy) return;
+    if (!SERVICE.insightDelete) return this.toast('Delete isn’t connected for this account');
+    this.setState({ myDelBusy:true, myDelErr:'' });
+    SERVICE.insightDelete(id).then(() => this.setState(st => ({ myDelBusy:false, myMenu:false, sheet:null, visits:st.visits.filter(v => v.id !== id) })),
+      e => this.setState({ myDelBusy:false, myDelErr:(e && e.message) || 'The insight could not be deleted. Please try again.' }));
+  }
+  // My Insights (MyInsights.tsx): Stemline's Insights/Notes, then search, meeting type, date and source; newest saved first
+  myView() {
+    const s = this.state, A = this.acct(), f = s.myF, q = s.actQ.trim().toLowerCase();
+    const base = s.visits.filter(v => !A.conv || f.type === 'all' || (v.ix && (f.type === 'Insight' ? v.ix.filed === 'Insight' : !v.ix.filed)));
+    const day0 = new Date(); day0.setHours(0, 0, 0, 0);
+    const since = { week:() => { const d = new Date(day0); d.setDate(d.getDate() - 7); return d.getTime(); }, month:() => { const d = new Date(day0); d.setMonth(d.getMonth() - 1); return d.getTime(); },
+      '3months':() => { const d = new Date(day0); d.setMonth(d.getMonth() - 3); return d.getTime(); } };
+    const inDate = v => { const at = v.my ? v.my.at : null; if (f.date === 'all') return true; if (at === null) return false;
+      return f.date === 'today' ? at >= day0.getTime() && at <= day0.getTime() + 86399999 : at >= since[f.date](); };
+    const shown = base.filter(v => (!q || (v.my ? v.my.find : (v.note + ' ' + v.topic).toLowerCase()).includes(q))
+      && (f.mtype === 'all' || (v.ix ? v.ix.mtype : '') === f.mtype) && inDate(v) && (f.src === 'all' || (v.ix && v.ix.source === f.src)))
+      .sort((a, b) => (b.ix ? b.ix.created : 0) - (a.ix ? a.ix.created : 0));
+    const types = [...new Set(base.map(v => v.ix ? v.ix.mtype : '').filter(Boolean))];
+    const pick = k => value => this.setState(st => ({ myF:{ ...st.myF, [k]:value == null ? 'all' : value }, myPage:0, sheet:null }));
+    const sel = (key, allLabel, opts, now) => ({ key:'my:' + key, label:allLabel, allLabel, value:now === 'all' ? null : now, options:opts.map(([value, label]) => ({ value, label, count:null })), pick:pick(key) });
+    const selects = [...(A.conv ? [sel('type', 'All', [['Insight', 'Insights'], ['Note', 'Notes']], f.type)] : []), sel('src', 'All Sources', MY_SRC, f.src),
+      sel('mtype', 'All Meeting Types', types.map(t => [t, t]), f.mtype), sel('date', 'All Dates', MY_DATES, f.date)];
+    return { base, shown, types, selects };
+  }
+  // the website's transcript page (TranscriptDetail.tsx), from the list row and then its full read
+  ixView(v) {
+    const s = this.state, got = s.ixFull[v.ix.id], F = got && typeof got === 'object' ? got : null, P = F ? F.page : v.ix;
+    const tStatus = F ? F.status || P.status : P.status, busy = s.ixBusy, sent = P.sentiment;
+    const iState = F && F.insightsStatus ? F.insightsStatus : tStatus !== 'completed' ? 'pending' : P.keyInsights.length || P.actions.length ? 'completed' : 'failed';
+    const iWait = iState === 'pending' || iState === 'processing';
+    const tab = s.ixTab, hasHcpIns = P.people.some(p => p.insights.length), subTabs = !!F && F.hasDocument && hasHcpIns, segs = F ? F.segments : [];
+    const view = segs.length ? s.ixView : 'normal', sub = subTabs ? s.ixSub : 'document';
+    const chip = on => on ? { bg:'#2447C4', fg:'#fff', bd:'#2447C4' } : { bg:'#fff', fg:'#5B6478', bd:'#D7DEEC' };
+    // Topic View's filter chips: All, each category A–Z, then General (TranscriptDetail.tsx:2530-2590)
+    const counts = {}; segs.forEach(g => { const k = g.cat || 'General'; counts[k] = (counts[k] || 0) + 1; });
+    const cats = Object.keys(counts).filter(k => k !== 'General').sort(), picked = s.ixTopics;
+    const toggle = k => this.setState(st => ({ ixTopics:st.ixTopics.includes(k) ? st.ixTopics.filter(x => x !== k) : [...st.ixTopics, k] }));
+    const segShown = !picked.length ? segs : segs.filter(g => picked.includes(g.cat || 'General'));
+    // the Topics card: tagged segments, else the attributions, else the topic, else none yet (TranscriptDetail.tsx:1740-1905)
+    const tagged = segs.filter(g => g.cat).length, byCount = Object.keys(counts).filter(k => k !== 'General').sort((a, b) => counts[b] - counts[a]);
+    const people = P.people.length ? P.people : [{ id:v.who || '', name:P.hcp || 'Unknown', spec:(HCPS[v.who] || {}).spec || '', site:'', place:'', adv:null, quarter:'', insights:[] }];
+    const pct = n => Math.round(n * 100) + '%';
+    const complete = !!sent && !!sent.confidence && !!sent.details && !!sent.explanations;
+    const ex = sent && sent.explanations, bullets = t => (t || '').split('. ').filter(x => x.trim()).map(x => x.trim());
+    const tone = SMY_SENT[(sent ? sent.overall : '').toLowerCase()] || ['#EEF1F7', '#5B6478'];
+    const d = sent && sent.details, total = d ? (d.positive || 0) + (d.neutral || 0) + (d.negative || 0) : 0, w = n => (total ? Math.round(n / total * 100) : 0) + '%';
+    return {
+      ixPage:true, ixFile:F && F.fileType ? (F.fileType === 'text' ? 'Text File' : capWord(F.fileType) + ' file') : '', ixDate:P.day || 'No date',
+      ixKind:P.kind || 'Not specified', ixKindBg:P.kind === 'Insight' ? '#2447C4' : '#EEF1F7', ixKindFg:P.kind === 'Insight' ? '#fff' : '#3C4557',
+      ixLoading:got === 'loading', ixFailed:got === 'failed', ixRetryRead:() => this.readInsight(v.ix.id),
+      ixTabs:[['transcript', 'Transcript'], ['summary', 'Summary'], ['insights', 'Insights'], ['sentiment', 'Sentiment']].map(([k, label]) => ({ label, ...seg(tab === k), go:() => this.setState({ ixTab:k }) })),
+      // Transcript
+      ixTrOn:tab === 'transcript', ixTrHead:F && F.fileType === 'text' ? 'Notes' : 'Transcript',
+      ixViewOn:segs.length > 0, ixViews:[['normal', 'Normal Text'], ['topics', 'Topic View']].map(([k, label]) => ({ label, ...chip(view === k), go:() => this.setState({ ixView:k }) })),
+      ixSubOn:view === 'normal' && subTabs, ixSubs:[['document', 'Document'], ['hcp', 'HCP Insights']].map(([k, label]) => ({ label, ...chip(sub === k), go:() => this.setState({ ixSub:k }) })),
+      ixDocOn:view === 'normal' && sub === 'document',
+      ixText:got === 'loading' ? 'Loading…' : F ? F.text || 'Transcript will appear here once processing is complete...' : P.preview || 'Transcript will appear here once processing is complete...',
+      ixTextC:F && F.text ? '#1B2333' : '#7A839A',
+      ixHcpInsOn:view === 'normal' && sub === 'hcp',
+      ixHcpIns:P.people.map(p => ({ name:p.name, meta:[p.spec, p.site].filter(Boolean).join(' · '), rows:p.insights, none:!p.insights.length })),
+      ixTopicOn:view === 'topics',
+      ixTopicChips:[{ label:'All (' + segs.length + ')', ...chip(!picked.length), go:() => this.setState({ ixTopics:[] }) },
+        ...cats.map(k => ({ label:k + ' (' + counts[k] + ')', ...chip(picked.includes(k)), go:() => toggle(k) })),
+        ...(counts.General ? [{ label:'General (' + counts.General + ')', ...chip(picked.includes('General')), go:() => toggle('General') }] : [])],
+      ixSegs:segShown.map(g => ({ tag:g.cat ? g.cat + (g.sub ? ' · ' + g.sub : '') : 'General', op:g.cat ? '1' : '0.6', text:g.text })), ixSegsNone:!segShown.length,
+      // Summary
+      ixSmOn:tab === 'summary', ixSmBtnOn:tStatus === 'completed' && !s.ixRegen,
+      ixSmBtn:busy === 'summary' ? (P.summary ? 'Regenerating...' : 'Generating...') : P.summary ? 'Regenerate Summary' : 'Generate Summary',
+      ixSmGo:() => P.summary ? this.setState({ ixRegen:true }) : this.insightAct(v.ix.id, 'summary'),
+      ixRegenOn:s.ixRegen, ixRegenNo:() => this.setState({ ixRegen:false }), ixRegenYes:() => this.insightAct(v.ix.id, 'summary'),
+      ixSmText:P.summary, ixSmNone:!P.summary,
+      ixConcerns:P.concerns, ixConcernsOn:P.concerns.length > 0, ixThemes:P.themes, ixThemesOn:P.themes.length > 0, ixKwNone:!P.concerns.length && !P.themes.length,
+      // Insights
+      ixInOn:tab === 'insights', ixInWait:tStatus === 'completed' && iWait, ixInFail:tStatus === 'completed' && iState === 'failed',
+      ixInErr:(F && F.error) || 'Automatic generation didn’t complete. You can try again.', ixRetry:() => this.insightAct(v.ix.id, 'retry'), ixRetryLabel:busy === 'retry' ? 'Retrying…' : 'Retry',
+      ixKeys:P.keyInsights, ixKeysNone:!P.keyInsights.length,
+      ixKeysEmpty:iState === 'failed' ? 'No insights were generated.' : iWait ? 'Insights are being generated automatically...' : 'No insights found for this transcript.',
+      ixActs:P.actions, ixActsNone:!P.actions.length,
+      ixActsEmpty:iState === 'failed' ? 'No action items were generated.' : iWait ? 'Action items are being generated automatically...' : 'No action items found for this transcript.',
+      // Sentiment: shown whole only when every part is there (TranscriptDetail.tsx:3050-3285)
+      ixSeOn:tab === 'sentiment', ixSeFull:complete, ixSeOverall:sent ? sent.overall : '', ixSeBg:tone[0], ixSeFg:tone[1],
+      ixSeConf:'Confidence: ' + (sent && sent.confidence > 0 ? pct(sent.confidence) : 'N/A'), ixSeConfBig:sent && sent.confidence > 0 ? pct(sent.confidence) : '—',
+      ixSeBars:d ? [['#1C7A4E', w(d.positive || 0)], ['#B8892B', w(d.neutral || 0)], ['#C0392B', w(d.negative || 0)]].map(([c, wd]) => ({ c, w:wd })) : [],
+      ixSeParts:d ? [['Positive', d.positive, '#E3F5EC', '#1C7A4E'], ['Neutral', d.neutral, '#FBF3E2', '#8A6A1F'], ['Negative', d.negative, '#FDECEA', '#C0392B']].map(([k, n, bg, fg]) => ({ label:k + ': ' + n + '%', bg, fg })) : [],
+      ixSeDetails:complete && !!ex.positive && !!ex.neutral && !!ex.negative,
+      ixSeEls:!ex ? [] : [['Positive Elements', ex.positive, '#1C7A4E', '#F2FAF5'], ['Neutral Elements', ex.neutral, '#8A6A1F', '#FDF8EE'], ['Negative Elements', ex.negative, '#C0392B', '#FDF3F2']]
+        .map(([head, t, fg, bg]) => ({ head, fg, bg, points:bullets(t) })),
+      ixSePartial:!!sent && !complete,
+      ixSeMissing:'Missing: ' + [sent && !sent.confidence && 'Confidence', sent && !sent.details && 'Breakdown', sent && !sent.explanations && 'Explanations'].filter(Boolean).join(', '),
+      ixSeNone:!sent,
+      // HCP card: two, then Show N more (TranscriptDetail.tsx:1560-1712); a name opens their page
+      ixHcpHead:P.people.length > 1 ? 'HEALTHCARE PROVIDERS' : 'HCP',
+      ixPeople:(people.length > 2 && !s.ixHcpAll ? people.slice(0, 2) : people).map(p => ({ name:p.name, spec:p.spec, site:p.site, place:p.place,
+        adv:p.adv != null ? 'Advocacy: ' + p.adv + '/5' + (p.quarter ? ' · ' + p.quarter : '') : '', link:!!HCPS[p.id], open:() => HCPS[p.id] ? this.go('hcp', p.id) : null })),
+      ixMoreOn:people.length > 2, ixMore:s.ixHcpAll ? 'Show less' : 'Show ' + (people.length - 2) + ' more', ixMoreGo:() => this.setState({ ixHcpAll:!s.ixHcpAll }),
+      // Topics card
+      ixFiled:P.filed, ixSegLine:segs.length ? tagged + ' of ' + segs.length + ' segments tagged' : '', ixSegChips:segs.length ? byCount.map(k => k + ' (' + counts[k] + ')') : [],
+      ixCats:segs.length ? [] : P.cats, ixTopicLine:!segs.length && !P.cats.length && F && F.topic ? F.topic : '', ixSubtopic:F && F.subtopic ? F.subtopic : '',
+      ixNoTopics:!segs.length && !P.cats.length && !(F && F.topic), ixReassignOn:segs.length > 0 || P.cats.length > 0,
+      ixAssign:() => this.insightAct(v.ix.id, 'topics', segs.length ? 'Topics re-assigned per sentence' : P.cats.length ? 'Topics re-assigned successfully' : 'Topics assigned successfully'), ixAssignLabel:busy === 'topics' ? 'Assigning Topics...' : 'Assign Topics', ixReassignLabel:busy === 'topics' ? 'Assigning Topics...' : 'Re-assign Topics',
+      // Attendees and Notes, from the full read
+      ixAttOn:!!F, ixAtt:F ? F.attendees.map(a => ({ name:a.name, meta:a.role + (a.org ? ' • ' + a.org : '') })) : [], ixAttNone:!!F && !F.attendees.length,
+      ixNotes:F ? F.notes : '',
+    };
+  }
   // Insights' Log meeting on a target list: a meeting with no write-up, as the website's Meetings tab logs it
-  openMeet(id) { this.setState({ sheet:'meet', sheetData:id, meetDateN:0, meetType:'', meetSent:'', meetNote:'', meetBusy:false }); }
+  openMeet(id) { this.setState({ sheet:'meet', sheetData:id, meetDateN:0, meetType:'', meetSent:'', meetNote:'', meetBusy:false, meetEditId:null }); }
+  // its pencil: the same form with the meeting's values, saved as "Save changes" (DetailDrawer.tsx openEditMeeting)
+  editMeet(id, v) {
+    const m = v.mtg || {};
+    this.setState({ sheet:'meet', sheetData:id, meetDateN:Math.max(0, v.dN || 0), meetType:m.type || '', meetSent:m.sentiment || '', meetNote:m.preview || '', meetBusy:false, meetEditId:v.id });
+  }
+  // its bin: deleted at once, as on the website
+  deleteMeet(listId, id, v) {
+    if (!SERVICE.meetDelete) return this.toast('This isn’t connected for this account');
+    SERVICE.meetDelete(listId, id, v.id).then(() => this.setState({ pSeg:'meeting' }), e => this.toast((e && e.message) || 'Delete failed'));
+  }
   saveMeet(listId) {
     const s = this.state, id = s.sheetData;
     if (s.meetBusy) return;
     if (!SERVICE.meet) { this.toast('Logging meetings is not connected'); return; }
     const d = dateAt(-s.meetDateN), two = n => String(n).padStart(2, '0');
     this.setState({ meetBusy:true });
-    SERVICE.meet(listId, id, { meetingDate:d.getFullYear() + '-' + two(d.getMonth() + 1) + '-' + two(d.getDate()), meetingType:s.meetType, sentiment:s.meetSent, notes:s.meetNote.trim() })
-      .then(() => { this.setState({ meetBusy:false, sheet:null, pSeg:'meeting' }); this.toast('Meeting logged'); },
-        e => { this.setState({ meetBusy:false }); this.toast((e && e.message) || 'Could not save the meeting · try again'); });
+    const meeting = { meetingDate:d.getFullYear() + '-' + two(d.getMonth() + 1) + '-' + two(d.getDate()), meetingType:s.meetType, sentiment:s.meetSent, notes:s.meetNote.trim() };
+    if (s.meetEditId && !SERVICE.meetEdit) { this.setState({ meetBusy:false }); return this.toast('This isn’t connected for this account'); }
+    (s.meetEditId ? SERVICE.meetEdit(listId, id, s.meetEditId, meeting) : SERVICE.meet(listId, id, meeting))
+      .then(() => { this.setState({ meetBusy:false, sheet:null, pSeg:'meeting', meetEditId:null }); if (!s.meetEditId) this.toast('Meeting logged'); },
+        e => { this.setState({ meetBusy:false }); this.toast((e && e.message) || 'Could not save the meeting. Please try again.'); });
   }
   // who can be picked: the account's doctors first, then the rest of the book (insights accounts: the target list)
   people(hco) {
@@ -3223,7 +3624,7 @@ class Component extends DCLogic {
     const s = this.state, who = s.insWho[0], key = s.insKey;
     this.setState({ insRec:false, insPaused:false, insMode:'notes', insBusy:true });
     let clip = null;
-    (source === 'Upload' ? Promise.resolve(s.insMedia) : SERVICE.rec('stop')).then(media => { clip = media; return SERVICE.transcript(s.insWho, this.transcript(who), media, this.draftForm()); }).then(r => {
+    (source === 'Upload' ? Promise.resolve(s.insMedia) : SERVICE.rec('stop')).then(media => { clip = media; return SERVICE.transcript(s.insWho, this.transcript(who), media, { ...this.draftForm(), insSource:source }); }).then(r => {
       // the sheet was closed or saved meanwhile
       if (this.state.insKey !== key) return;
       this.setState(st => ({ insBusy:false, insSource:source, insRef: r.ref || st.insRef, insNote:[st.insNote.trim(), r.text].filter(Boolean).join('\n\n'),
@@ -3248,17 +3649,20 @@ class Component extends DCLogic {
       this.setState({ briefing:id });
       SERVICE.brief(listId, id).then(() => this.setState({ briefing:null }), e => { this.setState({ briefing:null }); this.toast((e && e.message) || 'The brief couldn’t be written · try again'); });
     };
+    // a quote's meeting opens as the logged insights' rows do, once the target's meetings have been read
+    const meetings = t.activity || [], from = tid => tid ? meetings.find(m => m.id === 'target:' + listId + ':meeting:' + tid) : null;
+    const linked = (q, word) => { const v = from(q.tid); return v ? { link:word, go:() => this.sheet('visit', v.id) } : { link:'' }; };
     return {
-      head:'Pre-call brief',
-      basis:doc ? 'AI-generated · Updated ' + ago(doc.at) : 'Talking points, objections and quotes from ' + n + ' prior meeting' + (n === 1 ? '' : 's') + '.',
+      head:'Pre-call brief', badge:doc ? 'AI-GENERATED' : '',
+      basis:doc ? 'Updated ' + ago(doc.at) : 'Talking points, objections and quotes from ' + n + ' prior meeting' + (n === 1 ? '' : 's') + '.',
       message:'', write:doc || n ? write : null,
       action:writing ? (doc ? 'Regenerating…' : 'Generating…') : doc ? 'Regenerate' : 'Generate',
       sections:doc ? [
         ...(doc.snapshot ? [{ title:'', text:'', points:[{ lead:'', text:doc.snapshot }] }] : []),
+        ...(doc.points.length ? [{ title:'', text:'', points:doc.points.map(text => ({ lead:'', text:'• ' + text })) }] : []),
         ...(doc.points.length ? [{ title:'NEXT BEST ACTION', text:doc.points[0], points:[] }] : []),
-        ...(doc.points.length > 1 ? [{ title:'TALKING POINTS', text:'', points:doc.points.slice(1).map(text => ({ lead:'', text })) }] : []),
-        ...(doc.objections.length ? [{ title:'OBJECTIONS RAISED', text:'', points:doc.objections.map(o => ({ lead:o.text, text:o.date })) }] : []),
-        ...(doc.quotes.length ? [{ title:'QUOTES FROM PRIOR MEETINGS', text:'', points:doc.quotes.map(q => ({ lead:'“' + q.text + '”', text:q.date })) }] : [])
+        ...(doc.objections.length ? [{ title:'OBJECTIONS RAISED', text:'', points:doc.objections.map(o => ({ lead:o.text, text:o.date, ...linked(o, 'open transcript') })) }] : []),
+        ...(doc.quotes.length ? [{ title:'QUOTES FROM PRIOR MEETINGS', text:'', points:doc.quotes.map(q => ({ lead:'"' + q.text + '"', text:q.date, ...linked(q, 'source') })) }] : [])
       ] : []
     };
   }
@@ -3287,9 +3691,22 @@ class Component extends DCLogic {
       ...(v.vendor ? [v.vendor + (v.vendorSub ? ' · ' + v.vendorSub : '')] : []), ...(v.count ? [v.count + ' attendees'] : []), ...(v.conf ? [v.conf] : []),
       ...(v.topics || []), ...(v.subs || []), ...(v.tags || [])];
     const cardNote = v.note.length > 280 ? v.note.slice(0, 280).trimEnd() + '…' : v.note;
+    // Insights: My Insights' card (MyInsights.tsx:365-446): type, length and date, the transcript's start, who and who added it
+    const ix = v.ix, ixCard = !ix ? { ixOn:false, plainOn:true } : (() => {
+      const third = ix.source === 'third_party', sent = ix.sentiment ? ix.sentiment.overall.toLowerCase() : '', who = ix.hcp || ix.by || 'NA';
+      const tone = SMY_SENT[sent] || SMY_SENT.neutral, w = who.replace(/^dr\.?\s+/i, '').split(/\s+/).filter(Boolean);
+      return { ixOn:true, plainOn:false, ixType:(ix.mtype || 'Meeting').toUpperCase(), ixTypeC:mtColor(ix.mtype, third), ixWhen:(ix.mins ? ix.mins + 'm · ' : '') + (ix.day || '—'),
+        ixHero:ix.preview || (ix.status === 'pending' || ix.status === 'processing' ? 'Processing transcript…' : ix.status === 'failed' ? 'Transcription failed' : 'No transcript available'),
+        ixHeroC:ix.preview ? '#0B1220' : '#7A839A', ixHeroFs:ix.preview ? 'normal' : 'italic', ixName:ix.hcp || 'Third-party', ixBy:ix.by ? ' · Added by ' + ix.by : '',
+        ixIni:((w[0] || '')[0] || '') + (w.length > 1 ? w[w.length - 1][0] : ''),
+        ixChips:[...(sent && sent !== 'neutral' ? [{ label:capWord(sent), bg:tone[0], fg:tone[1] }] : []),
+          ...(A.conv ? [ix.filed === 'Insight' ? { label:'Insight', bg:'#E7ECFA', fg:'#22409F' } : { label:'Note', bg:'#EEF1F7', fg:'#5B6478' }] : []),
+          ...(third ? [{ label:'3rd Party', bg:'#EFE9FB', fg:'#6B46C1' }] : [])],
+        menu:() => this.setState({ sheet:'mymenu', sheetData:v.id, myMenu:false }) };
+    })();
     const topicOn = !!v.topic && v.topic !== v.type, typeLine = topicOn ? v.type + ' · ' + v.topic : v.type;
     return { ...v, cardNote, topicOn, typeLine, photo:p && p.photo, npi:p && p.id, name: p ? p.name + (ids.length > 1 ? ' +' + (ids.length - 1) : '') : v.vendor || v.type.split(' · ')[0], ini: p ? p.ini : '3P', chips, hasChips: chips.length > 0 || !!v.src, hasSrc: !!v.src,
-      srcLabel: v.src === 'manual' ? 'Logged manually' : v.conv === 'Note' ? 'Note' : v.src === 'Notes' ? wordsOf(A).one : v.src ? 'From ' + v.src.toLowerCase() : '', open: () => this.sheet('visit', v.id) };
+      srcLabel: v.src === 'manual' ? 'Logged manually' : v.conv === 'Note' ? 'Note' : v.src === 'Notes' ? wordsOf(A).one : v.src ? 'From ' + v.src.toLowerCase() : '', open: () => this.openVisit(v), ...ixCard };
   }
   themes(list) {
     const count = {}, tagged = list.some(v => v.topics && v.topics.length);
@@ -3720,7 +4137,8 @@ class Component extends DCLogic {
   fuView(f) {
     // no due date: no due chip, as the website shows none
     const p = HCPS[f.who], over = fuOver(f), undated = !f.done && f.dueAt === null;
-    return { ...f, whoName: p?.name || 'Clinician unavailable', dueBg: f.done ? '#EEF1F7' : undated ? 'transparent' : over ? '#FDEDE4' : '#E7ECFA', dueFg: f.done ? '#7A839A' : over ? '#A94D1B' : '#22409F', due: f.done ? 'Done' : undated ? '' : over ? 'Overdue · ' + dateOf(f.dueN) : dayOf(f.dueN),
+    return { ...f, whoName: p?.name || 'Clinician unavailable', dueBg: f.dueAt == null && !this.acct().fieldPro ? 'transparent' : f.done ? '#EEF1F7' : undated ? 'transparent' : over ? '#FDEDE4' : '#E7ECFA', dueFg: f.done ? '#7A839A' : over ? '#A94D1B' : '#22409F', due: !this.acct().fieldPro ? (f.dueAt == null ? '' : (over ? 'Overdue · ' : 'Due ') + utcDay(f.dueAt))
+        : f.done ? 'Done' : undated ? '' : over ? 'Overdue · ' + dateOf(f.dueN) : dayOf(f.dueN),
       toggle: () => {
         this.setState(st => ({ fus: st.fus.map(x => x.id === f.id ? { ...x, done: !x.done } : x) })); if (!f.done) this.toast('Follow-up done');
         if (SERVICE.followUpDone) SERVICE.followUpDone(f, !f.done).then(null, e => { this.setState(st => ({ fus: st.fus.map(x => x.id === f.id ? { ...x, done: f.done } : x) })); this.toast((e && e.message) || 'That didn’t save · try again'); });
@@ -3960,7 +4378,7 @@ class Component extends DCLogic {
         const meetings = pr ? { k:'MEETINGS', v:(pr.meetings12 ?? 0) + ' / ' + (pr.meetings ?? 0), c:'#22409F' } : { k:'INSIGHTS', v:String(this.convCount(p.id)), c:'#22409F' };
         const place = pr ? pr.site || pr.place : HCOS[p.hco]?.name;
         const over = !!pr && this.state.fus.some(x => x.ref?.targetId === pr.targetId && fuOver(x));
-        const lastCell = pr ? { k:'LAST MEETING', v:pr.lastMeeting || '—', small:true, c: over && pr.lastMeeting ? '#A94D1B' : '#0B1220',
+        const lastCell = pr ? { k:'LAST MEETING', v:pr.lastMeeting || '', small:true, c: over && pr.lastMeeting ? '#A94D1B' : '#0B1220',
           s: pr.lastMeeting ? (pr.lastAt ? agoAt(pr.lastAt) : agoOf(pr.lastMeeting)) + (over ? ' · overdue' : '') : '', sc: over ? '#A94D1B' : '#7A839A' }
           : { k:'LAST MEETING', v:this.lastOf(p.id).label, c:'#0B1220' };
         const notes = pr?.notes?.length || 0;
@@ -4111,18 +4529,18 @@ class Component extends DCLogic {
       // a list with no area explores the whole country; until the lists are confirmed it can't know that (HomeExplorePanel.tsx)
       : exploreMode && !WORKSPACE.explore.geographic ? { emptyTitle:'Your target lists couldn’t be confirmed.',emptySub:'',emptyA:'Try again',emptyAGo:() => AUTH.refreshWorkspace?.(),hasEmptyA:!!AUTH.refreshWorkspace,hasEmptyB:false }
       : exploreMode && !WORKSPACE.explore.hasCodes ? { emptyTitle:'You have no code groups yet, so there is nothing to list here.',emptySub:'Ask your admin to share code groups with you.',hasEmptyA:false,hasEmptyB:false }
-      : ql
+      : ql && !ins
       ? { emptyTitle:'No matches for “' + s.q.trim() + '”', emptySub: toExploreFirst ? 'Try Explore.' : 'Check the spelling.',
           emptyA: toExploreFirst ? 'Search Explore' : 'Clear search', emptyAGo: toExploreFirst ? () => this.setState({ scope:'explore' }) : () => this.setState({ q:'' }), hasEmptyB:false }
       : codesOff ? { emptyTitle:'Nothing for these codes', emptySub:'Change the specialty or the code groups.', emptyA:'Change filters', emptyAGo: () => this.sheet('filter'), emptyB:'Reset filters', emptyBGo: () => this.setState({ spec:'All codes', cgs: CODE_GROUPS.map(g => g.name) }) }
       // the website's empty list (TargetListDetail.tsx:650-673): a manual list offers its first HCP
       : ins ? (tlist.loading || !tlist.id ? { emptyTitle:tlist.loading ? 'Loading targets…' : 'No target lists yet',emptySub:tlist.loading ? 'Opening ' + tlist.name : '',
           emptyA:'Change list', emptyAGo: () => this.sheet('territory'), hasEmptyA: TLISTS.length > 1, emptyB:'', emptyBGo: () => {}, hasEmptyB: false }
-        : tlist.ids.length && (s.iSpec !== 'All' || s.iState !== 'All' || s.iStatus !== 'All' || s.iTopics.length) ? { emptyTitle:'No providers match these filters.',emptySub:'',
-          emptyA:'Reset filters', emptyAGo: () => this.setState({ ...I_FILTERS, targetPage:0 }), hasEmptyA:true, emptyB:'', emptyBGo: () => {}, hasEmptyB:false }
-        : tlist.smart ? { emptyTitle:'No HCPs match these rules yet',emptySub:'',emptyA:'Change list', emptyAGo: () => this.sheet('territory'), hasEmptyA: TLISTS.length > 1, emptyB:'', emptyBGo: () => {}, hasEmptyB:false }
+        : tlist.ids.length ? { emptyTitle:'No providers match these filters.',emptySub:'', emptyA:'', emptyAGo: () => {}, hasEmptyA:false, emptyB:'', emptyBGo: () => {}, hasEmptyB:false }
+        : tlist.smart ? { emptyTitle:'No HCPs match these rules yet',emptySub:'HCPs must already be in one of your manual lists to be picked up here. Add some to a manual list and they’ll appear automatically when they match.',
+          emptyA:'', emptyAGo: () => {}, hasEmptyA:false, emptyB:'', emptyBGo: () => {}, hasEmptyB:false }
         : { emptyTitle:'No HCPs in this list yet',emptySub:'Add an HCP and we’ll pull every meeting you’ve had with them. Generate a pre-call brief whenever you need one.',
-          emptyA:'Add your first HCP', emptyAGo: () => this.openPeople(), hasEmptyA:true, emptyB:'Change list', emptyBGo: () => this.sheet('territory'), hasEmptyB: TLISTS.length > 1 })
+          emptyA:'Add your first HCP', emptyAGo: () => this.openPeople(), hasEmptyA:true, emptyB:'', emptyBGo: () => {}, hasEmptyB:false })
       // the website's wording for an empty book (its "Add your targets" upload isn't in the app; Explore is)
       : savedHcps ? { emptyTitle:'No target HCPs in ' + territoryName + ' yet.',emptySub:'',emptyA:'Explore HCPs',emptyAGo:() => this.setState({ scope:'explore' }),hasEmptyB:false }
       : toExploreFirst && s.kind === 'hco' && !Object.values(HCOS).some(h => h.mine) ? { emptyTitle:'No target accounts in ' + territoryName + ' yet.',emptySub:'',emptyA:'Explore accounts',emptyAGo:() => this.setState({ scope:'explore' }),hasEmptyB:false }
@@ -4134,11 +4552,12 @@ class Component extends DCLogic {
       return { label:x.label, value:now, bd:set ? '#9DB3EE' : '#D7DEEC', bg:set ? '#EEF3FD' : '#fff', fg:set ? '#22409F' : '#0B1220', go:() => this.sheet('xf', x.key) };
     });
     const xClearOn = !!xv && xv.status === 'ready' && xv.clearable;
-    const xfSel = s.sheet === 'xf' && xv ? xv.selects.find(x => x.key === s.sheetData) || null : null;
+    const MY = ins ? this.myView() : null;
+    const xfSel = s.sheet !== 'xf' ? null : MY && String(s.sheetData).startsWith('my:') ? MY.selects.find(x => x.key === s.sheetData) || null : xv ? xv.selects.find(x => x.key === s.sheetData) || null : null;
     const xfOpts = xfSel ? [{ value:null, label:xfSel.allLabel, count:null }, ...xfSel.options].map(o => {
       const on = o.value === xfSel.value;
       return { label:o.label, count:o.count == null ? '' : o.count.toLocaleString('en-US'), check:on ? '✓' : '', bd:on ? '#2447C4' : '#E1E6F0', bg:on ? '#F4F7FE' : '#fff',
-        op:o.count === 0 && !on ? '0.5' : '1', go:() => this.exploreFilter(xfSel.key, o.value) };
+        op:o.count === 0 && !on ? '0.5' : '1', go:() => xfSel.pick ? xfSel.pick(o.value) : this.exploreFilter(xfSel.key, o.value) };
     }) : [];
     const note = (text, extra) => ({ lead:'', hasGo:false, go:() => {}, bg:'#EDF1FB', text, ...extra });
     const xNotes = !exploreMode ? [] : [
@@ -4171,7 +4590,7 @@ class Component extends DCLogic {
     const pYear = bookYr();
     const pHistory = pTarget ? (pTarget.activity || []) : s.visits.filter(v => this.whoOf(v).includes(pId));
     // a target's tabs are the website drawer's: Insights, Meetings, Notes, Follow-ups and, for Stemline, the Sentiment Tracker
-    const pSegKeys = pTarget ? ['insight','meeting','note','followups',...(SH.tracker && SERVICE.tracker && /^\d{10}$/.test(pId) ? ['tracker'] : [])] : ['overview','activity'];
+    const pSegKeys = pTarget ? ['insight','meeting','note','followups',...(SH.tracker && SERVICE.tracker && !(/^\d{10}$/.test(pId) && s.trk[pId] === null) ? ['tracker'] : [])] : ['overview','activity'];
     const pSegNow = pSegKeys.includes(s.pSeg) ? s.pSeg : pSegKeys[0];
     const pEntries = pTarget ? (pSegNow === 'meeting' ? pHistory.filter(v => String(v.id).includes(':meeting:')) : []) : pHistory;
     const historyState = pTarget?.activityState?.meeting;
@@ -4212,11 +4631,14 @@ class Component extends DCLogic {
 
     // insight detail
     const VD = s.sheet === 'visit' && (s.visits.find(v => v.id === s.sheetData) || pHistory.find(v => v.id === s.sheetData)), VV = VD && this.visitView(VD);
-    const visitDetail = VD ? { ...VV, hasTags: VV.chips.length > 0, hasPeople: this.whoOf(VD).length > 0,
+    const IXP = VD && VD.ix && !(VD.mtg && VD.mtg.manual) ? this.ixView(VD) : { ixPage:false };
+    const visitDetail = VD ? { ...VV, ...IXP, plainPage:!IXP.ixPage, hasTags: VV.chips.length > 0, hasPeople: this.whoOf(VD).length > 0,
       people: this.whoOf(VD).map(id => { const p = HCPS[id]; return { ini:p.ini, photo:p.photo, npi:p.id, name:p.name, meta:p.spec + ' · ' + HCOS[p.hco].name, open: () => this.go('hcp', id) }; }) }
-      : { date:'', type:'', topic:'', note:'', chips:[], hasTags:false, hasSrc:false, srcLabel:'', hasPeople:false, people:[] };
+      : { date:'', type:'', topic:'', note:'', chips:[], hasTags:false, hasSrc:false, srcLabel:'', hasPeople:false, people:[], ixPage:false, plainPage:true };
 
-    const titles = { visit: VD && VD.conv === 'Note' ? 'Note' : W.one, range: rangeType ? 'Area and type' : 'Search area', xf: xfSel ? xfSel.label : 'Filter', filter:'Filter and sort', territory: ins ? 'Target lists' : 'Target list', choose:'Who will you see?', email:'Draft email', fu:'New follow-up', meet:'Log a meeting', note:'Add a note', full:'Full profile', tracker: s.trkForm && s.trkForm.mode === 'edit' ? 'Edit your assessment' : 'New assessment', status:'Status', people: ins ? 'Add HCP to ' + tlist.name : s.peopleOrgs ? 'Add target accounts' : 'Add target HCPs', me:'Your workspace', account:'Account', insight: s.insRec ? 'Recording' : 'Add ' + W.one.toLowerCase(), summary:'Build your summary', smyf:SMY_PICK[s.sheetData] || '', smydates:'Start date – End date' };
+    const MYV = s.sheet === 'mymenu' ? s.visits.find(v => v.id === s.sheetData) : null;
+    const titles = { visit: VD && VD.ix && !(VD.mtg && VD.mtg.manual) ? ((typeof s.ixFull[VD.ix.id] === 'object' && s.ixFull[VD.ix.id]) ? s.ixFull[VD.ix.id].page : VD.ix).title : VD && VD.conv === 'Note' ? 'Note' : W.one,
+      mymenu: MYV && MYV.ix ? (s.myMenu ? 'Delete insight' : MYV.ix.hcp || 'Third-party') : '', range: rangeType ? 'Area and type' : 'Search area', xf: xfSel ? xfSel.label : 'Filter', filter:'Filter and sort', territory: ins ? 'Target lists' : 'Target list', choose:'Who will you see?', email:'Draft email', fu:'New follow-up', meet: s.meetEditId ? 'Edit meeting' : 'Log a meeting', note:'Add a note', full:'Full profile', tracker: s.trkForm && s.trkForm.mode === 'edit' ? 'Edit your assessment' : 'New assessment', status:'Status', people: ins ? 'Add HCP to ' + tlist.name : s.peopleOrgs ? 'Add target accounts' : 'Add target HCPs', me:'Your workspace', account:'Account', insight: s.insRec ? 'Recording' : 'Add ' + W.one.toLowerCase(), summary:'Build your summary', smyf:SMY_PICK[s.sheetData] || '', smydates:'Start date – End date' };
 
     const jumpDefs = [
       ['Sign in', () => this.signOutTo('signIn')],
@@ -4281,11 +4703,13 @@ class Component extends DCLogic {
       : (this.visitView(v).name + ' ' + v.note + ' ' + v.topic + ' ' + (v.topics || []).join(' ')).toLowerCase()).includes(actQ));
     // My Insights' tiles count every row, whatever the search (MyInsights.tsx:200-255)
     const myAgo = (days, months) => { const d = new Date(); d.setDate(d.getDate() - days); d.setMonth(d.getMonth() - months); return d.getTime(); };
-    const myMet = since => s.visits.filter(v => v.my && v.my.at !== null && v.my.at >= since).length;
+    const myMet = (rows, since) => rows.filter(v => v.my && v.my.at !== null && v.my.at >= since).length;
 
     // add insight sheet
     const insPer = this.insPerOf(), insPerOn = !A.fieldPro && s.insWho.length > 1;
-    const thirdParty = s.insType === 'Third Party', insReady = (s.insWho.length > 0 || thirdParty) && (!!s.insNote.trim() || insPer.length > 0) && (!A.areas || !!s.insArea);
+    const thirdParty = s.insType === 'Third Party', insProblems = A.fieldPro ? [] : this.insProblems(insPer, thirdParty);
+    const insReady = (A.fieldPro ? (s.insWho.length > 0 || thirdParty) && !!s.insNote.trim() : !insProblems.length) && (!A.areas || !!s.insArea);
+    const insStarted = s.insWho.length > 0 || !!s.insNote.trim() || insPer.length > 0 || s.insTried;
     const advDot = on => on ? { bg:'#2447C4', fg:'#fff', bd:'#2447C4' } : { bg:'#fff', fg:'#3C4557', bd:'#D7DEEC' };
     const topicsNow = this.topicsFor(s.insArea), subsNow = A.subs ? s.insTopics.flatMap(t => A.subs[t] || []) : [];
     const toggleIn = (key, val) => this.setState(st => ({ [key]: st[key].includes(val) ? st[key].filter(x => x !== val) : [...st[key], val] }));
@@ -4407,7 +4831,8 @@ class Component extends DCLogic {
       ],
       pSegs: pSegKeys.map(k => { const n = !pTarget ? 0 : k === 'insight' ? (A.conv ? (pTarget.insights || []).length : 0) : k === 'meeting' ? pHistory.filter(v => String(v.id).includes(':meeting:')).length
           : k === 'note' ? (pTarget.notes || []).length : k === 'followups' ? pScopedFus.filter(f => !f.done).length : 0;
-        return { label:{ overview:'Overview', activity:'Activity', insight:'Insights', meeting:'Meetings', note:'Notes', followups:'Follow-ups', tracker:'Sentiment Tracker' }[k] + (n ? ' · ' + n : ''),...seg(pSegNow === k),go:() => this.setState({ pSeg:k }) }; }),
+        const counted = !pTarget ? !!n : k === 'note' || k === 'followups' || (k === 'meeting' && !!historyState) || (k === 'insight' && !!A.conv && !!pTarget.activityState?.insight);
+        return { label:{ overview:'Overview', activity:'Activity', insight:'Insights', meeting:'Meetings', note:'Notes', followups:'Follow-ups', tracker:'Sentiment Tracker' }[k] + (counted ? ' · ' + n : ''),...seg(pSegNow === k),go:() => this.setState({ pSeg:k }) }; }),
       pOverview:pSegNow === 'overview' || pSegNow === 'insight',pActivity:['activity','meeting','note','followups'].includes(pSegNow),
       ...this.trackerView(pId, pTarget && pSegNow === 'tracker' ? pTarget : null),
       ...this.loggedInsightsView(pTarget, tlist.id, pSegNow === 'insight' && !!SH.loggedInsights),
@@ -4416,7 +4841,7 @@ class Component extends DCLogic {
       pTStats:pTarget ? [
         { k:'LAST MEETING', v:pTarget.lastMeeting || '', v2:'', s:pTarget.lastMeeting ? (pTarget.lastAt ? agoAt(pTarget.lastAt) : agoOf(pTarget.lastMeeting)) : 'No meetings yet' },
         { k:'MEETINGS', v:String(pTarget.meetings12), v2:' / ' + pTarget.meetings, s:'12mo / all time' },
-        ...(A.adv ? [{ k:'ADVOCACY', v:'', pipsOn:true, pips:[1, 2, 3, 4, 5].map(i => ({ bg: pTarget.advocacy && i <= pTarget.advocacy ? '#2447C4' : '#E1E6F0' })),
+        ...(A.adv ? [{ k:'ADVOCACY', v:'', pipsOn:true, pips:[1, 2, 3, 4, 5].map(i => ({ bg: pTarget.advocacy && i <= pTarget.advocacy ? (pTarget.advocacy >= 4 ? '#1C7A4E' : pTarget.advocacy === 3 ? '#B7791F' : '#C0392B') : '#E1E6F0' })),
           s:pTarget.advocacy ? ((A.advLabels || [])[pTarget.advocacy - 1] || '') + ' · ' + pTarget.advocacy + '/5' : 'Not scored' }] : []),
         { k:'SENTIMENT', v:'', barOn:pTarget.sentiment != null, w:(pTarget.sentiment || 0) + '%', barC:pTarget.sentiment >= 75 ? '#1C7A4E' : pTarget.sentiment >= 50 ? '#2447C4' : '#B7791F',
           s:pTarget.sentiment == null ? 'No sentiment yet' : (pTarget.sentiment >= 75 ? 'Positive' : pTarget.sentiment >= 50 ? 'Neutral' : 'Negative') + ' · ' + pTarget.sentiment },
@@ -4428,7 +4853,7 @@ class Component extends DCLogic {
       pDrugsOn:pSegNow === 'insight' && !!pTarget, pNoDrugs:!!pTarget && !(pTarget.drugs || []).length,
       pDrugs:(pTarget?.drugs || []).map(d => ({ label:d.name, n:'×' + d.count })),
       pVisitBrief,pBriefBasis:visitBrief?.basis || '',pBriefMessage:visitBrief?.message || (!visitBrief ? 'Reading the visit figures…' : ''),
-      pBriefSections:visitBrief?.sections || [],pCanWriteBrief:!!visitBrief?.write,pWriteBrief:visitBrief?.write,pBriefAction:visitBrief?.action || (visitBrief?.sections?.length ? 'Write again' : 'Try again'),pBriefHead:visitBrief?.head || 'Read this first',
+      pBriefSections:visitBrief?.sections || [],pCanWriteBrief:!!visitBrief?.write,pWriteBrief:visitBrief?.write,pBriefAction:visitBrief?.action || (visitBrief?.sections?.length ? 'Write again' : 'Try again'),pBriefBadge:visitBrief?.badge ?? 'AI BRIEF',pBriefHead:visitBrief?.head || 'Read this first',
       pPanels:(P.profilePanels || []).map(panel => ({ ...panel,rows:(panel.rows || []).map(row => {
         const org = row.org && HCOS[row.org], person = row.npi && HCPS[row.npi];
         return { ...row,linked:!!(org || person),plain:!(org || person),open:() => { if (org) this.go('hco',row.org); else if (person) this.go('hcp',row.npi); } };
@@ -4449,25 +4874,27 @@ class Component extends DCLogic {
       showPhone: SH.phone, showEmail: SH.email, showContact: !pTarget && !P.profilePanels?.length && (SH.phone || SH.email),
       pEmail: () => this.openEmail(pId), pAsk: () => this.ask('Brief me on ' + P.name), pCall: () => this.call(P.phone), pFu: () => this.openFu(pId),
       // on a target's Meetings, the website logs a meeting with no write-up; on Notes, a note
-      pLogOn:!pTarget || pSegNow === 'meeting' || pSegNow === 'note',
+      pLogOn:!pTarget || pSegNow === 'meeting', pNoteTop:!!pTarget && pSegNow === 'note',
       pLog:pTarget && pSegNow === 'meeting' ? () => this.openMeet(pId) : pTarget && pSegNow === 'note' ? () => this.openNote(pId) : () => this.openLog(pId),
       pLogLabel:pTarget && pSegNow === 'meeting' ? '＋ Log meeting' : pTarget && pSegNow === 'note' ? '＋ Add note' : '＋ Add ' + W.one.toLowerCase(),
       pFuBtn:!!SH.followUps && (!pTarget || pSegNow === 'followups'),
       pFus:!pTarget || pSegNow === 'followups' ? pScopedFus.map(f => this.fuView(f)) : [],
       pVisits:pTarget ? [] : pEntries.map(v => this.visitView(v)),
       // the website's meeting rows (DetailDrawer.tsx:1433-1617): date, stage or "Logged manually", type, sentiment, then the note or transcript
-      pMtgHead:!!pTarget && pSegNow === 'meeting' && pEntries.length > 0, pMtgCount:String(pEntries.length),
+      pMtgHead:!!pTarget && pSegNow === 'meeting', pMtgCount:historyState ? String(pEntries.length) : '',
       pMtgs:pTarget && pSegNow === 'meeting' ? pEntries.map(v => { const m = v.mtg || { stage:'', manual:false, sentiment:'', preview:v.note || '', by:'' };
         const tone = m.sentiment === 'Positive' ? ['#E3F5EC', '#1C7A4E'] : m.sentiment === 'Neutral' ? ['#E7ECFA', '#22409F'] : ['#FFF3D6', '#8A5A00'];
-        return { date:m.day || v.date, chip:m.manual ? 'Logged manually' : m.stage, type:m.type ?? v.type, sent:m.sentiment, sentBg:tone[0], sentFg:tone[1],
+        const stage = m.manual ? ['#EEF1F7', '#5B6478'] : m.stage === 'Impact' ? ['#E3F5EC', '#1C7A4E'] : m.stage === 'Actionable Insight' ? ['#FFF3D6', '#8A5A00'] : m.stage === 'Insight' ? ['#E7ECFA', '#22409F'] : ['#EEF1F7', '#5B6478'];
+        return { date:m.day || v.date, chip:m.manual ? 'Logged manually' : m.stage, chipBg:stage[0], chipFg:stage[1], type:m.type ?? v.type, sent:m.sentiment, sentBg:tone[0], sentFg:tone[1],
           text:m.preview || (m.manual ? 'No note recorded for this meeting.' : 'No transcript text available for this meeting yet.'), textC:m.preview ? '#1B2333' : '#7A839A', fs:m.preview ? 'normal' : 'italic',
-          by:m.by ? 'Logged by ' + m.by : '', open:() => this.sheet('visit', v.id) }; }) : [],
+          by:m.by ? 'Logged by ' + m.by : '', open:() => this.openVisit(v),
+          manual:!!m.manual, edit:() => this.editMeet(pId, v), del:() => this.deleteMeet(tlist.id, pId, v), delLabel:'Delete' }; }) : [],
       // the website's notes: pinned first, "who · date", the note
       pNotes:pTarget && pSegNow === 'note' ? (pTarget.notes || []).map(n => ({ head:(n.pinned ? 'Pinned · ' : '') + (n.author || 'You') + (n.date ? ' · ' + noteDay(n.date) : ''), text:n.text,
         bg:n.pinned ? '#FFF9E8' : '#fff', bd:n.pinned ? '#F1E2B5' : '#E1E6F0' })) : [],
       pNoVisits:pTarget ? (pSegNow === 'followups' ? !pScopedFus.length : pSegNow === 'meeting' ? !pEntries.length : pSegNow === 'note' ? !(pTarget.notes || []).length : false) : !pEntries.length,
-      pEmptyHistory:!pTarget ? 'No visits logged yet.' : pSegNow === 'followups' ? 'No follow-ups yet.' : pSegNow === 'note' ? 'No notes yet.'
-        : !historyState ? 'Loading meetings…' : historyState === 'unavailable' ? 'Meetings are temporarily unavailable.' : 'No meetings logged.',
+      pEmptyHistory:!pTarget ? 'No visits logged yet.' : pSegNow === 'followups' ? 'No follow-ups yet.' : pSegNow === 'note' ? 'No notes yet. Add the first one above.'
+        : !historyState ? 'Loading meetings…' : 'No meetings logged.',
 
       // route
       noRoute: viewList.length === 0,
@@ -4579,18 +5006,35 @@ class Component extends DCLogic {
       actVisits: s.actSeg === 'visits', actFus: s.actSeg === 'fus', actDash: s.actSeg === 'dash', ...(s.actSeg === 'dash' ? this.dashView() : {}),
       actQ: s.actQ, onActQ: e => this.setState({ actQ:e.target.value }), hasActQ: !!s.actQ, clearActQ: () => this.setState({ actQ:'' }),
       actHint: ins ? 'Search by HCP name, file name, or content...' : 'Search notes or HCPs',
-      actStatus: ins ? (actShown.length || (!s.actQ.trim() && s.drafts.length) ? '' : 'No insights found')
+      // while the first read is on its way, the website shows its loader, not the empty list
+      actStatus: ins ? (MY.shown.length || (!s.actQ.trim() && s.drafts.length) ? '' : (this.props || {}).loading ? 'Loading…' : 'No insights found')
         : !s.actQ.trim() ? (actShown.length || s.drafts.length ? '' : 'No ' + W.many.toLowerCase() + ' yet.') : !actShown.length ? 'Nothing matches “' + s.actQ.trim() + '”.' : '',
-      myOn: ins, myCount: actShown.length + ' insights',
-      myTiles: ins ? [['Total', s.visits.length], ['This Week', myMet(myAgo(7, 0))], ['This Month', myMet(myAgo(0, 1))],
-        ['Meeting Types', new Set(s.visits.map(v => v.my ? v.my.mtype : '').filter(Boolean)).size]].map(([label, n]) => ({ label, value:String(n) })) : [],
+      myOn: ins, myCount: ins ? MY.shown.length + ' insights' : '',
+      // the empty list's second line (MyInsights.tsx:340-352)
+      myEmptySub: !ins || MY.shown.length || (!s.actQ.trim() && s.drafts.length) || (this.props || {}).loading ? '' : MY.base.length ? 'Try adjusting your filters.' : 'You haven’t submitted any insights yet.',
+      myTiles: ins ? [['Total', MY.base.length], ['This Week', myMet(MY.base, myAgo(7, 0))], ['This Month', myMet(MY.base, myAgo(0, 1))],
+        ['Meeting Types', MY.types.length]].map(([label, n]) => ({ label, value:String(n) })) : [],
+      myChips: ins ? MY.selects.map(x => { const set = x.value != null, now = set ? (x.options.find(o => o.value === x.value) || {}).label || x.allLabel : x.allLabel;
+        return { value:now, bd:set ? '#9DB3EE' : '#D7DEEC', bg:set ? '#EEF3FD' : '#fff', fg:set ? '#22409F' : '#0B1220', go:() => this.sheet('xf', x.key) }; }) : [],
+      ...(() => { const n = ins ? MY.shown.length : 0, pages = Math.ceil(n / 5), page = Math.min(s.myPage, Math.max(0, pages - 1));
+        return { myPagesOn: pages > 1, myPageLine: pages > 1 ? 'Showing ' + (page * 5 + 1) + '-' + Math.min(page * 5 + 5, n) + ' of ' + n : '',
+          myPrev: () => this.setState({ myPage:Math.max(0, page - 1) }), myPrevFg: page === 0 ? '#B9C3D8' : '#0B1220',
+          myNext: () => this.setState({ myPage:Math.min(pages - 1, page + 1) }), myNextFg: page >= pages - 1 ? '#B9C3D8' : '#0B1220', myPageNow: page }; })(),
       actNoQ: !s.actQ.trim(),
       // a summary is built from the pill that appears once conversations are picked, as a route is
       // the centre button adds an entry; here only a follow-up or a task
       actAddOn: s.actSeg === 'fus' || s.actSeg === 'dash',
       actAddLabel: s.actSeg === 'fus' ? '＋ Follow-up' : s.actSeg === 'dash' ? '＋ Task' : '＋ ' + W.one,
       actAdd: () => s.actSeg === 'fus' ? this.openFu(null) : s.actSeg === 'dash' ? this.setState({ boardNew:true, boardTitle:'', boardPrio:'medium' }) : this.openInsight([], 'notes'),
-      visitList: actShown.map(v => this.visitView(v)),
+      visitList: ins ? MY.shown.slice(Math.min(s.myPage, Math.max(0, Math.ceil(MY.shown.length / 5) - 1)) * 5).slice(0, 5).map(v => this.visitView(v)) : actShown.map(v => this.visitView(v)),
+      // a card's menu: Open, Delete, and the website's delete dialog
+      myMenuAsk: s.myMenu, myMenuOpts: !s.myMenu,
+      myMenuOpen: () => { const v = s.visits.find(x => x.id === s.sheetData); if (v) this.openVisit(v); },
+      myMenuDel: () => this.setState({ myMenu:true, myDelErr:'' }), myMenuNo: () => { if (!s.myDelBusy) this.setState({ myMenu:false, myDelErr:'', sheet:null }); }, myMenuErr:s.myDelErr,
+      myMenuYes: () => this.deleteInsight(s.sheetData), myMenuYesLabel: s.myDelBusy ? 'Deleting…' : 'Delete',
+      myMenuText: (() => { const v = s.visits.find(x => x.id === s.sheetData), ix = v && v.ix;
+        return 'This permanently deletes “' + ((ix && (ix.hcp || (ix.title !== 'Untitled Transcript' ? ix.title : ''))) || 'this insight') + '”. This action cannot be undone.'; })(),
+      shMyMenu: s.sheet === 'mymenu',
       fuAll: s.fus.map(f => this.fuView(f)), fuNone: !s.fus.length,
       draftRows: s.drafts.map(d => { const w = (d.form.insWho || [])[0], at = d.form.insHco;
         return { label: 'Continue ' + (A.conv && d.form.insConv === 'Note' ? 'note' : W.one.toLowerCase()) + (w ? ' · ' + HCPS[w].name : at ? ' · ' + HCOS[at].name : ''), open: () => this.openDraft(d) }; }),
@@ -4619,7 +5063,7 @@ class Component extends DCLogic {
       meetTypeOpts: ['', ...(A.meetTypes === SHORT_TYPES ? SHORT_TYPES : SIX_TYPES)].map(t => ({ label:t || 'Not specified', ...chip(s.meetType === t), go: () => this.setState({ meetType:t }) })),
       meetSentOpts: ['Positive', 'Neutral', 'Negative'].map(t => ({ label:t, ...chip(s.meetSent === t), go: () => this.setState({ meetSent: s.meetSent === t ? '' : t }) })),
       meetNote: s.meetNote || '', onMeetNote: e => this.setState({ meetNote: e.target.value.slice(0, 2000) }),
-      meetSaveBg: s.meetBusy ? '#9AA6C4' : '#2447C4', meetSaveLabel: s.meetBusy ? 'Saving…' : 'Log meeting', saveMeet: () => this.saveMeet(tlist.id),
+      meetSaveBg: s.meetBusy ? '#9AA6C4' : '#2447C4', meetSaveLabel: s.meetBusy ? 'Saving…' : s.meetEditId ? 'Save changes' : 'Log meeting', saveMeet: () => this.saveMeet(tlist.id),
       noteWho: (HCPS[s.sheetData] || NO_HCP).name, noteText: s.noteText || '', onNoteText: e => this.setState({ noteText: e.target.value.slice(0, 4000) }),
       noteSaveBg: s.noteBusy || !(s.noteText || '').trim() ? '#9AA6C4' : '#2447C4', noteSaveLabel: s.noteBusy ? 'Saving…' : 'Save note', saveNote: () => this.saveNote(tlist.id),
       ...this.listFilterView(ins && scr === 'targets' ? tlist : null),
@@ -4679,7 +5123,7 @@ class Component extends DCLogic {
       insShowModes: !s.insRec && !!(SH.upload || A.record),
       insModes: [['notes', ins ? 'Notes' : 'Type'], ...(SH.upload ? [['upload','Upload']] : []), ...(A.record ? [['record','Record']] : [])].map(([k, label]) => ({ label, ...seg(s.insMode === k), go: () => this.setState({ insMode:k }) })),
       insNotes: s.insMode === 'notes', insUpload: s.insMode === 'upload', insRecord: s.insMode === 'record',
-      insShowConv: !!A.conv, insConvNote: s.insConv === 'Note',
+      insShowConv: !!A.conv,
       // the website's "Insight" and "Notes": neither to start, and tapping the chosen one clears it
       insConvOpts: (A.conv || []).map(t => ({ label: t === 'Note' ? 'Notes' : t, ...chip(s.insConv === t), go: () => this.setState({ insConv: s.insConv === t ? '' : t }) })),
       insShowAdv: !!A.adv,
@@ -4700,8 +5144,10 @@ class Component extends DCLogic {
       insNote: s.insNote, onInsNote: e => this.setState({ insNote: A.fieldPro ? e.target.value.slice(0, NOTE_MAX) : e.target.value }),
       insNotePh: A.fieldPro ? 'What happened, what’s next' : 'What did you hear? Quotes, asks, next steps.',
       insWhoHead: A.fieldPro ? 'WHO YOU SAW' : 'ATTENDEES',
+      insWhoLabel: A.fieldPro ? 'WHO YOU SAW' : s.insType === 'Third Party' ? 'HCP NAME' : 'HCP NAME *',
+      insTopicHead: this.state.account === 'stemline' ? 'ATTRIBUTION' : 'TOPIC',
       insShowArea: !!A.areas,
-      insAreaOpts: Object.keys(A.areas || {}).map(k => ({ label:A.areas[k].label, ...chip(s.insArea === k), go: () => this.setState({ insArea:k, insTopics:[] }) })),
+      insAreaOpts: Object.keys(A.areas || {}).map(k => ({ label:k, sub:AREA_PRODUCT[k] || '', ...chip(s.insArea === k), go: () => this.setState({ insArea:k, insTopics:[] }) })),
       // Stemline tags topics on an Insight only (AddInsightSheet.tsx:2198)
       insShowTopics: topicsNow.length > 0 && (!A.conv || s.insConv === 'Insight'),
       insTopicOpts: topicsNow.map(t => ({ label:t, ...chip(s.insTopics.includes(t)), go: () => toggleIn('insTopics', t) })),
@@ -4713,10 +5159,11 @@ class Component extends DCLogic {
       insPrioOpts: (A.prios || []).map(t => ({ label:t, ...chip(s.insPrio === t), go: () => this.setState({ insPrio:t }) })),
       insShowTags: A.tags.length > 0,
 
+      insTypeHeadOn: !A.fieldPro, insTypeHead: A.extra ? 'MEETING TYPE *' : 'MEETING TYPE',
       insTypeOpts: A.meetTypes.map(t => ({ label:t, ...chip(s.insType === t), go: () => this.setState({ insType:t }) })),
       insLiveOpts: ['Live','Virtual'].map(t => ({ label:t, ...chip(s.insLive === t), go: () => this.setState({ insLive:t }) })),
       insTagOpts: [...A.tags, ...MY_TAGS.filter(t => !A.tags.includes(t))].map(t => ({ label:t, ...chip(s.insTags.includes(t)), go: () => toggleIn('insTags', t) })),
-      insSaveBg: insReady ? '#2447C4' : '#9DB0E8', insSaveLabel: 'Save ' + (A.conv && s.insConv === 'Note' ? 'note' : W.one.toLowerCase()),
+      insSaveBg: insReady ? '#2447C4' : '#9DB0E8', insProblemsOn: insStarted && insProblems.length > 0, insProblems, insSaveLabel: A.fieldPro ? 'Save ' + W.one.toLowerCase() : s.insSource === 'Recording' ? 'Upload Recording' : s.insSource === 'Upload' ? 'Add insight' : 'Generate Insights',
       insDateOpts: [0, 1, 2, 3, 4, 5, 6].map(n => ({ label: n === 0 ? 'Today' : n === 1 ? 'Yesterday' : WD[dateAt(-n).getDay()] + ' ' + dateAt(-n).getDate(), ...chip(s.insDateN === n), go: () => this.setState({ insDateN:n }) })),
       insDateLabel: (s.insDateN === 0 ? 'Today ' + dateOf(0) : s.insDateN === 1 ? 'Yesterday ' + dateOf(-1) : dayFull(-s.insDateN)).toUpperCase(),
       insShowVendor: !!A.extra && thirdParty,
@@ -4727,11 +5174,12 @@ class Component extends DCLogic {
       insCount: s.insCount, onInsCount: e => this.setState({ insCount: e.target.value.replace(/\D/g, '') }),
       insShowConf: !!A.extra && s.insType === 'Conference',
       insConfOpts: (A.extra ? A.extra.confs : []).map(t => ({ label:t, ...chip(s.insConf === t), go: () => this.setState({ insConf:t }) })),
+      insConfOther: s.insConf === 'Other', insConfName: s.insConfName, onInsConfName: e => this.setState({ insConfName: e.target.value }),
       insSaveDraft: () => { this.dropRec(); this.keepDraft(); this.setState({ sheet:null, insRec:false, insKey:null }); this.toast('Draft saved'); },
       insSave: () => {
         if (s.insBusy) return this.toast('The transcript is still coming · one moment');
-        if (!s.insWho.length && !thirdParty) return this.toast('Add who you met');
-        if (!s.insNote.trim() && !insPer.length && !A.fieldPro) return this.toast('Add what you heard');
+        if (!s.insWho.length && !thirdParty && A.fieldPro) return this.toast('Add who you met');
+        if (insProblems.length) return this.setState({ insTried:true });
         if (A.fieldPro && s.insNote.trim().length > NOTE_MAX) return this.toast('A note takes up to ' + NOTE_MAX.toLocaleString('en-US') + ' characters · shorten it a little');
         if (A.areas && !s.insArea) return this.toast('Pick the therapeutic area');
         const who = s.insWho, first = who[0] || null, dN = s.insDateN, id = Date.now(), form = this.draftForm(), draft = s.insDraft;
@@ -4743,20 +5191,21 @@ class Component extends DCLogic {
           ...(A.fieldPro
             ? { type:interactionOf(vType), topic:vType, note:s.insNote.trim() || 'Logged a ' + vType.toLowerCase() + (place ? ' at ' + place : '') }
             : { type:[vType, A.live ? s.insLive : ''].filter(Boolean).join(' · '), topic:s.insTopics[0] || s.insArea || wordsOf(A).one,
-              note:!insPer.length ? s.insNote.trim() : [s.insNote.trim(), (s.insNote.trim() ? '--- Per-HCP Insights ---\n\n' : '') + insPer.map(([pid, t]) => (HCPS[pid] || NO_HCP).name + ':\n' + t).join('\n\n')].filter(Boolean).join('\n\n'),
+              note:!insPer.length ? s.insNote.trim() : [s.insNote.trim(), (s.insNote.trim() ? '--- Per-HCP Insights ---\n\n' : '') + insPer.map(([pid, t]) => { const h = HCPS[pid] || NO_HCP; return h.name + (s.insNote.trim() && h.spec ? ' (' + h.spec + ')' : '') + ':\n' + t; }).join('\n\n')].filter(Boolean).join('\n\n'),
               ...(insPer.length ? { perNotes:Object.fromEntries(insPer) } : {}) }),
           topics: A.conv && s.insConv !== 'Insight' ? [] : s.insTopics,
           subs: A.conv && s.insConv !== 'Insight' ? [] : s.insSubs.filter(x => subsNow.includes(x)), tags: A.tags.length ? s.insTags : [], src:s.insSource || 'Notes',
           ...(A.conv ? { conv:s.insConv } : {}), ...(A.areas ? { area:s.insArea } : {}), ...(A.stages ? { stage:s.insStage, prio:s.insPrio } : {}),
           ...(A.extra && s.insType === 'Third Party' ? { vendor: s.insVendor === 'Other' ? s.insVendorName.trim() || 'Other' : s.insVendor, vendorSub: s.insVendorSub, count: s.insCount } : {}),
-          ...(A.extra && s.insType === 'Conference' ? { conf: s.insConf } : {}) };
+          ...(A.extra && s.insType === 'Conference' ? { conf: s.insConf === 'Other' ? s.insConfName.trim() || 'Other' : s.insConf } : {}),
+          ...(A.fieldPro ? {} : this.savedInsight(who, dN, vType)) };
         this.setState(st => ({ ...this.insFresh([]), sheet:null, logged:[...new Set([...st.logged, ...who, ...(st.insHco ? [st.insHco] : [])])],
           drafts: st.drafts.filter(d => d.id !== draft), visits:[visit, ...st.visits].sort((a, b) => a.dN - b.dN) }));
         this.toast((A.conv && s.insConv === 'Note' ? 'Note' : wordsOf(A).one) + ' saved' + (first ? ' · ' + HCPS[first].name + (who.length > 1 ? ' +' + (who.length - 1) : '') : ''));
         if (!SERVICE.save) return;
         // a save that fails comes back as a draft
         SERVICE.save(visit, { ...form, media: s.insMedia }).then(r => {
-          if (r && r.id) this.setState(st => ({ visits: st.visits.map(v => v.id === id ? { ...v, id: r.id } : v) }));
+          if (r && r.id) this.setState(st => ({ visits: st.visits.map(v => v.id === id ? { ...v, id: r.id, ...(v.ix ? { ix:{ ...v.ix, id:String(r.id) } } : {}) } : v) }));
           if (r && r.warn) this.toast(r.warn);
         }, e => {
           this.setState(st => ({ visits: st.visits.filter(v => v.id !== id), drafts: [{ id: draft || id, form }, ...st.drafts.filter(d => d.id !== draft)] }));
