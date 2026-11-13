@@ -129,10 +129,18 @@ input,textarea,button{font-family:inherit}
               <button onClick="{{ toAsk }}" style="display:flex;align-items:center;gap:5px;border:0;background:#E7ECFA;color:#22409F;border-radius:9px;padding:7px 10px;font-size:12.5px;font-weight:700;cursor:pointer;">✳ Ask</button>
             </div>
             <sc-if value="{{ isFieldPro }}" hint-placeholder-val="{{ true }}">
-              <div style="display:flex;padding:3px;border-radius:12px;background:#E6EAF2;">
-                <sc-for list="{{ scopeSeg }}" as="o" hint-placeholder-count="2">
-                  <button onClick="{{ o.go }}" style="flex:1;padding:9px;border:0;border-radius:10px;background:{{ o.bg }};color:{{ o.fg }};box-shadow:{{ o.sh }};font-size:13.5px;font-weight:650;cursor:pointer;">{{ o.label }}</button>
-                </sc-for>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <div style="flex:1;min-width:0;display:flex;padding:3px;border-radius:12px;background:#E6EAF2;">
+                  <sc-for list="{{ scopeSeg }}" as="o" hint-placeholder-count="2">
+                    <button onClick="{{ o.go }}" style="flex:1;padding:9px 3px;border:0;border-radius:10px;background:{{ o.bg }};color:{{ o.fg }};box-shadow:{{ o.sh }};font-size:13px;font-weight:650;cursor:pointer;">{{ o.label }}</button>
+                  </sc-for>
+                </div>
+                <sc-if value="{{ fpTilesOn }}" hint-placeholder-val="{{ false }}">
+                  <button onClick="{{ toggleTargetMetrics }}" aria-label="Target metrics" aria-expanded="{{ targetMetricsOpen }}" style="flex:0 0 auto;min-height:40px;display:flex;align-items:center;gap:5px;padding:7px 9px;border:1px solid {{ metricsButton.bd }};border-radius:10px;background:{{ metricsButton.bg }};color:{{ metricsButton.fg }};cursor:pointer;">
+                    <span style="font-size:12px;font-weight:650;">Metrics</span>
+                    <span style="font-size:12px;font-weight:650;">{{ metricsChevron }}</span>
+                  </button>
+                </sc-if>
               </div>
             </sc-if>
             <div style="display:flex;align-items:center;gap:6px;">
@@ -157,12 +165,6 @@ input,textarea,button{font-family:inherit}
                 <sc-if value="{{ showGroupsChip }}" hint-placeholder-val="{{ true }}"><button onClick="{{ openFilter }}" style="flex:0 0 auto;padding:8px 12px;border-radius:999px;border:1px solid #D7DEEC;background:#fff;color:#0B1220;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;">{{ groupsChip }}</button></sc-if>
               </sc-if>
               <sc-if value="{{ showTargetSort }}" hint-placeholder-val="{{ true }}"><button onClick="{{ openFilter }}" aria-label="{{ sortAria }}" title="{{ sortNow }}" style="flex:0 0 auto;padding:7px 9px;border-radius:999px;border:1px solid #D7DEEC;background:#fff;color:#0B1220;font-size:12px;font-weight:650;cursor:pointer;">Sort ▾</button></sc-if>
-              <sc-if value="{{ fpTilesOn }}" hint-placeholder-val="{{ false }}">
-                <button onClick="{{ toggleTargetMetrics }}" aria-label="Target metrics" aria-expanded="{{ targetMetricsOpen }}" style="flex:0 0 auto;display:flex;align-items:center;gap:5px;padding:7px 9px;border:1px solid {{ metricsButton.bd }};border-radius:999px;background:{{ metricsButton.bg }};color:{{ metricsButton.fg }};cursor:pointer;">
-                  <span style="font-size:12px;font-weight:650;">Metrics</span>
-                  <span style="font-size:12px;font-weight:650;">{{ metricsChevron }}</span>
-                </button>
-              </sc-if>
               </div></sc-if>
             <sc-if value="{{ showTargetMetrics }}" hint-placeholder-val="{{ false }}">
               <div style="background:#fff;border:1px solid #D7DEEC;border-radius:14px;padding:10px;display:flex;flex-direction:column;gap:8px;">
@@ -6938,7 +6940,7 @@ class Component extends DCLogic {
       : { emptyTitle:'Nothing in ' + territoryName + ' yet', emptySub:'', hasEmptyA:false, hasEmptyB:false };
     const rangeType = s.omKind === 'acc';
     const viewRows = !ins && ME.staff ? PICKS.filter(p => p.action === 'view') : [];
-    const canChangeView = viewRows.some(v => !v.selected);
+    const canChangeView = !this.props?.loading && viewRows.some(v => !v.selected);
     const viewsOpen = s.sheet === 'views';
     const viewPickLabel = WORKSPACE.viewLabel || 'Default view';
     const openViews = () => this.sheet(viewsOpen ? null : 'views');
