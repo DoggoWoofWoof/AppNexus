@@ -83,33 +83,19 @@ input,textarea,button{font-family:inherit}
           <div style="padding:6px 18px 0;display:flex;flex-direction:column;gap:12px;">
             <div style="display:flex;align-items:center;gap:8px;">
               <span style="flex:1;font-family:'Source Serif 4',Georgia,serif;font-size:30px;line-height:1.1;letter-spacing:-.02em;">Targets</span>
-              <sc-if value="{{ viewPickOn }}" hint-placeholder-val="{{ false }}"><button onClick="{{ openViews }}" aria-label="Choose workspace view" style="padding:7px 10px;border:1px solid #D7DEEC;border-radius:999px;background:#fff;color:#22409F;font-size:12px;font-weight:650;cursor:pointer;">{{ viewPickLabel }} ▾</button></sc-if>
-              <sc-if value="{{ viewFixedOn }}" hint-placeholder-val="{{ false }}"><span style="padding:6px 9px;border-radius:999px;background:#E7ECFA;color:#22409F;font-size:12px;font-weight:650;">{{ viewPickLabel }}</span></sc-if>
-              <button onClick="{{ openMe }}" style="width:38px;height:38px;border-radius:50%;background:#DCE3F5;color:#22409F;border:0;font-size:12.5px;font-weight:700;cursor:pointer;">{{ meIni }}</button>
+              <sc-if value="{{ viewPickOn }}" hint-placeholder-val="{{ false }}">
+                <button onClick="{{ openViews }}" aria-label="{{ viewPickAria }}" aria-expanded="{{ viewsOpen }}" style="display:flex;align-items:center;gap:6px;min-height:40px;padding:7px 9px;border:1px solid #D7DEEC;border-radius:10px;background:#fff;color:#22409F;cursor:pointer;">
+                  <span style="display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:1;min-width:0;font-size:12px;font-weight:650;">{{ viewPickLabel }}</span>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#22409F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg>
+                </button>
+              </sc-if>
+              <sc-if value="{{ reportsShortcutOn }}" hint-placeholder-val="{{ true }}">
+                <button onClick="{{ openReports }}" aria-label="Reports" title="Open reports" style="flex:0 0 40px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;border:1px solid #D7DEEC;border-radius:10px;background:#fff;cursor:pointer;">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#2447C4" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l4 4v14H7z M14 3v5h4 M10 12h5 M10 16h5"></path></svg>
+                </button>
+              </sc-if>
+              <button onClick="{{ openMe }}" aria-label="Your workspace" style="flex:0 0 40px;width:40px;height:40px;border-radius:50%;background:#DCE3F5;color:#22409F;border:0;font-size:12.5px;font-weight:700;cursor:pointer;">{{ meIni }}</button>
             </div>
-            <sc-if value="{{ lhOn }}" hint-placeholder-val="{{ false }}">
-              <div style="display:flex;flex-direction:column;gap:10px;">
-                <button onClick="{{ lhBack }}" style="align-self:flex-start;display:flex;align-items:center;gap:6px;border:0;background:none;padding:0;cursor:pointer;"><span style="font-size:13px;color:#5B6478;">←</span><span style="font-size:13px;color:#5B6478;">All target lists</span></button>
-                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-                  <span style="width:38px;height:38px;border-radius:10px;background:#E7ECFA;display:grid;place-items:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2447C4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="{{ lhIcon }}"></path></svg></span>
-                  <span style="font-size:22px;font-weight:650;color:#0B1220;letter-spacing:-.01em;">{{ lhName }}</span>
-                  <span style="font-size:10px;font-weight:650;letter-spacing:.06em;color:#5B6478;border:1px solid #D7DEEC;border-radius:999px;padding:2px 8px;background:#fff;">{{ lhTag }}</span>
-                </div>
-                <div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;"><sc-for list="{{ lhMeta }}" as="m" hint-placeholder-count="3"><span style="font-size:13px;color:#5B6478;">{{ m.pre }}<span style="font-weight:650;color:#0B1220;">{{ m.bold }}</span>{{ m.post }}</span></sc-for></div>
-                <div style="display:flex;flex-wrap:wrap;gap:8px;">
-                  <sc-if value="{{ lhShareOn }}" hint-placeholder-val="{{ true }}"><button onClick="{{ lhShare }}" style="display:flex;align-items:center;gap:5px;padding:8px 11px;border:1px solid #D7DEEC;border-radius:10px;background:#fff;cursor:pointer;"><span style="font-size:13px;color:#3C4557;">↗</span><span style="font-size:13px;font-weight:600;color:#0B1220;">Share</span></button></sc-if>
-                  <button onClick="{{ lhExport }}" title="Download every HCP on this list with their meetings, insights and notes (.xlsx)" style="display:flex;align-items:center;gap:5px;padding:8px 11px;border:1px solid #D7DEEC;border-radius:10px;background:#fff;cursor:pointer; opacity:{{ lhExportOp }};"><span style="font-size:13px;color:#3C4557;">↓</span><span style="font-size:13px;font-weight:600;color:#0B1220;">{{ lhExportLabel }}</span></button>
-                  <sc-if value="{{ lhAddOn }}" hint-placeholder-val="{{ true }}"><button onClick="{{ lhAdd }}" style="display:flex;align-items:center;gap:5px;padding:8px 12px;border:0;border-radius:10px;background:#2447C4;cursor:pointer;"><span style="font-size:13px;color:#fff;">＋</span><span style="font-size:13px;font-weight:650;color:#fff;">Add HCP</span></button></sc-if>
-                  <sc-if value="{{ lhAuto }}" hint-placeholder-val="{{ false }}"><button title="Smart lists update automatically from your rules" style="display:flex;align-items:center;gap:5px;padding:8px 11px;border:1px solid #D7DEEC;border-radius:10px;background:#EEF1F7;"><span style="font-size:13px;font-weight:600;color:#7A839A;">Auto-updating</span></button></sc-if>
-                </div>
-                <sc-if value="{{ lhRulesOn }}" hint-placeholder-val="{{ false }}">
-                  <div style="display:flex;flex-direction:column;gap:6px;padding:11px 13px;border:1px solid #E1E6F0;border-radius:12px;background:#fff;">
-                    <div style="display:flex;align-items:center;gap:8px;"><span style="flex:1;font-size:10.5px;font-weight:650;letter-spacing:.06em;color:#5B6478;">Auto-updates when</span><sc-if value="{{ lhRulesEdit }}" hint-placeholder-val="{{ true }}"><button onClick="{{ lhEditRules }}" style="border:0;background:none;padding:0;cursor:pointer;"><span style="font-size:12px;font-weight:650;color:#2447C4;">Edit rules</span></button></sc-if></div>
-                    <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 8px;"><sc-for list="{{ lhRules }}" as="r" hint-placeholder-count="2"><span style="font-size:13px;color:#0B1220;">{{ r.text }}</span><sc-if value="{{ r.hasSep }}" hint-placeholder-val="{{ true }}"><span style="font-size:10.5px;font-weight:650;letter-spacing:.06em;color:#7A839A;">{{ r.sep }}</span></sc-if></sc-for></div>
-                  </div>
-                </sc-if>
-              </div>
-            </sc-if>
             <sc-if value="{{ routeOn }}" hint-placeholder-val="{{ true }}">
             <div style="display:flex;align-items:center;gap:12px;padding:12px 10px 12px 14px;border-radius:16px;color:#fff;background:radial-gradient(120% 140% at 10% 0%,#2F59DE 0%,#22409F 60%,#16276A 100%);">
               <button onClick="{{ openRoute }}" style="flex:1;min-width:0;border:0;background:none;padding:0;cursor:pointer;text-align:left;color:#fff;">
@@ -149,23 +135,49 @@ input,textarea,button{font-family:inherit}
                 </sc-for>
               </div>
             </sc-if>
-            <div style="display:flex;align-items:center;gap:7px;">
-              <sc-if value="{{ isFieldPro }}" hint-placeholder-val="{{ true }}"><sc-for list="{{ kindChips }}" as="c" hint-placeholder-count="2">
-                  <button onClick="{{ c.go }}" style="flex:0 0 auto;padding:8px 13px;border-radius:999px;border:1px solid {{ c.bd }};background:{{ c.bg }};color:{{ c.fg }};font-size:13px;font-weight:650;cursor:pointer;">{{ c.label }}</button>
-              </sc-for></sc-if><div style="display:flex;flex:1;min-width:0;gap:7px;overflow-x:auto;">
-              <sc-if value="{{ terrChipOn }}" hint-placeholder-val="{{ true }}"><button onClick="{{ openTerritory }}" aria-label="Choose target list" style="flex:0 0 auto;display:flex;align-items:center;gap:6px;border:1px solid #D7DEEC;background:#fff;border-radius:999px;padding:8px 12px;font-size:13px;font-weight:650;color:#0B1220;cursor:pointer;white-space:nowrap;"><span style="width:7px;height:7px;border-radius:50%;background:#2447C4;"></span>{{ territoryChip }}<span style="color:#7A839A;">▾</span></button></sc-if>
-              </div></div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <sc-if value="{{ isFieldPro }}" hint-placeholder-val="{{ true }}">
+                <sc-for list="{{ kindChips }}" as="c" hint-placeholder-count="2">
+                  <button onClick="{{ c.go }}" aria-label="{{ c.aria }}" style="flex:0 0 auto;min-height:40px;padding:7px 10px;border-radius:10px;border:1px solid {{ c.bd }};background:{{ c.bg }};color:{{ c.fg }};font-size:12.5px;font-weight:650;cursor:pointer;">{{ c.short }}</button>
+                </sc-for>
+              </sc-if>
+              <button onClick="{{ openTerritory }}" aria-label="Choose target list" title="{{ territoryChip }}" aria-expanded="{{ targetListOpen }}" style="flex:1;min-width:0;min-height:40px;display:flex;align-items:center;gap:7px;border:1px solid #D7DEEC;background:#fff;border-radius:10px;padding:7px 10px;cursor:pointer;">
+                <span style="flex:0 0 7px;width:7px;height:7px;border-radius:50%;background:#2447C4;"></span>
+                <span style="flex:1;min-width:0;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:1;font-size:13px;font-weight:650;color:#0B1220;text-align:left;">{{ territoryChip }}</span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#5B6478" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg>
+              </button>
+              <sc-if value="{{ addInsightHcpOn }}" hint-placeholder-val="{{ false }}"><button onClick="{{ openPeople }}" aria-label="Add HCP" style="flex:0 0 auto;min-height:40px;padding:7px 10px;border:1px solid #C9D5F6;border-radius:10px;background:#E7ECFA;color:#22409F;font-size:12.5px;font-weight:700;cursor:pointer;">＋ Add HCP</button></sc-if>
+            </div>
             <sc-if value="{{ targetFiltersOn }}" hint-placeholder-val="{{ true }}">
             <div aria-label="Target list filters" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
               <sc-if value="{{ isFieldPro }}" hint-placeholder-val="{{ true }}">
-                <sc-for list="{{ xChips }}" as="x" hint-placeholder-count="2"><button onClick="{{ x.go }}" aria-label="{{ x.aria }}" style="padding:7px 10px;border-radius:999px;border:1px solid {{ x.bd }};background:{{ x.bg }};color:{{ x.fg }};font-size:12.5px;font-weight:650;cursor:pointer;">{{ x.label }}: {{ x.value }} ▾</button></sc-for>
+                <sc-for list="{{ xChips }}" as="x" hint-placeholder-count="2"><button onClick="{{ x.go }}" aria-label="{{ x.aria }}" style="padding:7px 9px;border-radius:999px;border:1px solid {{ x.bd }};background:{{ x.bg }};color:{{ x.fg }};font-size:12px;font-weight:650;cursor:pointer;">{{ x.text }} ▾</button></sc-for>
                 <sc-if value="{{ xClearOn }}" hint-placeholder-val="{{ false }}"><button onClick="{{ xClear }}" style="flex:0 0 auto;padding:8px 10px;border:0;border-radius:999px;background:none;color:#2447C4;font-size:13px;font-weight:650;cursor:pointer;white-space:nowrap;">Clear filters</button></sc-if>
                 <sc-if value="{{ showSpecChip }}" hint-placeholder-val="{{ true }}"><button onClick="{{ openFilter }}" style="flex:0 0 auto;padding:8px 12px;border-radius:999px;border:1px solid #D7DEEC;background:#fff;color:#0B1220;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;"><span style="color:#7A839A;">Specialty</span> {{ spec }} ▾</button></sc-if>
                 <sc-if value="{{ showGroupsChip }}" hint-placeholder-val="{{ true }}"><button onClick="{{ openFilter }}" style="flex:0 0 auto;padding:8px 12px;border-radius:999px;border:1px solid #D7DEEC;background:#fff;color:#0B1220;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;">{{ groupsChip }}</button></sc-if>
               </sc-if>
-              <sc-if value="{{ iFilterChipOn }}" hint-placeholder-val="{{ false }}"><button onClick="{{ openFilter }}" style="flex:0 0 auto;padding:8px 12px;border-radius:999px;border:1px solid {{ iFilterChipBd }};background:{{ iFilterChipBg }};color:{{ iFilterChipFg }};font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;">{{ iFilterChip }} ▾</button></sc-if>
-              <sc-if value="{{ showTargetSort }}" hint-placeholder-val="{{ true }}"><button onClick="{{ openFilter }}" style="flex:0 0 auto;padding:8px 12px;border-radius:999px;border:1px solid #D7DEEC;background:#fff;color:#0B1220;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;"><span style="color:#7A839A;">Sort</span> {{ sortNow }} ▾</button></sc-if>
+              <sc-if value="{{ showTargetSort }}" hint-placeholder-val="{{ true }}"><button onClick="{{ openFilter }}" aria-label="{{ sortAria }}" title="{{ sortNow }}" style="flex:0 0 auto;padding:7px 9px;border-radius:999px;border:1px solid #D7DEEC;background:#fff;color:#0B1220;font-size:12px;font-weight:650;cursor:pointer;">Sort ▾</button></sc-if>
+              <sc-if value="{{ fpTilesOn }}" hint-placeholder-val="{{ false }}">
+                <button onClick="{{ toggleTargetMetrics }}" aria-label="Target metrics" aria-expanded="{{ targetMetricsOpen }}" style="flex:0 0 auto;display:flex;align-items:center;gap:5px;padding:7px 9px;border:1px solid {{ metricsButton.bd }};border-radius:999px;background:{{ metricsButton.bg }};color:{{ metricsButton.fg }};cursor:pointer;">
+                  <span style="font-size:12px;font-weight:650;">Metrics</span>
+                  <span style="font-size:12px;font-weight:650;">{{ metricsChevron }}</span>
+                </button>
+              </sc-if>
               </div></sc-if>
+            <sc-if value="{{ showTargetMetrics }}" hint-placeholder-val="{{ false }}">
+              <div style="background:#fff;border:1px solid #D7DEEC;border-radius:14px;padding:10px;display:flex;flex-direction:column;gap:8px;">
+                <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;">
+                  <sc-for list="{{ fpTiles }}" as="k" hint-placeholder-count="4">
+                    <div style="display:flex;flex-direction:column;gap:2px;min-width:0;padding:8px 9px;border-radius:9px;background:#F4F7FD;">
+                      <span style="font-size:11px;font-weight:650;color:#5B6478;">{{ k.eb }}</span>
+                      <span style="font-family:'Source Serif 4',Georgia,serif;font-size:21px;line-height:1.1;color:{{ k.color }};">{{ k.n }}</span>
+                      <sc-if value="{{ k.k }}" hint-placeholder-val="{{ true }}"><span style="font-size:10.5px;line-height:1.25;color:#5B6478;">{{ k.k }}</span></sc-if>
+                    </div>
+                  </sc-for>
+                </div>
+                <sc-if value="{{ fpMeasured }}" hint-placeholder-val="{{ true }}"><div style="padding:0 2px 1px;font-size:11px;line-height:1.3;color:#5B6478;">{{ fpMeasured }}</div></sc-if>
+              </div>
+            </sc-if>
             <sc-if value="{{ chOn }}" hint-placeholder-val="{{ false }}">
               <div style="background:#fff;border:1px solid #E1E6F0;border-radius:16px;padding:12px 14px;display:flex;flex-direction:column;gap:10px;">
                 <div style="display:flex;align-items:center;gap:8px;">
@@ -192,70 +204,58 @@ input,textarea,button{font-family:inherit}
                 </sc-if>
               </div>
             </sc-if>
-            <sc-if value="{{ fpTilesOn }}" hint-placeholder-val="{{ false }}">
-              <div style="background:#2447C4;border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:10px;">
-                <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 10px;">
-                  <sc-for list="{{ fpTiles }}" as="k" hint-placeholder-count="4">
-                    <div style="display:flex;flex-direction:column;gap:3px;min-width:0;">
-                      <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.09em;color:#C9D5F6;">{{ k.eb }}</span>
-                      <span style="font-family:'Source Serif 4',Georgia,serif;font-size:22px;line-height:1.1;color:#fff;">{{ k.n }}</span>
-                      <span style="font-size:11px;line-height:1.3;color:#DCE4FA;">{{ k.k }}</span>
-                    </div>
-                  </sc-for>
-                </div>
-                <div style="border-top:1px solid rgba(255,255,255,.22);padding-top:8px;font-size:11.5px;color:#DCE4FA;"><span style="color:#C9D5F6;">Measured on</span> <span style="color:#fff;font-weight:650;">{{ fpMeasured }}</span></div>
-              </div>
-            </sc-if>
             <sc-for list="{{ xNotes }}" as="n" hint-placeholder-count="1">
               <div style="background:{{ n.bg }};border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;align-items:flex-start;gap:4px;">
                 <div style="font-size:12.5px;line-height:1.45;color:#3C4557;"><b>{{ n.lead }}</b>{{ n.text }}</div>
                 <sc-if value="{{ n.hasGo }}" hint-placeholder-val="{{ false }}"><button onClick="{{ n.go }}" style="border:0;background:none;padding:0;color:#2447C4;font-size:12.5px;font-weight:650;cursor:pointer;">{{ n.goLabel }}</button></sc-if>
               </div>
             </sc-for>
-            <div style="display:flex;align-items:center;gap:10px;padding:2px 2px 0;">
-              <span style="font-size:13px;font-weight:650;color:#3C4557;">{{ targetCount }}</span>
-              <span style="flex:1;font-size:12px;color:#7A839A;text-align:right;">{{ targetHint }}</span>
+            <sc-if value="{{ targetToolbarOn }}" hint-placeholder-val="{{ true }}"><div style="display:flex;align-items:center;gap:10px;padding:0 2px;">
+              <span style="flex:1;min-width:0;font-size:12px;font-weight:600;color:#5B6478;">{{ targetCount }}</span>
+              <sc-if value="{{ iFilterChipOn }}" hint-placeholder-val="{{ false }}"><button onClick="{{ openFilter }}" title="Filter or sort HCPs" style="flex:0 0 auto;padding:7px 10px;border-radius:999px;border:1px solid {{ iFilterChipBd }};background:{{ iFilterChipBg }};color:{{ iFilterChipFg }};font-size:12px;font-weight:650;cursor:pointer;">{{ iFilterChip }} ▾</button></sc-if>
               <sc-if value="{{ canAddPeople }}" hint-placeholder-val="{{ true }}"><button onClick="{{ openPeople }}" style="flex:0 0 auto;padding:6px 10px;border:1px solid #D7DEEC;border-radius:999px;background:#fff;color:#22409F;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap;">{{ addPeopleLabel }}</button></sc-if>
-            </div>
+            </div></sc-if>
             <sc-for list="{{ targetItems }}" as="t" hint-placeholder-count="3">
               <div style="display:flex;flex-direction:column;gap:12px;">
               <sc-if value="{{ t.hasDivider }}" hint-placeholder-val="{{ false }}"><div style="border-top:1px solid #D7DEEC;padding:10px 2px 0;font-size:12px;font-weight:650;color:#5B6478;">{{ t.divider }}</div></sc-if>
-              <div style="background:#fff;border:1px solid #E1E6F0;border-radius:16px;overflow:hidden;">
-                <div style="display:flex;gap:10px;align-items:center;padding:12px 12px 10px 14px;">
-                  <button onClick="{{ t.open }}" style="flex:1;min-width:0;display:flex;gap:12px;align-items:center;text-align:left;border:0;background:none;padding:0;cursor:pointer;color:#0B1220;">
-                    <span data-kit="avatar" data-photo="{{ t.photo }}" data-npi="{{ t.npi }}" data-initials="{{ t.ini }}" style="width:42px;height:42px;flex:0 0 42px;border-radius:{{ t.avR }};background:{{ t.avBg }};color:{{ t.avFg }};display:grid;place-items:center;font-size:12.5px;font-weight:700;">{{ t.ini }}</span>
+               <div style="background:#fff;border:1px solid #E1E6F0;border-radius:14px;overflow:hidden;">
+                 <div style="display:flex;gap:7px;align-items:center;padding:9px 10px;">
+                   <button onClick="{{ t.open }}" aria-label="{{ t.profileLabel }}" style="flex:1;min-width:0;min-height:40px;display:flex;gap:9px;align-items:center;text-align:left;border:0;background:none;padding:0;cursor:pointer;color:#0B1220;">
+                     <span data-kit="avatar" data-photo="{{ t.photo }}" data-npi="{{ t.npi }}" data-initials="{{ t.ini }}" style="width:36px;height:36px;flex:0 0 36px;border-radius:{{ t.avR }};background:{{ t.avBg }};color:{{ t.avFg }};display:grid;place-items:center;font-size:12px;font-weight:700;">{{ t.ini }}</span>
                     <span style="flex:1;min-width:0;">
-                      <span style="display:flex;align-items:center;gap:6px;"><sc-if value="{{ t.prio }}" hint-placeholder-val="{{ false }}"><span title="{{ t.prioTip }}" style="width:16px;height:16px;flex:0 0 16px;border-radius:50%;background:#FFF3D6;color:#8A5A00;display:grid;place-items:center;font-size:10px;font-weight:700;">{{ t.prio }}</span></sc-if><span style="flex:1;min-width:0;font-size:15px;font-weight:650;line-height:1.25;">{{ t.name }}</span></span>
-                      <span style="display:block;font-size:12.5px;color:#5B6478;margin-top:2px;line-height:1.3;">{{ t.sub }}</span>
+                       <span style="display:flex;align-items:center;gap:5px;"><sc-if value="{{ t.prio }}" hint-placeholder-val="{{ false }}"><span title="{{ t.prioTip }}" style="width:16px;height:16px;flex:0 0 16px;border-radius:50%;background:#FFF3D6;color:#8A5A00;display:grid;place-items:center;font-size:10px;font-weight:700;">{{ t.prio }}</span></sc-if><span style="flex:1;min-width:0;font-size:14.5px;font-weight:650;line-height:1.2;">{{ t.name }}</span></span>
+                       <sc-if value="{{ t.sub }}" hint-placeholder-val="{{ true }}"><span title="{{ t.sub }}" style="display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;font-size:11.5px;color:#5B6478;margin-top:2px;line-height:1.25;">{{ t.sub }}</span></sc-if>
                     </span>
                   </button>
-                  <sc-if value="{{ routeOn }}" hint-placeholder-val="{{ true }}"><button onClick="{{ t.toggle }}" style="width:44px;height:44px;flex:0 0 44px;border-radius:13px;border:1px solid {{ t.addBd }};background:{{ t.addBg }};color:{{ t.addFg }};font-size:18px;font-weight:600;cursor:pointer;">{{ t.addIcon }}</button></sc-if>
+                   <sc-if value="{{ t.inlineFlagTap }}" hint-placeholder-val="{{ false }}"><button onClick="{{ t.flagGo }}" aria-label="{{ t.flagAria }}" style="flex:0 0 auto;min-height:32px;padding:4px 7px;border-radius:8px;border:0;background:{{ t.flagBg }};color:{{ t.flagFg }};font-size:11px;font-weight:650;cursor:pointer;">{{ t.flag }} ▾</button></sc-if>
+                   <sc-if value="{{ t.inlineFlagStill }}" hint-placeholder-val="{{ false }}"><span style="flex:0 0 auto;font-size:11px;font-weight:650;padding:4px 7px;border-radius:7px;background:{{ t.flagBg }};color:{{ t.flagFg }};">{{ t.flag }}</span></sc-if>
+                   <sc-if value="{{ routeOn }}" hint-placeholder-val="{{ true }}"><button onClick="{{ t.toggle }}" aria-label="{{ t.routeLabel }}" style="width:40px;height:40px;flex:0 0 40px;border-radius:10px;border:1px solid {{ t.addBd }};background:{{ t.addBg }};color:{{ t.addFg }};font-size:17px;font-weight:600;cursor:pointer;">{{ t.addIcon }}</button></sc-if>
                 </div>
-                <sc-if value="{{ t.hasFlag }}" hint-placeholder-val="{{ false }}">
-                  <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px;padding:0 14px 11px;">
+                 <sc-if value="{{ t.flagBelow }}" hint-placeholder-val="{{ false }}">
+                   <div style="display:flex;align-items:center;flex-wrap:wrap;gap:3px 7px;padding:0 10px 8px;">
                     <sc-if value="{{ t.flagTap }}" hint-placeholder-val="{{ false }}"><button onClick="{{ t.flagGo }}" title="Click to change status" style="font-size:11.5px;font-weight:650;padding:4px 8px;border-radius:7px;border:0;background:{{ t.flagBg }};color:{{ t.flagFg }};cursor:pointer;">{{ t.flag }} ▾</button></sc-if>
                     <sc-if value="{{ t.flagStill }}" hint-placeholder-val="{{ true }}"><span style="font-size:11.5px;font-weight:650;padding:4px 8px;border-radius:7px;background:{{ t.flagBg }};color:{{ t.flagFg }};">{{ t.flag }}</span></sc-if>
                     <sc-if value="{{ t.hasFlagSub }}" hint-placeholder-val="{{ false }}"><span style="font-size:11.5px;color:#7A839A;">{{ t.flagSub }}</span></sc-if>
                   </div>
                 </sc-if>
-                <button onClick="{{ t.open }}" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));width:100%;border:0;border-top:1px solid #EEF1F7;background:#FAFBFE;padding:0;cursor:pointer;text-align:left;">
+                 <button onClick="{{ t.open }}" style="display:flex;flex-wrap:wrap;width:100%;border:0;border-top:1px solid #E7EBF3;background:#F7F9FC;padding:2px 4px;text-align:left;cursor:pointer;">
                   <sc-for list="{{ t.metrics }}" as="m" hint-placeholder-count="3">
-                    <span title="{{ m.tip }}" style="padding:10px 14px 11px;">
-                      <span title="{{ m.ktip }}" style="display:block;font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.08em;color:#7A839A;">{{ m.k }}</span>
-                      <sc-if value="{{ m.big }}" hint-placeholder-val="{{ true }}"><span style="display:block;font-family:'Source Serif 4',Georgia,serif;font-size:20px;line-height:1.1;margin-top:4px;color:{{ m.c }};">{{ m.v }}</span></sc-if>
-                      <sc-if value="{{ m.hasPips }}" hint-placeholder-val="{{ false }}"><span style="display:flex;align-items:center;gap:6px;margin-top:6px;"><span style="display:flex;gap:2px;"><sc-for list="{{ m.pips }}" as="d" hint-placeholder-count="5"><span style="width:6px;height:14px;border-radius:2px;background:{{ d.c }};"></span></sc-for></span><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#5B6478;">{{ m.pipV }}</span></span></sc-if>
-                      <sc-if value="{{ m.small }}" hint-placeholder-val="{{ false }}"><span style="display:block;font-family:'Source Serif 4',Georgia,serif;font-size:15px;line-height:1.2;margin-top:5px;color:{{ m.c }};">{{ m.v }}</span></sc-if>
-                      <sc-if value="{{ m.hasDots }}" hint-placeholder-val="{{ false }}"><span aria-label="Current score per statement" style="display:flex;flex-wrap:wrap;gap:3px;margin-top:7px;"><sc-for list="{{ m.dots }}" as="d" hint-placeholder-count="6"><span style="width:8px;height:8px;border-radius:50%;background:{{ d.c }};"></span></sc-for></span></sc-if>
-                      <sc-if value="{{ m.hasBar }}" hint-placeholder-val="{{ false }}"><span style="display:flex;height:6px;border-radius:999px;overflow:hidden;margin-top:6px;background:#EEF1F7;"><span style="width:{{ m.barA }};background:#2447C4;"></span><span style="width:{{ m.barB }};background:#DD6134;"></span></span></sc-if>
-                      <sc-if value="{{ m.hasS }}" hint-placeholder-val="{{ false }}"><span style="display:block;font-size:11px;line-height:1.3;margin-top:3px;color:{{ m.sc }};">{{ m.s }}</span></sc-if>
+                     <span title="{{ m.tip }}" style="display:flex;flex-direction:column;min-width:0;width:{{ t.metricWidth }};box-sizing:border-box;padding:6px 6px;">
+                       <span title="{{ m.ktip }}" style="display:block;font-size:10.5px;font-weight:600;color:#5B6478;">{{ m.k }}</span>
+                       <sc-if value="{{ m.big }}" hint-placeholder-val="{{ true }}"><span style="display:block;font-family:'Source Serif 4',Georgia,serif;font-size:17px;line-height:1.15;margin-top:2px;color:{{ m.c }};">{{ m.v }}</span></sc-if>
+                       <sc-if value="{{ m.hasPips }}" hint-placeholder-val="{{ false }}"><span style="display:flex;align-items:center;gap:4px;margin-top:4px;"><span style="display:flex;gap:2px;"><sc-for list="{{ m.pips }}" as="d" hint-placeholder-count="5"><span style="width:5px;height:11px;border-radius:2px;background:{{ d.c }};"></span></sc-for></span><span style="font-size:11px;color:#5B6478;">{{ m.pipV }}</span></span></sc-if>
+                       <sc-if value="{{ m.small }}" hint-placeholder-val="{{ false }}"><span style="display:block;font-size:12.5px;font-weight:650;line-height:1.2;margin-top:2px;color:{{ m.c }};">{{ m.v }}</span></sc-if>
+                       <sc-if value="{{ m.hasDots }}" hint-placeholder-val="{{ false }}"><span aria-label="Current score per statement" style="display:flex;flex-wrap:wrap;gap:3px;margin-top:4px;"><sc-for list="{{ m.dots }}" as="d" hint-placeholder-count="6"><span style="width:7px;height:7px;border-radius:50%;background:{{ d.c }};"></span></sc-for></span></sc-if>
+                       <sc-if value="{{ m.hasBar }}" hint-placeholder-val="{{ false }}"><span style="display:flex;height:4px;border-radius:999px;overflow:hidden;margin-top:4px;background:#EEF1F7;"><span style="width:{{ m.barA }};background:#2447C4;"></span><span style="width:{{ m.barB }};background:#DD6134;"></span></span></sc-if>
+                       <sc-if value="{{ m.hasS }}" hint-placeholder-val="{{ false }}"><span style="display:block;font-size:10.5px;line-height:1.2;margin-top:2px;color:{{ m.sc }};">{{ m.s }}</span></sc-if>
                     </span>
                   </sc-for>
-                </button>
+                 </button>
                 <sc-if value="{{ t.hasWide }}" hint-placeholder-val="{{ false }}">
-                  <button onClick="{{ t.open }}" style="display:block;width:100%;text-align:left;border:0;border-top:1px solid #EEF1F7;background:#FAFBFE;padding:10px 14px 11px;cursor:pointer;color:#0B1220;">
-                    <span style="display:block;font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.08em;color:#7A839A;">{{ t.wideK }}</span>
-                    <span style="display:block;font-size:13.5px;line-height:1.35;margin-top:4px;color:#0B1220;">{{ t.wideV }}</span>
-                  </button>
+                   <button onClick="{{ t.open }}" style="display:flex;align-items:baseline;gap:7px;width:100%;border:0;border-top:1px solid #E7EBF3;background:#F7F9FC;padding:6px 10px;text-align:left;cursor:pointer;">
+                     <span style="flex:0 0 auto;font-size:10.5px;font-weight:600;color:#5B6478;">{{ t.wideK }}</span>
+                     <span title="{{ t.wideV }}" style="flex:1;min-width:0;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:1;font-size:11.5px;line-height:1.25;color:#0B1220;">{{ t.wideV }}</span>
+                   </button>
                 </sc-if>
               </div>
               </div>
@@ -851,15 +851,13 @@ input,textarea,button{font-family:inherit}
 
         <sc-if value="{{ isAsk }}" hint-placeholder-val="{{ false }}">
           <div style="padding:6px 18px 0;display:flex;flex-direction:column;gap:12px;">
-            <sc-if value="{{ askEyebrowOn }}" hint-placeholder-val="{{ false }}"><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.09em;color:#7A839A;margin-bottom:-6px;">{{ askEyebrow }}</div></sc-if>
             <div style="display:flex;align-items:center;gap:8px;">
               <span style="flex:1;font-family:'Source Serif 4',Georgia,serif;font-size:30px;line-height:1.1;letter-spacing:-.02em;">Ask</span>
-              <button onClick="{{ askReset }}" style="padding:8px 12px;border-radius:999px;border:1px solid #D7DEEC;background:#fff;font-size:12.5px;font-weight:650;cursor:pointer;">New chat</button>
+              <sc-if value="{{ askHasThread }}" hint-placeholder-val="{{ false }}"><button onClick="{{ askReset }}" style="padding:8px 12px;border-radius:999px;border:1px solid #D7DEEC;background:#fff;font-size:12.5px;font-weight:650;cursor:pointer;">New chat</button></sc-if>
             </div>
-            <sc-if value="{{ askScopeOn }}" hint-placeholder-val="{{ true }}"><div aria-label="Answer scope" style="padding:11px 13px;border-radius:14px;border:1px solid #E1E6F0;background:#fff;font-size:13px;line-height:1.45;color:#3C4557;"><span style="font-weight:700;color:#0B1220;">{{ askScopeName }}</span>{{ askScopeCounts }}<div style="margin-top:3px;color:#5B6478;">{{ askScopeNote }}</div></div></sc-if>
+            <sc-if value="{{ askScopeOn }}" hint-placeholder-val="{{ true }}"><div aria-label="Answer scope" style="font-size:12px;line-height:1.35;color:#5B6478;">{{ askScope }}</div></sc-if>
             <sc-if value="{{ askEmpty }}" hint-placeholder-val="{{ true }}">
               <div style="display:flex;flex-direction:column;gap:12px;">
-                <div style="font-size:14px;color:#5B6478;line-height:1.5;">Your day, your doctors, your numbers. Ask out loud or type.</div>
                 <div style="display:flex;flex-direction:column;gap:8px;">
                   <sc-for list="{{ askSuggest }}" as="sq" hint-placeholder-count="4">
                     <button onClick="{{ sq.go }}" style="display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:1px solid #DCE3F2;background:#fff;border-radius:14px;padding:13px 14px;cursor:pointer;font-size:14px;color:#0B1220;" style-hover="border-color:#2447C4;"><span style="color:#2447C4;font-weight:800;">✳</span><span style="flex:1;">{{ sq.q }}</span><span style="color:#C3CAD8;">›</span></button>
@@ -894,8 +892,6 @@ input,textarea,button{font-family:inherit}
                 </div>
               </div>
             </sc-for>
-            <sc-if value="{{ askNoGroupOn }}" hint-placeholder-val="{{ false }}"><div style="font-size:11.5px;line-height:1.45;color:#7A839A;">Choose a code group on Targets to include activity figures.</div></sc-if>
-            <sc-if value="{{ askFootOn }}" hint-placeholder-val="{{ false }}"><div style="font-size:11.5px;line-height:1.45;color:#7A839A;">Written by AI from your own figures. Check figures before quoting.</div></sc-if>
             <div style="height:190px;"></div>
           </div>
         </sc-if>
@@ -1423,7 +1419,6 @@ input,textarea,button{font-family:inherit}
 
             <sc-if value="{{ shTerritory }}" hint-placeholder-val="{{ false }}">
               <div style="padding:12px 18px 0;display:flex;flex-direction:column;gap:8px;">
-                <sc-if value="{{ pkIntroOn }}" hint-placeholder-val="{{ false }}"><div style="font-size:12.5px;color:#5B6478;line-height:1.4;">{{ pkIntro }}</div></sc-if>
                 <sc-if value="{{ pkTabsOn }}" hint-placeholder-val="{{ false }}">
                   <div style="display:flex;padding:3px;border-radius:12px;background:#E6EAF2;">
                     <sc-for list="{{ pkTabs }}" as="o" hint-placeholder-count="4"><button onClick="{{ o.go }}" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:8px 2px;border:0;border-radius:10px;background:{{ o.bg }};box-shadow:{{ o.sh }};cursor:pointer;"><span style="font-size:12.5px;font-weight:650;color:{{ o.fg }};">{{ o.label }}</span><span style="font-size:10.5px;font-weight:700;padding:1px 6px;border-radius:999px;background:{{ o.nbg }};color:{{ o.fg }};">{{ o.n }}</span></button></sc-for>
@@ -1450,11 +1445,7 @@ input,textarea,button{font-family:inherit}
                 </sc-if>
                 <sc-for list="{{ pkRows }}" as="t" hint-placeholder-count="3">
                   <sc-if value="{{ t.isNew }}" hint-placeholder-val="{{ false }}">
-                    <button onClick="{{ t.go }}" title="{{ t.hint }}" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:13px;border:1px dashed #B9C3D8;border-radius:14px;background:#EDF1FB;cursor:pointer;opacity:{{ t.op }};">
-                      <sc-if value="{{ t.hasPlus }}" hint-placeholder-val="{{ false }}"><span style="width:30px;height:30px;border-radius:50%;border:1.5px dashed #B9C3D8;color:#22409F;display:grid;place-items:center;font-size:15px;">＋</span></sc-if>
-                      <span style="font-size:13.5px;font-weight:700;color:#22409F;">{{ t.name }}</span>
-                      <sc-if value="{{ t.hasSub }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;color:#5B6478;text-align:center;">{{ t.sub }}</span></sc-if>
-                    </button>
+                    <button onClick="{{ t.go }}" title="{{ t.hint }}" style="padding:12px;border:1px dashed #B9C3D8;border-radius:12px;background:#EDF1FB;color:#22409F;font-size:13.5px;font-weight:700;cursor:pointer;opacity:{{ t.op }};">{{ t.name }}</button>
                   </sc-if>
                   <sc-if value="{{ t.isList }}" hint-placeholder-val="{{ true }}">
                     <div style="border:1.5px solid {{ t.bd }};border-radius:14px;background:{{ t.bg }};overflow:hidden;opacity:{{ t.op }};">
@@ -1462,37 +1453,18 @@ input,textarea,button{font-family:inherit}
                         <button onClick="{{ t.go }}" title="{{ t.hint }}" aria-label="{{ t.aria }}" style="flex:1;min-width:0;display:flex;align-items:flex-start;gap:12px;padding:13px 14px;border:0;background:none;cursor:pointer;text-align:left;">
                           <sc-if value="{{ t.hasIcon }}" hint-placeholder-val="{{ false }}"><span style="flex:0 0 auto;width:34px;height:34px;border-radius:10px;background:{{ t.iconBg }};display:grid;place-items:center;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="{{ t.iconFg }}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="{{ t.iconD }}"></path></svg></span></sc-if>
                           <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;">
-                            <sc-if value="{{ t.hasBadges }}" hint-placeholder-val="{{ false }}"><span style="display:flex;flex-wrap:wrap;gap:4px;"><sc-for list="{{ t.badges }}" as="b" hint-placeholder-count="1"><span title="{{ b.hint }}" style="font-size:10px;font-weight:700;letter-spacing:.04em;padding:2px 7px;border-radius:999px;background:{{ b.bg }};color:{{ b.fg }};">{{ b.label }}</span></sc-for></span></sc-if>
                             <span style="display:flex;flex-wrap:wrap;align-items:baseline;"><span style="font-size:14.5px;font-weight:650;color:#0B1220;">{{ t.name }}</span><sc-if value="{{ t.hasBy }}" hint-placeholder-val="{{ false }}"><span style="font-size:12.5px;color:#7A839A;"> · shared</span></sc-if></span>
-                            <sc-if value="{{ t.hasDesc }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;color:#5B6478;line-height:1.35;">{{ t.desc }}</span></sc-if>
-                            <sc-if value="{{ t.hasCard }}" hint-placeholder-val="{{ false }}">
-                              <span style="display:flex;flex-direction:column;gap:6px;">
-                                <sc-if value="{{ t.hasCallout }}" hint-placeholder-val="{{ true }}"><span style="font-size:12px;color:#0B1220;padding:6px 9px;border-radius:8px;background:#F4F6FA;border:1px solid #E7EBF3;">✦ {{ t.callout }}</span></sc-if>
-                                <span style="display:flex;height:6px;border-radius:999px;overflow:hidden;background:#EEF1F7;"><sc-for list="{{ t.bar }}" as="x" hint-placeholder-count="2"><span style="width:{{ x.w }};background:{{ x.c }};"></span></sc-for></span>
-                                <span style="display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;color:#5B6478;">
-                                  <sc-if value="{{ t.noStatuses }}" hint-placeholder-val="{{ false }}"><span style="font-style:italic;">No targets yet</span></sc-if>
-                                  <sc-for list="{{ t.statuses }}" as="x" hint-placeholder-count="2"><span style="display:flex;align-items:center;gap:5px;"><span style="width:6px;height:6px;border-radius:50%;background:{{ x.c }};"></span><span style="color:#0B1220;font-weight:600;">{{ x.n }}</span> {{ x.label }}</span></sc-for>
-                                </span>
-                                <sc-if value="{{ t.hasAvatars }}" hint-placeholder-val="{{ false }}"><span style="display:flex;align-items:center;padding-left:2px;"><sc-for list="{{ t.avatars }}" as="v" hint-placeholder-count="2"><span title="{{ v.email }}" style="width:24px;height:24px;margin-right:-6px;border-radius:50%;border:2px solid #fff;background:{{ v.bg }};color:{{ v.fg }};display:grid;place-items:center;font-size:9px;font-weight:700;">{{ v.ini }}</span></sc-for><sc-if value="{{ t.hasMore }}" hint-placeholder-val="{{ false }}"><span style="width:24px;height:24px;border-radius:50%;border:2px solid #fff;background:#EEF1F7;color:#5B6478;display:grid;place-items:center;font-size:9px;font-weight:700;">{{ t.more }}</span></sc-if></span></sc-if>
-                                <span style="display:flex;align-items:center;gap:8px;border-top:1px solid #EEF1F7;padding-top:8px;">
-                                  <span style="font-size:20px;font-weight:700;color:#0B1220;line-height:1;">{{ t.total }}</span>
-                                  <span style="font-size:10.5px;letter-spacing:.06em;color:#7A839A;">{{ t.totalWord }}</span>
-                                  <sc-if value="{{ t.hasRecent }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px;font-weight:650;color:#1C7A4E;">{{ t.recent }}</span></sc-if>
-                                  <span style="flex:1;"></span>
-                                  <sc-if value="{{ t.hasOwner }}" hint-placeholder-val="{{ false }}"><span style="width:24px;height:24px;border-radius:50%;background:{{ t.ownerBg }};color:{{ t.ownerFg }};display:grid;place-items:center;font-size:9.5px;font-weight:700;">{{ t.ownerIni }}</span></sc-if>
-                                  <span style="font-size:11px;color:#7A839A;white-space:nowrap;">{{ t.ago }}</span>
-                                </span>
-                              </span>
-                            </sc-if>
+                            <sc-if value="{{ t.hasSub }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;color:#5B6478;line-height:1.25;">{{ t.sub }}</span></sc-if>
                           </span>
                           <span style="color:#2447C4;font-weight:700;">{{ t.check }}</span>
                         </button>
-                        <sc-if value="{{ t.hasMenu }}" hint-placeholder-val="{{ false }}"><button onClick="{{ t.menu }}" aria-label="More actions" style="flex:0 0 auto;width:36px;height:36px;margin:8px 8px 0 -6px;border:0;border-radius:10px;background:{{ t.menuBg }};color:#5B6478;font-size:18px;font-weight:700;cursor:pointer;">⋯</button></sc-if>
+                        <sc-if value="{{ t.hasMenu }}" hint-placeholder-val="{{ false }}"><button onClick="{{ t.menu }}" aria-label="{{ t.menuAria }}" aria-expanded="{{ t.menuOpen }}" style="flex:0 0 auto;width:40px;height:40px;margin:5px 6px 0 -6px;border:0;border-radius:10px;background:{{ t.menuBg }};color:#5B6478;font-size:18px;font-weight:700;cursor:pointer;">⋯</button></sc-if>
                       </div>
                       <sc-if value="{{ t.menuOpen }}" hint-placeholder-val="{{ false }}">
                         <div style="display:flex;flex-direction:column;padding:0 12px 8px;">
-                          <sc-for list="{{ t.menuItems }}" as="m" hint-placeholder-count="3"><button onClick="{{ m.go }}" style="padding:11px 6px;border:0;border-top:1px solid #EEF1F7;background:none;color:{{ m.fg }};font-size:13.5px;font-weight:600;text-align:left;cursor:pointer;">{{ m.label }}</button></sc-for>
-                          <sc-if value="{{ t.hasMenuNote }}" hint-placeholder-val="{{ false }}"><span style="padding:11px 6px;border-top:1px solid #EEF1F7;font-size:12px;color:#7A839A;">Shared with you</span></sc-if>
+                          <sc-if value="{{ t.details }}" hint-placeholder-val="{{ false }}"><div style="padding:7px 6px;font-size:12px;line-height:1.4;color:#5B6478;">{{ t.details }}</div></sc-if>
+                          <sc-if value="{{ t.rules }}" hint-placeholder-val="{{ false }}"><div style="padding:7px 6px;font-size:12px;line-height:1.4;color:#5B6478;">{{ t.rules }}</div></sc-if>
+                          <sc-for list="{{ t.menuItems }}" as="m" hint-placeholder-count="3"><button onClick="{{ m.go }}" disabled="{{ m.disabled }}" style="padding:11px 6px;border:0;border-top:1px solid #EEF1F7;background:none;color:{{ m.fg }};font-size:13.5px;font-weight:600;text-align:left;cursor:pointer;">{{ m.label }}</button></sc-for>
                         </div>
                       </sc-if>
                       <sc-if value="{{ t.asking }}" hint-placeholder-val="{{ false }}">
@@ -1537,8 +1509,8 @@ input,textarea,button{font-family:inherit}
                     <sc-if value="{{ t.hasHead }}" hint-placeholder-val="{{ false }}">
                       <div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.08em;color:#7A839A;padding:6px 2px 0;">{{ t.head }}</div>
                     </sc-if>
-                    <button onClick="{{ t.go }}" style="display:flex;align-items:center;gap:12px;padding:13px 14px;border:1.5px solid {{ t.bd }};border-radius:14px;background:{{ t.bg }};cursor:pointer;text-align:left;">
-                      <span style="flex:1;"><span style="display:block;font-size:14.5px;font-weight:650;color:#0B1220;">{{ t.name }}</span><span style="display:block;font-size:12px;color:#5B6478;margin-top:2px;">{{ t.meta }}</span></span>
+                    <button onClick="{{ t.go }}" aria-label="{{ t.aria }}" disabled="{{ t.disabled }}" style="display:flex;align-items:center;gap:12px;padding:13px 14px;border:1.5px solid {{ t.bd }};border-radius:14px;background:{{ t.bg }};cursor:pointer;text-align:left;">
+                      <span style="flex:1;"><span style="display:block;font-size:14.5px;font-weight:650;color:#0B1220;">{{ t.name }}</span><sc-if value="{{ t.meta }}" hint-placeholder-val="{{ true }}"><span style="display:block;font-size:12px;color:#5B6478;margin-top:2px;">{{ t.meta }}</span></sc-if></span>
                       <span style="color:#2447C4;font-weight:700;">{{ t.check }}</span>
                     </button>
                   </div>
@@ -3360,18 +3332,13 @@ const BLOCKS = {
 const showOf = A => ({ ...BLOCKS[A.fieldPro ? 'fieldPro' : 'insights'], ...(A.show || {}) });
 // what a logged conversation is called: Field Pro keeps notes, Insights keeps insights
 const wordsOf = A => A.fieldPro ? { one:'Note', many:'Notes' } : { one:'Insight', many:'Insights' };
-// Target lists, one picker for both accounts (adapter): Field Pro's target list switch (TerritorySwitch.tsx, its
-// "target list" words) and Insights' Target Lists page (TargetLists.tsx, TargetListCard.tsx). Each account switches
-// its own parts on: Insights' tabs, sort, cards and ⋯ menu; Field Pro's six rows, then forty more at a time
 // one filter group in the filter sheet, for every account: its label, a figure at its side, a note above and below its options
 // one stat tile, for every account: its label, value (and a smaller second value), pips, the line under it and its tooltip
 const statTile = x => ({ v2:'', pipsOn:false, pips:[], tip:'', c:'#0B1220', ...x });
 const filterGroup = g => ({ ...g, side:g.side || '', sideOn:!!g.side, note:g.note || '', noteOn:!!g.note, foot:g.foot || '', footOn:!!g.foot });
 const LIST_UI = {
-  fieldPro: { tabs:false, sorts:false, cards:false, menu:false, intro:'', findHint:'Find a target list', findLabel:'Find a target list by name, state or ZIP code',
-    newLabel:'＋ New target list', newSub:'', collapsed:6, page:40, header:false },
-  insights: { tabs:true, sorts:true, cards:true, menu:true, intro:"Track HCPs you care about. Share lists with teammates, pin the important ones, archive what's done.",
-    findHint:'Search your lists…', findLabel:'Search your lists…', newLabel:'New list', newSub:'Group HCPs by territory or campaign', collapsed:0, page:0, header:true },
+  fieldPro: { findHint:'Find a target list', findLabel:'Find a target list by name, state or ZIP code', newLabel:'＋ New target list', collapsed:6, page:40 },
+  insights: { findHint:'Search your lists…', findLabel:'Search your lists', newLabel:'New list' },
 };
 // a smart list's rules, as the website's builder (SmartListRulesBuilder.tsx:28-151): each field's operators, its
 // value (a word, a number, one of a few, yes/no) and the quick starts
@@ -3408,14 +3375,9 @@ const LIST_ICONS = {
   compass:'M12 2a10 10 0 1 0 0 20a10 10 0 1 0 0-20 M16.24 7.76l-2.12 6.36-6.36 2.12 2.12-6.36 6.36-2.12z',
   flag:'M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z M4 22v-7',
 };
-const LIST_WAND = 'm21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72Z M14 7l3 3 M5 6v4 M19 14v4 M10 2v2 M7 8H3 M21 16h-4 M11 3H9';
 const LIST_TONES = { teal:['#E6F6F4','#0F766E'], blue:['#E7ECFA','#2447C4'], amber:['#FBF1DF','#A16207'], rose:['#FDEAEA','#C0392B'], violet:['#EFE9FB','#6B46C1'], emerald:['#E3F5EC','#1C7A4E'], slate:['#EEF1F7','#5B6478'] };
 const LIST_SWATCH = { teal:'#14B8A6', blue:'#2447C4', amber:'#D97706', rose:'#C0392B', violet:'#7C3AED', emerald:'#1C7A4E' };
 // someone a list is shared with, as the website's avatars: initials from the email, a tone picked by it
-const EMAIL_TONES = [['#E7ECFA','#2447C4'], ['#E3F5EC','#1C7A4E'], ['#EFE9FB','#6B46C1'], ['#FBF1DF','#A16207'], ['#FDEAEA','#C0392B'], ['#E0F4F1','#0F766E']];
-const emailTone = e => { let h = 0; for (const ch of String(e || '')) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return EMAIL_TONES[h % EMAIL_TONES.length]; };
-const emailIni = e => { const local = String(e || '').split('@')[0], parts = local.split(/[._-]/).filter(Boolean);
-  return !local ? '?' : parts.length > 1 ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase() : (parts[0] || local).slice(0, 2).toUpperCase(); };
 // sample wording: Ottava sells a surgical system, the others are oncology medicines
 const FP_PEOPLE = Object.fromEntries(Object.values(HCPS).map(p => [p.id, { spec:p.spec, iOpen:p.iOpen, iBrief:p.iBrief }]));
 const ONC_PEOPLE = {
@@ -3507,15 +3469,17 @@ class Component extends DCLogic {
     const account = ACCOUNTS[pr.account] ? pr.account : 'ottava', A = ACCOUNTS[account];
     this._pa = pr.account;
     applyPeople(A);
+    const initial = seed(A);
     return {
     account,
     tab: this.tabsFor({ account }).includes(pr.startTab) ? pr.startTab : 'targets', stack: [], sheet: null, sheetData: null,
     repTab: 'mine', scope: 'mine', kind: ACCOUNTS[account].fieldPro ? 'hco' : 'hcp', q: '', spec: 'All codes', cgs: CODE_GROUPS.map(g => g.name), sort: WORKSPACE.lens === 'hcp' || WORKSPACE.drugAccount ? 'Volume' : 'Opportunity', iSort: 'Last met', ...I_FILTERS, briefing: null, peopleAdding: [], peopleAdded: [], listTab: 'all', listSort: 'recent', listConfirm: null, listBusy: null, pkQ: '', pkLimit: 0, pkMoreKey: '', pkMenu: null, fm: null, shr: null, changes: {}, chBusy: {}, chHidden: {}, actQ: '', myF:MY_F0, myPage:0, trF:TR_F0, trPage:0, trRows:null, trLoad:false, trBusy:null, myMenu:false, myDelBusy:false, myDelErr:'', ixFull:{}, ixTab:'transcript', ixView:'normal', ixSub:'document', ixTopics:[], ixHcpAll:false, ixBusy:null, ixRegen:false, ...IX0, meetEditId:null, dash: null, board: null, boardCol: 'todo', boardNew: false, boardTitle: '', boardPrio: 'medium', boardBusy: null, boardAsk: null, trk: {}, tlist: TLISTS[0] ? TLISTS[0].id || TLISTS[0].name : '',
     route: [], tomorrow: [], day: 'today', runIdx: 0, runDone: [], runSkip: [], logged: [],
-    ...seed(A),
+    ...initial,
+    targetMetricsOpen: initial.targetMetricsOpen === true,
     thread: [], askIn: '', listening: false, email: null, switching: null,
     actSeg: A.fieldPro ? 'visits' : 'dash', pSeg: 'overview', pRowF: 'all', trkHist: false, trkAsk: null, trkForm: null, trkBusy: false, trkFormErr: '', trkBlocked: false, trkCal: null, trkCalOn: false, noteText: '', noteBusy: false, full: null, fullDone: false, fullErr: '', exporting: false,
-    territory: seed(A).territory || (TERRS[0] ? TERRS[0].id || TERRS[0].name : ''), targetPage:0, targetPageKey:'', toast: null, toastUndo: null, omKind:'acc', omRadius:25, mapTypes:null, omTypeNote:'', omHeat:{ status:'idle', err:'' }, omMode:AREA.mode || 'near', omStart:AREA.centre, omCity:AREA.city, omGroup:'all', omSel:null, omExpanded:false, omLayer:'Pins', omCmd:{ kind:'', n:0 }, speaking: null, fuTask: '', fuWho: null, fuDue: 1,
+    territory: initial.territory || (TERRS[0] ? TERRS[0].id || TERRS[0].name : ''), targetPage:0, targetPageKey:'', toast: null, toastUndo: null, omKind:'acc', omRadius:25, mapTypes:null, omTypeNote:'', omHeat:{ status:'idle', err:'' }, omMode:AREA.mode || 'near', omStart:AREA.centre, omCity:AREA.city, omGroup:'all', omSel:null, omExpanded:false, omLayer:'Pins', omCmd:{ kind:'', n:0 }, speaking: null, fuTask: '', fuWho: null, fuDue: 1,
     ...this.insFresh([], A),
     smySeg:'new', smyQ:'', smySel:[], smyName:'', smyOpen:null, ...smyFresh(),
     smyDet:null, smyDets:{}, smyDetTab:'overview', smyDrugs:[], smyDetExp:false, smyAsk:null, smyDel:null, smyRev:null,
@@ -4430,32 +4394,13 @@ class Component extends DCLogic {
       acGoLabel: ac.busy ? 'Adding…' : acNew.length ? 'Add ' + acNew.length.toLocaleString() + ' ' + (acNew.length === 1 ? 'account' : 'accounts') : 'Add accounts',
     };
   }
-  // Insights' list page header (TargetListDetail.tsx:462-633): back to the lists, the list's name and kind, who owns it and
-  // when it was made and changed, Share, Export, Add HCP (a smart list fills itself), and a smart list's rules
-  listHeaderView(ins, tl, total) {
-    const s = this.state, on = LIST_UI[ins ? 'insights' : 'fieldPro'].header && !!(tl && tl.id);
-    if (!on) return { lhOn:false, lhIcon:'', lhName:'', lhTag:'', lhMeta:[], lhShareOn:false, lhAddOn:false, lhAuto:false, lhRulesOn:false, lhRulesEdit:false, lhRules:[], lhExportOp:1, lhExportLabel:'Export',
-      lhBack: () => {}, lhShare: () => {}, lhExport: () => {}, lhAdd: () => {}, lhEditRules: () => {} };
-    const smart = !!tl.smart, lines = ruleLines(tl.rules), owner = tl.owner !== false, sep = tl.rules && tl.rules.join === 'or' ? 'or' : 'and';
-    const upd = agoAt(tl.updatedIso), updated = upd === 'Today' ? 'today' : upd === 'Yesterday' ? 'yesterday' : upd;
-    return {
-      lhOn:true, lhBack: () => this.sheet('territory'), lhIcon: smart ? LIST_WAND : LIST_ICONS.bookmark, lhName:tl.name, lhTag: smart ? 'Smart list' : 'Target list',
-      lhMeta: [{ pre:'', bold:String(total), post:' targets' }, ...(tl.creatorEmail ? [{ pre:'Owner ', bold:tl.creatorEmail.split('@')[0], post:'' }] : []),
-        ...(tl.createdIso && noteDay(tl.createdIso) ? [{ pre:'Created ' + noteDay(tl.createdIso), bold:'', post:'' }] : []), ...(updated ? [{ pre:'Updated ' + updated, bold:'', post:'' }] : [])],
-      lhShareOn:!smart, lhShare: () => this.openShare(tl.id),
-      lhExportLabel: s.listExporting ? 'Exporting…' : 'Export', lhExportOp: s.listExporting || !total ? 0.5 : 1, lhExport: () => { if (total) this.exportList(tl); },
-      lhAddOn:!smart, lhAdd: () => this.openPeople(), lhAuto:smart,
-      lhRulesOn: smart && lines.length > 0, lhRulesEdit:owner, lhEditRules: () => this.openForm('rules', tl.id),
-      lhRules: lines.map((text, i) => ({ text, sep, hasSep: i < lines.length - 1 })),
-    };
-  }
   // Export: the server's workbook of the whole list, saved on the device (TargetListDetail.tsx:349-391)
   exportList(tl) {
     if (this.state.listExporting) return;
     if (!SERVICE.listExport) return this.toast('Export isn’t connected for this account');
-    this.setState({ listExporting:true });
-    SERVICE.listExport(tl.id).then(name => { this.setState({ listExporting:false }); this.toast(name ? 'Exported · ' + name : 'Exported'); },
-      e => { this.setState({ listExporting:false }); this.toast((e && e.message) || 'Failed to export this list'); });
+    this.setState({ listExporting:tl.id });
+    SERVICE.listExport(tl.id).then(name => { this.setState({ listExporting:null }); this.toast(name ? 'Exported · ' + name : 'Exported'); },
+      e => { this.setState({ listExporting:null }); this.toast((e && e.message) || 'Failed to export this list'); });
   }
   // the Sentiment Tracker on a person (the website's Sentiment Tracker tab), read once a session per person
   // a month of days to pick from (Summaries' dates, the tracker's date): `cellOf(day)` says how a day looks and what a tap does
@@ -5229,19 +5174,16 @@ class Component extends DCLogic {
       shrDone: () => this.setState({ sheet:null, shr:null }),
     };
   }
-  // the target list picker, one for both accounts: LIST_UI switches each account's parts on. Field Pro: Unassigned
-  // targets, New target list, the company's accounts, then six lists (the picked one always among them) and forty
-  // more at a time, found by name, state or ZIP code past six (TerritorySwitch.tsx). Insights: All, Pinned, Mine and
-  // Archived, search, sort, a card per list with its ⋯ menu, and the New list tile (TargetLists.tsx, TargetListCard.tsx)
+  // Field Pro and Insights share the picker. Each list's menu contains its own actions and details.
   pickerView(ins, picked) {
     const s = this.state, U = LIST_UI[ins ? 'insights' : 'fieldPro'], q = (s.pkQ || '').trim(), needle = q.toLowerCase();
-    const off = { pkIntroOn:false, pkIntro:'', pkTabsOn:false, pkTabs:[], pkFindOn:false, pkQ:s.pkQ || '', onPkQ: () => {}, pkFindHint:U.findHint, pkFindLabel:U.findLabel, pkSortsOn:false, pkSorts:[],
+    const off = { pkTabsOn:false, pkTabs:[], pkFindOn:false, pkQ:s.pkQ || '', onPkQ: () => {}, pkFindHint:U.findHint, pkFindLabel:U.findLabel, pkSortsOn:false, pkSorts:[],
       pkLoading:false, pkLoadingText:'', pkNoMatch:false, pkNoMatchText:'', pkEmptyOn:false, pkEmptyGo: () => {}, pkRows:[], pkCoverOn:false, pkCover: () => {},
       pkMoreOn:false, pkMoreHas:false, pkMoreLabel:'', pkMore: () => {}, pkFewerHas:false, pkFewer: () => {} };
-    const ROW = { isNew:false, isList:true, name:'', sub:'', hasSub:false, hasPlus:false, hint:'', aria:'', go: () => {}, hasIcon:false, iconBg:'', iconFg:'', iconD:'', badges:[], hasBadges:false,
-      hasBy:false, desc:'', hasDesc:false, hasCard:false, callout:'', hasCallout:false, bar:[], statuses:[], noStatuses:false, avatars:[], hasAvatars:false, more:'', hasMore:false,
-      total:'', totalWord:'', recent:'', hasRecent:false, ownerIni:'', hasOwner:false, ownerBg:'', ownerFg:'', ago:'', check:'', bg:'#fff', bd:'#E1E6F0', op:1,
-      hasMenu:false, menu: () => {}, menuBg:'transparent', menuOpen:false, menuItems:[], hasMenuNote:false, asking:false, askText:'', yes: () => {}, yesLabel:'', no: () => {} };
+    if (s.sheet !== 'territory') return { ...off, pkRows:[] };
+    const ROW = { isNew:false, isList:true, name:'', sub:'', hasSub:false, hint:'', aria:'', go: () => {}, hasIcon:false, iconBg:'', iconFg:'', iconD:'',
+      hasBy:false, details:'', rules:'', check:'', bg:'#fff', bd:'#E1E6F0', op:1,
+      hasMenu:false, menuAria:'', menu: () => {}, menuBg:'transparent', menuOpen:false, menuItems:[], asking:false, askText:'', yes: () => {}, yesLabel:'', no: () => {} };
     if (!ins) {
       const waiting = !TERRS.length && !!this.props?.loading;
       const own = TERRS.filter(t => t.id !== ':other' && t.id !== ':company'), other = TERRS.find(t => t.id === ':other'), company = TERRS.find(t => t.id === ':company');
@@ -5264,9 +5206,9 @@ class Component extends DCLogic {
         if (!t.id || t.owner === false || t.id === ':other' || t.id === ':company') return {};
         const zipsOnly = !codesOf(t).length && (SERVICE.zip ? SERVICE.zip.saved(t.postalCodes) : t.postalCodes || []).length > 0;
         const ask = !!s.listConfirm && s.listConfirm.id === t.id && s.listConfirm.kind === 'terrDelete';
-        return { hasMenu:true, menu: () => this.setState({ pkMenu: s.pkMenu === t.id ? null : t.id, listConfirm:null }), menuBg: s.pkMenu === t.id ? '#EEF1F7' : 'transparent',
+        return { hasMenu:true, menuAria:'Actions for ' + t.name, menu: () => this.setState({ pkMenu: s.pkMenu === t.id ? null : t.id, listConfirm:null }), menuBg: s.pkMenu === t.id ? '#EEF1F7' : 'transparent',
           menuOpen: s.pkMenu === t.id && !ask, asking:ask, op: s.listBusy === t.id ? 0.65 : 1,
-          menuItems: [[zipsOnly ? 'Edit ZIP codes' : 'Edit states', '#0B1220', () => zipsOnly ? this.openZipEdit(t) : this.openTerrEdit(t)], ['Delete', '#C0392B', () => this.setState({ pkMenu:null, listConfirm:{ id:t.id, kind:'terrDelete' } })]].map(([label, fg, go]) => ({ label, fg, go })),
+          menuItems: [[zipsOnly ? 'Edit ZIP codes' : 'Edit states', '#0B1220', () => zipsOnly ? this.openZipEdit(t) : this.openTerrEdit(t)], ['Delete', '#C0392B', () => this.setState({ pkMenu:null, listConfirm:{ id:t.id, kind:'terrDelete' } })]].map(([label, fg, go]) => ({ label, fg, go, disabled:false })),
           askText:'Delete ' + t.name + '? It also goes from your Opportunity Map, and from anyone you shared it with.', yesLabel:'Delete', yes: () => this.deleteTerritory(t), no: () => this.setState({ listConfirm:null }) };
       };
       const hasMore = matches.length > head.length, canCollapse = !searching && limit > U.collapsed;
@@ -5295,39 +5237,40 @@ class Component extends DCLogic {
     const cards = shown.map(t => {
       const id = t.id || t.name, on = s.tlist === id, owner = t.owner !== false && !!t.id, busy = !!t.id && s.listBusy === t.id;
       const ask = s.listConfirm && s.listConfirm.id === t.id ? s.listConfirm.kind : '';
-      const total = t.count ?? t.ids.length, sc = t.statusCounts || {}, tone = LIST_TONES[t.color] || LIST_TONES.teal, shared = t.sharedWith || [], avatars = shared.slice(0, 5);
-      const statuses = [['new','#2447C4'], ['engaged','#7C3AED'], ['declined','#C0392B'], ['inactive','#7A839A']].filter(([k]) => (sc[k] || 0) > 0);
-      const badges = [t.smart && ['Smart', '#EFE9FB', '#6B46C1', 'Auto-updating from rules'], t.pinned && ['Pinned', '#E7ECFA', '#2447C4', 'Pinned'], t.archived && ['Archived', '#EEF1F7', '#5B6478', ''],
-        shared.length > 0 && ['Shared', '#E0F4F1', '#0F766E', 'Shared with ' + shared.length + ' ' + (shared.length === 1 ? 'person' : 'people')]].filter(Boolean).map(([label, bg, fg, hint]) => ({ label, bg, fg, hint }));
+      const total = t.count ?? t.ids.length, tone = LIST_TONES[t.color] || LIST_TONES.teal, shared = t.sharedWith || [];
+      const sub = [t.loading && total === 0 ? 'Loading HCPs…' : total.toLocaleString('en-US') + (total === 1 ? ' HCP' : ' HCPs'), t.smart && 'Smart list', t.pinned && 'Pinned'].filter(Boolean).join(' · ');
+      const created = t.createdIso && noteDay(t.createdIso);
+      const statuses = Object.entries(t.statusCounts || {}).filter(([,count]) => count > 0).map(([status,count]) => count + ' ' + status).join(', ');
+      const details = [t.description,t.creatorEmail && 'Owner ' + t.creatorEmail.split('@')[0],created && 'Created ' + created,t.ago,
+        t.recent > 0 && t.recent + ' recently added',statuses,t.callout].filter(Boolean).join(' · ');
+      const rules = t.smart ? ruleLines(t.rules).join(t.rules?.join === 'or' ? ' or ' : ' and ') : '';
+      const exporting = s.listExporting === t.id;
       const items = !t.id ? [] : [
-        owner && !t.archived && [t.pinned ? 'Unpin' : 'Pin', '#0B1220', () => this.listAct('pin', t)],
         !t.archived && !t.smart && [shared.length ? 'Manage sharing' : 'Share', '#0B1220', () => this.openShare(t.id)],
+        !t.archived && [exporting ? 'Exporting…' : 'Export list (.xlsx)', '#0B1220', () => this.exportList(t), !total || !!s.listExporting],
+        owner && !t.archived && t.smart && ['Edit rules', '#0B1220', () => this.openForm('rules',t.id)],
+        owner && !t.archived && [t.pinned ? 'Unpin' : 'Pin', '#0B1220', () => this.listAct('pin', t)],
         owner && !t.archived && ['Archive', '#0B1220', () => this.setState({ pkMenu:null, listConfirm:{ id:t.id, kind:'archive' } })],
         owner && t.archived && ['Restore', '#0B1220', () => this.listAct('restore', t)],
         owner && ['Delete permanently', '#C0392B', () => this.setState({ pkMenu:null, listConfirm:{ id:t.id, kind:'remove' } })],
-      ].filter(Boolean).map(([label, fg, go]) => ({ label, fg, go }));
-      return { ...ROW, name:t.name, aria:t.name, go: () => this.setState({ tlist:id, sheet:null, listConfirm:null, pkMenu:null, ...I_FILTERS }),
-        hasIcon:true, iconBg:tone[0], iconFg:tone[1], iconD:LIST_ICONS[t.icon] || LIST_ICONS.bookmark, badges, hasBadges:badges.length > 0,
-        desc:t.description || '', hasDesc:!!t.description, hasCard:true, callout:t.callout || '', hasCallout:!!t.callout,
-        bar: total > 0 ? statuses.map(([k, c]) => ({ w:(sc[k] / total * 100) + '%', c })) : [],
-        statuses: statuses.map(([k, c]) => ({ n:String(sc[k]), label:k, c })), noStatuses: total === 0,
-        avatars: avatars.map(e => { const [bg, fg] = emailTone(e); return { ini:emailIni(e), bg, fg, email:e }; }), hasAvatars: shared.length > 0,
-        more:'+' + (shared.length - avatars.length), hasMore: shared.length > avatars.length,
-        total:String(total), totalWord: total === 1 ? 'target' : 'targets', recent:'↑ +' + (t.recent || 0), hasRecent:(t.recent || 0) > 0,
-        ownerIni:t.ownerIni || '', hasOwner:!!t.ownerIni, ownerBg:(t.ownerTone || [])[0] || '#E7ECFA', ownerFg:(t.ownerTone || [])[1] || '#2447C4', ago:t.ago || '',
+      ].filter(Boolean).map(([label,fg,go,disabled]) => ({ label,fg,go,disabled:!!disabled }));
+      return { ...ROW, name:t.name, aria:t.name, hint:t.description || '', sub, hasSub:true, details, rules, hasBy:!owner && !!t.id,
+        go: () => this.setState({ tlist:id, sheet:null, listConfirm:null, pkMenu:null, pkQ:'', q:'', targetPage:0, ...I_FILTERS }),
+        hasIcon:true, iconBg:tone[0], iconFg:tone[1], iconD:LIST_ICONS[t.icon] || LIST_ICONS.bookmark,
         check: on ? '✓' : '', bg: on ? '#EDF1FB' : '#fff', bd: on ? '#2447C4' : '#E1E6F0', op: t.archived || busy ? 0.65 : 1,
-        hasMenu: !!t.id, menu: () => this.setState({ pkMenu: s.pkMenu === t.id ? null : t.id, listConfirm:null }), menuBg: s.pkMenu === t.id ? '#EEF1F7' : 'transparent',
-        menuOpen: s.pkMenu === t.id && !ask, menuItems:items, hasMenuNote:!owner && !!t.id, asking:!!ask,
+        hasMenu: !!t.id, menuAria:'Actions for ' + t.name, menu: () => this.setState({ pkMenu: s.pkMenu === t.id ? null : t.id, listConfirm:null }), menuBg: s.pkMenu === t.id ? '#EEF1F7' : 'transparent',
+        menuOpen: s.pkMenu === t.id && !ask, menuItems:items, asking:!!ask,
         askText: ask === 'remove' ? 'Permanently delete “' + t.name + '” and all of its targets? This cannot be undone.' : 'Archive “' + t.name + '”? You can restore it later.',
         yes: () => this.listAct(ask, t), yesLabel: ask === 'remove' ? 'Delete permanently' : 'Archive', no: () => this.setState({ listConfirm:null }) };
     });
     const empty = counts.all === 0 && counts.archived === 0;
-    return { ...off, pkIntroOn:true, pkIntro:U.intro, pkTabsOn:true,
+    return { ...off, pkTabsOn:true,
       pkTabs: [['all','All'], ['pinned','Pinned'], ['mine','Mine'], ['archived','Archived']].map(([k, label]) => ({ label, n:String(counts[k]), ...seg(tab === k), nbg: tab === k ? '#E7ECFA' : '#D9DFEA', go: () => this.setState({ listTab:k, listConfirm:null, pkMenu:null }) })),
       pkFindOn:true, onPkQ: e => this.setState({ pkQ:e.target.value.slice(0, 120), listConfirm:null, pkMenu:null }),
       pkSortsOn:true, pkSorts: [['recent','Recently updated'], ['targets','Most targets'], ['name','Name (A–Z)'], ['created','Recently created']].map(([k, label]) => ({ label, ...chip(sort === k), go: () => this.setState({ listSort:k }) })),
+      pkNoMatch:!!needle && !cards.length, pkNoMatchText:'No lists match “' + q + '”.',
       pkEmptyOn:empty, pkEmptyGo: () => this.openForm('list'),
-      pkRows: empty ? [] : [...cards, ...(tab !== 'archived' ? [{ ...ROW, isNew:true, isList:false, name:U.newLabel, sub:U.newSub, hasSub:true, hasPlus:true, go: () => this.openForm('list') }] : [])] };
+      pkRows: empty ? [] : [...cards, ...(tab !== 'archived' ? [{ ...ROW, isNew:true, isList:false, name:U.newLabel, go: () => this.openForm('list') }] : [])] };
   }
   // Field Pro's Remove target and ＋ Add to target HCPs on a doctor's page (SurgeonView.tsx, useHcpTargetAdd.ts): the rep's
   // own list only, nothing elsewhere is deleted; adding someone removed puts them back
@@ -6095,6 +6038,11 @@ class Component extends DCLogic {
   replaceTop(s, id) { this.setState(st => ({ stack: [...st.stack.slice(0, -1), { s, id }] })); }
   setTab(t, extra) { this.setState({ tab: t, stack: [], sheet: null, ...(extra || {}) }); }
   sheet(sheet, data) { this.setState({ sheet, sheetData: data == null ? null : data }); }
+  toggleTargetMetrics() {
+    const open = !this.state.targetMetricsOpen;
+    this.setState({ targetMetricsOpen:open });
+    AUTH.saveTargetMetricsOpen?.(open);
+  }
   // an Add or a removal can be undone for a few seconds
   // the dialler, clipboard, share sheet and links (SERVICE); each says so when it isn't connected
   call(phone) {
@@ -6832,7 +6780,7 @@ class Component extends DCLogic {
             : { k:'ADVOCACY', v:'', pips:[1, 2, 3, 4, 5].map(() => ({ c:'#E1E6F0' })), pipV:'', tip:'Not scored' })
           : tlist.trackerKey && pr ? (pr.tracker ? { k:'SENTIMENT TRACKER', ktip:'Field-rep scores, shared with the Sphere of Influence profile', v:'', dots:(pr.trackerDots || []).map(b => ({ c: b === 'red' ? '#C0392B' : b === 'yellow' ? '#D9A21B' : b === 'green' ? '#1C7A4E' : '#DADFE8' })),
               s:pr.tracker, sc:'#5B6478' } : { k:'SENTIMENT TRACKER', ktip:'Field-rep scores, shared with the Sphere of Influence profile', v:'—', c:'#7A839A' }) : null;
-        // then the topics take a line of their own on every list row: two, most discussed first, as the website's chips
+        // Up to two topics, most discussed first.
         const tops = pr?.topics || [];
         const topicLine = tops.slice(0, 2).map((t, i) => t + (pr.topicN?.[i] ? ' ×' + pr.topicN[i] : '')).join(' · ') + (tops.length > 2 ? ' +' + (tops.length - 2) : '');
         // the first specialty only, as the website writes it, and the notes on them
@@ -6843,7 +6791,7 @@ class Component extends DCLogic {
           metrics: extra
             ? [extra, lastCell, meetings]
             : [lastCell, meetings],
-          hasWide: !!pr, wideK:'TOP TOPICS', wideV: topicLine || 'No topics tagged' };
+          hasWide: !!topicLine, wideK:'TOP TOPICS', wideV:topicLine };
       });
     } else if (exploreMode) {
       const hcp = s.kind === 'hcp';
@@ -6858,7 +6806,8 @@ class Component extends DCLogic {
           open:() => this.go(s.kind, entity.id), toggle:() => this.toggleRoute(entity.id),
           hasFlag:!!row.tag, flag:row.tag, flagSub:row.tagSub, flagBg:here ? '#E7ECFA' : '#EEF1F7', flagFg:here ? '#22409F' : '#5B6478',
           divider:i === xv.beyondAt ? 'Beyond the top ' + xv.listSize.toLocaleString('en-US') + ' · name matches across ' + xv.where : '',
-          metrics:[{ k:WORKSPACE.explore.metric || measure, v:row.value, c:'#0B1220' }]
+          metrics:[{ k:WORKSPACE.explore.metric || measure, v:row.value, c:'#0B1220' },
+            ...(hcp && row.practice ? [{ k:'PRACTICE', v:row.practice, small:true, c:'#3C4557' }] : [])]
         }];
       });
     } else if (s.kind === 'hco') {
@@ -6877,7 +6826,7 @@ class Component extends DCLogic {
         const metrics = WORKSPACE.drugAccount
           ? [volume, { k:'% OF LIST', v:or(h.listShare), c:'#22409F' }, yoy, { k:'CHANGE', v:or(h.delta), c:yoyN < 0 ? '#A94D1B' : '#1C7A4E' }, { k:'340B', v:or(h.is340b), c:'#0B1220' }]
           : [volume, ...(leakCols ? [{ k:'SHARE', v:or(h.share), c:'#0B1220' }] : []), yoy,
-            ...(leakCols ? [{ k:'STAYED / LEFT', v:or(h.left), c:'#A94D1B', ...(h.leftN != null ? { barA:(100 - h.leftN) + '%', barB:h.leftN + '%' } : {}) }] : []),
+            ...(leakCols ? [{ k:'LEFT', v:or(h.left), c:'#A94D1B', tip:'Share of cases that left. Blue stayed, orange left.', ...(h.leftN != null ? { barA:(100 - h.leftN) + '%', barB:h.leftN + '%' } : {}) }] : []),
             ...(!WORKSPACE.companyId || WORKSPACE.explore?.opportunity ? [{ k:'OPPORTUNITY', v:h.opp, c:'#22409F' }] : []),
             ...(leakCols ? [{ k:'LEAKING $', v:or(h.leak), c:'#A94D1B' }] : [])];
         return { name:h.name, photo:h.photo, sub:[h.mine ? 'Target' : '', h.city, h.type].filter(has).join(' · '), ini:h.ini, avBg:'#EEF1F7', avFg:'#3C4557', avR:'13px', ...addSt(inR),
@@ -6901,33 +6850,36 @@ class Component extends DCLogic {
             { k:measure + ' ' + (bookY - 1), v:p.priorN == null ? '—' : p.priorN.toLocaleString('en-US'), c:'#5B6478' }] };
       });
     }
-    const unit = ins ? ['clinician','clinicians'] : s.kind === 'hco' ? ['account','accounts'] : ['HCP','HCPs'];
+    const unit = !ins && s.kind === 'hco' ? ['account','accounts'] : ['HCP','HCPs'];
     const crmNow = WORKSPACE.crm || null;
     const syncAccounts = Object.values(HCOS).filter(x => x.mine).length, syncVisits = s.visits.filter(v => v.dN === 0).length;
-    const bookN = ins ? 0 : Object.values(s.kind === 'hco' ? HCOS : HCPS).filter(x => x.mine).length;
+    const bookDoctorCount = ins ? 0 : Object.values(HCPS).filter(x => x.mine).length;
+    const bookN = ins ? 0 : s.kind === 'hco' ? syncAccounts : bookDoctorCount;
     const groupOf = cgOn.length === 1 ? cgOn[0] : CODE_GROUPS[0], groupName = groupOf?.name || '';
     // the book's headline (HomeView.tsx allKpis): leaking dollars, volume, the share that left and the trend,
     // pooled over the accounts with stored figures (bookLeakage), on a procedure book's My HCOs
+    const fieldMetrics = scr === 'targets' && !ins && s.scope === 'mine' && s.kind === 'hco' && !WORKSPACE.drugAccount && WORKSPACE.view !== 'hema_sales' && bookN > 0;
+    const targetMetricsOpen = s.targetMetricsOpen === true;
     const fpTiles = (() => {
-      if (ins || exploreMode || s.kind !== 'hco' || WORKSPACE.drugAccount || WORKSPACE.view === 'hema_sales') return [];
+      if (!fieldMetrics || !targetMetricsOpen) return [];
       const book = Object.values(HCOS).filter(h => h.mine);
-      if (!book.length) return [];
       const measured = book.filter(h => h.leftCount != null && h.leftOf != null);
       const left = measured.reduce((n, h) => n + h.leftCount, 0), total = measured.reduce((n, h) => n + h.leftOf, 0);
       const charged = book.filter(h => h.leakN != null);
-      const measuredOf = measured.length + ' of ' + book.length + ' measured';
-      const vol = book.reduce((n, h) => n + (h.volN || 0), 0), priorKnown = book.filter(h => h.askPrior != null);
+      const scored = book.filter(h => has(h.listProc || h.proc));
+      const vol = scored.reduce((n, h) => n + (h.volN || 0), 0);
+      const priorKnown = scored.filter(h => h.askPrior != null);
+      const comparableVolume = priorKnown.reduce((n, h) => n + (h.volN || 0), 0);
       const prior = priorKnown.reduce((n, h) => n + h.askPrior, 0);
-      const trend = priorKnown.length && prior > 0 ? Math.round(1000 * (vol - prior) / prior) / 10 : null;
+      const trend = prior > 0 ? Math.round(1000 * (comparableVolume - prior) / prior) / 10 : null;
       return [
-        charged.length ? { eb:'LEAKING', n:money(charged.reduce((n, h) => n + h.leakN, 0)), k:'left ' + (WORKSPACE.leakSince ? 'since ' + WORKSPACE.leakSince : 'over all years on file') + ' · ' + measuredOf }
-          : { eb:'LEAKING', n:'—', k:'leaving your accounts' },
-        { eb:'VOLUME', n:vol.toLocaleString('en-US'), k:String(WORKSPACE.metric || 'procedures').toLowerCase() + ' · ' + groupName + ' · ' + bookY },
-        total > 0 ? { eb:'LEAKAGE', n:sharePct(100 * left / total), k:'left in ' + bookY + ' · ' + measuredOf } : { eb:'LEAKAGE', n:'—', k:'left across your book' },
-        { eb:'TREND', n:trend == null ? '—' : (trend > 0 ? '+' : '') + trend.toFixed(1) + '%', k:'volume, ' + bookY + ' vs ' + (bookY - 1) },
+        { eb:'Volume', n:scored.length ? vol.toLocaleString('en-US') : '—', k:String(WORKSPACE.metric || 'Procedures').toLowerCase() + ' · ' + bookY, color:'#0B1220' },
+        { eb:'Volume change', n:trend == null ? '—' : (trend > 0 ? '+' : '') + trend.toFixed(1) + '%', k:bookY + ' vs ' + (bookY - 1), color:trend == null ? '#5B6478' : trend < 0 ? '#A94D1B' : '#1C7A4E' },
+        { eb:'Leaking charges', n:charged.length ? money(charged.reduce((n, h) => n + h.leakN, 0)) : '—',
+          k:[WORKSPACE.leakSince ? 'Since ' + WORKSPACE.leakSince : 'All years', charged.length + ' of ' + book.length + ' measured'].join(' · '), color:'#A94D1B' },
+        { eb:'Cases that left', n:total > 0 ? sharePct(100 * left / total) : '—', k:bookY + ' · ' + measured.length + ' of ' + book.length + ' measured', color:'#A94D1B' },
       ];
     })();
-    const fpMeasured = groupOf ? groupOf.name + ' · ' + groupOf.codes + (groupOf.codes === 1 ? ' code' : ' codes') : '';
     const insTotal = ins ? tlist.ids.filter(id => HCPS[id]).length : 0;
     const pickedTerritory = s.territory || WORKSPACE.pendingTerritory || TERRS[0]?.id || TERRS[0]?.name;
     const territoryName = (TERRS.find(t => (t.id || t.name) === pickedTerritory) || {}).name || (this.props?.loading ? 'Target list' : s.territory);
@@ -6940,6 +6892,8 @@ class Component extends DCLogic {
     const savedHcps = !ins && s.scope === 'mine' && s.kind === 'hcp';
     const savedState = toExploreFirst ? (savedHcps ? WORKSPACE.hcpTargetsState : WORKSPACE.hcoTargetsState) : null;
     const openingTargets = !!this.props?.loading || !!tlist.loading || savedState === 'loading' || xv?.status === 'loading';
+    const addInsightHcpOn = ins && !!tlist.id && !tlist.smart && !tlist.archived;
+    const fpTilesOn = fieldMetrics && !openingTargets && savedState !== 'failed';
     // Explore's words, as the website's: where the list is, its count word and the search beyond it
     const xHcp = s.kind === 'hcp', xTop = xv ? xv.listSize.toLocaleString('en-US') : '';
     const xIn = xv ? (xHcp ? 'practicing in ' : 'in ') + xv.where : '';
@@ -6975,24 +6929,26 @@ class Component extends DCLogic {
         : tlist.loading || !tlist.id ? { emptyTitle:tlist.loading ? 'Loading targets…' : 'No target lists yet',emptySub:tlist.loading ? 'Opening ' + tlist.name : '',
           emptyA:'Change list', emptyAGo: () => this.sheet('territory'), hasEmptyA: TLISTS.length > 1, emptyB:'', emptyBGo: () => {}, hasEmptyB: false }
         : tlist.ids.length ? { emptyTitle:'No providers match these filters.',emptySub:'', emptyA:'', emptyAGo: () => {}, hasEmptyA:false, emptyB:'', emptyBGo: () => {}, hasEmptyB:false }
-        : tlist.smart ? { emptyTitle:'No HCPs match these rules yet',emptySub:'HCPs must already be in one of your manual lists to be picked up here. Add some to a manual list and they’ll appear automatically when they match.',
+        : tlist.smart ? { emptyTitle:'No HCPs match these rules yet',emptySub:'HCPs in your manual lists appear here when they match the rules.',
           emptyA:'', emptyAGo: () => {}, hasEmptyA:false, emptyB:'', emptyBGo: () => {}, hasEmptyB:false }
-        : { emptyTitle:'No HCPs in this list yet',emptySub:'Add an HCP and we’ll pull every meeting you’ve had with them. Generate a pre-call brief whenever you need one.',
-          emptyA:'Add your first HCP', emptyAGo: () => this.openPeople(), hasEmptyA:true, emptyB:'', emptyBGo: () => {}, hasEmptyB:false })
+        : { emptyTitle:'No HCPs in this list yet',emptySub:'',hasEmptyA:false,hasEmptyB:false })
       // the website's wording for an empty book (its "Add your targets" upload isn't in the app; Explore is)
       : savedHcps ? { emptyTitle:pickedTerritory === ':other' ? 'No unassigned target HCPs.' : 'No target HCPs in ' + territoryName + ' yet.',emptySub:'',emptyA:'Explore HCPs',emptyAGo:() => this.setState({ scope:'explore' }),hasEmptyB:false }
       : toExploreFirst && s.kind === 'hco' && !Object.values(HCOS).some(h => h.mine) ? { emptyTitle:pickedTerritory === ':other' ? 'No unassigned target accounts.' : 'No target accounts in ' + territoryName + ' yet.',emptySub:'',emptyA:'Explore accounts',emptyAGo:() => this.setState({ scope:'explore' }),hasEmptyB:false }
       : { emptyTitle:'Nothing in ' + territoryName + ' yet', emptySub:'', hasEmptyA:false, hasEmptyB:false };
     const rangeType = s.omKind === 'acc';
-    const showView = !ins && !!(ME.staff && PICKS.some(p => p.action === 'view') || WORKSPACE.viewLabel);
-    const viewRows = ME.staff ? PICKS.filter(p => p.action === 'view') : [];
-    const viewPickLabel = 'View: ' + (WORKSPACE.viewLabel || 'Default');
-    const openViews = () => this.sheet('views');
+    const viewRows = !ins && ME.staff ? PICKS.filter(p => p.action === 'view') : [];
+    const canChangeView = viewRows.some(v => !v.selected);
+    const viewsOpen = s.sheet === 'views';
+    const viewPickLabel = WORKSPACE.viewLabel || 'Default view';
+    const openViews = () => this.sheet(viewsOpen ? null : 'views');
+    const reportsShortcutOn = !ins && !!SH.reports;
+    const openReports = () => { this.setState({ repTab:'mine' }); this.go('reports'); };
     const pickerRows = PICKS.filter(p => s.sheet === 'views' ? p.action === 'view' : p.action !== 'view');
     // Explore's pickers: State (only with more than one), City, Type or Specialty, Status; a set filter is tinted
     const xChips = (xv?.selects || mineSelects).map(x => {
       const set = x.value != null, now = set ? (x.options.find(o => o.value === x.value) || {}).label || x.allLabel : x.allLabel;
-      return { label:x.label, value:now, aria:x.label + ': ' + now + (set ? ', filter active' : ''), ...chip(set), go:() => this.sheet('xf', x.key) };
+      return { label:x.label, value:now, text:set ? x.label + ': ' + now : x.label, aria:x.label + ': ' + now + (set ? ', filter active' : ''), ...chip(set), go:() => this.sheet('xf', x.key) };
     });
     const xClearOn = mineGeo ? mineFiltered : !!xv && xv.status === 'ready' && xv.clearable;
     const TRON = ins && this.trOn(), ACTPG = TRON ? s.trPage : s.myPage, ACTPK = TRON ? 'trPage' : 'myPage';
@@ -7228,15 +7184,19 @@ class Component extends DCLogic {
       centreBg: 'radial-gradient(120% 120% at 20% 10%,#3D6BF0 0%,#22409F 70%)', centreFg: s.sheet === 'insight' ? '#2447C4' : '#7A839A',
       goTargets: () => this.setTab('targets'), goAsk: () => this.setTab('ask'), goMap: () => this.setTab('map'), goActivity: () => this.setTab('activity'), goSummaries: () => this.setTab('summaries'),
       hasFuBadge: !!SH.followUps && fuOpen.length > 0, fuOpenCount: fuOpen.length, fuOn: !!SH.followUps,
-      territory: ins ? tlist.name : territoryName, territoryChip: ins ? tlist.name : territoryName,
-      openMe: () => this.sheet('me'), openTerritory: () => this.sheet('territory'),
+      territory: ins ? tlist.name : territoryName,
+      territoryChip: (ins ? tlist.name : territoryName) || 'Target list',
+      targetListOpen: s.sheet === 'territory',
+      openMe: () => this.sheet('me'), openTerritory: () => this.setState({ sheet:s.sheet === 'territory' ? null : 'territory',pkMenu:null,listConfirm:null,pkQ:'' }),
       meIni: ME.ini, meName: ME.name, ...this.authVals(),
-      viewPickOn: showView && viewRows.some(v => !v.selected), viewFixedOn:showView && !viewRows.some(v => !v.selected), viewPickLabel, openViews,
-      accountRows: ME.staff ? pickerRows.map((p, i) => { const on = p.action ? !!p.selected : ME.pick ? ME.pick === p.id : s.account === p.account; return { hasHead: i === 0 || pickerRows[i - 1].kind !== p.kind, head: p.kind.toUpperCase(),
-        name:p.name, meta: s.switching === p.id ? 'Opening…' : p.meta, check: on ? '✓' : '', bg: on || s.switching === p.id ? '#EDF1FB' : '#fff', bd: on ? '#2447C4' : '#E1E6F0',
-        go: () => { if (!ME.staff || s.switching || on) return; this.setState({ switching: p.id });
-          const change = p.action === 'view' ? AUTH.pickView : p.action === 'unit' ? AUTH.pickUnit : AUTH.pickAccount;
-          Promise.resolve(change && change(p.value || p.id)).then(() => { this.setState({ switching: null, sheet:null }); },
+      viewPickOn:canChangeView, viewPickLabel, viewPickAria:'Choose workspace view, current view ' + viewPickLabel, viewsOpen, openViews,
+      reportsShortcutOn, openReports,
+      accountRows: ME.staff ? pickerRows.map((p, i) => { const on = p.action ? !!p.selected : ME.pick ? ME.pick === p.id : s.account === p.account; return { hasHead: !viewsOpen && (i === 0 || pickerRows[i - 1].kind !== p.kind), head: p.kind.toUpperCase(),
+        name:p.name, aria:p.name + (on ? ', selected' : ''), disabled:!!s.switching, meta:s.switching === p.id ? 'Opening…' : on && viewsOpen ? 'Current view' : p.meta,
+        check:on ? '✓' : '', bg:on || s.switching === p.id ? '#EDF1FB' : '#fff', bd:on ? '#2447C4' : '#E1E6F0',
+        go: () => { if (!ME.staff || s.switching) return; if (on) { this.sheet(null); return; } this.setState({ switching:p.id });
+          const change = p.action === 'view' ? AUTH.pickView?.(p.value || null) : p.action === 'unit' ? AUTH.pickUnit?.(p.value || p.id) : AUTH.pickAccount?.(p.id);
+          Promise.resolve(change).then(() => { this.setState({ switching: null, sheet:null }); },
             e => { this.setState({ switching: null }); this.toast((e && e.message) || 'That account didn’t open · try again'); }); } }; }) : [],
 
       // targets
@@ -7244,18 +7204,25 @@ class Component extends DCLogic {
       toAsk: () => s.q.trim() ? this.ask(s.q) : this.setTab('ask'),
       scopeSeg: [['mine','My targets'], ['explore','Explore']].map(([k, label]) => ({ label, ...seg(s.scope === k), go: () => this.setState({ scope:k }) })),
       // the website's lens tabs: "My HCOs 22" on the book, the bare kind in Explore
-      kindChips: [['hco','Explore HCOs','My HCOs'], ['hcp','Explore HCPs','My HCPs']].map(([k, label, mine]) => ({ label:s.scope === 'mine' ? mine + (openingTargets ? '' : ' ' + Object.values(k === 'hco' ? HCOS : HCPS).filter(x => x.mine).length.toLocaleString('en-US')) : label,
-        ...chip(s.kind === k), go: () => this.setState({ kind:k }) })),
+      kindChips: [['hco','HCOs'], ['hcp','HCPs']].map(([k,short]) => {
+        const mine = s.scope === 'mine', count = !mine || openingTargets ? '' : ' ' + Object.values(k === 'hco' ? HCOS : HCPS).filter(x => x.mine).length.toLocaleString('en-US');
+        const label = (mine ? 'My ' : 'Explore ') + short + count;
+        return { label, short, aria:label + (s.kind === k ? ', selected' : ''), ...chip(s.kind === k), go:() => this.setState({ kind:k }) };
+      }),
       qHint: ins ? 'Search name, NPI, institution' : exploreMode ? (s.kind === 'hcp' ? 'HCP name, hospital or city' : 'Name or city') : 'Search doctors or accounts',
       qLabel: ins ? 'Search this list' : exploreMode ? (s.kind === 'hcp' ? 'Name, hospital or city' : 'Filter organizations') : 'Search doctors or accounts',
-      isFieldPro: !ins, showTargetSort:!exploreMode,
-      targetFiltersOn: !exploreMode || xChips.length > 0 || xClearOn,
+      isFieldPro: !ins, showTargetSort:!ins && !exploreMode, sortAria:'Sort targets, currently ' + sortNow,
+      targetFiltersOn: !ins && (!exploreMode || xChips.length > 0 || xClearOn),
       showSpecChip:!exploreMode && specMany, showGroupsChip:!exploreMode && CODE_GROUPS.length > 1,
       xChips, xClearOn, xClear,
       spec: s.spec, sortNow, openFilter: () => this.sheet('filter'),
       groupsChip: cgOn.length + (cgOn.length === 1 ? ' group · ' : ' groups · ') + cgOn.reduce((n, g) => n + g.codes, 0) + (cgOn.reduce((n, g) => n + g.codes, 0) === 1 ? ' code' : ' codes'),
-      targetItems: (xv ? items : items.slice(targetPage * PG, (targetPage + 1) * PG)).map(t => ({ prio:'', prioTip:'', ...t, flagTap: !!t.flagTap, flagStill: !t.flagTap,
-        flagSub: t.flagSub || '', hasFlagSub: !!t.flagSub, divider: t.divider || '', hasDivider: !!t.divider,
+      targetItems: (xv ? items : items.slice(targetPage * PG, (targetPage + 1) * PG)).map(t => ({ prio:'', prioTip:'', ...t,
+        profileLabel:'Open ' + t.name, routeLabel:t.addLabel + (t.addIcon === '✓' ? ', ' : ' ') + t.name,
+        flagTap:!!t.flagTap, flagStill:!t.flagTap, flagBelow:!ins && !!t.hasFlag,
+        inlineFlagTap:ins && !!t.hasFlag && !!t.flagTap, inlineFlagStill:ins && !!t.hasFlag && !t.flagTap, flagAria:'Change status for ' + t.name + ', currently ' + t.flag,
+        flagSub:t.flagSub || '', hasFlagSub:!!t.flagSub, divider:t.divider || '', hasDivider:!!t.divider,
+        metricWidth:100 / Math.max(1,Math.min(3,t.metrics.length)) + '%',
         metrics: (t.metrics || []).map(m => ({ s:'', sc:'#7A839A', dots:[], barA:'', barB:'', pips:[], pipV:'', tip:m.k, ktip:m.k, ...m, big: !m.small && !m.dots && !m.pips, small: !!m.small && !m.dots, hasS: !!m.s,
           hasDots: !!(m.dots && m.dots.length), hasBar: !!m.barA, hasPips: !!(m.pips && m.pips.length) })) })), noTargets: items.length === 0, hasEmptyA: true, hasEmptyB: true, ...empty,
       // Insights' footer is always there, its buttons greyed when there's no page to go to (TargetListDetail.tsx:781-820)
@@ -7272,7 +7239,7 @@ class Component extends DCLogic {
       xNotes,
       targetCount: openingTargets || exploreMode || savedState === 'failed' ? '' : ins ? (items.length < insTotal ? items.length + ' of ' : '') + insTotal + ' ' + (insTotal === 1 ? unit[0] : unit[1]) + ' on this list'
         : items.length.toLocaleString('en-US') + ' of ' + bookN.toLocaleString('en-US') + ' ' + (bookN === 1 ? unit[0] : unit[1]) + ' · ' + bookY,
-      targetHint: '',
+      targetToolbarOn:ins ? !!tlist.id && !openingTargets : !exploreMode,
       // and its footer: the rows in view, what they're filtered from, the code group and year, the search
       hasTargetFoot: exploreMode ? !!xFoot : !ins && !openingTargets && items.length > 0,
       footRetryOn: !!xv && xv.search.on && xv.search.failed, footRetry: xRetry('beyond'),
@@ -7280,7 +7247,8 @@ class Component extends DCLogic {
         + (s.kind === 'hcp' ? (items.length !== bookN ? ' · filtered from ' + bookN.toLocaleString('en-US') + ' target HCPs' : ' · saved target list')
           : items.length !== bookN ? ' · filtered from ' + bookN.toLocaleString('en-US') : '')
         + (groupName ? ' · ' + groupName + ' · ' + bookY : '') + (ql ? ' · matching “' + s.q.trim() + '”' : ''),
-      fpTilesOn: fpTiles.length > 0 && !openingTargets, fpTiles, fpMeasured,
+      fpTilesOn, fpTiles, fpMeasured:groupName, targetMetricsOpen, showTargetMetrics:fpTilesOn && targetMetricsOpen,
+      toggleTargetMetrics:() => this.toggleTargetMetrics(), metricsButton:chip(targetMetricsOpen), metricsChevron:targetMetricsOpen ? '▴' : '▾',
 
       // pill
       routeOn: !!SH.route,
@@ -7505,14 +7473,11 @@ class Component extends DCLogic {
       askBar: scr === 'ask',
       askIn: s.askIn, onAskIn: e => this.setState({ askIn: ins ? e.target.value : e.target.value.slice(0, 300) }),
       askPh: !ins && s.thread.length ? 'Ask a follow-up…' : 'Type a question',
-      askEyebrowOn: !ins && CODE_GROUPS.length > 0,
-      askEyebrow: ('ASK FIELD PRO · ' + (s.cgs.length === 1 ? s.cgs[0] : s.cgs.length === CODE_GROUPS.length ? 'All code groups' : s.cgs.length + ' code groups') + ' · ' + (bookYr() - 1) + ' vs ' + bookYr()).toUpperCase(),
-      // the website's "Answer scope" note: which targets the answers use
-      askScopeOn: !ins, askScopeName: 'All your targets',
-      askScopeCounts: ' · ' + Object.values(HCOS).filter(h => h.mine).length.toLocaleString('en-US') + ' HCOs · ' + Object.values(HCPS).filter(p => p.mine).length.toLocaleString('en-US') + ' HCPs',
-      askScopeNote: Object.values(HCOS).some(h => h.mine) || Object.values(HCPS).some(p => p.mine) ? 'Answers use your saved targets. Explore top providers to find more.' : 'No saved targets here yet. Add your targets or find providers to add.',
-      askNoGroupOn: !ins && CODE_GROUPS.length === 0,
-      askFootOn: !ins && s.thread.length > 0,
+      askHasThread:s.thread.length > 0,
+      askScopeOn:!ins,
+      askScope:syncAccounts || bookDoctorCount ? 'Saved targets · ' + (territoryName || 'Target list')
+        : this.props?.loading || WORKSPACE.hcpTargetsState === 'loading' || WORKSPACE.hcoTargetsState === 'loading' ? 'Loading saved targets…'
+          : WORKSPACE.hcpTargetsState === 'failed' || WORKSPACE.hcoTargetsState === 'failed' ? 'Saved targets unavailable' : 'No saved targets in this list',
       askKey: e => { if (e.key === 'Enter') this.ask(s.askIn); }, askSend: () => this.ask(s.askIn),
       listening: s.listening, micBg: s.listening ? '#DD6134' : '#EEF1F7', micFg: s.listening ? '#fff' : '#2447C4',
       toggleMic: () => {
@@ -7581,12 +7546,12 @@ class Component extends DCLogic {
         this.dropRec(); this.setState({ sheet:null, insRec:false, insPaused:false, insKey:null });
       },
       shInsight: s.sheet === 'insight', shFilter: s.sheet === 'filter', shTerritory: s.sheet === 'territory', shChoose: s.sheet === 'choose', shEmail: s.sheet === 'email', shFu: s.sheet === 'fu', shMeet: s.sheet === 'meet', shSync: s.sheet === 'sync' && !ins, shCrm: s.sheet === 'sync' && ins, shStatus: s.sheet === 'status', shRmTarget: s.sheet === 'rmTarget', ...this.rmView(), ...this.crmView(ins), shXf: s.sheet === 'xf', xfOpts, ...this.statusView(), ...this.trackerFormView(), shTracker: s.sheet === 'tracker', shNote: s.sheet === 'note', ...this.fullView(), shPeople: s.sheet === 'people', shSummary: s.sheet === 'summary', shMe: s.sheet === 'me', ...RS.view, shAccount: !!ME.staff && (s.sheet === 'account' || s.sheet === 'views'), shVisit: s.sheet === 'visit', vd: visitDetail,
-      ...this.peopleView(ins, tlist), ...this.listHeaderView(ins, tlist, insTotal), terrChipOn: !LIST_UI[ins ? 'insights' : 'fieldPro'].header,
+      ...this.peopleView(ins, tlist),
       ...this.changesView(ins, tlist),
       ...this.pickerView(ins, pickedTerritory), ...this.formView(), ...this.covView(), ...this.shareView(),
       // Add HCP sits on the Targets list: Insights' manual lists, Field Pro's own doctors (Explore finds by place)
-      canAddPeople: !ins && s.scope === 'mine', openPeople: () => this.openPeople(),
-      addPeopleLabel: ins ? '＋ Add HCP' : s.kind === 'hco' ? '＋ Add target accounts' : '＋ Add target HCPs',
+      canAddPeople: !ins && s.scope === 'mine', addInsightHcpOn, openPeople: () => this.openPeople(),
+      addPeopleLabel: s.kind === 'hco' ? '＋ Add target accounts' : '＋ Add target HCPs',
       meetWho: (HCPS[s.sheetData] || NO_HCP).name,
       meetDateLabel: (s.meetDateN === 0 ? 'Today ' + dateOf(0) : s.meetDateN === 1 ? 'Yesterday ' + dateOf(-1) : dayFull(-s.meetDateN)).toUpperCase(),
       meetDateOpts: this.weekChips('meetDateN'),
@@ -7634,14 +7599,14 @@ class Component extends DCLogic {
       syncOff: true,
       meSub: [ins ? A.name : WORKSPACE.company || A.name, ins ? tlist.name : territoryName, WORKSPACE.viewLabel].filter(Boolean).join(' · '),
       meRows: [
-        ...(ins || !SH.reports ? [] : [{ icon:'▤', label:'Reports', meta:(s.reports.some(r => r.busy) ? '● ' : '') + s.reports.filter(r => !r.busy).length + ' ready', go: () => this.setState(st => ({ sheet:null, stack:[...st.stack, { s:'reports' }] })) }]),
+        ...(reportsShortcutOn ? [{ icon:'▤', label:'Reports', meta:(s.reports.some(r => r.busy) ? '● ' : '') + s.reports.filter(r => !r.busy).length + ' ready', go:openReports }] : []),
         { icon:'◎', label: ins ? 'Target lists' : 'Target list', meta: ins ? tlist.name : territoryName, go: () => this.sheet('territory') },
         ...(SH.followUps ? [{ icon:'◷', label:'History & follow-ups', meta:fuOpen.length + ' open', go: () => this.setTab('activity', { actSeg:'fus' }) }] : []),
         // Field Pro's Sync to CRM, and Insights' CRM page in the same sheet: Stemline's alone has a CRM, as the website switches it on
         ...(ins ? [{ icon:'↑', label:'CRM', meta: A.crm && SERVICE.crm ? 'Salesforce' : 'Not connected', go: () => this.openCrm() }]
           : [{ icon:'↑', label:'CRM', meta: crmNow && crmNow.connected ? `${crmNow.vendor || 'CRM'} · connected` : 'Not connected', go: () => this.sheet('sync') }]),
         ...(ME.staff ? [{ icon:'⇄', label:'Account', meta:(PICKS.find(p => ME.pick ? p.id === ME.pick : p.account === s.account) || A).name, go: () => this.sheet('account') }] : []),
-        ...(viewRows.some(v => !v.selected) ? [{ icon:'▤', label:'Workspace view', meta:WORKSPACE.viewLabel || 'Default', go:openViews }] : []),
+        ...(canChangeView ? [{ icon:'▤', label:'Workspace view', meta:viewPickLabel, go:openViews }] : []),
         { icon:'↪', label:'Sign out', meta:'', go: () => this.signOut() }
       ],
 
