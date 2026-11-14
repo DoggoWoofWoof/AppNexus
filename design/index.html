@@ -3063,8 +3063,8 @@ const ANSWERS_INS = {
 const MAP_TYPES = [['Hospitals','hospital','hospitals'], ['ASC','surgery center','surgery centers'], ['IDN','health system','health systems'], ['Facility','facility','facilities'],
   ['Provider Network','provider network','provider networks'], ['Physician Group','physician group','physician groups'], ['Clinic','clinic','clinics'], ['Laboratories','lab','labs'],
   ['Emergency'], ['Residential'], ['Pharmacy','pharmacy','pharmacies'], ['Other Service Providers'], ['Suppliers','supplier','suppliers'], ['Insurance']];
-// a list page as each website pages it: Field Pro's ten (HomeView.tsx PAGE); Insights' choice, 50 to start
-const TARGET_PAGE_SIZE = 10;
+// Field Pro mobile pages hold 20. Insights has its own page-size selector.
+const TARGET_PAGE_SIZE = 20;
 // the website's tags on Add insight (AddInsightSheet.tsx:69-74)
 const TAGS = ['Clinical Trial','Follow Up','KOL','Drug Interactions'];
 // the rep's own tags (Insights' /user-tags), offered after the four, as the website's Add insight does; none in the sample
@@ -3563,7 +3563,7 @@ class Component extends DCLogic {
   componentWillUnmount() { this.finishEmail(); clearTimeout(this._smyDetT); clearTimeout(this._smyHistTimer); clearTimeout(this._whoTimer); this._routeWork.clear(); this._routeLegKey = null; this._exploreKey = null; this._exploreGone = true; clearTimeout(this._exploreTimer); if (SERVICE.hush) SERVICE.hush(); clearTimeout(this._t); clearTimeout(this._a); clearTimeout(this._m); clearTimeout(this._s); clearTimeout(this._smyT); clearTimeout(this._trT); clearTimeout(this._auto); clearInterval(this._i); this._at.forEach(clearTimeout); }
 
   // Explore as the website's (TerritoryDiscoveryPanel.tsx): the list's area read once, its top 1,000; State, City,
-  // Type or Specialty and Status filter it here, 25 to a page. Filters belong to the list and the tab.
+  // Type or Specialty and Status filter it here, 20 to a page. Filters belong to the list and the tab.
   exploreRequest() {
     const s = this.state;
     if (!WORKSPACE.explore?.geographic || !WORKSPACE.explore.hasCodes || !SERVICE.exploreView || !SERVICE.exploreLoad ||
