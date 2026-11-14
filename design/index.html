@@ -243,7 +243,7 @@ input,textarea,button{font-family:inherit}
                       <button onClick="{{ t.open }}" style="display:flex;flex-direction:column;gap:8px;width:100%;padding:2px 0 3px;border:0;background:none;text-align:left;cursor:pointer;">
                         <span style="display:flex;flex-wrap:wrap;align-items:baseline;row-gap:6px;">
                           <sc-for list="{{ t.hcoCard.stats }}" as="m" hint-placeholder-count="3">
-                            <span style="display:flex;align-items:baseline;gap:4px;flex:0 0 auto;padding:0 8px 0 {{ m.inset }};margin-left:{{ m.margin }};border-left:1px solid {{ m.line }};">
+                            <span style="display:flex;align-items:baseline;gap:3px;flex:0 0 auto;padding:0 {{ m.trailing }} 0 {{ m.inset }};margin-left:{{ m.margin }};border-left:1px solid {{ m.line }};">
                               <span style="font-size:14px;line-height:1.2;font-weight:650;color:{{ m.c }};">{{ m.v }}</span><span style="font-size:12px;color:{{ m.labelColor }};">{{ m.label }}</span>
                             </span>
                           </sc-for>
@@ -315,9 +315,9 @@ input,textarea,button{font-family:inherit}
             <sc-if value="{{ hasTargetPages }}" hint-placeholder-val="{{ false }}">
               <div style="display:flex;flex-direction:column;gap:8px;">
                 <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
-                  <sc-if value="{{ showPrevTargets }}" hint-placeholder-val="{{ true }}"><button onClick="{{ previousTargets }}" style="padding:10px 14px;border:1px solid #D7DEEC;border-radius:11px;background:#fff;color:#2447C4;font-size:13px;cursor:pointer; opacity:{{ prevOp }};">{{ prevLabel }}</button></sc-if>
+                  <sc-if value="{{ showPrevTargets }}" hint-placeholder-val="{{ true }}"><button onClick="{{ previousTargets }}" aria-label="Previous page" disabled="{{ previousTargetsDisabled }}" style="padding:10px 14px;border:1px solid #D7DEEC;border-radius:11px;background:#fff;color:#2447C4;font-size:13px;cursor:pointer; opacity:{{ prevOp }};">{{ prevLabel }}</button></sc-if>
                   <span style="font-size:12px;color:#5B6478;">{{ targetPageLabel }}</span>
-                  <sc-if value="{{ showNextTargets }}" hint-placeholder-val="{{ true }}"><button onClick="{{ nextTargets }}" style="padding:10px 14px;border:1px solid #D7DEEC;border-radius:11px;background:#fff;color:#2447C4;font-size:13px;cursor:pointer; opacity:{{ nextOp }};">{{ nextLabel }}</button></sc-if>
+                  <sc-if value="{{ showNextTargets }}" hint-placeholder-val="{{ true }}"><button onClick="{{ nextTargets }}" aria-label="Next page" disabled="{{ nextTargetsDisabled }}" style="padding:10px 14px;border:1px solid #D7DEEC;border-radius:11px;background:#fff;color:#2447C4;font-size:13px;cursor:pointer; opacity:{{ nextOp }};">{{ nextLabel }}</button></sc-if>
                 </div>
                 <sc-if value="{{ perPageOn }}" hint-placeholder-val="{{ false }}"><div aria-label="HCPs per page" style="display:flex;flex-wrap:wrap;justify-content:center;gap:6px;"><sc-for list="{{ perPageOpts }}" as="o" hint-placeholder-count="4"><button onClick="{{ o.go }}" style="padding:6px 10px;border-radius:999px;border:1px solid {{ o.bd }};background:{{ o.bg }};color:{{ o.fg }};font-size:12px;font-weight:600;cursor:pointer;">{{ o.label }}</button></sc-for></div></sc-if>
               </div>
@@ -6783,9 +6783,9 @@ class Component extends DCLogic {
     const accountCard = (lead, facts, { split = null, charges = '', context = '' } = {}) => {
       const stats = facts.filter(m => has(m.v)).map((m, i) => ({
         v:m.v, label:m.k === 'YOY' ? 'YoY' : m.k.toLowerCase(), c:m.c, labelColor:m.k === 'YOY' || m.k === 'OUT' ? m.c : '#5B6478',
-        inset:i ? '8px' : '0', line:i ? '#D7DEEC' : 'transparent', margin:m.k === 'OUT' && i ? 'auto' : '0',
+        inset:i ? '5px' : '0', trailing:m.k === 'OUT' ? '0' : '5px', line:i && m.k !== 'OUT' ? '#D7DEEC' : 'transparent', margin:m.k === 'OUT' && i ? 'auto' : '0',
       }));
-      const routeInFooter = !!SH.route && stats.length > 0;
+      const routeInFooter = !!SH.route && !!(stats.length || charges || context);
       return { lead:{ v:or(lead.v), label:readableMetric(lead.k) }, stats, hasStats:!!stats.length, split, charges, context,
         routeInFooter, metaOn:!!(charges || context || routeInFooter) };
     };
@@ -6902,8 +6902,8 @@ class Component extends DCLogic {
           : [...(lead === opportunity ? [volume] : []), ...(leakCols ? [{ k:'SHARE', v:h.share, c:'#0B1220' }] : []), yoy,
             ...(split ? [{ k:'OUT', v:leftLabel, c:'#A94D1B' }] : [])];
         const charges = leakCols && has(h.leak) ? h.leak + ' leaking' + (h.leakFrom ? ' since ' + h.leakFrom : '') : '';
-        const hcoCard = accountCard(lead,stats,{ split,charges });
-        return { name:h.name, photo:h.photo, sub:[h.city, h.type, AREA.here && has(h.dist) ? h.dist + ' away' : ''].filter(has).join(' · '), ini:h.ini, avBg:'#EEF1F7', avFg:'#3C4557', avR:'13px', ...addSt(inR),
+        const hcoCard = accountCard(lead,stats,{ split,charges,context:AREA.here && has(h.dist) ? h.dist + ' away' : '' });
+        return { name:h.name, photo:h.photo, sub:[h.city,h.type].filter(has).join(' · '), ini:h.ini, avBg:'#EEF1F7', avFg:'#3C4557', avR:'13px', ...addSt(inR),
           toggle: () => h.hcps.length ? this.sheet('choose', h.id) : this.toggleRoute(h.id),
           open: () => this.go('hco', h.id), hasFlag:false, flag:'', flagBg:'#FDEDE4', flagFg:'#A94D1B', hcoCard, metrics:[] };
       });
@@ -7042,7 +7042,8 @@ class Component extends DCLogic {
     if (!failure) LOAD.retried = false;
     const loadNote = !failure ? [] : [note(failure + (LOAD.retried ? ' Try again in a minute.' : ''),
       { bg:'#FDF4EE', hasGo:!!AUTH.refreshWorkspace, go:() => this.retryLoad(), goLabel:s.retrying ? 'Trying again…' : 'Try again' })];
-    const xNotes = [...loadNote, ...(!exploreMode ? [] : [
+    const partialTargets = savedState === 'loading' && items.length > 0 ? [note(savedHcps ? 'Loading the rest of your saved HCPs…' : 'Loading the rest of your saved accounts…')] : [];
+    const xNotes = [...loadNote, ...partialTargets, ...(!exploreMode ? [] : [
       ...(WORKSPACE.explore.national ? [note(' This target list has no assigned geographic area. Explore across all 50 states and DC, or use State to narrow the results.', { lead:'National · United States.' })] : []),
       ...(xv && xv.unreadZips > 0 ? [note('Its ' + xv.unreadZips.toLocaleString('en-US') + ' ZIP ' + (xv.unreadZips === 1 ? 'code isn’t' : 'codes aren’t') + ' read here: Field Pro lists a territory that has states by its states.')] : []),
       ...(xv && xv.status === 'ready' && xv.marks === 'failed' ? [note(xHcp ? 'Targeting status couldn’t be loaded. HCP activity is still shown.' : 'Target status couldn’t be loaded. Organization activity is still shown.',
@@ -7056,7 +7057,7 @@ class Component extends DCLogic {
       : xs.beyond >= 25 ? ' · the busiest ' + xs.beyond.toLocaleString('en-US') + ' name matches beyond the top ' + xTop + '; type more of the name to find others'
       : xs.beyond ? ' · ' + xs.beyond.toLocaleString('en-US') + ' more by name beyond the top ' + xTop
       : xs.found ? ' · more by that name across ' + xv.where + ', but none match these filters' : ' · none more by name across ' + xv.where;
-    const xFoot = xv && xv.status === 'ready' && xv.total > 0 ? rangeOf(xv.page, 25, xv.total) + ' ' + xv.noun
+    const xFoot = xv && xv.status === 'ready' && xv.total > 0 ? rangeOf(xv.page, xv.pageSize || TARGET_PAGE_SIZE, xv.total) + ' ' + xv.noun
       + (xv.filtered ? ' · filtered from ' + xTop : '') + ' · ' + (xv.capped ? 'the top ' + xTop + ' by ' + xv.unit : 'with ' + xv.unit) + ' ' + xIn
       + ' · ' + xv.group + ' · ' + xv.year + xSearch : '';
 
@@ -7313,6 +7314,7 @@ class Component extends DCLogic {
           hasDots: !!(m.dots && m.dots.length), hasPips: !!(m.pips && m.pips.length) })) })), noTargets: items.length === 0, hasEmptyA: true, hasEmptyB: true, ...empty,
       // Insights' footer is always there, its buttons greyed when there's no page to go to (TargetListDetail.tsx:781-820)
       hasPreviousTargets, hasNextTargets, hasTargetPages: ins ? !openingTargets && items.length > 0 : hasPreviousTargets || hasNextTargets,
+      previousTargetsDisabled:!hasPreviousTargets, nextTargetsDisabled:!hasNextTargets,
       showPrevTargets: ins || hasPreviousTargets, showNextTargets: ins || hasNextTargets, prevOp: hasPreviousTargets ? 1 : 0.4, nextOp: hasNextTargets ? 1 : 0.4,
       prevLabel: ins ? 'Previous' : '‹ Previous', nextLabel: ins ? 'Next' : 'Next ›',
       // Field Pro's website counts pages ("Page X of Y")
