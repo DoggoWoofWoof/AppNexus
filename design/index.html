@@ -220,8 +220,8 @@ input,textarea,button{font-family:inherit}
             <sc-for list="{{ targetItems }}" as="t" hint-placeholder-count="3">
               <div style="display:flex;flex-direction:column;gap:12px;">
               <sc-if value="{{ t.hasDivider }}" hint-placeholder-val="{{ false }}"><div style="border-top:1px solid #D7DEEC;padding:10px 2px 0;font-size:12px;font-weight:650;color:#5B6478;">{{ t.divider }}</div></sc-if>
-               <div style="background:{{ t.cardBg }};border:1px solid #E1E6F0;border-radius:14px;overflow:hidden;">
-                 <div style="display:flex;gap:10px;align-items:center;padding:12px 13px;">
+               <div style="background:#fff;border:1px solid #E1E6F0;border-radius:14px;overflow:hidden;">
+                 <div style="display:flex;gap:10px;align-items:flex-start;padding:12px 13px;background:#fff;">
                    <button onClick="{{ t.open }}" aria-label="{{ t.profileLabel }}" style="flex:1;min-width:0;min-height:40px;display:flex;gap:10px;align-items:center;text-align:left;border:0;background:none;padding:0;cursor:pointer;color:#0B1220;">
                      <span data-kit="avatar" data-photo="{{ t.photo }}" data-npi="{{ t.npi }}" data-initials="{{ t.ini }}" style="width:40px;height:40px;flex:0 0 40px;border-radius:{{ t.avR }};background:{{ t.avBg }};color:{{ t.avFg }};display:grid;place-items:center;font-size:12px;font-weight:700;">{{ t.ini }}</span>
                     <span style="flex:1;min-width:0;">
@@ -229,42 +229,44 @@ input,textarea,button{font-family:inherit}
                        <sc-if value="{{ t.sub }}" hint-placeholder-val="{{ true }}"><span title="{{ t.sub }}" style="display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;font-size:12.5px;color:#5B6478;margin-top:2px;line-height:1.3;">{{ t.sub }}</span></sc-if>
                     </span>
                   </button>
-                    <sc-if value="{{ t.hcoCard }}" hint-placeholder-val="{{ false }}">
+                    <sc-if value="{{ t.leadingOnly }}" hint-placeholder-val="{{ false }}">
                       <span style="display:flex;flex:0 0 auto;flex-direction:column;align-items:flex-end;align-self:flex-start;gap:1px;">
                         <span style="font-family:'Source Serif 4',Georgia,serif;font-size:23px;line-height:1.05;color:#0B1220;">{{ t.hcoCard.lead.v }}</span>
                         <span style="font-size:11.5px;color:#5B6478;">{{ t.hcoCard.lead.label }}</span>
                       </span>
                     </sc-if>
-                   <sc-if value="{{ t.headerRoute }}" hint-placeholder-val="{{ true }}"><button onClick="{{ t.toggle }}" aria-label="{{ t.routeLabel }}" style="width:40px;height:40px;flex:0 0 40px;border-radius:10px;border:1px solid {{ t.addBd }};background:{{ t.addBg }};color:{{ t.addFg }};font-size:17px;font-weight:600;cursor:pointer;">{{ t.addIcon }}</button></sc-if>
+                   <sc-if value="{{ routeOn }}" hint-placeholder-val="{{ true }}"><button onClick="{{ t.toggle }}" aria-label="{{ t.routeLabel }}" style="width:40px;height:40px;flex:0 0 40px;border-radius:10px;border:1px solid {{ t.addBd }};background:{{ t.addBg }};color:{{ t.addFg }};font-size:17px;font-weight:600;cursor:pointer;">{{ t.addIcon }}</button></sc-if>
                 </div>
                 <sc-if value="{{ t.hcoCard }}" hint-placeholder-val="{{ false }}">
-                  <div style="display:flex;flex-direction:column;padding:0 13px 8px;">
-                    <sc-if value="{{ t.hcoCard.hasStats }}" hint-placeholder-val="{{ true }}">
-                      <button onClick="{{ t.open }}" style="display:flex;flex-direction:column;gap:8px;width:100%;padding:2px 0 3px;border:0;background:none;text-align:left;cursor:pointer;">
-                        <span style="display:flex;flex-wrap:wrap;align-items:baseline;row-gap:6px;">
+                  <sc-if value="{{ t.hcoCard.showPanel }}" hint-placeholder-val="{{ true }}">
+                    <button onClick="{{ t.open }}" style="position:relative;display:flex;flex-direction:column;gap:8px;width:100%;padding:10px 13px 12px;border:0;border-top:1px solid #E7EBF3;background:#F7F9FC;text-align:left;cursor:pointer;">
+                      <sc-if value="{{ t.hcoCard.split }}" hint-placeholder-val="{{ true }}">
+                        <span title="{{ t.hcoCard.split.label }}" aria-label="{{ t.hcoCard.split.label }}" style="position:absolute;top:-1px;left:0;right:0;height:3px;display:flex;overflow:hidden;background:#E1E6F0;">
+                          <span style="width:{{ t.hcoCard.split.stayed }};background:#3354BC;"></span><span style="width:{{ t.hcoCard.split.left }};background:#CF673E;"></span>
+                        </span>
+                      </sc-if>
+                      <sc-if value="{{ t.hcoCard.leakageOn }}" hint-placeholder-val="{{ true }}">
+                        <span style="display:flex;align-items:baseline;justify-content:space-between;gap:6px;">
+                          <span style="flex:1;min-width:0;font-size:11.5px;line-height:1.3;color:#7A4C35;">{{ t.hcoCard.charges }}</span>
+                          <sc-if value="{{ t.hcoCard.split }}" hint-placeholder-val="{{ true }}"><span style="font-size:12px;font-weight:650;color:#A94D1B;">{{ t.hcoCard.split.out }}</span></sc-if>
+                        </span>
+                      </sc-if>
+                      <sc-if value="{{ t.hcoCard.showMetrics }}" hint-placeholder-val="{{ true }}">
+                        <span style="display:flex;flex-wrap:wrap;align-items:flex-start;gap:8px 7px;">
+                          <span style="display:flex;flex:1 0 auto;min-width:74px;flex-direction:column;gap:2px;">
+                            <span style="font-family:'Source Serif 4',Georgia,serif;font-size:21px;line-height:1.12;color:#0B1220;">{{ t.hcoCard.lead.v }}</span>
+                            <span style="font-size:11.5px;color:#5B6478;">{{ t.hcoCard.lead.label }}</span>
+                          </span>
                           <sc-for list="{{ t.hcoCard.stats }}" as="m" hint-placeholder-count="3">
-                            <span style="display:flex;align-items:baseline;gap:3px;flex:0 0 auto;padding:0 {{ m.trailing }} 0 {{ m.inset }};margin-left:{{ m.margin }};border-left:1px solid {{ m.line }};">
-                              <span style="font-size:14px;line-height:1.2;font-weight:650;color:{{ m.c }};">{{ m.v }}</span><span style="font-size:12px;color:{{ m.labelColor }};">{{ m.label }}</span>
+                            <span style="display:flex;flex:1 0 auto;min-width:54px;flex-direction:column;gap:3px;padding-top:3px;">
+                              <span style="font-size:14px;line-height:1.24;font-weight:650;color:{{ m.c }};">{{ m.v }}</span><span style="font-size:11.5px;color:#5B6478;">{{ m.label }}</span>
                             </span>
                           </sc-for>
                         </span>
-                        <sc-if value="{{ t.hcoCard.split }}" hint-placeholder-val="{{ true }}">
-                          <span title="{{ t.hcoCard.split.label }}" aria-label="{{ t.hcoCard.split.label }}" style="display:flex;height:6px;width:100%;border-radius:999px;overflow:hidden;background:#E1E6F0;">
-                            <span style="width:{{ t.hcoCard.split.stayed }};background:#3354BC;"></span><span style="width:{{ t.hcoCard.split.left }};background:#CF673E;"></span>
-                          </span>
-                        </sc-if>
-                      </button>
-                    </sc-if>
-                    <sc-if value="{{ t.hcoCard.metaOn }}" hint-placeholder-val="{{ true }}">
-                      <div style="display:flex;align-items:center;gap:8px;margin-top:3px;">
-                        <div style="flex:1;min-width:0;display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;">
-                          <sc-if value="{{ t.hcoCard.context }}" hint-placeholder-val="{{ true }}"><span style="font-size:12px;color:#5B6478;line-height:1.35;">{{ t.hcoCard.context }}</span></sc-if>
-                          <sc-if value="{{ t.hcoCard.charges }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;line-height:1.35;color:#914623;">{{ t.hcoCard.charges }}</span></sc-if>
-                        </div>
-                        <sc-if value="{{ t.footerRoute }}" hint-placeholder-val="{{ true }}"><button onClick="{{ t.toggle }}" aria-label="{{ t.routeLabel }}" style="display:grid;place-items:center;width:40px;height:40px;flex:0 0 40px;border-radius:10px;border:1px solid {{ t.addBd }};background:{{ t.addBg }};color:{{ t.addFg }};font-size:17px;font-weight:600;cursor:pointer;">{{ t.addIcon }}</button></sc-if>
-                      </div>
-                    </sc-if>
-                  </div>
+                      </sc-if>
+                      <sc-if value="{{ t.hcoCard.context }}" hint-placeholder-val="{{ false }}"><span style="font-size:11.5px;color:#5B6478;line-height:1.3;">{{ t.hcoCard.context }}</span></sc-if>
+                    </button>
+                  </sc-if>
                 </sc-if>
                  <sc-if value="{{ t.flagBelow }}" hint-placeholder-val="{{ false }}">
                    <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px;padding:0 13px 9px;">
@@ -274,9 +276,9 @@ input,textarea,button{font-family:inherit}
                   </div>
                 </sc-if>
                 <sc-if value="{{ t.standardMetrics }}" hint-placeholder-val="{{ true }}">
-                 <button onClick="{{ t.open }}" style="display:flex;flex-wrap:wrap;width:100%;border:0;border-top:1px solid #E7EBF3;background:#F7F9FC;padding:4px 5px;text-align:left;cursor:pointer;">
+                 <button onClick="{{ t.open }}" style="display:flex;width:100%;border:0;border-top:1px solid #E7EBF3;background:#F7F9FC;padding:10px 13px;text-align:left;cursor:pointer;">
                   <sc-for list="{{ t.metrics }}" as="m" hint-placeholder-count="3">
-                     <span title="{{ m.tip }}" style="display:flex;flex-direction:column;min-width:0;width:{{ m.width }};box-sizing:border-box;padding:8px 8px;">
+                     <span title="{{ m.tip }}" style="display:flex;flex:1;flex-direction:column;min-width:0;box-sizing:border-box;padding:0 4px;">
                        <span title="{{ m.ktip }}" style="display:block;font-size:12px;line-height:1.25;color:#5B6478;">{{ m.label }}</span>
                        <sc-if value="{{ m.big }}" hint-placeholder-val="{{ true }}"><span style="display:block;font-family:'Source Serif 4',Georgia,serif;font-size:20px;line-height:1.15;margin-top:3px;color:{{ m.c }};">{{ m.v }}</span></sc-if>
                        <sc-if value="{{ m.hasPips }}" hint-placeholder-val="{{ false }}"><span style="display:flex;align-items:center;gap:5px;margin-top:5px;"><span style="display:flex;gap:2px;"><sc-for list="{{ m.pips }}" as="d" hint-placeholder-count="5"><span style="width:5px;height:12px;border-radius:2px;background:{{ d.c }};"></span></sc-for></span><span style="font-size:11.5px;color:#5B6478;">{{ m.pipV }}</span></span></sc-if>
@@ -3546,6 +3548,7 @@ class Component extends DCLogic {
     this.loadRouteSites();
     this.loadRouteMiles();
     this.loadExplore();
+    this.loadTargetWeekdays();
     this.loadOpportunity();
     this.loadChanges();
     this.loadSummaries();
@@ -3560,7 +3563,7 @@ class Component extends DCLogic {
     const na = (this.props || {}).account;
     if (na !== this._pa) { this._pa = na; if (ACCOUNTS[na]) this.setAccount(na); }
   }
-  componentWillUnmount() { this.finishEmail(); clearTimeout(this._smyDetT); clearTimeout(this._smyHistTimer); clearTimeout(this._whoTimer); this._routeWork.clear(); this._routeLegKey = null; this._exploreKey = null; this._exploreGone = true; clearTimeout(this._exploreTimer); if (SERVICE.hush) SERVICE.hush(); clearTimeout(this._t); clearTimeout(this._a); clearTimeout(this._m); clearTimeout(this._s); clearTimeout(this._smyT); clearTimeout(this._trT); clearTimeout(this._auto); clearInterval(this._i); this._at.forEach(clearTimeout); }
+  componentWillUnmount() { this.finishEmail(); clearTimeout(this._smyDetT); clearTimeout(this._smyHistTimer); clearTimeout(this._whoTimer); this._routeWork.clear(); this._routeLegKey = null; this._exploreKey = null; this._exploreGone = true; clearTimeout(this._exploreTimer); clearTimeout(this._pageWarmTimer); if (SERVICE.hush) SERVICE.hush(); clearTimeout(this._t); clearTimeout(this._a); clearTimeout(this._m); clearTimeout(this._s); clearTimeout(this._smyT); clearTimeout(this._trT); clearTimeout(this._auto); clearInterval(this._i); this._at.forEach(clearTimeout); }
 
   // Explore as the website's (TerritoryDiscoveryPanel.tsx): the list's area read once, its top 1,000; State, City,
   // Type or Specialty and Status filter it here, 20 to a page. Filters belong to the list and the tab.
@@ -3581,6 +3584,7 @@ class Component extends DCLogic {
   loadExplore() {
     const query = this.exploreRequest();
     const view = query ? SERVICE.exploreView(query.request) : null;
+    this.warmExplore(query,view);
     if (!view || !view.load) { clearTimeout(this._exploreTimer); this._exploreKey = null; return; }
     const key = JSON.stringify([view.load, query.filterKey]);
     if (key === this._exploreKey) return;
@@ -3589,6 +3593,26 @@ class Component extends DCLogic {
     const read = () => this.exploreRead(query.request, view.load);
     if (view.load === 'beyond') this._exploreTimer = setTimeout(read, 350);
     else read();
+  }
+
+  warmExplore(query,view) {
+    const warm = SERVICE.warmExplorePages;
+    const key = warm && view?.status === 'ready' && !view.search.searching && view.pages > 1
+      ? JSON.stringify([query.filterKey,view.page,view.pages,view.total,view.marks]) : '';
+    if (key === this._pageWarmKey) return;
+    clearTimeout(this._pageWarmTimer);
+    this._pageWarmKey = key;
+    if (key) this._pageWarmTimer = setTimeout(() => warm({ ...query.request,page:view.page },view.pages),150);
+  }
+
+  loadTargetWeekdays() {
+    const read = SERVICE.targetWeekdays;
+    if (!read) return;
+    const pages = this._targetWeekdayPages || [[],[]];
+    const key = JSON.stringify(pages);
+    if (key === this._targetWeekdayKey) return;
+    this._targetWeekdayKey = key;
+    read(...pages);
   }
 
   exploreRead(request, what) {
@@ -6232,7 +6256,7 @@ class Component extends DCLogic {
   componentDidMount() {
     const s = this.state, n = (this.props || {}).notice;
     if (n) this.toast(n);
-    this.loadExplore(); this.loadOpportunity(); this.loadChanges(); this.loadSummaries(); this.loadTranscripts(); this.watchSummaryHistory();
+    this.loadExplore(); this.loadTargetWeekdays(); this.loadOpportunity(); this.loadChanges(); this.loadSummaries(); this.loadTranscripts(); this.watchSummaryHistory();
     if (!this.acct().fieldPro && s.tab === 'targets' && SERVICE.dashboardStats) this.loadFrontSent();
     if (s.tab === 'activity' && s.actSeg === 'dash') this.loadDash();
   }
@@ -6754,7 +6778,7 @@ class Component extends DCLogic {
     const isRun = scr === 'run';
 
     // targets
-    let items;
+    let items, makeCard;
     const ql = s.q.trim().toLowerCase();
     const words = ql.split(/\s+/).filter(Boolean);
     const matches = (...fields) => {
@@ -6780,14 +6804,11 @@ class Component extends DCLogic {
     const xv = exploreQuery ? SERVICE.exploreView(exploreQuery.request) : null;
     const measure = WORKSPACE.hcpMetric || 'VOLUME';
     const readableMetric = k => k === 'YOY' ? 'YoY' : capWord(String(k || '').toLowerCase());
-    const accountCard = (lead, facts, { split = null, charges = '', context = '' } = {}) => {
-      const stats = facts.filter(m => has(m.v)).map((m, i) => ({
-        v:m.v, label:m.k === 'YOY' ? 'YoY' : m.k.toLowerCase(), c:m.c, labelColor:m.k === 'YOY' || m.k === 'OUT' ? m.c : '#5B6478',
-        inset:i ? '5px' : '0', trailing:m.k === 'OUT' ? '0' : '5px', line:i && m.k !== 'OUT' ? '#D7DEEC' : 'transparent', margin:m.k === 'OUT' && i ? 'auto' : '0',
-      }));
-      const routeInFooter = !!SH.route && !!(stats.length || charges || context);
-      return { lead:{ v:or(lead.v), label:readableMetric(lead.k) }, stats, hasStats:!!stats.length, split, charges, context,
-        routeInFooter, metaOn:!!(charges || context || routeInFooter) };
+    const accountCard = (lead, facts, { split = null, charges = '', context = '', showMetrics = false } = {}) => {
+      const stats = facts.filter(m => has(m.v)).map(m => ({ v:m.v, label:readableMetric(m.k), c:m.c }));
+      const leakageOn = !!(split || charges);
+      return { lead:{ v:or(lead.v), label:readableMetric(lead.k) }, stats, split, charges, context, showMetrics,
+        leakageOn, showPanel:showMetrics || leakageOn || !!context };
     };
     // each list sorts as its website does: Field Pro's book (fe:AccountWorkspace/lib/homeLists.ts) and the
     // Insights list (TargetListDetail.tsx). A sort whose figures aren't there isn't offered; the default is the website's.
@@ -6826,7 +6847,7 @@ class Component extends DCLogic {
       const metT = id => { const pr = prOf(id); return pr ? new Date(pr.lastAt || 0).getTime() || 0 : -(this.lastOf(id).n ?? 1e9); };
       const sortV = p => sortKey === 'Name' ? p.name : sortKey === 'Meetings' ? prOf(p.id)?.meetings12 ?? 0 : metT(p.id), dir = s.iDir === 'asc' ? 1 : -1;
       items.sort((a, b) => { const x = sortV(a), y = sortV(b); return x < y ? -dir : x > y ? dir : 0; });
-      items = items.map(p => {
+      makeCard = p => {
         const f = this.flagOf(p.id), adv = this.advOf(p.id), pr = tlist.profiles?.[p.id];
         // the website's row: priority, status, last meeting, meetings (last 12 months / all) and the top topic
         const tone = ST_TONE[pr?.status] || ST_TONE.New;
@@ -6859,7 +6880,7 @@ class Component extends DCLogic {
             ? [extra, lastCell, meetings]
             : [lastCell, meetings],
           hasWide: !!topicLine, wideV:topicLine };
-      });
+      };
     } else if (exploreMode) {
       const hcp = s.kind === 'hcp';
       // the website's row: its tag (In your target list, Targeted elsewhere and where, Not targeted) and its count
@@ -6888,42 +6909,41 @@ class Component extends DCLogic {
       // the website's columns: claims, share, YoY, stayed/left, opportunity and leaking for a procedure book;
       // patients, share of the list, change and 340B for a drug book
       const leakCols = !WORKSPACE.drugAccount && WORKSPACE.view !== 'hema_sales';
-      items = items.map(h => {
+      makeCard = h => {
         const inR = inRoute(h.id), yoyN = h.listYoyN == null ? h.yoyN : h.listYoyN;
         const volume = { k:WORKSPACE.metric || 'PROCEDURES', v:h.listProc || h.proc, c:'#0B1220' }, yoy = { k:'YOY', v:h.listYoy || h.yoy, c:yoyN < 0 ? '#A94D1B' : '#1C7A4E' };
         const opportunity = !WORKSPACE.companyId || WORKSPACE.explore?.opportunity ? { k:'OPPORTUNITY', v:h.opp, c:'#22409F' } : null;
         const left = h.leftN, measured = Number.isFinite(left) && left >= 0 && left <= 100;
         const leftLabel = has(h.left) ? h.left : sharePct(left);
         const stayedLabel = has(h.stayed) ? h.stayed : sharePct(100 - left);
-        const split = leakCols && measured ? { stayed:(100 - left) + '%', left:left + '%', label:stayedLabel + ' stayed · ' + leftLabel + ' left' } : null;
+        const split = leakCols && measured ? { stayed:(100 - left) + '%', left:left + '%', out:leftLabel + ' out', label:stayedLabel + ' stayed · ' + leftLabel + ' left' } : null;
         const lead = opportunity && has(opportunity.v) ? opportunity : volume;
         const stats = WORKSPACE.drugAccount
           ? [{ k:'OF LIST', v:h.listShare, c:'#22409F' }, yoy, { k:'CHANGE', v:h.delta, c:yoy.c }, { k:'340B', v:h.is340b, c:'#0B1220' }]
-          : [...(lead === opportunity ? [volume] : []), ...(leakCols ? [{ k:'SHARE', v:h.share, c:'#0B1220' }] : []), yoy,
-            ...(split ? [{ k:'OUT', v:leftLabel, c:'#A94D1B' }] : [])];
+          : [...(lead === opportunity ? [volume] : []), ...(leakCols ? [{ k:'SHARE', v:h.share, c:'#0B1220' }] : []), yoy];
         const charges = leakCols && has(h.leak) ? h.leak + ' leaking' + (h.leakFrom ? ' since ' + h.leakFrom : '') : '';
-        const hcoCard = accountCard(lead,stats,{ split,charges,context:AREA.here && has(h.dist) ? h.dist + ' away' : '' });
+        const hcoCard = accountCard(lead,stats,{ split,charges,showMetrics:true,context:AREA.here && has(h.dist) ? h.dist + ' away' : '' });
         return { name:h.name, photo:h.photo, sub:[h.city,h.type].filter(has).join(' · '), ini:h.ini, avBg:'#EEF1F7', avFg:'#3C4557', avR:'13px', ...addSt(inR),
           toggle: () => h.hcps.length ? this.sheet('choose', h.id) : this.toggleRoute(h.id),
           open: () => this.go('hco', h.id), hasFlag:false, flag:'', flagBg:'#FDEDE4', flagFg:'#A94D1B', hcoCard, metrics:[] };
-      });
+      };
     } else {
       items = Object.values(HCPS).filter(p => s.scope === 'explore' || p.mine).filter(mineOk).filter(p => matches(p.name,p.id,p.spec,HCOS[p.hco]?.name)).filter(specOk);
       // as the website orders doctors: the count, then the name; the change puts new first (no count a year
       // earlier), then the biggest rise down to the biggest fall, then none
-      const byCount = (a, b) => b.claimsN - a.claimsN || a.name.localeCompare(b.name);
+      const byCount = (a, b) => desc(a.claimsN, b.claimsN) || a.name.localeCompare(b.name);
       const trend = p => p.priorN == null ? [3, 0] : p.priorN > 0 ? [1, (p.priorN - p.claimsN) / p.priorN] : p.claimsN > 0 ? [0, 0] : [2, 0];
-      items.sort((a, b) => sortKey === 'Name' ? a.name.localeCompare(b.name)
+      items.sort((a, b) => sortKey === 'Name' || WORKSPACE.hcpFiguresPending ? a.name.localeCompare(b.name)
         : sortKey === 'Last year' ? desc(a.priorN ?? null, b.priorN ?? null) || byCount(a, b)
         : sortKey === 'Year on year' ? trend(a)[0] - trend(b)[0] || trend(a)[1] - trend(b)[1] || byCount(a, b) : byCount(a, b));
-      items = items.map(p => {
+      makeCard = p => {
         const f = this.flagOf(p.id);
         return { name:p.name, photo:p.photo, npi:p.id, sub:[p.spec,HCOS[p.hco]?.name].filter(has).join(' · '), ini:p.ini, avBg:'#E7ECFA', avFg:'#22409F', avR:'50%', ...addSt(inRoute(p.id)),
           toggle: () => this.toggleRoute(p.id), open: () => this.go('hcp', p.id), hasFlag: !!f, flag: f ? f.label : '', flagBg: f ? f.bg : '', flagFg: f ? f.fg : '',
-          metrics:[{ k:measure, v:or(p.claims), c:'#0B1220' }, { k:'YOY', v:or(p.yoy), c: p.yoyN < 0 ? '#A94D1B' : '#1C7A4E' },
+          metrics:[{ k:measure, v:or(p.claims), c:'#0B1220' }, { k:'YOY', v:or(p.yoy), c:!has(p.yoy) ? '#5B6478' : p.yoyN < 0 ? '#A94D1B' : '#1C7A4E' },
             { k:measure + ' ' + (bookY - 1), v:p.priorN == null ? '—' : p.priorN.toLocaleString('en-US'), c:'#5B6478' },
-            ...(SH.lightest && has(p.day) ? [{ k:'LIGHTEST DAY', v:p.day, tip:p.dayL || p.day, c:'#22409F' }] : [])] };
-      });
+            ...(SH.lightest ? [{ k:'LIGHTEST DAY', v:or(p.day), tip:has(p.day) ? p.dayL || p.day : 'No weekday data yet', c:has(p.day) ? '#22409F' : '#5B6478' }] : [])] };
+      };
     }
     const unit = !ins && s.kind === 'hco' ? ['account','accounts'] : ['HCP','HCPs'];
     const crmNow = WORKSPACE.crm || null;
@@ -6963,6 +6983,10 @@ class Component extends DCLogic {
     const targetPage = xv ? xv.page : s.targetPageKey === targetPageKey ? Math.max(0, Math.min(s.targetPage || 0, Math.ceil(items.length / PG) - 1)) : 0;
     const hasPreviousTargets = targetPage > 0;
     const hasNextTargets = xv ? xv.page + 1 < xv.pages : (targetPage + 1) * PG < items.length;
+    const pageStart = targetPage * PG;
+    const pageRows = xv ? items : items.slice(pageStart,pageStart + PG);
+    this._targetWeekdayPages = scr === 'targets' && mineGeo && s.kind === 'hcp' && SH.lightest
+      ? [pageRows.map(p => p.id),items.slice(pageStart + PG,pageStart + 2 * PG).map(p => p.id)] : [[],[]];
     const toExploreFirst = !ins && s.scope === 'mine';
     const savedHcps = !ins && s.scope === 'mine' && s.kind === 'hcp';
     const savedState = toExploreFirst ? (savedHcps ? WORKSPACE.hcpTargetsState : WORKSPACE.hcoTargetsState) : null;
@@ -7042,7 +7066,8 @@ class Component extends DCLogic {
     if (!failure) LOAD.retried = false;
     const loadNote = !failure ? [] : [note(failure + (LOAD.retried ? ' Try again in a minute.' : ''),
       { bg:'#FDF4EE', hasGo:!!AUTH.refreshWorkspace, go:() => this.retryLoad(), goLabel:s.retrying ? 'Trying again…' : 'Try again' })];
-    const partialTargets = savedState === 'loading' && items.length > 0 ? [note(savedHcps ? 'Loading the rest of your saved HCPs…' : 'Loading the rest of your saved accounts…')] : [];
+    const partialTargets = savedState === 'loading' && items.length > 0 ? [note(savedHcps ? 'Loading the rest of your saved HCPs…' : 'Loading the rest of your saved accounts…')]
+      : savedHcps && WORKSPACE.hcpFiguresPending && items.length > 0 ? [note('Updating claim figures…')] : [];
     const xNotes = [...loadNote, ...partialTargets, ...(!exploreMode ? [] : [
       ...(WORKSPACE.explore.national ? [note(' This target list has no assigned geographic area. Explore across all 50 states and DC, or use State to narrow the results.', { lead:'National · United States.' })] : []),
       ...(xv && xv.unreadZips > 0 ? [note('Its ' + xv.unreadZips.toLocaleString('en-US') + ' ZIP ' + (xv.unreadZips === 1 ? 'code isn’t' : 'codes aren’t') + ' read here: Field Pro lists a territory that has states by its states.')] : []),
@@ -7299,16 +7324,15 @@ class Component extends DCLogic {
       xChips, xClearOn, xClear,
       spec: s.spec, sortNow, openFilter: () => this.sheet('filter'),
       groupsChip: cgOn.length + (cgOn.length === 1 ? ' group · ' : ' groups · ') + cgOn.reduce((n, g) => n + g.codes, 0) + (cgOn.reduce((n, g) => n + g.codes, 0) === 1 ? ' code' : ' codes'),
-      targetItems: (xv ? items : items.slice(targetPage * PG, (targetPage + 1) * PG)).map(t => ({ prio:'', prioTip:'', ...t,
+      targetItems: pageRows.map(makeCard || (row => row)).map(t => ({ prio:'', prioTip:'', ...t,
         profileLabel:'Open ' + t.name, routeLabel:t.addLabel + (t.addIcon === '✓' ? ', ' : ' ') + t.name,
-        cardBg:t.hcoCard ? '#F7F9FC' : '#fff', headerRoute:!!SH.route && !t.hcoCard?.routeInFooter, footerRoute:!!t.hcoCard?.routeInFooter,
+        leadingOnly:!!t.hcoCard && !t.hcoCard.showMetrics,
         standardMetrics:!t.hcoCard && !!t.metrics.length,
         flagTap:!!t.flagTap, flagStill:!t.flagTap, flagBelow:!ins && !t.hcoCard && !!t.hasFlag,
         footerOn:!!t.hasWide || (ins && !!t.hasFlag), statusLabelOn:ins && !!t.hasFlag && !t.hasWide,
         footerStatusTap:ins && !!t.hasFlag && !!t.flagTap, footerStatusStill:ins && !!t.hasFlag && !t.flagTap, flagAria:'Change status for ' + t.name + ', currently ' + t.flag,
         flagSub:t.flagSub || '', hasFlagSub:!!t.flagSub, divider:t.divider || '', hasDivider:!!t.divider,
         metrics: t.metrics.map(m => ({ s:'', sc:'#7A839A', dots:[], pips:[], pipV:'', tip:m.k, ktip:m.k,
-          width:100 / (t.metrics.length === 4 ? 2 : Math.min(3,t.metrics.length)) + '%',
           label:readableMetric(m.k), ...m,
           big: !m.small && !m.dots && !m.pips, small: !!m.small && !m.dots, hasS: !!m.s,
           hasDots: !!(m.dots && m.dots.length), hasPips: !!(m.pips && m.pips.length) })) })), noTargets: items.length === 0, hasEmptyA: true, hasEmptyB: true, ...empty,
