@@ -3547,6 +3547,9 @@ const wordsOf = A => A.fieldPro ? { one:'Note', many:'Notes' } : { one:'Insight'
 // one filter group in the filter sheet, for every account: its label, a figure at its side, a note above and below its options
 // one stat tile, for every account: its label, value (and a smaller second value), pips, the line under it and its tooltip
 const statTile = x => ({ v2:'', pipsOn:false, pips:[], tip:'', c:'#0B1220', ...x });
+// Kura's advocacy, one colour by score and the five pips it fills: the Targets row's cell and the doctor's tile both draw them
+const advTone = n => n >= 4 ? '#1C7A4E' : n === 3 ? '#B7791F' : '#C0392B';
+const advPips = n => [1, 2, 3, 4, 5].map(i => n && i <= n ? advTone(n) : '#E1E6F0');
 const filterGroup = g => ({ ...g, side:g.side || '', sideOn:!!g.side, note:g.note || '', noteOn:!!g.note, foot:g.foot || '', footOn:!!g.foot });
 const LIST_UI = {
   fieldPro: { findHint:'Find a target list', findLabel:'Find a target list by name, state or ZIP code', newLabel:'＋ New target list', collapsed:6, page:40 },
@@ -5520,6 +5523,10 @@ class Component extends DCLogic {
     const ROW = { isNew:false, isList:true, name:'', sub:'', hasSub:false, activity:'', hint:'', aria:'', go: () => {}, hasIcon:false, iconBg:'', iconFg:'', iconD:'',
       hasBy:false, details:[], check:'', bg:'#fff', bd:'#E1E6F0', op:1,
       hasMenu:false, menuAria:'', menuHint:'', hasMenuNote:false, menu: () => {}, menuBg:'transparent', menuOpen:false, menuItems:[], asking:false, askText:'', yes: () => {}, yesLabel:'', no: () => {} };
+    // the look of a card that is the one picked, and the ⋯ menu with its delete or archive question; territories and target lists share both
+    const look = on => ({ check: on ? '✓' : '', bg: on ? '#EDF1FB' : '#fff', bd: on ? '#2447C4' : '#E1E6F0' });
+    const menuOf = (t, o) => ({ hasMenu:true, menuAria:o.menuAria, menuHint:o.menuHint || '', menu: () => this.setState({ pkMenu: s.pkMenu === t.id ? null : t.id, listConfirm:null }), menuBg: s.pkMenu === t.id ? '#EEF1F7' : 'transparent',
+      menuOpen: s.pkMenu === t.id && !o.ask, menuItems:o.items, asking:!!o.ask, askText:o.askText, yesLabel:o.yesLabel, yes:o.yes, no: () => this.setState({ listConfirm:null }) });
     if (!ins) {
       const waiting = !TERRS.length && !!this.props?.loading;
       const own = TERRS.filter(t => t.id !== ':other' && t.id !== ':company'), other = TERRS.find(t => t.id === ':other'), company = TERRS.find(t => t.id === ':company');
@@ -5536,7 +5543,7 @@ class Component extends DCLogic {
       const companyHit = !!company && (!searching || company.name.toLowerCase().includes(needle));
       const row = (t, hint, more) => { const id = t.id || t.name, on = picked === id;
         const sub = t.meta || (t.countsState === 'loading' ? 'Loading counts…' : '');
-        return { ...ROW, name:t.name, sub, hasSub:!!sub, hint, aria:[t.name, sub, hint].filter(Boolean).join(', '), check: on ? '✓' : '', bg: on ? '#EDF1FB' : '#fff', bd: on ? '#2447C4' : '#E1E6F0', ...more,
+        return { ...ROW, name:t.name, sub, hasSub:!!sub, hint, aria:[t.name, sub, hint].filter(Boolean).join(', '), ...look(on), ...more,
           go: () => { this.setState({ sheet:null, pkQ:'', pkLimit:0, pkMoreKey:'', pkMenu:null, listConfirm:null }); if (AUTH.pickTerritory) AUTH.pickTerritory(id, { kind:s.kind, scope:s.scope }).catch(e => this.toast(e.message || 'That list didn’t open')); else this.setState({ territory:id }); } }; };
       // Coverage on each territory. Only the owner can edit states, edit ZIP codes or delete it.
       const terrMenu = t => {
@@ -5544,10 +5551,10 @@ class Component extends DCLogic {
         const editable = t.owner !== false;
         const zipsOnly = !codesOf(t).length && (SERVICE.zip ? SERVICE.zip.saved(t.postalCodes) : t.postalCodes || []).length > 0;
         const ask = !!s.listConfirm && s.listConfirm.id === t.id && s.listConfirm.kind === 'terrDelete';
-        return { hasMenu:true, menuAria:'Actions for ' + t.name, menu: () => this.setState({ pkMenu: s.pkMenu === t.id ? null : t.id, listConfirm:null }), menuBg: s.pkMenu === t.id ? '#EEF1F7' : 'transparent',
-          menuOpen: s.pkMenu === t.id && !ask, asking:ask, op: s.listBusy === t.id ? 0.65 : 1,
-          menuItems: editable ? [[zipsOnly ? 'Edit ZIP codes' : 'Edit states', '#0B1220', () => zipsOnly ? this.openZipEdit(t) : this.openTerrEdit(t)], ['Delete', '#C0392B', () => this.setState({ pkMenu:null, listConfirm:{ id:t.id, kind:'terrDelete' } })]].map(([label, fg, go]) => ({ label, fg, go, disabled:false })) : [],
-          askText:'Delete ' + t.name + '? It also goes from your Opportunity Map, and from anyone you shared it with.', yesLabel:'Delete', yes: () => this.deleteTerritory(t), no: () => this.setState({ listConfirm:null }) };
+        return { ...menuOf(t, { menuAria:'Actions for ' + t.name, ask,
+          items: editable ? [[zipsOnly ? 'Edit ZIP codes' : 'Edit states', '#0B1220', () => zipsOnly ? this.openZipEdit(t) : this.openTerrEdit(t)], ['Delete', '#C0392B', () => this.setState({ pkMenu:null, listConfirm:{ id:t.id, kind:'terrDelete' } })]].map(([label, fg, go]) => ({ label, fg, go, disabled:false })) : [],
+          askText:'Delete ' + t.name + '? It also goes from your Opportunity Map, and from anyone you shared it with.', yesLabel:'Delete', yes: () => this.deleteTerritory(t) }),
+          op: s.listBusy === t.id ? 0.65 : 1 };
       };
       const hasMore = matches.length > head.length, canCollapse = !searching && limit > U.collapsed;
       return { ...off, pkFindOn:findOn, onPkQ: e => this.setState({ pkQ:e.target.value.slice(0, 80) }), pkCoverOn:!waiting && own.length > 0, pkCover: () => this.openCoverage(),
@@ -5600,11 +5607,11 @@ class Component extends DCLogic {
       return { ...ROW, name:t.name, aria:[t.name, sub, activity].filter(Boolean).join(', '), hint:[t.smart && 'Auto-updating from rules', t.description].filter(Boolean).join(' · '), sub, hasSub:true, activity, details, hasBy:!owner && !!t.id,
         go: () => this.setState({ tlist:id, sheet:null, listConfirm:null, pkMenu:null, pkQ:'', q:'', targetPage:0, ...I_FILTERS }),
         hasIcon:true, iconBg:tone[0], iconFg:tone[1], iconD:LIST_ICONS[t.icon] || LIST_ICONS.bookmark,
-        check: on ? '✓' : '', bg: on ? '#EDF1FB' : '#fff', bd: on ? '#2447C4' : '#E1E6F0', op: t.archived || busy ? 0.65 : 1,
-        hasMenu: !!t.id, menuAria:'More actions', menuHint:'Actions for ' + t.name, hasMenuNote:!owner && !!t.id, menu: () => this.setState({ pkMenu: s.pkMenu === t.id ? null : t.id, listConfirm:null }), menuBg: s.pkMenu === t.id ? '#EEF1F7' : 'transparent',
-        menuOpen: s.pkMenu === t.id && !ask, menuItems:items, asking:!!ask,
-        askText: ask === 'remove' ? 'Permanently delete “' + t.name + '” and all of its targets? This cannot be undone.' : 'Archive “' + t.name + '”? You can restore it later.',
-        yes: () => this.listAct(ask, t), yesLabel: ask === 'remove' ? 'Delete permanently' : 'Archive', no: () => this.setState({ listConfirm:null }) };
+        ...look(on), op: t.archived || busy ? 0.65 : 1,
+        ...menuOf(t, { menuAria:'More actions', menuHint:'Actions for ' + t.name, ask, items,
+          askText: ask === 'remove' ? 'Permanently delete “' + t.name + '” and all of its targets? This cannot be undone.' : 'Archive “' + t.name + '”? You can restore it later.',
+          yesLabel: ask === 'remove' ? 'Delete permanently' : 'Archive', yes: () => this.listAct(ask, t) }),
+        hasMenu: !!t.id, hasMenuNote:!owner && !!t.id };
     });
     const empty = counts.all === 0 && counts.archived === 0;
     return { ...off, pkTabsOn:true,
@@ -7114,6 +7121,11 @@ class Component extends DCLogic {
     const cgOn = CODE_GROUPS.filter(g => s.cgs.includes(g.name)), cgSpecs = cgOn.flatMap(g => g.specs);
     const specOk = x => !x.specs.length || ((s.spec === 'All codes' || x.specs.includes(s.spec)) && x.specs.some(sp => cgSpecs.includes(sp)));
     const codesOff = !ins && (s.spec !== 'All codes' || s.cgs.length < CODE_GROUPS.length);
+    // what every Targets card shares, whichever account builds it: who it is, whether it is on the day's route, where a tap goes
+    // and its status pill; each builder below adds only its own figures
+    const entityBase = (e, isHcp) => ({ name:e.name, photo:e.photo, npi:isHcp ? e.id : '', ini:e.ini, avBg:isHcp ? '#E7ECFA' : '#EEF1F7', avFg:isHcp ? '#22409F' : '#3C4557', avR:isHcp ? '50%' : '13px',
+      ...addSt(inRoute(e.id)), toggle: () => this.toggleRoute(e.id), open: () => this.go(isHcp ? 'hcp' : 'hco', e.id) });
+    const flagBase = f => ({ hasFlag:!!f, flag:f ? f.label : '', flagBg:f ? f.bg : '', flagFg:f ? f.fg : '' });
     if (scr !== 'targets') items = [];
     else if (ins) {
       const prOf = id => tlist.profiles?.[id];
@@ -7141,19 +7153,17 @@ class Component extends DCLogic {
         // the website's extra column: Kura's advocacy, or Stemline's sentiment tracker once someone on the list is scored
         const advN = pr ? pr.advocacy : adv;
         // Kura's advocacy as the website's cell (TargetTable.tsx:355-385): five pips and n/5, else the latest word, else empty pips
-        const pipC = i => advN && i <= advN ? (advN >= 4 ? '#1C7A4E' : advN === 3 ? '#B7791F' : '#C0392B') : '#E1E6F0';
-        const extra = A.adv ? (advN ? { k:'ADVOCACY', v:'', pips:[1, 2, 3, 4, 5].map(i => ({ c:pipC(i) })), pipV:advN + '/5', tip:((A.advLabels || [])[advN - 1] || 'Advocacy') + ' · ' + advN + '/5 — same value as the congress deck' }
+        const extra = A.adv ? (advN ? { k:'ADVOCACY', v:'', pips:advPips(advN).map(c => ({ c })), pipV:advN + '/5', tip:((A.advLabels || [])[advN - 1] || 'Advocacy') + ' · ' + advN + '/5 — same value as the congress deck' }
             : pr?.advocacyLabel ? { k:'ADVOCACY', v:pr.advocacyLabel, small:true, c:'#0B1220', tip:'Latest advocacy: ' + pr.advocacyLabel }
-            : { k:'ADVOCACY', v:'', pips:[1, 2, 3, 4, 5].map(() => ({ c:'#E1E6F0' })), pipV:'', tip:'Not scored' })
+            : { k:'ADVOCACY', v:'', pips:advPips(0).map(c => ({ c })), pipV:'', tip:'Not scored' })
           : tlist.trackerKey && pr ? (pr.tracker ? { k:'SENTIMENT TRACKER', ktip:'Field-rep scores, shared with the Sphere of Influence profile', v:'', dots:(pr.trackerDots || []).map(b => ({ c: b === 'red' ? '#C0392B' : b === 'yellow' ? '#D9A21B' : b === 'green' ? '#1C7A4E' : '#DADFE8' })),
               s:pr.tracker, sc:'#5B6478' } : { k:'SENTIMENT TRACKER', ktip:'Field-rep scores, shared with the Sphere of Influence profile', v:'—', c:'#7A839A' }) : null;
         // Up to two topics, most discussed first.
         const tops = pr?.topics || [];
         const topicLine = tops.slice(0, 2).map((t, i) => t + (pr.topicN?.[i] ? ' ×' + pr.topicN[i] : '')).join(' · ') + (tops.length > 2 ? ' +' + (tops.length - 2) : '');
         // the first specialty only, as the website writes it, and the notes on them
-        return { name:p.name, photo:p.photo, npi:p.id, prio:pr?.priority ? String(pr.priority) : '', prioTip:pr?.priority ? 'Priority ' + pr.priority : '',
-          sub:[String(p.spec || '').split(',')[0].trim(), place, notes ? notes + (notes === 1 ? ' note' : ' notes') : ''].filter(has).join(' · '), ini:p.ini, avBg:'#E7ECFA', avFg:'#22409F', avR:'50%', ...addSt(inRoute(p.id)),
-          toggle: () => this.toggleRoute(p.id), open: () => this.go('hcp', p.id), hasFlag: !!status, flag: status ? status.label : '', flagBg: status ? status.bg : '', flagFg: status ? status.fg : '',
+        return { ...entityBase(p, true), prio:pr?.priority ? String(pr.priority) : '', prioTip:pr?.priority ? 'Priority ' + pr.priority : '',
+          sub:[String(p.spec || '').split(',')[0].trim(), place, notes ? notes + (notes === 1 ? ' note' : ' notes') : ''].filter(has).join(' · '), ...flagBase(status),
           flagTap: !!pr?.status, flagGo: () => this.openStatus(p.id),
           metrics: extra
             ? [extra, lastCell, meetings]
@@ -7169,9 +7179,7 @@ class Component extends DCLogic {
         const here = row.tone === 'here';
         const activity = { k:WORKSPACE.explore.metric || measure, v:row.value, c:'#0B1220' };
         return [{
-          name:entity.name, photo:entity.photo, npi:hcp ? entity.id : '', sub:row.detail, ini:entity.ini,
-          avBg:hcp ? '#E7ECFA' : '#EEF1F7', avFg:hcp ? '#22409F' : '#3C4557', avR:hcp ? '50%' : '13px', ...addSt(inRoute(entity.id)),
-          open:() => this.go(s.kind, entity.id), toggle:() => this.toggleRoute(entity.id),
+          ...entityBase(entity, hcp), sub:row.detail,
           hasFlag:!!row.tag, flag:row.tag, flagSub:row.tagSub, flagBg:here ? '#E7ECFA' : '#EEF1F7', flagFg:here ? '#22409F' : '#5B6478',
           divider:i === xv.beyondAt ? 'Beyond the top ' + xv.listSize.toLocaleString('en-US') + ' · name matches across ' + xv.where : '',
           hcoCard:hcp ? null : accountCard(activity,[],{ context:[row.tag,row.tagSub].filter(has).join(' · ') }),
@@ -7189,7 +7197,7 @@ class Component extends DCLogic {
       // patients, share of the list, change and 340B for a drug book
       const leakCols = !WORKSPACE.drugAccount && WORKSPACE.view !== 'hema_sales';
       makeCard = h => {
-        const inR = inRoute(h.id), yoyN = h.listYoyN == null ? h.yoyN : h.listYoyN;
+        const yoyN = h.listYoyN == null ? h.yoyN : h.listYoyN;
         const volume = { k:WORKSPACE.metric || 'PROCEDURES', v:h.listProc || h.proc, c:'#0B1220' }, yoy = { k:'YOY', v:h.listYoy || h.yoy, c:yoyN < 0 ? '#A94D1B' : '#1C7A4E' };
         const opportunity = !WORKSPACE.companyId || WORKSPACE.explore?.opportunity ? { k:'OPPORTUNITY', v:h.opp, c:'#22409F' } : null;
         const left = h.leftN, measured = Number.isFinite(left) && left >= 0 && left <= 100;
@@ -7202,9 +7210,8 @@ class Component extends DCLogic {
           : [...(lead === opportunity ? [volume] : []), ...(leakCols ? [{ k:'SHARE', v:h.share, c:'#0B1220' }] : []), yoy];
         const charges = leakCols && has(h.leak) ? h.leak + ' leaking' + (h.leakFrom ? ' since ' + h.leakFrom : '') : '';
         const hcoCard = accountCard(lead,stats,{ split,charges,showMetrics:true,context:AREA.here && has(h.dist) ? h.dist + ' away' : '' });
-        return { name:h.name, photo:h.photo, sub:[h.city,h.type].filter(has).join(' · '), ini:h.ini, avBg:'#EEF1F7', avFg:'#3C4557', avR:'13px', ...addSt(inR),
-          toggle: () => h.hcps.length ? this.sheet('choose', h.id) : this.toggleRoute(h.id),
-          open: () => this.go('hco', h.id), hasFlag:false, flag:'', flagBg:'#FDEDE4', flagFg:'#A94D1B', hcoCard, metrics:[] };
+        return { ...entityBase(h, false), sub:[h.city,h.type].filter(has).join(' · '),
+          toggle: () => h.hcps.length ? this.sheet('choose', h.id) : this.toggleRoute(h.id), hasFlag:false, flag:'', flagBg:'#FDEDE4', flagFg:'#A94D1B', hcoCard, metrics:[] };
       };
     } else {
       items = Object.values(HCPS).filter(p => s.scope === 'explore' || p.mine).filter(mineOk).filter(p => matches(p.name,p.id,p.spec,HCOS[p.hco]?.name)).filter(specOk);
@@ -7217,8 +7224,7 @@ class Component extends DCLogic {
         : sortKey === 'Year on year' ? trend(a)[0] - trend(b)[0] || trend(a)[1] - trend(b)[1] || byCount(a, b) : byCount(a, b));
       makeCard = p => {
         const f = this.flagOf(p.id);
-        return { name:p.name, photo:p.photo, npi:p.id, sub:[p.spec,HCOS[p.hco]?.name].filter(has).join(' · '), ini:p.ini, avBg:'#E7ECFA', avFg:'#22409F', avR:'50%', ...addSt(inRoute(p.id)),
-          toggle: () => this.toggleRoute(p.id), open: () => this.go('hcp', p.id), hasFlag: !!f, flag: f ? f.label : '', flagBg: f ? f.bg : '', flagFg: f ? f.fg : '',
+        return { ...entityBase(p, true), sub:[p.spec,HCOS[p.hco]?.name].filter(has).join(' · '), ...flagBase(f),
           metrics:[{ k:measure, v:or(p.claims), c:'#0B1220' }, { k:'YOY', v:or(p.yoy), c:!has(p.yoy) ? '#5B6478' : p.yoyN < 0 ? '#A94D1B' : '#1C7A4E' },
             { k:measure + ' ' + (bookY - 1), v:p.priorN == null ? '—' : p.priorN.toLocaleString('en-US'), c:'#5B6478' },
             ...(SH.lightest ? [{ k:'LIGHTEST DAY', v:or(p.day), tip:has(p.day) ? p.dayL || p.day : 'No weekday data yet', c:has(p.day) ? '#22409F' : '#5B6478' }] : [])] };
@@ -7511,7 +7517,7 @@ class Component extends DCLogic {
     const pTStats = pTarget ? [
       { k:'LAST MEETING', v:pTarget.lastMeeting || '', v2:'', s:pTarget.lastMeeting ? (pTarget.lastAt ? agoAt(pTarget.lastAt) : agoOf(pTarget.lastMeeting)) : 'No meetings yet' },
       { k:'MEETINGS', v:String(pTarget.meetings12), v2:' / ' + pTarget.meetings, s:'12mo / all time' },
-      ...(A.adv ? [{ k:'ADVOCACY', v:'', pipsOn:true, pips:[1, 2, 3, 4, 5].map(i => ({ bg: pTarget.advocacy && i <= pTarget.advocacy ? (pTarget.advocacy >= 4 ? '#1C7A4E' : pTarget.advocacy === 3 ? '#B7791F' : '#C0392B') : '#E1E6F0' })),
+      ...(A.adv ? [{ k:'ADVOCACY', v:'', pipsOn:true, pips:advPips(pTarget.advocacy).map(bg => ({ bg })),
         s:pTarget.advocacy ? ((A.advLabels || [])[pTarget.advocacy - 1] || '') + ' · ' + pTarget.advocacy + '/5' : 'Not scored',
         tip:pTarget.advocacy ? 'Advocacy ' + pTarget.advocacy + '/5 — same value as the congress deck' : 'Not scored' }] : []),
     ].map(x => statTile({ tip:x.k, ...x })) : [];
@@ -7659,11 +7665,11 @@ class Component extends DCLogic {
 
       // hco
       // Field Pro's target pill and its status line, as the website's TargetMembershipStatus
-      h:hProfile, hTag: H.mine ? [ins ? 'Target' : '✓ Target account', territoryName].filter(Boolean).join(' · ') : ins ? 'Not yet a target' : WORKSPACE.hcoTargetsState === 'loading' ? 'Checking your targets…' : WORKSPACE.hcoTargetsState === 'failed' ? 'Target status unavailable' : (WORKSPACE.hcoExcluded || []).includes(H.id) ? 'Removed from your targets' : 'Not in your targets', hTagBg: H.mine ? '#E7ECFA' : '#EEF1F7', hTagFg: H.mine ? '#22409F' : '#3C4557',
+      h:hProfile, hTag: H.mine ? ['✓ Target account', territoryName].filter(Boolean).join(' · ') : WORKSPACE.hcoTargetsState === 'loading' ? 'Checking your targets…' : WORKSPACE.hcoTargetsState === 'failed' ? 'Target status unavailable' : (WORKSPACE.hcoExcluded || []).includes(H.id) ? 'Removed from your targets' : 'Not in your targets', hTagBg: H.mine ? '#E7ECFA' : '#EEF1F7', hTagFg: H.mine ? '#22409F' : '#3C4557',
       hIdentity:[H.type,H.city].filter(has).join(' · '),
       hcoReport: () => this.leakReport(H.id),
       hCanReport,hShowLeak:!WORKSPACE.drugAccount && WORKSPACE.view !== 'hema_sales' && has(hProfile.left),
-      hShowLeakCard:!WORKSPACE.drugAccount && WORKSPACE.view !== 'hema_sales' && !ins && (has(hProfile.left) || !!H.profileLeakState || hLeakWait),
+      hShowLeakCard:!WORKSPACE.drugAccount && WORKSPACE.view !== 'hema_sales' && (has(hProfile.left) || !!H.profileLeakState || hLeakWait),
       hDestSub:H.profileLeakState === 'ready' ? 'top destinations of the ' + hDestUnit + 's that left ' + (H.profileLeakSince ? 'since ' + H.profileLeakSince : 'over all years on file') : 'top destinations of the cases that left',
       hDestWhy:hLeakWait ? 'Measuring leakage — the first time for an account can take a few minutes.' : H.profileLeakState === 'failed' ? H.profileLeakNote || 'Leakage couldn’t be loaded' : H.profileLeakState === 'nolinks' ? H.profileLeakNote : H.profileLeakState === 'none' ? 'No leakage figures for this account in this year' : H.profileLeakState === 'ready' && !hDestAll.length ? H.profileLeakNote || '' : '',
       hDestOn:hDestOnNow, hDestUnit:hDestUnit === 'case' ? 'CASES' : 'PROCEDURES',
@@ -7682,8 +7688,8 @@ class Component extends DCLogic {
       hcoActions: [
         // the website's report button: Generate leakage report, then Generating…, then Open report once it is written
         ...(hCanReport ? [hRep ? act('▤', hRep.busy ? 'Generating…' : 'Open report', () => this.sheet('report', hRep.busy ? 'job' : String(hRep.id))) : act('▤', 'Generate leakage report', () => this.leakReport(H.id), false, (s.reports || []).some(x => x.busy) ? 'One report at a time — another is generating' : undefined)] : []),
-        ...(!ins && !H.mine ? [s.hcoAdding === H.id ? act('…', 'Adding…', () => {}) : act('＋', s.hcoAddFailed === H.id ? 'Couldn’t add · Try again' : 'Add to target accounts', () => this.addAccount(H.id), false, 'Add to target accounts')] : []),
-        ins ? act('✎', W.one, () => this.openInsight([], 'notes', H.id)) : act('＋', 'Log a visit', () => this.openInsight([], 'notes', H.id)),
+        ...(!H.mine ? [s.hcoAdding === H.id ? act('…', 'Adding…', () => {}) : act('＋', s.hcoAddFailed === H.id ? 'Couldn’t add · Try again' : 'Add to target accounts', () => this.addAccount(H.id), false, 'Add to target accounts')] : []),
+        act('＋', 'Log a visit', () => this.openInsight([], 'notes', H.id)),
         !onEarth(H) ? act('◎', 'View on a map', () => this.toast('This account has no saved location'), false, 'This account has no saved location') : act('◎', 'View on a map', () => this.setTab('map', { omMode:'near', omStart:H.name, omAnchor:{ name:H.name,lat:H.lat,lng:H.lng }, omSel:H.id })),
         act(hIn ? '✓' : '+', hIn ? 'In route' : 'Add', () => H.hcps.length ? this.sheet('choose', H.id) : this.toggleRoute(H.id), hIn),
         act('✳', 'Ask', () => this.ask('Brief me on ' + H.name))
