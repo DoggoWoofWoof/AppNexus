@@ -155,6 +155,7 @@ input,textarea,button{font-family:inherit}
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#5B6478" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg>
               </button>
               <sc-if value="{{ addInsightHcpOn }}" hint-placeholder-val="{{ false }}"><button onClick="{{ openPeople }}" aria-label="Add HCP" style="flex:0 0 auto;min-height:40px;padding:7px 10px;border:1px solid #C9D5F6;border-radius:10px;background:#E7ECFA;color:#22409F;font-size:12.5px;font-weight:700;cursor:pointer;">＋ Add HCP</button></sc-if>
+              <sc-if value="{{ smartAutoOn }}" hint-placeholder-val="{{ false }}"><button disabled="true" title="Smart lists update automatically from your rules" style="flex:0 0 auto;min-height:40px;display:flex;align-items:center;padding:7px 10px;border:1px solid #D7DEEC;border-radius:10px;background:#EEF1F7;"><span style="font-size:12.5px;font-weight:600;color:#7A839A;">Auto-updating</span></button></sc-if>
             </div>
             <sc-if value="{{ targetFiltersOn }}" hint-placeholder-val="{{ true }}">
             <div aria-label="Target list filters" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
@@ -177,7 +178,7 @@ input,textarea,button{font-family:inherit}
                     </div>
                   </sc-for>
                 </div>
-                <sc-if value="{{ fpMeasured }}" hint-placeholder-val="{{ true }}"><div style="padding:0 2px 1px;font-size:11px;line-height:1.3;color:#5B6478;">{{ fpMeasured }}</div></sc-if>
+                <sc-if value="{{ fpMeasured }}" hint-placeholder-val="{{ true }}"><div style="padding:0 2px 1px;font-size:11px;line-height:1.3;color:#5B6478;"><span style="font-weight:650;">Measured on</span> {{ fpMeasured }}</div></sc-if>
               </div>
             </sc-if>
             <sc-if value="{{ chOn }}" hint-placeholder-val="{{ false }}">
@@ -909,6 +910,7 @@ input,textarea,button{font-family:inherit}
             <sc-if value="{{ askEmpty }}" hint-placeholder-val="{{ true }}">
               <div style="display:flex;flex-direction:column;gap:12px;">
                 <div style="display:flex;flex-direction:column;gap:8px;">
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.09em;color:#7A839A;">ASK</span>
                   <sc-for list="{{ askSuggest }}" as="sq" hint-placeholder-count="4">
                     <button onClick="{{ sq.go }}" style="display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:1px solid #DCE3F2;background:#fff;border-radius:14px;padding:13px 14px;cursor:pointer;font-size:14px;color:#0B1220;" style-hover="border-color:#2447C4;"><span style="color:#2447C4;font-weight:800;">✳</span><span style="flex:1;">{{ sq.q }}</span><span style="color:#C3CAD8;">›</span></button>
                   </sc-for>
@@ -1009,7 +1011,7 @@ input,textarea,button{font-family:inherit}
                     <sc-if value="{{ omScaleOn }}" hint-placeholder-val="{{ true }}"><span>{{ omLegendLo }}</span>
                     <span style="display:flex;gap:2px;"><span style="width:18px;height:6px;border-radius:2px;background:#BFE6DC;"></span><span style="width:18px;height:6px;border-radius:2px;background:#7FCBBE;"></span><span style="width:18px;height:6px;border-radius:2px;background:#3F74D6;"></span><span style="width:18px;height:6px;border-radius:2px;background:#22409F;"></span></span>
                     <span>{{ omLegendHi }}</span></sc-if><span>{{ omLegendNote }}</span>
-                    <button onClick="{{ omExport }}" style="margin-left:auto;border:0;background:none;color:#2447C4;font-size:11.5px;font-weight:650;cursor:pointer;padding:0;">↓ Export</button>
+                    <sc-if value="{{ omExportOn }}" hint-placeholder-val="{{ true }}"><button onClick="{{ omExport }}" style="margin-left:auto;border:0;background:none;color:#2447C4;font-size:11.5px;font-weight:650;cursor:pointer;padding:0;">↓ Export</button></sc-if>
                   </div>
                 </div>
                 <div style="display:flex;padding:3px;border-radius:10px;background:#E6EAF2;">
@@ -1338,6 +1340,71 @@ input,textarea,button{font-family:inherit}
                     <div style="display:flex;gap:6px;overflow-x:auto;margin:0 -18px;padding:0 18px;">
                       <sc-for list="{{ smyDetTabs }}" as="o" hint-placeholder-count="4"><button onClick="{{ o.go }}" style="flex:0 0 auto;padding:7px 12px;border-radius:999px;border:1px solid {{ o.bd }};background:{{ o.bg }};color:{{ o.fg }};font-size:12.5px;font-weight:650;cursor:pointer;white-space:nowrap;">{{ o.label }}</button></sc-for>
                     </div>
+                    <sc-for list="{{ smyGen }}" as="g" hint-placeholder-count="1">
+                      <div style="background:#fff;border:1px solid #E1E6F0;border-radius:16px;overflow:hidden;">
+                        <sc-if value="{{ g.hasHead }}" hint-placeholder-val="{{ true }}"><div style="padding:12px 14px;border-bottom:1px solid #E1E6F0;font-family:'Source Serif 4',Georgia,serif;font-size:18px;color:#0B1220;">{{ g.head }}</div></sc-if>
+                        <div style="padding:13px 14px;display:flex;flex-direction:column;gap:12px;">
+                          <sc-if value="{{ g.hasText }}" hint-placeholder-val="{{ true }}"><span style="font-size:14.5px;line-height:1.55;color:#0B1220;">{{ g.text }}</span></sc-if>
+                          <sc-if value="{{ g.hasMoods }}" hint-placeholder-val="{{ false }}">
+                            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+                              <sc-for list="{{ g.moods }}" as="m" hint-placeholder-count="3">
+                                <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+                                  <span style="width:58px;height:58px;border-radius:50%;background:{{ m.bg }};color:{{ m.fg }};display:grid;place-items:center;font-size:18px;font-weight:700;">{{ m.pct }}</span>
+                                  <span style="font-size:13px;font-weight:650;color:{{ m.fg }};">{{ m.label }}</span>
+                                </div>
+                              </sc-for>
+                            </div>
+                          </sc-if>
+                          <sc-if value="{{ g.hasGroups }}" hint-placeholder-val="{{ false }}">
+                            <sc-for list="{{ g.groups }}" as="e" hint-placeholder-count="3">
+                              <div style="padding:11px 12px;border-radius:12px;background:{{ e.bg }};border:1px solid {{ e.bd }};display:flex;flex-direction:column;gap:7px;">
+                                <span style="font-size:14px;font-weight:700;color:{{ e.fg }};">{{ e.title }}</span>
+                                <sc-for list="{{ e.items }}" as="i" hint-placeholder-count="3"><span style="display:flex;gap:8px;font-size:13px;line-height:1.45;color:{{ e.fg }};"><span>•</span><span style="flex:1;min-width:0;">{{ i.t }}</span></span></sc-for>
+                              </div>
+                            </sc-for>
+                          </sc-if>
+                          <sc-if value="{{ g.hasChips }}" hint-placeholder-val="{{ false }}">
+                            <div style="display:flex;flex-direction:column;gap:8px;">
+                              <span style="font-size:14px;font-weight:700;color:#0B1220;">{{ g.chipsHead }}</span>
+                              <div style="display:flex;flex-wrap:wrap;gap:6px;"><sc-for list="{{ g.chips }}" as="k" hint-placeholder-count="3"><span style="padding:5px 11px;border-radius:999px;background:#EEF1F7;color:#0B1220;font-size:12px;font-weight:600;">{{ k.t }}</span></sc-for></div>
+                            </div>
+                          </sc-if>
+                          <sc-if value="{{ g.hasSub }}" hint-placeholder-val="{{ false }}"><span style="font-size:16px;font-weight:700;color:#0B1220;">{{ g.sub }}</span></sc-if>
+                          <sc-for list="{{ g.cards }}" as="c" hint-placeholder-count="2">
+                            <div style="background:#F7F9FC;border:1px solid #E1E6F0;border-left:4px solid {{ c.edge }};border-radius:12px;padding:11px 12px;display:flex;flex-direction:column;gap:9px;">
+                              <div style="display:flex;gap:9px;align-items:flex-start;">
+                                <sc-if value="{{ c.hasNum }}" hint-placeholder-val="{{ false }}"><span style="flex:0 0 22px;width:22px;height:22px;border-radius:7px;background:#fff;color:{{ c.edge }};display:grid;place-items:center;font-size:12px;font-weight:700;">{{ c.num }}</span></sc-if>
+                                <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;">
+                                  <sc-if value="{{ c.hasTitle }}" hint-placeholder-val="{{ false }}"><span style="font-family:'Source Serif 4',Georgia,serif;font-size:17px;color:#0B1220;">{{ c.title }}</span></sc-if>
+                                  <sc-if value="{{ c.hasSub }}" hint-placeholder-val="{{ false }}"><span style="font-size:12.5px;color:#5B6478;">{{ c.sub }}</span></sc-if>
+                                  <sc-if value="{{ c.hasText }}" hint-placeholder-val="{{ true }}"><span style="font-size:14px;line-height:1.5;color:#0B1220;">{{ c.text }}</span></sc-if>
+                                </span>
+                              </div>
+                              <sc-for list="{{ c.rows }}" as="r" hint-placeholder-count="2">
+                                <sc-if value="{{ r.isLabel }}" hint-placeholder-val="{{ false }}"><span style="font-size:13px;font-weight:650;color:#0B1220;">{{ r.text }}</span></sc-if>
+                                <sc-if value="{{ r.isBullet }}" hint-placeholder-val="{{ true }}"><div style="display:flex;gap:8px;align-items:flex-start;"><span style="flex:0 0 6px;width:6px;height:6px;border-radius:50%;background:#2447C4;margin-top:7px;"></span><span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;"><span style="font-size:13.5px;line-height:1.45;color:#0B1220;">{{ r.text }}</span><sc-if value="{{ r.hasMeta }}" hint-placeholder-val="{{ false }}"><span style="font-size:11.5px;color:#7A839A;">{{ r.meta }}</span></sc-if></span></div></sc-if>
+                              </sc-for>
+                              <sc-if value="{{ c.hasDeep }}" hint-placeholder-val="{{ false }}">
+                                <div style="border-top:1px solid #E1E6F0;padding-top:9px;display:flex;flex-direction:column;gap:8px;">
+                                  <div style="display:flex;align-items:center;gap:8px;">
+                                    <span style="flex:1;min-width:0;font-size:15px;font-weight:700;color:#0B1220;">{{ c.deepHead }}</span>
+                                    <button onClick="{{ c.deepGo }}" style="flex:0 0 auto;padding:4px 2px;border:0;background:none;color:#2447C4;font-size:13px;font-weight:650;cursor:pointer;">{{ c.deepLabel }}</button>
+                                  </div>
+                                  <sc-for list="{{ c.deepRows }}" as="r" hint-placeholder-count="2">
+                                    <sc-if value="{{ r.isTitle }}" hint-placeholder-val="{{ false }}"><span style="font-size:14.5px;font-weight:700;color:#0B1220;">{{ r.text }}</span></sc-if>
+                                    <sc-if value="{{ r.isLabel }}" hint-placeholder-val="{{ false }}"><span style="font-size:13px;font-weight:650;color:#0B1220;">{{ r.text }}</span></sc-if>
+                                    <sc-if value="{{ r.isPara }}" hint-placeholder-val="{{ false }}"><span style="font-size:13px;line-height:1.5;color:#5B6478;">{{ r.text }}</span></sc-if>
+                                    <sc-if value="{{ r.isNote }}" hint-placeholder-val="{{ false }}"><span style="padding:9px 11px;border-radius:10px;background:#fff;border:1px solid #E1E6F0;font-size:13px;line-height:1.45;color:#5B6478;">{{ r.text }}</span></sc-if>
+                                    <sc-if value="{{ r.isBullet }}" hint-placeholder-val="{{ true }}"><div style="display:flex;gap:8px;align-items:flex-start;"><span style="flex:0 0 6px;width:6px;height:6px;border-radius:50%;background:#2447C4;margin-top:7px;"></span><span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;"><span style="font-size:13.5px;line-height:1.45;color:#0B1220;">{{ r.text }}</span><sc-if value="{{ r.hasMeta }}" hint-placeholder-val="{{ false }}"><span style="font-size:11.5px;color:#7A839A;">{{ r.meta }}</span></sc-if></span></div></sc-if>
+                                  </sc-for>
+                                </div>
+                              </sc-if>
+                            </div>
+                          </sc-for>
+                          <sc-if value="{{ g.hasEmpty }}" hint-placeholder-val="{{ false }}"><span style="padding:8px 0;text-align:center;font-size:13px;color:#5B6478;">{{ g.empty }}</span></sc-if>
+                        </div>
+                      </div>
+                    </sc-for>
                     <sc-if value="{{ smyAnalyticsSearch }}" hint-placeholder-val="{{ false }}">
                       <input value="{{ smyAnalyticsQ }}" onChange="{{ onSmyAnalyticsQ }}" placeholder="Search insights, HCPs or institutions" aria-label="Search Kura insights" style="padding:10px 12px;border:1px solid #D7DEEC;border-radius:11px;font-size:14px;background:#fff;color:#0B1220;outline:0;">
                     </sc-if>
@@ -1495,7 +1562,7 @@ input,textarea,button{font-family:inherit}
                 </sc-if>
                 <sc-for list="{{ pkRows }}" as="t" hint-placeholder-count="3">
                   <sc-if value="{{ t.isNew }}" hint-placeholder-val="{{ false }}">
-                    <button onClick="{{ t.go }}" title="{{ t.hint }}" style="padding:12px;border:1px dashed #B9C3D8;border-radius:12px;background:#EDF1FB;color:#22409F;font-size:13.5px;font-weight:700;cursor:pointer;opacity:{{ t.op }};">{{ t.name }}</button>
+                    <button onClick="{{ t.go }}" title="{{ t.hint }}" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:12px;border:1px dashed #B9C3D8;border-radius:12px;background:#EDF1FB;color:#22409F;font-size:13.5px;font-weight:700;cursor:pointer;opacity:{{ t.op }};"><span>{{ t.name }}</span><sc-if value="{{ t.hasSub }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;font-weight:500;color:#5B6478;">{{ t.sub }}</span></sc-if></button>
                   </sc-if>
                   <sc-if value="{{ t.isList }}" hint-placeholder-val="{{ true }}">
                     <div style="border:1.5px solid {{ t.bd }};border-radius:14px;background:{{ t.bg }};overflow:hidden;opacity:{{ t.op }};">
@@ -1509,14 +1576,15 @@ input,textarea,button{font-family:inherit}
                           </span>
                           <span style="color:#2447C4;font-weight:700;">{{ t.check }}</span>
                         </button>
-                        <sc-if value="{{ t.hasMenu }}" hint-placeholder-val="{{ false }}"><button onClick="{{ t.menu }}" aria-label="{{ t.menuAria }}" aria-expanded="{{ t.menuOpen }}" style="flex:0 0 auto;width:40px;height:40px;margin:5px 6px 0 -6px;border:0;border-radius:10px;background:{{ t.menuBg }};color:#5B6478;font-size:18px;font-weight:700;cursor:pointer;">⋯</button></sc-if>
+                        <sc-if value="{{ t.hasMenu }}" hint-placeholder-val="{{ false }}"><button onClick="{{ t.menu }}" aria-label="{{ t.menuAria }}" title="{{ t.menuHint }}" aria-expanded="{{ t.menuOpen }}" style="flex:0 0 auto;width:40px;height:40px;margin:5px 6px 0 -6px;border:0;border-radius:10px;background:{{ t.menuBg }};color:#5B6478;font-size:18px;font-weight:700;cursor:pointer;">⋯</button></sc-if>
                       </div>
                       <sc-if value="{{ t.menuOpen }}" hint-placeholder-val="{{ false }}">
                         <div style="display:flex;flex-direction:column;padding:0 12px 8px;">
                           <sc-for list="{{ t.details }}" as="d" hint-placeholder-count="2">
                             <div style="display:flex;flex-wrap:wrap;gap:2px 8px;padding:5px 6px;font-size:12px;line-height:1.4;color:#5B6478;"><span style="font-weight:650;color:#3C4557;">{{ d.label }}</span><span>{{ d.value }}</span></div>
                           </sc-for>
-                          <sc-for list="{{ t.menuItems }}" as="m" hint-placeholder-count="3"><button onClick="{{ m.go }}" disabled="{{ m.disabled }}" style="padding:11px 6px;border:0;border-top:1px solid #EEF1F7;background:none;color:{{ m.fg }};font-size:13.5px;font-weight:600;text-align:left;cursor:pointer;">{{ m.label }}</button></sc-for>
+                          <sc-for list="{{ t.menuItems }}" as="m" hint-placeholder-count="3"><button onClick="{{ m.go }}" disabled="{{ m.disabled }}" title="{{ m.hint }}" style="padding:11px 6px;border:0;border-top:1px solid #EEF1F7;background:none;color:{{ m.fg }};font-size:13.5px;font-weight:600;text-align:left;cursor:pointer;">{{ m.label }}</button></sc-for>
+                          <sc-if value="{{ t.hasMenuNote }}" hint-placeholder-val="{{ false }}"><span style="padding:11px 6px;border-top:1px solid #EEF1F7;font-size:12px;font-style:italic;color:#7A839A;">Shared with you</span></sc-if>
                         </div>
                       </sc-if>
                       <sc-if value="{{ t.asking }}" hint-placeholder-val="{{ false }}">
@@ -2082,6 +2150,16 @@ input,textarea,button{font-family:inherit}
                     </sc-if>
                     <div>
                       <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.09em;color:#7A839A;">{{ insWhoLabel }}</div>
+                      <sc-if value="{{ insChoiceOn }}" hint-placeholder-val="{{ false }}">
+                        <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px;">
+                          <div aria-label="HCP attribution" style="display:flex;padding:3px;border-radius:12px;background:#E6EAF2;">
+                            <sc-for list="{{ insChoice }}" as="o" hint-placeholder-count="2"><button onClick="{{ o.go }}" style="flex:1;padding:9px;border:0;border-radius:10px;background:{{ o.bg }};color:{{ o.fg }};box-shadow:{{ o.sh }};font-size:13px;font-weight:650;cursor:pointer;">{{ o.label }}</button></sc-for>
+                          </div>
+                          <sc-if value="{{ insNoHcp }}" hint-placeholder-val="{{ false }}"><div style="font-size:12px;color:#5B6478;">This insight will not be attributed to an HCP.</div></sc-if>
+                          <sc-if value="{{ insGenGone }}" hint-placeholder-val="{{ false }}"><div style="font-size:12.5px;line-height:1.45;color:#8A6A1F;">Without HCP is currently unavailable. Your draft is kept; you can edit it and submit when it is available.</div></sc-if>
+                        </div>
+                      </sc-if>
+                      <sc-if value="{{ insWithHcp }}" hint-placeholder-val="{{ true }}">
                       <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
                         <sc-for list="{{ insAttendees }}" as="a" hint-placeholder-count="1">
                           <div style="border:1px solid #E1E6F0;border-radius:14px;padding:11px 12px;">
@@ -2113,6 +2191,39 @@ input,textarea,button{font-family:inherit}
                         </sc-if>
                         <sc-if value="{{ insHasWho }}" hint-placeholder-val="{{ true }}"><button onClick="{{ insAddHcp }}" style="align-self:flex-start;border:0;background:none;padding:2px;color:#2447C4;font-size:13px;font-weight:650;cursor:pointer;">{{ insAddLabel }}</button></sc-if>
                       </div>
+                      </sc-if>
+                      <sc-if value="{{ insGenOn }}" hint-placeholder-val="{{ false }}">
+                      <div aria-label="General insights" style="display:flex;flex-direction:column;gap:10px;margin-top:10px;">
+                        <sc-for list="{{ insGenRows }}" as="g" hint-placeholder-count="1">
+                          <div style="border:1px solid #E1E6F0;border-radius:14px;padding:11px 12px;display:flex;flex-direction:column;gap:8px;background:#fff;">
+                            <div style="display:flex;align-items:center;gap:10px;">
+                              <span style="flex:1;font-size:12.5px;font-weight:650;color:#0B1220;">{{ g.label }}</span>
+                              <sc-if value="{{ g.canRemove }}" hint-placeholder-val="{{ false }}"><button onClick="{{ g.remove }}" aria-label="{{ g.removeLabel }}" style="border:0;background:none;padding:2px;color:#5B6478;font-size:12.5px;font-weight:650;cursor:pointer;">Remove</button></sc-if>
+                            </div>
+                            <textarea value="{{ g.text }}" onChange="{{ g.change }}" placeholder="Enter an insight without attributing it to an HCP..." aria-label="{{ g.ariaLabel }}" style="width:100%;box-sizing:border-box;min-height:84px;border:1px solid #D7DEEC;border-radius:14px;padding:12px 13px;font-size:14.5px;line-height:1.5;background:#F7F9FC;outline:0;resize:none;color:#0B1220;"></textarea>
+                            <sc-if value="{{ g.showTypes }}" hint-placeholder-val="{{ false }}"><div style="display:flex;gap:6px;"><sc-for list="{{ g.types }}" as="o" hint-placeholder-count="2"><button onClick="{{ o.go }}" style="padding:7px 11px;border-radius:999px;border:1px solid {{ o.bd }};background:{{ o.bg }};color:{{ o.fg }};font-size:12.5px;font-weight:600;cursor:pointer;">{{ o.label }}</button></sc-for></div></sc-if>
+                            <sc-if value="{{ g.showTopics }}" hint-placeholder-val="{{ false }}">
+                              <div style="display:flex;flex-direction:column;gap:8px;">
+                                <div style="display:flex;flex-wrap:wrap;gap:6px;"><sc-for list="{{ g.cats }}" as="o" hint-placeholder-count="5"><button onClick="{{ o.go }}" style="padding:7px 11px;border-radius:999px;border:1px solid {{ o.bd }};background:{{ o.bg }};color:{{ o.fg }};font-size:12.5px;font-weight:600;cursor:pointer;">{{ o.label }}</button></sc-for></div>
+                                <div style="display:flex;flex-wrap:wrap;gap:6px;padding-left:10px;border-left:2px solid #E1E6F0;"><sc-for list="{{ g.subRows }}" as="o" hint-placeholder-count="3"><sc-if value="{{ o.isHead }}" hint-placeholder-val="{{ false }}"><span style="width:100%;font-size:12px;color:#5B6478;">{{ o.label }}</span></sc-if><sc-if value="{{ o.isSub }}" hint-placeholder-val="{{ true }}"><button onClick="{{ o.go }}" style="padding:5px 9px;border-radius:999px;border:1px solid {{ o.bd }};background:{{ o.bg }};color:{{ o.fg }};font-size:12px;font-weight:600;cursor:pointer;">{{ o.label }}</button></sc-if></sc-for></div>
+                              </div>
+                            </sc-if>
+                            <sc-if value="{{ g.showExact }}" hint-placeholder-val="{{ false }}"><button onClick="{{ g.toggleExact }}" style="align-self:flex-start;display:flex;align-items:center;gap:7px;border:0;background:none;padding:2px;font-size:12.5px;color:#0B1220;cursor:pointer;"><span style="width:16px;height:16px;border-radius:4px;border:1px solid {{ g.exactBd }};background:{{ g.exactBg }};color:#fff;display:grid;place-items:center;font-size:11px;font-weight:700;">{{ g.exactMark }}</span>Keep Exact</button></sc-if>
+                            <sc-if value="{{ g.polishOn }}" hint-placeholder-val="{{ false }}"><button onClick="{{ g.polish }}" disabled="{{ g.polishOff }}" style="align-self:flex-start;padding:7px 12px;border-radius:999px;border:1px solid #D7DEEC;background:#fff;color:#22409F;font-size:12.5px;font-weight:650;cursor:pointer;">{{ g.polishLabel }}</button></sc-if>
+                            <sc-if value="{{ g.revertOn }}" hint-placeholder-val="{{ false }}"><button onClick="{{ g.revert }}" style="align-self:flex-start;padding:7px 12px;border-radius:999px;border:1px solid #D7DEEC;background:#fff;color:#22409F;font-size:12.5px;font-weight:650;cursor:pointer;">Revert to Original</button></sc-if>
+                          </div>
+                        </sc-for>
+                        <sc-if value="{{ insGenCanAdd }}" hint-placeholder-val="{{ true }}"><button onClick="{{ insGenAdd }}" style="align-self:flex-start;border:0;background:none;padding:2px;color:#2447C4;font-size:13px;font-weight:650;cursor:pointer;">Add another insight</button></sc-if>
+                        <sc-if value="{{ insGenErr }}" hint-placeholder-val="{{ false }}"><div style="font-size:13px;line-height:1.45;color:#B42318;">{{ insGenErr }}</div></sc-if>
+                        <sc-if value="{{ insGenPrevOn }}" hint-placeholder-val="{{ false }}">
+                          <div aria-label="Insight revision" style="border:1px solid #C9D4F2;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px;background:#EEF3FF;">
+                            <div style="font-size:12.5px;font-weight:650;color:#0B1220;">AI generated revision</div>
+                            <div style="font-size:13.5px;line-height:1.5;white-space:pre-line;color:#0B1220;">{{ insGenPrevText }}</div>
+                            <div style="display:flex;gap:8px;"><button onClick="{{ insGenKeep }}" style="flex:1;padding:10px;border:1px solid #D7DEEC;border-radius:12px;background:#fff;font-size:13px;font-weight:650;cursor:pointer;">Keep Original</button><button onClick="{{ insGenUse }}" style="flex:1;padding:10px;border:0;border-radius:12px;background:#2447C4;color:#fff;font-size:13px;font-weight:700;cursor:pointer;">Use AI Version</button></div>
+                          </div>
+                        </sc-if>
+                      </div>
+                      </sc-if>
                     </div>
                     <sc-if value="{{ insHasSource }}" hint-placeholder-val="{{ false }}"><div style="font-size:12.5px;font-weight:650;color:#1C7A4E;">✓ {{ insSourceLabel }}</div></sc-if>
                     <sc-if value="{{ insBusy }}" hint-placeholder-val="{{ false }}"><div style="font-size:12.5px;font-weight:650;color:#7A839A;">Transcribing… the text fills in when it’s ready</div></sc-if>
@@ -2281,6 +2392,7 @@ input,textarea,button{font-family:inherit}
                         <button onClick="{{ repOpen }}" style="flex:1.3;padding:12px;border:0;border-radius:12px;background:#2447C4;color:#fff;font-size:13.5px;font-weight:700;cursor:pointer;">↗ Open</button>
                       </div>
                     </sc-if>
+                    <sc-if value="{{ repLocked }}" hint-placeholder-val="{{ false }}"><div style="padding:12px;border-radius:12px;background:#EEF1F7;color:#5B6478;font-size:13.5px;font-weight:650;text-align:center;">Exports are turned off in this demo environment.</div></sc-if>
                     <sc-if value="{{ repNoUrl }}" hint-placeholder-val="{{ false }}"><div style="padding:12px;border-radius:12px;background:#EEF1F7;color:#7A839A;font-size:13.5px;font-weight:650;text-align:center;">Link expired — reopen Reports</div></sc-if>
                   </div>
                 </sc-if>
@@ -2360,7 +2472,8 @@ input,textarea,button{font-family:inherit}
                 </sc-if>
                 <div style="background:#fff;border:1px solid #E1E6F0;border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;">
                   <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.09em;color:#7A839A;">{{ vd.ixHcpHead }}</div>
-                  <sc-if value="{{ vd.ixViewing }}" hint-placeholder-val="{{ true }}">
+                  <sc-if value="{{ vd.ixNoHcp }}" hint-placeholder-val="{{ false }}"><span style="font-size:14px;font-weight:650;color:#0B1220;">No HCP attributed</span></sc-if>
+                  <sc-if value="{{ vd.ixPeopleView }}" hint-placeholder-val="{{ true }}">
                   <sc-for list="{{ vd.ixPeople }}" as="r" hint-placeholder-count="1">
                     <button onClick="{{ r.open }}" style="display:flex;flex-direction:column;gap:2px;padding:6px 0;border:0;background:transparent;text-align:left;cursor:pointer;">
                       <span style="font-size:15px;font-weight:650;color:#22409F;">{{ r.name }}</span>
@@ -2372,7 +2485,7 @@ input,textarea,button{font-family:inherit}
                   </sc-for>
                   <sc-if value="{{ vd.ixMoreOn }}" hint-placeholder-val="{{ false }}"><button onClick="{{ vd.ixMoreGo }}" style="align-self:flex-start;border:0;background:transparent;padding:0;color:#2447C4;font-size:12.5px;font-weight:650;cursor:pointer;">{{ vd.ixMore }}</button></sc-if>
                   </sc-if>
-                  <sc-if value="{{ vd.ixEditing }}" hint-placeholder-val="{{ false }}">
+                  <sc-if value="{{ vd.ixPeopleEdit }}" hint-placeholder-val="{{ false }}">
                     <span style="font-size:12px;color:#7A839A;">Editing — your changes save with the Save button at the top of the page.</span>
                     <sc-for list="{{ vd.ixEdPeople }}" as="r" hint-placeholder-count="1">
                       <div style="border:1px dashed #B9C3D8;border-radius:12px;padding:10px 11px;display:flex;flex-direction:column;gap:8px;background:#F7F9FC;">
@@ -2395,6 +2508,53 @@ input,textarea,button{font-family:inherit}
                     </sc-for>
                   </sc-if>
                 </div>
+                <sc-if value="{{ vd.ixGenOn }}" hint-placeholder-val="{{ false }}">
+                  <div aria-label="Entered general insights" style="background:#fff;border:1px solid #E1E6F0;border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;">
+                    <div style="font-size:14px;font-weight:650;color:#0B1220;">Entered insights</div>
+                    <sc-if value="{{ vd.ixViewing }}" hint-placeholder-val="{{ true }}">
+                      <div style="display:flex;flex-direction:column;gap:8px;">
+                        <sc-for list="{{ vd.ixGenRead }}" as="g" hint-placeholder-count="1">
+                          <div style="border:1px solid #E1E6F0;border-radius:12px;padding:10px 11px;display:flex;flex-direction:column;gap:6px;">
+                            <span style="font-size:13.5px;line-height:1.5;white-space:pre-line;color:#0B1220;">{{ g.text }}</span>
+                            <div style="display:flex;flex-wrap:wrap;gap:5px;"><sc-for list="{{ g.chips }}" as="c" hint-placeholder-count="2"><span style="font-size:11px;font-weight:600;padding:3px 7px;border-radius:6px;border:1px solid #D7DEEC;color:#3C4557;">{{ c }}</span></sc-for></div>
+                          </div>
+                        </sc-for>
+                      </div>
+                    </sc-if>
+                    <sc-if value="{{ vd.ixGenEdOn }}" hint-placeholder-val="{{ false }}">
+                    <div aria-label="General insights" style="display:flex;flex-direction:column;gap:10px;">
+                      <sc-for list="{{ vd.ixGenRows }}" as="g" hint-placeholder-count="1">
+                        <div style="border:1px solid #E1E6F0;border-radius:14px;padding:11px 12px;display:flex;flex-direction:column;gap:8px;background:#fff;">
+                          <div style="display:flex;align-items:center;gap:10px;">
+                            <span style="flex:1;font-size:12.5px;font-weight:650;color:#0B1220;">{{ g.label }}</span>
+                            <sc-if value="{{ g.canRemove }}" hint-placeholder-val="{{ false }}"><button onClick="{{ g.remove }}" aria-label="{{ g.removeLabel }}" style="border:0;background:none;padding:2px;color:#5B6478;font-size:12.5px;font-weight:650;cursor:pointer;">Remove</button></sc-if>
+                          </div>
+                          <textarea value="{{ g.text }}" onChange="{{ g.change }}" placeholder="Enter an insight without attributing it to an HCP..." aria-label="{{ g.ariaLabel }}" style="width:100%;box-sizing:border-box;min-height:84px;border:1px solid #D7DEEC;border-radius:14px;padding:12px 13px;font-size:14.5px;line-height:1.5;background:#F7F9FC;outline:0;resize:none;color:#0B1220;"></textarea>
+                          <sc-if value="{{ g.showTypes }}" hint-placeholder-val="{{ false }}"><div style="display:flex;gap:6px;"><sc-for list="{{ g.types }}" as="o" hint-placeholder-count="2"><button onClick="{{ o.go }}" style="padding:7px 11px;border-radius:999px;border:1px solid {{ o.bd }};background:{{ o.bg }};color:{{ o.fg }};font-size:12.5px;font-weight:600;cursor:pointer;">{{ o.label }}</button></sc-for></div></sc-if>
+                          <sc-if value="{{ g.showTopics }}" hint-placeholder-val="{{ false }}">
+                            <div style="display:flex;flex-direction:column;gap:8px;">
+                              <div style="display:flex;flex-wrap:wrap;gap:6px;"><sc-for list="{{ g.cats }}" as="o" hint-placeholder-count="5"><button onClick="{{ o.go }}" style="padding:7px 11px;border-radius:999px;border:1px solid {{ o.bd }};background:{{ o.bg }};color:{{ o.fg }};font-size:12.5px;font-weight:600;cursor:pointer;">{{ o.label }}</button></sc-for></div>
+                              <div style="display:flex;flex-wrap:wrap;gap:6px;padding-left:10px;border-left:2px solid #E1E6F0;"><sc-for list="{{ g.subRows }}" as="o" hint-placeholder-count="3"><sc-if value="{{ o.isHead }}" hint-placeholder-val="{{ false }}"><span style="width:100%;font-size:12px;color:#5B6478;">{{ o.label }}</span></sc-if><sc-if value="{{ o.isSub }}" hint-placeholder-val="{{ true }}"><button onClick="{{ o.go }}" style="padding:5px 9px;border-radius:999px;border:1px solid {{ o.bd }};background:{{ o.bg }};color:{{ o.fg }};font-size:12px;font-weight:600;cursor:pointer;">{{ o.label }}</button></sc-if></sc-for></div>
+                            </div>
+                          </sc-if>
+                          <sc-if value="{{ g.showExact }}" hint-placeholder-val="{{ false }}"><button onClick="{{ g.toggleExact }}" style="align-self:flex-start;display:flex;align-items:center;gap:7px;border:0;background:none;padding:2px;font-size:12.5px;color:#0B1220;cursor:pointer;"><span style="width:16px;height:16px;border-radius:4px;border:1px solid {{ g.exactBd }};background:{{ g.exactBg }};color:#fff;display:grid;place-items:center;font-size:11px;font-weight:700;">{{ g.exactMark }}</span>Keep Exact</button></sc-if>
+                          <sc-if value="{{ g.polishOn }}" hint-placeholder-val="{{ false }}"><button onClick="{{ g.polish }}" disabled="{{ g.polishOff }}" style="align-self:flex-start;padding:7px 12px;border-radius:999px;border:1px solid #D7DEEC;background:#fff;color:#22409F;font-size:12.5px;font-weight:650;cursor:pointer;">{{ g.polishLabel }}</button></sc-if>
+                          <sc-if value="{{ g.revertOn }}" hint-placeholder-val="{{ false }}"><button onClick="{{ g.revert }}" style="align-self:flex-start;padding:7px 12px;border-radius:999px;border:1px solid #D7DEEC;background:#fff;color:#22409F;font-size:12.5px;font-weight:650;cursor:pointer;">Revert to Original</button></sc-if>
+                        </div>
+                      </sc-for>
+                      <sc-if value="{{ vd.ixGenCanAdd }}" hint-placeholder-val="{{ true }}"><button onClick="{{ vd.ixGenAdd }}" style="align-self:flex-start;border:0;background:none;padding:2px;color:#2447C4;font-size:13px;font-weight:650;cursor:pointer;">Add another insight</button></sc-if>
+                      <sc-if value="{{ vd.ixsGenErr }}" hint-placeholder-val="{{ false }}"><div style="font-size:13px;line-height:1.45;color:#B42318;">{{ vd.ixsGenErr }}</div></sc-if>
+                      <sc-if value="{{ vd.ixGenPrevOn }}" hint-placeholder-val="{{ false }}">
+                        <div aria-label="Insight revision" style="border:1px solid #C9D4F2;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px;background:#EEF3FF;">
+                          <div style="font-size:12.5px;font-weight:650;color:#0B1220;">AI generated revision</div>
+                          <div style="font-size:13.5px;line-height:1.5;white-space:pre-line;color:#0B1220;">{{ vd.ixGenPrevText }}</div>
+                          <div style="display:flex;gap:8px;"><button onClick="{{ vd.ixGenKeep }}" style="flex:1;padding:10px;border:1px solid #D7DEEC;border-radius:12px;background:#fff;font-size:13px;font-weight:650;cursor:pointer;">Keep Original</button><button onClick="{{ vd.ixGenUse }}" style="flex:1;padding:10px;border:0;border-radius:12px;background:#2447C4;color:#fff;font-size:13px;font-weight:700;cursor:pointer;">Use AI Version</button></div>
+                        </div>
+                      </sc-if>
+                    </div>
+                    </sc-if>
+                  </div>
+                </sc-if>
                 <sc-if value="{{ vd.ixPlOn }}" hint-placeholder-val="{{ false }}">
                   <div style="border:1px solid #E1E6F0;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px;background:#F7F9FC;">
                     <div style="font-size:14px;font-weight:650;">AI Generated Insight</div>
@@ -3110,7 +3270,7 @@ const EXTRA = { vendors:['ASCO','Community Health Media','Connex','Curio','DAVA 
 // the product under each BeOne area, as the website's Therapeutic Area picker writes it
 const AREA_PRODUCT = { CLL:'Brukinsa (zanubrutinib)', MCL:'Sonrotoclax' };
 const AUTO_DAYS = 7;
-const DRAFT_KEYS = ['insKey','insRef','insWho','insAdv','insQtr','insNote','insPer','insTopics','insType','insLive','insConv','insArea','insSubs','insStage','insPrio','insTags','insDateN','insVendor','insVendorSub','insVendorName','insCount','insConf','insConfName','insHco','insSource'];
+const DRAFT_KEYS = ['insKey','insRef','insWho','insAdv','insQtr','insNote','insPer','insTopics','insType','insLive','insConv','insArea','insSubs','insStage','insPrio','insTags','insDateN','insVendor','insVendorSub','insVendorName','insCount','insConf','insConfName','insHco','insSource','insNoHcp','insGen'];
 // customer accounts: one flow everywhere; each account shows only the fields it uses (from the Insights source)
 // the signed-in rep; the app fills it from the session. The sample rep is DocNexus staff, so Me shows the account switch.
 // pick: the account-switch row the app loaded (empty: the row for the account)
@@ -3390,7 +3550,7 @@ const statTile = x => ({ v2:'', pipsOn:false, pips:[], tip:'', c:'#0B1220', ...x
 const filterGroup = g => ({ ...g, side:g.side || '', sideOn:!!g.side, note:g.note || '', noteOn:!!g.note, foot:g.foot || '', footOn:!!g.foot });
 const LIST_UI = {
   fieldPro: { findHint:'Find a target list', findLabel:'Find a target list by name, state or ZIP code', newLabel:'＋ New target list', collapsed:6, page:40 },
-  insights: { findHint:'Search your lists…', findLabel:'Search your lists', newLabel:'New list' },
+  insights: { findHint:'Search your lists…', findLabel:'Search your lists', newLabel:'New list', newSub:'Group HCPs by territory or campaign' },
 };
 // a smart list's rules, as the website's builder (SmartListRulesBuilder.tsx:28-151): each field's operators, its
 // value (a word, a number, one of a few, yes/no) and the quick starts
@@ -3506,7 +3666,8 @@ const TR_F0 = { author:'all', list:'all', type:'all', src:'all', prio:'all', sta
 const TR_SORTS = [['recent', 'Most recent first'], ['oldest', 'Oldest first'], ['meeting_desc', 'Meeting date (newest)'], ['hcp', 'HCP name (A–Z)']];
 const MY_F0 = { type:'all', src:'all', mtype:'all', date:'all' };
 // the transcript page's own state (TranscriptDetail.tsx): the edit draft, text typed over the transcript or summary, the dialogs, Tagged View's filters
-const IX0 = { ixsDraft:null, ixsBusy:false, ixsText:null, ixsTextBusy:false, ixsSum:null, ixsSumBusy:false, ixsPolish:null, ixsPolBusy:'', ixsAtt:null, ixsAttBusy:false, ixsRecBusy:false, ixsRetry:false, ixsReady:false,
+const GEN0 = { rows:[], canAdd:false, add:() => {}, prevOn:false, prevText:'', keep:() => {}, use:() => {} };
+const IX0 = { ixsGenPrev:null, ixsGenBusy:'', ixsGenErr:'', ixsDraft:null, ixsBusy:false, ixsText:null, ixsTextBusy:false, ixsSum:null, ixsSumBusy:false, ixsPolish:null, ixsPolBusy:'', ixsAtt:null, ixsAttBusy:false, ixsRecBusy:false, ixsRetry:false, ixsReady:false,
   ixsTag:{ t:[], s:[], q:false, n:false, p:1 }, ixsTagBusy:false, ixsTagErr:'', ixsSeg:-1 };
 const TG_TONES = [['#E7ECFA', '#22409F'], ['#E3F5EC', '#1C7A4E'], ['#EEE8FA', '#5B3FA8'], ['#FBF3E2', '#8A6A1F'], ['#FDECEA', '#C0392B']];
 const capWord = w => w ? w.charAt(0).toUpperCase() + w.slice(1) : '';
@@ -3557,6 +3718,7 @@ class Component extends DCLogic {
     if (!this.acct().fieldPro && (s.stack[s.stack.length - 1]?.s || s.tab) === 'targets' && !s.frontSent && SERVICE.dashboardStats) this.loadFrontSent();
     if (s.tab === 'activity' && s.actSeg === 'dash' && !s.dash) this.loadDash();
     this.autoKeep();
+    this.loadGenCap();
     const pTop = s.stack[s.stack.length - 1];
     // a doctor's Sentiment Tracker tab reads their assessments when it opens
     if (SERVICE.tracker && pTop && pTop.s === 'hcp' && this.state.pSeg === 'tracker' && /^\d{10}$/.test(pTop.id)) this.loadTracker(pTop.id);
@@ -3657,7 +3819,8 @@ class Component extends DCLogic {
   insUploadGo() {
     const s = this.state;
     if (s.insUpBusy || !SERVICE.insightUpload || !s.insFiles.length) return;
-    if (!s.insWho.length && s.insType !== 'Third Party') return this.setState({ insUpErr:'Please fill in all required fields before uploading' });
+    if (!s.insWho.length && s.insType !== 'Third Party' && !s.insNoHcp) return this.setState({ insUpErr:'Please fill in all required fields before uploading' });
+    if (s.insNoHcp && s.insGenCap !== true) return this.setState({ insUpErr:'Without HCP is currently unavailable. Your input has been kept.' });
     const key = s.insKey;
     this.setState({ insUpBusy:true, insUpErr:'' });
     SERVICE.insightUpload(s.insWho, s.insFiles, this.draftForm()).then(() => {
@@ -3873,7 +4036,7 @@ class Component extends DCLogic {
   // History's View Details: the summary's own page, read when it opens and again every 5 s while the server is still writing it
   smyOpenDetail(sm) {
     if (!SERVICE.summaryDetail) return this.toast('Summaries aren’t connected yet');
-    this.setState({ smyDet:sm.id, smyDetTab:'overview', smyAnalyticsQ:'', smyAnalyticsPage:1, smyAsk:null });
+    this.setState({ smyDet:sm.id, smyDetTab:'overview', smyDrugs:[], smyAnalyticsQ:'', smyAnalyticsPage:1, smyAsk:null });
     this.loadSmyDetail(sm.id, false);
   }
   loadSmyDetail(id, polling) {
@@ -3886,13 +4049,15 @@ class Component extends DCLogic {
     }, () => { if (!polling) this.setState(st => ({ smyDets:{ ...st.smyDets, [id]:'failed' } })); });
   }
   smyDetClose() { clearTimeout(this._smyDetT); this.setState({ smyDet:null }); }
+  smyDrugToggle(i) { this.setState(st => ({ smyDrugs: (st.smyDrugs || []).includes(i) ? st.smyDrugs.filter(x => x !== i) : [...(st.smyDrugs || []), i] })); }
   // the page's own Export: the same deck as History's Export PPT, named the way the page names it
   smyDetExportGo(d) {
     if (this.state.smyDetExp) return;
     if (!SERVICE.exportSummary) return this.toast('Export isn’t connected for this account');
     this.setState({ smyDetExp:true });
     const sm = this.state.summaries.find(x => String(x.id) === String(d.id)) || d;
-    SERVICE.exportSummary({ id:sm.id,template:sm.template,templateVersion:sm.templateVersion,createdAt:sm.createdAt,revision:sm.revision }).then(name => {
+    const iso = new Date().toISOString(), fileName = `${String(d.tag || '').replace(/[^a-zA-Z0-9]/g, '_')}_Congress_Summary_${iso.split('T')[0]}_${iso.split('T')[1].split('.')[0].replace(/:/g, '-')}.pptx`;
+    SERVICE.exportSummary({ id:sm.id,template:sm.template,templateVersion:sm.templateVersion,createdAt:sm.createdAt,revision:sm.revision,fileName }).then(name => {
       this.setState({ smyDetExp:false }); this.toast(name ? 'Exported · ' + name : 'Exported');
     }, e => { this.setState({ smyDetExp:false }); this.toast('Failed to export PowerPoint: ' + ((e && e.message) || 'Unknown error')); });
   }
@@ -3953,6 +4118,36 @@ class Component extends DCLogic {
       : sp.status === 'processing' ? ['Generating Congress Summary', 'Your congress summary is being generated. This may take a few minutes depending on the number of conversations.', 'This page will automatically update when the summary is ready.']
       : ['Generation Failed', 'There was an error generating this congress summary. Please try again or contact support if the issue persists.'];
     const analytics = pageOk ? sp.analytics || [] : [];
+    // the website's default tabs (CongressSummaryDetail.tsx): Overview, Sentiment Analysis, Drug Insights, Attendees
+    const generic = pageOk && !sp.analytics, openDrugs = s.smyDrugs || [];
+    const GTABS = [['overview', 'Overview'], ['sentiment', 'Sentiment Analysis'], ['drugs', 'Drug Insights'], ['attendees', 'Attendees']];
+    const GC = { edge:'#2447C4', num:'', hasNum:false, title:'', hasTitle:false, sub:'', hasSub:false, text:'', hasText:false, rows:[], deepHead:'', hasDeep:false, deepLabel:'', deepGo: () => {}, deepRows:[] };
+    const GP = { head:'', hasHead:false, text:'', hasText:false, moods:[], hasMoods:false, groups:[], hasGroups:false, chips:[], hasChips:false, chipsHead:'', sub:'', hasSub:false, cards:[], empty:'', hasEmpty:false };
+    const grow = (kind, text, meta = '') => ({ isTitle:kind === 'title', isLabel:kind === 'label', isPara:kind === 'para', isNote:kind === 'note', isBullet:kind === 'bullet', text, meta, hasMeta:!!meta });
+    const panel = (head, more) => ({ ...GP, head, hasHead:!!head, ...more });
+    const numbered = (items, edge) => items.map((text, i) => ({ ...GC, edge, num:String(i + 1), hasNum:true, text, hasText:true }));
+    const drugCard = (g, i) => {
+      const n = g.themes.length, open = openDrugs.includes(i), first = g.themes[0];
+      return { ...GC, edge:'#C2522D', title:g.name, hasTitle:true, text:g.context, hasText:!!g.context,
+        rows:[grow('label', 'Key Points'), ...g.keyPoints.map(t => grow('bullet', t))],
+        hasDeep:n > 0, deepHead:`In-Depth Analysis (${n} ${n === 1 ? 'theme' : 'themes'})`, deepLabel:open ? 'View Less' : 'View More', deepGo: () => this.smyDrugToggle(i),
+        deepRows: open ? g.themes.flatMap(t => [grow('title', t.theme), ...(t.intro ? [grow('label', 'Main Discussion:'), grow('para', t.intro)] : []),
+          ...(t.points.length ? [grow('label', 'Key Points:'), ...t.points.map(p => grow('bullet', p.text, p.meta))] : [])])
+          : [grow('note', n === 1 ? `1 analysis theme available: "${first.theme}"` : `${n} analysis themes available. Click "View More" to see all themes and insights.`),
+            ...(n > 0 && first.intro ? [grow('note', first.intro.substring(0, 200) + (first.intro.length > 200 ? '...' : ''))] : [])] };
+    };
+    const mood = sp && sp.mood;
+    const gSections = !generic ? [] : tab === 'sentiment' ? (mood ? [panel('Sentiment Analysis', {
+        hasMoods:true, moods:[['Positive', mood.positive, '#1C7A4E', '#EAF6EF'], ['Neutral', mood.neutral, '#8A5A00', '#FFF6E0'], ['Negative', mood.negative, '#C0392B', '#FDECEA']].map(([label, n, fg, bg]) => ({ label, pct:n + '%', fg, bg })),
+        groups:[['Positive Elements', mood.pos, '#1C7A4E', '#EAF6EF', '#BFE3CF'], ['Neutral Elements', mood.neu, '#8A5A00', '#FFF6E0', '#F0DDA8'], ['Negative Elements', mood.neg, '#C0392B', '#FDECEA', '#F2C9C4']]
+          .filter(g => g[1].length).map(([title, items, fg, bg, bd]) => ({ title, fg, bg, bd, items:items.map(t => ({ t })) })),
+        hasChips:mood.drivers.length > 0, chipsHead:'Key Drivers', chips:mood.drivers.map(t => ({ t })) })] : [])
+      : tab === 'drugs' ? (sp.drugs ? [panel('Drug-Wise Insights', sp.drugs.length ? { hasSub:true, sub:'Individual Drug Analysis', cards:sp.drugs.map(drugCard) } : { hasEmpty:true, empty:'No specific drug mentions found in this analysis.' })]
+        : [panel('', { hasEmpty:true, empty:'No drug insights available for this congress summary.' })])
+      : tab === 'attendees' ? (sp.attendees ? [panel('Attendee Contributions', sp.attendees.length ? { hasSub:true, sub:'Individual Attendee Analysis', cards:sp.attendees.map(a => ({ ...GC, title:a.name, hasTitle:true, sub:a.line, hasSub:!!a.line })) } : { hasEmpty:true, empty:'No specific attendee information found in this analysis.' })]
+        : [panel('', { hasEmpty:true, empty:'No attendee contributions available for this congress summary.' })])
+      : [panel('Executive Summary', { hasText:true, text:sp.summary }), ...(sp.insights.length ? [panel('Key Insights', { cards:numbered(sp.insights, '#2447C4') })] : []),
+        ...(sp.recommendations.length ? [panel('Strategic Recommendations', { cards:numbered(sp.recommendations, '#1C7A4E') })] : [])];
     const aQuery = (s.smyAnalyticsQ || '').trim().toLowerCase(), aPage = s.smyAnalyticsPage || 1;
     const aRows = (analytics.find(x => x.id === tab)?.rows || []).filter(r => !aQuery || (r.title + ' ' + r.meta + ' ' + r.detail).toLowerCase().includes(aQuery));
     const rv = R || { groups:[], loading:false, err:'', stale:false, uncertain:false, busy:false, exact:[] }, refresh = rv.stale || (!!rv.err && !rv.groups.length), nExact = rv.exact.length;
@@ -3962,15 +4157,17 @@ class Component extends DCLogic {
       smyDetOn: det != null, smyDetBack: () => this.smyDetClose(),
       smyDetNote: note[0] || '', smyDetNote2: note[1] || '', smyDetNote3: note[2] || '', smyDetPage: pageOk,
       smyDetTitle: pageOk ? sp.tag : '', smyDetGen: pageOk ? 'Generated on ' + sp.generated : '',
-      smyDetExport: () => sp && this.smyDetExportGo(sp), smyDetExpOff: !!s.smyDetExp, smyDetExpBg: s.smyDetExp ? '#9DB0E8' : '#2447C4', smyDetExpLabel: s.smyDetExp ? 'Exporting…' : 'Export PPT',
+      smyDetExport: () => sp && this.smyDetExportGo(sp), smyDetExpOff: !!s.smyDetExp, smyDetExpBg: s.smyDetExp ? '#9DB0E8' : '#2447C4', smyDetExpLabel: s.smyDetExp ? 'Exporting...' : 'Export PPT',
       smyDetStats: pageOk ? [['Conversations', String(sp.total), '#0B1220'], ['Date Range', sp.from + ' - ' + sp.to, '#0B1220'],
         ['Sentiment', sp.sentiment || '—', ({ positive:'#1C7A4E', neutral:'#8A5A00', negative:'#C0392B' })[(sp.sentiment || '').toLowerCase()] || '#0B1220'], ['Generated', sp.generated, '#0B1220']].map(([label, value, fg]) => ({ label, value, fg })) : [],
-      smyDetTabs: analytics.map(a => ({ label:a.label, ...chip(tab === a.id), go:() => this.setState({ smyDetTab:a.id,smyAnalyticsQ:'',smyAnalyticsPage:1 }) })),
+      smyDetTabs: generic ? GTABS.map(([id, label]) => ({ label, ...chip(tab === id), go:() => this.setState({ smyDetTab:id }) }))
+        : analytics.map(a => ({ label:a.label, ...chip(tab === a.id), go:() => this.setState({ smyDetTab:a.id,smyAnalyticsQ:'',smyAnalyticsPage:1 }) })),
+      smyGen: gSections,
       smyAnalyticsSearch: tab === 'explorer' && analytics.length > 0, smyAnalyticsQ:s.smyAnalyticsQ || '',
       onSmyAnalyticsQ:e => this.setState({ smyAnalyticsQ:e.target.value,smyAnalyticsPage:1 }),
       smyAnalyticsRows:aRows.slice(0,25 * aPage), smyAnalyticsMore:aRows.length > 25 * aPage,
       smyAnalyticsNext:() => this.setState({ smyAnalyticsPage:aPage + 1 }),
-      smyAnalyticsNone: aRows.length ? '' : analytics.length ? 'No matching analytics in this section.' : 'No analytics data is available for this deck.',
+      smyAnalyticsNone: generic || aRows.length ? '' : analytics.length ? 'No matching analytics in this section.' : 'No analytics data is available for this deck.',
       // Review Insights
       shSmyRev: s.sheet === 'smyrev',
       revErr: rv.err, revLoading: rv.loading,
@@ -4024,11 +4221,11 @@ class Component extends DCLogic {
       smyNamed: !stem, smyName: s.smyName, onSmyName: e => this.setState({ smyName: e.target.value }),
       smyTemplateOn:!!A.smy?.length, smyTemplateOpts:(A.smy || []).map(label => ({ label, ...chip(s.smyArea === label), go:() => this.setState({ smyArea:label }) })),
       smyGoBtns: stem ? [{ label:'Generate Insights Template (' + (n || shown.length) + ')', off:shown.length === 0, bg:shown.length ? '#2447C4' : '#9DB0E8', go: () => this.smyGo('') }]
-        : [goBtn('Generate PowerPoint', s.smyArea || '')],
+        : [goBtn(s.smyLoading ? 'Generating...' : 'Generate summary', s.smyArea || '')],
       smyGenerate: () => this.smyGo(s.smyArea || ''), smyClearOn: n > 0,
       // the filter and date sheets
       shSmyF: s.sheet === 'smyf', smyOptQ:s.smyOptQ, onSmyOptQ:e => this.setState({ smyOptQ:e.target.value }),
-      smyFNone: !fKey || optionRows.length ? '' : optionQuery ? 'No matching options.' : !s.smyOpts ? 'Loading filter options…' : 'No options available.',
+      smyFNone: !fKey || optionRows.length ? '' : optionQuery ? 'No matching options.' : !s.smyOpts ? 'Loading filter options…' : fKey === 'topic' ? 'No topics available' : 'No options available.',
       smyFOpts: fKey ? [{ label:({ conferenceTag:'All tags', topic:'All topics', representativeName:'All HCPs', teamEmails:'All members' })[fKey], ...box(allTicked), team:'', teamBg:'#fff', teamFg:'#fff',
         go: () => { if (!allTicked) this.smySetFilter({ [fKey]:[] }); } },
         ...optionRows.map(([v, label, team]) => ({ label, ...box(cur.includes(v)), team, teamBg:team === 'Medical' ? '#E7ECFA' : '#E3F5EC', teamFg:team === 'Medical' ? '#22409F' : '#1C7A4E',
@@ -4160,6 +4357,8 @@ class Component extends DCLogic {
   // insight, at least one insight, and on Stemline a subtopic for each topic that has them (AddInsightSheet.tsx)
   insProblems(insPer, thirdParty, s = this.state) {
     const A = this.acct(), out = [], name = id => (HCPS[id] || NO_HCP).name, per = Object.fromEntries(insPer);
+    // Without HCP: only its entered insights count (generalInsightProblems), and the server must have it on
+    if (s.insNoHcp && !A.fieldPro) return [...this.genProblems(s.insGen || []), ...(s.insGenCap === true ? [] : ['Without HCP is currently unavailable. Your input has been kept.'])];
     if (!thirdParty && !s.insWho.length) out.push('Add at least one HCP (name required).');
     if (!thirdParty && s.insWho.length > 1) s.insWho.slice(1).forEach(id => { if (!per[id]) out.push(name(id) + ' has no insight — add one or remove the row.'); });
     if (!s.insNote.trim() && !insPer.length) out.push('Enter at least one insight before generating.');
@@ -4171,20 +4370,83 @@ class Component extends DCLogic {
     }
     return out;
   }
+  // Without HCP (GeneralInsightEditor.tsx, utils/insightAttribution.ts): the entered insights, each with its text, type, topics and Keep Exact
+  genNew() { return { k:'g' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), text:'', orig:'', kind:'', verbatim:false, attrs:[] }; }
+  // what the website asks before generating: some text, no empty entry, and on Stemline a subtopic for each topic that has them
+  genProblems(list) {
+    const A = this.acct();
+    if (!list.some(g => g.text.trim())) return ['Enter at least one insight before generating.'];
+    return list.flatMap((g, i) => {
+      const out = g.text.trim() ? [] : ['Insight #' + (i + 1) + ' needs text — add it or remove the entry.'];
+      if (g.kind === 'Insight' && A.conv && A.subs) g.attrs.forEach(a => { if (a.category && (A.subs[a.category] || []).length && !a.subs.length) out.push('Insight #' + (i + 1) + ': choose a subtopic for "' + a.category + '" (or remove the topic).'); });
+      return out;
+    });
+  }
+  // the editor's rows for the sheet and for the transcript page's Edit; `c.put` changes the list, the rest is the AI Generate comparison
+  genView(list, c) {
+    const A = this.acct(), chip = on => on ? { bg:'#2447C4', fg:'#fff', bd:'#2447C4' } : { bg:'#fff', fg:'#5B6478', bd:'#D7DEEC' };
+    const topics = this.topicsFor(this.state.insArea) || [], many = list.length > 1;
+    const set = (k, patch) => c.put(rows => rows.map(g => g.k === k ? { ...g, ...(typeof patch === 'function' ? patch(g) : patch) } : g));
+    const rows = list.map((g, i) => {
+      const n = i + 1, topicsOn = topics.length > 0 && (!A.conv || g.kind === 'Insight'), exactOn = !!A.conv && g.kind === 'Insight';
+      const polish = !!SERVICE.polishText && !!g.text.trim();
+      return { label:'Insight' + (many ? ' ' + n : ''), canRemove:many, removeLabel:'Remove general insight ' + n, remove:() => c.put(r => r.filter(x => x.k !== g.k)),
+        ariaLabel:'General insight ' + n, text:g.text, change:e => { const v = e.target.value; set(g.k, { text:v }); },
+        showTypes:!!A.conv, types:(A.conv || []).map(t => { const v = t === 'Note' ? 'Notes' : t; return { label:v, ...chip(g.kind === v), go:() => set(g.k, x => ({ kind:x.kind === v ? '' : v })) }; }),
+        showTopics:topicsOn,
+        cats:topicsOn ? topics.map(cat => ({ label:cat, ...chip(g.attrs.some(a => a.category === cat)), go:() => set(g.k, x => ({ attrs:x.attrs.some(a => a.category === cat) ? x.attrs.filter(a => a.category !== cat) : [...x.attrs, { category:cat, subs:[] }] })) })) : [],
+        subRows:topicsOn ? g.attrs.flatMap(a => { const all = (A.subs && A.subs[a.category]) || []; return all.length ? [{ isHead:true, isSub:false, label:a.category, bd:'', bg:'', fg:'', go:() => {} },
+          ...all.map(sub => ({ isHead:false, isSub:true, label:sub, ...chip(a.subs.includes(sub)), go:() => set(g.k, x => ({ attrs:x.attrs.map(y => y.category === a.category ? { ...y, subs:y.subs.includes(sub) ? y.subs.filter(z => z !== sub) : [...y.subs, sub] } : y) })) }))] : []; }) : [],
+        showExact:exactOn, toggleExact:() => set(g.k, x => ({ verbatim:!x.verbatim })), exactMark:g.verbatim ? '✓' : '', exactBg:g.verbatim ? '#2447C4' : '#fff', exactBd:g.verbatim ? '#2447C4' : '#B9C3D8',
+        polishOn:polish && !g.orig, polishLabel:c.busy === g.k ? 'Generating...' : 'AI Generate', polishOff:!!c.busy, polish:() => c.polish(g.k),
+        revertOn:polish && !!g.orig, revert:() => set(g.k, x => ({ text:x.orig, orig:'' })) };
+    });
+    return { rows, canAdd:list.length < 50, add:() => c.put(r => [...r, this.genNew()]), prevOn:!!c.prev, prevText:c.prev ? c.prev.polished : '', keep:c.keep, use:c.use };
+  }
+  // AI Generate on one entered insight (`w`: 'ins' the sheet, 'ixs' the transcript page's Edit): the comparison, then Use AI Version or Keep Original
+  genList(w, s = this.state) { return w === 'ins' ? s.insGen || [] : (s.ixsDraft && s.ixsDraft.gen) || []; }
+  genPolish(w, k) {
+    const s = this.state, g = this.genList(w).find(x => x.k === k);
+    if (!g || !SERVICE.polishText || s[w + 'GenBusy']) return;
+    this.setState({ [w + 'GenBusy']:k, [w + 'GenErr']:'' });
+    SERVICE.polishText(g.text).then(text => {
+      const now = this.genList(w).find(x => x.k === k);
+      if (!now || now.text !== g.text) return this.setState({ [w + 'GenBusy']:'', [w + 'GenErr']:'The insight changed. Generate again to use the latest text.' });
+      this.setState({ [w + 'GenBusy']:'', [w + 'GenPrev']:{ k, original:g.text, polished:text } });
+    }, () => this.setState({ [w + 'GenBusy']:'', [w + 'GenErr']:'Could not generate a revision. Your text has been kept.' }));
+  }
+  genUse(w) {
+    const p = this.state[w + 'GenPrev'];
+    if (!p) return;
+    const now = this.genList(w).find(x => x.k === p.k), ok = !!now && now.text === p.original;
+    const up = rows => rows.map(g => g.k === p.k ? { ...g, text:p.polished, orig:p.original } : g);
+    if (ok) { if (w === 'ins') this.setState(st => ({ insGen:up(st.insGen) })); else this.ixPut(d => { if (d.gen) d.gen = up(d.gen); return d; }); }
+    this.setState({ [w + 'GenPrev']:null, ...(ok ? {} : { [w + 'GenErr']:'The insight changed. Generate again to use the latest text.' }) });
+  }
+  // Without HCP (AddInsightSheet.tsx): the server says whether it is on, asked each time the sheet opens
+  loadGenCap() {
+    const s = this.state;
+    if (s.sheet !== 'insight' || !SERVICE.insightCaps || this.acct().fieldPro) { this._genCapOpen = false; if (s.insGenCap) this.setState({ insGenCap:false }); return; }
+    if (this._genCapOpen) return;
+    this._genCapOpen = true;
+    SERVICE.insightCaps().then(on => this.setState({ insGenCap:on === true }), () => this.setState({ insGenCap:false }));
+  }
   // a just-saved insight, as the website's My Insights shows it before the server has read it: "Processing
   // transcript…", the rep as its author, its meeting type and date; the next read brings the rest
   savedInsight(who, dN, vType, s = this.state) {
     const A = this.acct(), at = new Date(); at.setHours(0, 0, 0, 0); at.setDate(at.getDate() - dN);
     const names = who.map(id => (HCPS[id] || NO_HCP).name), filed = A.conv ? (s.insConv === 'Insight' ? 'Insight' : s.insConv === 'Note' ? 'Notes' : '') : '';
     return {
-      my:{ at:at.getTime(), mtype:vType, find:[names.join(', '), ...who.map(id => (HCPS[id] || NO_HCP).spec)].filter(Boolean).join('\n').toLowerCase() },
+      my:{ at:at.getTime(), mtype:vType, find:[names.join(', '), ...who.map(id => (HCPS[id] || NO_HCP).spec), ...(s.insNoHcp ? s.insGen.map(g => g.text) : [])].filter(Boolean).join('\n').toLowerCase() },
       ix:{ id:'', title:'', day:MO[at.getMonth()] + ' ' + at.getDate() + ', ' + at.getFullYear(), created:Date.now(), mins:null, status:'pending', preview:'', summary:'',
-        by:ME.name, source:s.insSource === 'Upload' ? 'third_party' : 'team_member', hcp:names.join(', '), kind:filed || (A.areas || A.adv ? 'Insight' : ''), filed, mtype:vType,
+        by:ME.name, source:s.insSource === 'Upload' ? 'third_party' : 'team_member', hcp:names.join(', '), noHcp:!!s.insNoHcp,
+        entered:s.insNoHcp ? s.insGen.filter(g => g.text.trim()).map(g => ({ text:g.text, chips:[g.kind, g.verbatim ? 'Keep Exact' : '', ...g.attrs.map(a => a.category + (a.subs.length ? ' · ' + a.subs.join(', ') : ''))].filter(Boolean) })) : null,
+        kind:filed || (A.areas || A.adv ? 'Insight' : ''), filed, mtype:vType,
         sentiment:null, concerns:[], themes:[], keyInsights:[], actions:[], people:[], cats:[] },
     };
   }
-  insPerOf(s = this.state) { return this.acct().fieldPro || s.insWho.length < 2 ? [] : s.insWho.map(id => [id, String((s.insPer || {})[id] || '').trim()]).filter(x => x[1]); }
-  insFresh(who, A = this.acct()) { return { insWho: who, insWhoQ:'', insWhoRows:[], insWhoWait:false, insWhoErr:false, insAdv:{}, insNote:'', insPer:{}, insTopics:[], insType: A.fieldPro ? A.meetTypes[0] : '', insLive:'', insConv:'', insArea: A.areas ? Object.keys(A.areas)[0] : null, insQtr:{}, insSubs:[], insStage:'Observation', insPrio:'Low', insTags:[], insFile:null, insSource:null, insTried:false, insConfName:'', insPickMore:false, insRec:false, insPaused:false, insSecs:0, insMode:'notes',
+  insPerOf(s = this.state) { return this.acct().fieldPro || s.insNoHcp || s.insWho.length < 2 ? [] : s.insWho.map(id => [id, String((s.insPer || {})[id] || '').trim()]).filter(x => x[1]); }
+  insFresh(who, A = this.acct()) { return { insNoHcp:false, insGen:[this.genNew()], insGenPrev:null, insGenBusy:'', insGenErr:'', insWho: who, insWhoQ:'', insWhoRows:[], insWhoWait:false, insWhoErr:false, insAdv:{}, insNote:'', insPer:{}, insTopics:[], insType: A.fieldPro ? A.meetTypes[0] : '', insLive:'', insConv:'', insArea: A.areas ? Object.keys(A.areas)[0] : null, insQtr:{}, insSubs:[], insStage:'Observation', insPrio:'Low', insTags:[], insFile:null, insSource:null, insTried:false, insConfName:'', insPickMore:false, insRec:false, insPaused:false, insSecs:0, insMode:'notes',
     insDateN:0, insVendor:null, insVendorSub:null, insVendorName:'', insCount:'', insConf:null, insHco:null, insDraft:null,
     insKey: Date.now().toString(36) + Math.random().toString(36).slice(2, 8), insRef:null, insMedia:null, insFiles:[], insUpBusy:false, insUpErr:'', insBusy:false }; }
   openLog(id) { this.openInsight(id ? [id] : [], 'notes'); }
@@ -4205,7 +4467,7 @@ class Component extends DCLogic {
   autoKeep() {
     const s = this.state;
     if (this.acct().fieldPro || s.sheet !== 'insight' || s.insMode !== 'notes' || s.insBusy) return;
-    const words = !!s.insNote.trim() || Object.values(s.insPer || {}).some(t => String(t || '').trim());
+    const words = !!s.insNote.trim() || Object.values(s.insPer || {}).some(t => String(t || '').trim()) || (s.insNoHcp && (s.insGen || []).some(g => g.text.trim()));
     if (!words) return;
     const form = this.draftForm(), text = JSON.stringify(form);
     if (text === this._autoText) return;
@@ -5257,7 +5519,7 @@ class Component extends DCLogic {
     if (s.sheet !== 'territory') return { ...off, pkRows:[] };
     const ROW = { isNew:false, isList:true, name:'', sub:'', hasSub:false, activity:'', hint:'', aria:'', go: () => {}, hasIcon:false, iconBg:'', iconFg:'', iconD:'',
       hasBy:false, details:[], check:'', bg:'#fff', bd:'#E1E6F0', op:1,
-      hasMenu:false, menuAria:'', menu: () => {}, menuBg:'transparent', menuOpen:false, menuItems:[], asking:false, askText:'', yes: () => {}, yesLabel:'', no: () => {} };
+      hasMenu:false, menuAria:'', menuHint:'', hasMenuNote:false, menu: () => {}, menuBg:'transparent', menuOpen:false, menuItems:[], asking:false, askText:'', yes: () => {}, yesLabel:'', no: () => {} };
     if (!ins) {
       const waiting = !TERRS.length && !!this.props?.loading;
       const own = TERRS.filter(t => t.id !== ':other' && t.id !== ':company'), other = TERRS.find(t => t.id === ':other'), company = TERRS.find(t => t.id === ':company');
@@ -5322,24 +5584,24 @@ class Component extends DCLogic {
       const rules = t.smart ? ruleLines(t.rules).join(t.rules?.join === 'or' ? ' or ' : ' and ') : '';
       const details = [
         ['Description', t.description], ['Owner', t.creatorEmail || t.ownerIni], ['Created', t.createdIso && noteDay(t.createdIso)],
-        ['Updated', t.updatedIso && noteDay(t.updatedIso)], ['By status', statuses], ['Shared with', shared.length && (shared.length + (shared.length === 1 ? ' person' : ' people'))],
+        ['Updated', t.updatedIso && noteDay(t.updatedIso)], ['By status', statuses || (!total && !t.loading && !t.readFailed ? 'No targets yet' : '')], ['Shared with', shared.length && (shared.length + (shared.length === 1 ? ' person' : ' people'))],
         ['Note', t.callout], ['Auto-updates when', rules],
       ].filter(([,value]) => !!value).map(([label,value]) => ({ label,value }));
       const exporting = s.listExporting === t.id;
       const items = !t.id ? [] : [
         !t.archived && !t.smart && [shared.length ? 'Manage sharing' : 'Share', '#0B1220', () => this.openShare(t.id)],
-        !t.archived && [exporting ? 'Exporting…' : 'Export list (.xlsx)', '#0B1220', () => this.exportList(t), !total || !!s.listExporting],
+        !t.archived && [exporting ? 'Exporting…' : 'Export list (.xlsx)', '#0B1220', () => this.exportList(t), !total || !!s.listExporting, 'Download every HCP on this list with their meetings, insights and notes (.xlsx)'],
         owner && !t.archived && t.smart && ['Edit rules', '#0B1220', () => this.openForm('rules',t.id)],
         owner && !t.archived && [t.pinned ? 'Unpin' : 'Pin', '#0B1220', () => this.listAct('pin', t)],
         owner && !t.archived && ['Archive', '#0B1220', () => this.setState({ pkMenu:null, listConfirm:{ id:t.id, kind:'archive' } })],
         owner && t.archived && ['Restore', '#0B1220', () => this.listAct('restore', t)],
         owner && ['Delete permanently', '#C0392B', () => this.setState({ pkMenu:null, listConfirm:{ id:t.id, kind:'remove' } })],
-      ].filter(Boolean).map(([label,fg,go,disabled]) => ({ label,fg,go,disabled:!!disabled }));
-      return { ...ROW, name:t.name, aria:[t.name, sub, activity].filter(Boolean).join(', '), hint:t.description || '', sub, hasSub:true, activity, details, hasBy:!owner && !!t.id,
+      ].filter(Boolean).map(([label,fg,go,disabled,hint]) => ({ label,fg,go,disabled:!!disabled,hint:hint || '' }));
+      return { ...ROW, name:t.name, aria:[t.name, sub, activity].filter(Boolean).join(', '), hint:[t.smart && 'Auto-updating from rules', t.description].filter(Boolean).join(' · '), sub, hasSub:true, activity, details, hasBy:!owner && !!t.id,
         go: () => this.setState({ tlist:id, sheet:null, listConfirm:null, pkMenu:null, pkQ:'', q:'', targetPage:0, ...I_FILTERS }),
         hasIcon:true, iconBg:tone[0], iconFg:tone[1], iconD:LIST_ICONS[t.icon] || LIST_ICONS.bookmark,
         check: on ? '✓' : '', bg: on ? '#EDF1FB' : '#fff', bd: on ? '#2447C4' : '#E1E6F0', op: t.archived || busy ? 0.65 : 1,
-        hasMenu: !!t.id, menuAria:'Actions for ' + t.name, menu: () => this.setState({ pkMenu: s.pkMenu === t.id ? null : t.id, listConfirm:null }), menuBg: s.pkMenu === t.id ? '#EEF1F7' : 'transparent',
+        hasMenu: !!t.id, menuAria:'More actions', menuHint:'Actions for ' + t.name, hasMenuNote:!owner && !!t.id, menu: () => this.setState({ pkMenu: s.pkMenu === t.id ? null : t.id, listConfirm:null }), menuBg: s.pkMenu === t.id ? '#EEF1F7' : 'transparent',
         menuOpen: s.pkMenu === t.id && !ask, menuItems:items, asking:!!ask,
         askText: ask === 'remove' ? 'Permanently delete “' + t.name + '” and all of its targets? This cannot be undone.' : 'Archive “' + t.name + '”? You can restore it later.',
         yes: () => this.listAct(ask, t), yesLabel: ask === 'remove' ? 'Delete permanently' : 'Archive', no: () => this.setState({ listConfirm:null }) };
@@ -5351,7 +5613,7 @@ class Component extends DCLogic {
       pkSortsOn:true, pkSorts: [['recent','Recently updated'], ['targets','Most targets'], ['name','Name (A–Z)'], ['created','Recently created']].map(([k, label]) => ({ label, ...chip(sort === k), go: () => this.setState({ listSort:k }) })),
       pkNoMatch:!!needle && !cards.length, pkNoMatchText:'No lists match “' + q + '”.',
       pkEmptyOn:empty, pkEmptyGo: () => this.openForm('list'),
-      pkRows: empty ? [] : [...cards, ...(tab !== 'archived' ? [{ ...ROW, isNew:true, isList:false, name:U.newLabel, go: () => this.openForm('list') }] : [])] };
+      pkRows: empty ? [] : [...cards, ...(tab !== 'archived' ? [{ ...ROW, isNew:true, isList:false, name:U.newLabel, sub:U.newSub || '', hasSub:!!U.newSub, go: () => this.openForm('list') }] : [])] };
   }
   // Field Pro's Remove target and ＋ Add to target HCPs on a doctor's page (SurgeonView.tsx, useHcpTargetAdd.ts): the rep's
   // own list only, nothing elsewhere is deleted; adding someone removed puts them back
@@ -5500,8 +5762,8 @@ class Component extends DCLogic {
     return { ixFull:{ ...st.ixFull, [id]:full }, ...(was && typeof was === 'object' && was.status !== 'completed' && full.status === 'completed' ? { ixsReady:true } : {}) };
   }
   // the page's Edit (TranscriptDetail.tsx enterEditMode, cancelEditMode, handleSaveAll): the draft is kept until Save Changes
-  ixEnter(F) { this.setState({ ixsDraft:JSON.parse(JSON.stringify(F.edit)), ixsSeg:-1, ixsPolish:null }); }
-  ixLeave() { this.setState({ ixsDraft:null, ixsText:null, ixsSum:null, ixsPolish:null, ixsSeg:-1 }); }
+  ixEnter(F) { this.setState({ ixsDraft:JSON.parse(JSON.stringify(F.edit)), ixsSeg:-1, ixsPolish:null, ixsGenPrev:null, ixsGenBusy:'', ixsGenErr:'' }); }
+  ixLeave() { this.setState({ ixsDraft:null, ixsText:null, ixsSum:null, ixsPolish:null, ixsSeg:-1, ixsGenPrev:null, ixsGenBusy:'', ixsGenErr:'' }); }
   ixPut(fn) { this.setState(st => st.ixsDraft ? { ixsDraft:fn(JSON.parse(JSON.stringify(st.ixsDraft))) } : {}); }
   ixSaveAll(id, F) {
     const s = this.state, d = s.ixsDraft, A = this.acct();
@@ -5509,6 +5771,9 @@ class Component extends DCLogic {
     // Stemline's no-uncategorized rule: a topic that has subtopics needs one picked, or it is left out of the deck
     const miss = A.subs ? d.segments.find(g => g.cat && (A.subs[g.cat] || []).length && !g.sub.length) : null;
     if (miss) return this.toast('Pick a subtopic for "' + miss.cat + '" (or set the topic to General) — a topic with no subtopic is left out of the deck.');
+    // a Without HCP transcript's entered insights are checked as the sheet's are
+    const bad = d.gen ? this.genProblems(d.gen) : [];
+    if (bad.length) return this.toast(bad[0]);
     if (!SERVICE.insightSave) return this.toast('This isn’t connected for this account');
     this.setState({ ixsBusy:true });
     SERVICE.insightSave(id, F.raw, { ...d, text:s.ixsText != null ? s.ixsText : d.text, summary:s.ixsSum != null ? s.ixsSum : d.summary }).then(full => {
@@ -5693,6 +5958,9 @@ class Component extends DCLogic {
     const edCats = A.areas ? A.areas[areaOf].topics : A.topics || [];
     // the Topics card: tagged segments, else the attributions, else the topic, else none yet (TranscriptDetail.tsx:1740-1905)
     const tagged = segs.filter(g => g.cat).length, byCount = Object.keys(counts).filter(k => k !== 'General').sort((a, b) => counts[b] - counts[a]);
+    // a Without HCP transcript: its entered insights, edited in place (TranscriptDetail.tsx GeneralInsightEditor)
+    const gv = editing && ed.gen ? this.genView(ed.gen, { put:fn => this.ixPut(d => { if (d.gen) d.gen = fn(d.gen); return d; }), polish:k => this.genPolish('ixs', k), busy:s.ixsGenBusy, prev:s.ixsGenPrev,
+      keep:() => this.setState({ ixsGenPrev:null }), use:() => this.genUse('ixs') }) : GEN0;
     const people = P.people.length ? P.people : [{ id:v.who || '', name:P.hcp || 'Unknown', spec:(HCPS[v.who] || {}).spec || '', site:'', place:'', adv:null, quarter:'', insights:[] }];
     const pct = n => Math.round(n * 100) + '%';
     const complete = !!sent && !!sent.confidence && !!sent.details && !!sent.explanations;
@@ -5754,7 +6022,10 @@ class Component extends DCLogic {
       ixSeMissing:'Missing: ' + [sent && !sent.confidence && 'Confidence', sent && !sent.details && 'Breakdown', sent && !sent.explanations && 'Explanations'].filter(Boolean).join(', '),
       ixSeNone:!sent,
       // HCP card: two, then Show N more (TranscriptDetail.tsx:1560-1712); a name opens their page
-      ixHcpHead:P.people.length > 1 ? 'HEALTHCARE PROVIDERS' : 'HCP',
+      ixHcpHead:P.noHcp ? 'ATTRIBUTION' : P.people.length > 1 ? 'HEALTHCARE PROVIDERS' : 'HCP',
+      ixNoHcp:!!P.noHcp, ixPeopleView:!editing && !P.noHcp, ixPeopleEdit:editing && !P.noHcp,
+      ixGenOn:!!P.noHcp && P.entered != null, ixGenRead:P.entered || [], ixGenEdOn:editing && !!ed.gen,
+      ixGenRows:gv.rows, ixGenCanAdd:gv.canAdd, ixGenAdd:gv.add, ixGenPrevOn:gv.prevOn, ixGenPrevText:gv.prevText, ixGenKeep:gv.keep, ixGenUse:gv.use, ixsGenErr:s.ixsGenErr,
       ixPeople:(people.length > 2 && !s.ixHcpAll ? people.slice(0, 2) : people).map(p => ({ name:p.name, spec:p.spec, site:p.site, place:p.place,
         adv:p.adv != null ? 'Advocacy: ' + p.adv + '/5' + (p.quarter ? ' · ' + p.quarter : '') : '', link:!!HCPS[p.id], open:() => HCPS[p.id] ? this.go('hcp', p.id) : null })),
       ixMoreOn:people.length > 2, ixMore:s.ixHcpAll ? 'Show less' : 'Show ' + (people.length - 2) + ' more', ixMoreGo:() => this.setState({ ixHcpAll:!s.ixHcpAll }),
@@ -6028,7 +6299,7 @@ class Component extends DCLogic {
       const tone = SMY_SENT[sent] || SMY_SENT.neutral, w = who.replace(/^dr\.?\s+/i, '').split(/\s+/).filter(Boolean);
       return { cardType:(ix.mtype || 'Meeting').toUpperCase(), cardC:mtColor(ix.mtype, third), cardWhen:(ix.mins ? ix.mins + 'm · ' : '') + (ix.day || '—'), heroOn:true,
         cardHero:ix.preview || (ix.status === 'pending' || ix.status === 'processing' ? (this.trOn() ? 'Processing transcript...' : 'Processing transcript…') : ix.status === 'failed' ? 'Transcription failed' : 'No transcript available'),
-        cardHeroC:ix.preview ? '#0B1220' : '#7A839A', cardHeroFs:ix.preview ? 'normal' : 'italic', cardName:ix.hcp || 'Third-party', cardBy:ix.by ? ' · Added by ' + ix.by : '',
+        cardHeroC:ix.preview ? '#0B1220' : '#7A839A', cardHeroFs:ix.preview ? 'normal' : 'italic', cardName:ix.hcp || (ix.noHcp ? 'No HCP attributed' : 'Third-party'), cardBy:ix.by ? ' · Added by ' + ix.by : '',
         cardIni:((w[0] || '')[0] || '') + (w.length > 1 ? w[w.length - 1][0] : ''),
         cardChips:[...(sent && sent !== 'neutral' ? [{ label:capWord(sent), bg:tone[0], fg:tone[1] }] : []),
           ...(A.conv ? [ix.filed === 'Insight' ? { label:'Insight', bg:'#E7ECFA', fg:'#22409F' } : { label:'Note', bg:'#EEF1F7', fg:'#5B6478' }] : []),
@@ -6095,7 +6366,7 @@ class Component extends DCLogic {
     return { title: running ? 'Generating report' : 'Report ready', view: {
       shReport: on && !!r, repName: name, repSubtitle: name + (r && r.group ? ' · ' + r.group : ''), repRunning: running, repDone: !!r && !running,
       repChips: chips.map(c => ({ ...c, bg: c.ok ? '#E3F5EC' : '#EEF1F7', fg: c.ok ? '#1C7A4E' : '#5B6478' })),
-      repUrlOn: !!url, repNoUrl: !!r && !running && !url, repOpen: () => this.openLink(url),
+      repUrlOn: !!url && !WORKSPACE.exportsLocked, repLocked: !!url && !!WORKSPACE.exportsLocked, repNoUrl: !!r && !running && !url, repOpen: () => this.exportsLocked() ? null : this.openLink(url),
       repStop: () => this.setState(st => ({ sheet:null, reports: st.reports.filter(x => !(x.busy && String(x.id) === (mine ? String(mine.id) : ''))) })),
     } };
   }
@@ -6138,6 +6409,12 @@ class Component extends DCLogic {
   share(what) {
     if (!SERVICE.share) return this.toast('Sharing isn’t connected yet');
     SERVICE.share(what).then(m => { if (m) this.toast(m); }, e => this.toast((e && e.message) || 'That didn’t share · try again'));
+  }
+  // the website's export lock (the team's saved brand): nothing leaves the app as a file, and it says so
+  exportsLocked() {
+    if (!WORKSPACE.exportsLocked) return false;
+    this.toast('Exports are turned off in this demo environment.');
+    return true;
   }
   openLink(url) {
     if (!url) return this.toast('The link isn’t ready yet');
@@ -6703,7 +6980,9 @@ class Component extends DCLogic {
       omShowClear: live && (near || !!s.omState || city !== 'All cities' || !!s.mapTypes),
       omSearchRetry: () => bookState === 'failed' ? AUTH.refreshWorkspace?.() : this.loadOpportunity(true),
       omSearchRetryOn: result?.status === 'failed' || bookState === 'failed',
+      omExportOn: !WORKSPACE.exportsLocked,
       omExport: () => {
+        if (this.exportsLocked()) return;
         if (!SERVICE.saveText) return this.toast('Export isn’t connected yet');
         if (!src.length) return this.toast('Nothing to export here');
         const cell = v => /[",\n]/.test(String(v)) ? '"' + String(v).replace(/"/g, '""') + '"' : String(v);
@@ -6725,8 +7004,8 @@ class Component extends DCLogic {
       omMoneyNote: !mapIssue && src.length > 0 && data?.hasOpportunity && !priced ? (moneyRead?.status === 'failed' ? 'Billed charges unavailable. Showing activity.' : 'Loading billed charges…') : '',
       omLimitNote: !mapIssue && data?.capped ? 'Top ' + (search.request.wide ? '1,000' : '200') + ' by activity. Narrow the area to find more.' : '',
       // the colour steps (omColor) in the map's own unit, on the scale the largest value in view set
-      omLegendHead: layer === 'Pins' ? Nouns + ' outside your target list · ' + bookYr()
-        : (unit === '$' || unit === '$K' ? 'Procedure value' : unit.charAt(0).toUpperCase() + unit.slice(1)) + ' outside your target list · by ' + layer.toLowerCase() + ' · ' + bookYr(),
+      omLegendHead: layer === 'Pins' ? Nouns + ' not in your book · ' + bookYr()
+        : (unit === '$' || unit === '$K' ? 'Procedure value' : unit.charAt(0).toUpperCase() + unit.slice(1)) + ' not in your book · by ' + layer.toLowerCase() + ' · ' + bookYr(),
       omLegendNote: layer === 'Pins' ? '· Size = ' + (unit === '$' || unit === '$K' ? 'procedure value' : 'volume') : layer === 'ZIP' ? '· Bigger circle = more value' : '',
       omLegendLo: '<' + fmt(Math.round(25 * vMax / 134)), omLegendHi: unit === '$K' || unit === '$' ? fmt(Math.round(100 * vMax / 134)) + '+' : Math.round(100 * vMax / 134).toLocaleString('en-US') + '+ ' + unit,
       omGroups: [['all','All'], ['zip','By ' + (detail ? heatNoun[0] : 'ZIP')]].map(([k, label]) => ({ label, ...segOf(s.omGroup === k), go: () => this.setState({ omGroup:k, omSel:null }) })),
@@ -6879,7 +7158,7 @@ class Component extends DCLogic {
           metrics: extra
             ? [extra, lastCell, meetings]
             : [lastCell, meetings],
-          hasWide: !!topicLine, wideV:topicLine };
+          hasWide: !!pr, wideV:topicLine || 'No topics tagged' };
       };
     } else if (exploreMode) {
       const hcp = s.kind === 'hcp';
@@ -6916,7 +7195,7 @@ class Component extends DCLogic {
         const left = h.leftN, measured = Number.isFinite(left) && left >= 0 && left <= 100;
         const leftLabel = has(h.left) ? h.left : sharePct(left);
         const stayedLabel = has(h.stayed) ? h.stayed : sharePct(100 - left);
-        const split = leakCols && measured ? { stayed:(100 - left) + '%', left:left + '%', out:leftLabel + ' out', label:stayedLabel + ' stayed · ' + leftLabel + ' left' } : null;
+        const split = leakCols && measured ? { stayed:(100 - left) + '%', left:left + '%', out:leftLabel + ' out', label:'STAYED / LEFT · ' + stayedLabel + ' stayed · ' + leftLabel + ' left' } : null;
         const lead = opportunity && has(opportunity.v) ? opportunity : volume;
         const stats = WORKSPACE.drugAccount
           ? [{ k:'OF LIST', v:h.listShare, c:'#22409F' }, yoy, { k:'CHANGE', v:h.delta, c:yoy.c }, { k:'340B', v:h.is340b, c:'#0B1220' }]
@@ -7030,9 +7309,10 @@ class Component extends DCLogic {
         : tlist.loading || !tlist.id ? { emptyTitle:tlist.loading ? 'Loading targets…' : 'No target lists yet',emptySub:tlist.loading ? 'Opening ' + tlist.name : '',
           emptyA:'Change list', emptyAGo: () => this.sheet('territory'), hasEmptyA: TLISTS.length > 1, emptyB:'', emptyBGo: () => {}, hasEmptyB: false }
         : tlist.ids.length ? { emptyTitle:'No providers match these filters.',emptySub:'', emptyA:'', emptyAGo: () => {}, hasEmptyA:false, emptyB:'', emptyBGo: () => {}, hasEmptyB:false }
-        : tlist.smart ? { emptyTitle:'No HCPs match these rules yet',emptySub:'HCPs in your manual lists appear here when they match the rules.',
+        : tlist.smart ? { emptyTitle:'No HCPs match these rules yet',emptySub:'HCPs must already be in one of your manual lists to be picked up here. Add some to a manual list and they’ll appear automatically when they match.',
           emptyA:'', emptyAGo: () => {}, hasEmptyA:false, emptyB:'', emptyBGo: () => {}, hasEmptyB:false }
-        : { emptyTitle:'No HCPs in this list yet',emptySub:'',hasEmptyA:false,hasEmptyB:false })
+        : { emptyTitle:'No HCPs in this list yet',emptySub:'Add an HCP and we’ll pull every meeting you’ve had with them. Generate a pre-call brief whenever you need one.',
+          emptyA:'Add your first HCP', emptyAGo: () => this.openPeople(), hasEmptyA:addInsightHcpOn, emptyB:'', emptyBGo: () => {}, hasEmptyB:false })
       // the website's wording for an empty book (its "Add your targets" upload isn't in the app; Explore is)
       : savedHcps ? { emptyTitle:pickedTerritory === ':other' ? 'No unassigned target HCPs.' : 'No target HCPs in ' + territoryName + ' yet.',emptySub:'',emptyA:'Explore HCPs',emptyAGo:() => this.setState({ scope:'explore' }),hasEmptyB:false }
       : toExploreFirst && s.kind === 'hco' && !Object.values(HCOS).some(h => h.mine) ? { emptyTitle:pickedTerritory === ':other' ? 'No unassigned target accounts.' : 'No target accounts in ' + territoryName + ' yet.',emptySub:'',emptyA:'Explore accounts',emptyAGo:() => this.setState({ scope:'explore' }),hasEmptyB:false }
@@ -7162,7 +7442,7 @@ class Component extends DCLogic {
     const MYV = s.sheet === 'mymenu' ? s.visits.find(v => v.id === s.sheetData) || (s.trRows || []).find(v => v.id === s.sheetData) : null;
     const RS = this.reportSheet();
     const titles = { report: RS.title, visit: VD && VD.ix && !(VD.mtg && VD.mtg.manual) ? ((typeof s.ixFull[VD.ix.id] === 'object' && s.ixFull[VD.ix.id]) ? s.ixFull[VD.ix.id].page : VD.ix).title : VD && VD.conv === 'Note' ? 'Note' : W.one,
-      mymenu: MYV && MYV.ix ? (s.myMenu ? 'Delete insight' : MYV.ix.hcp || 'Third-party') : '', range: rangeType ? 'Area and type' : 'Search area', xf: xfSel ? xfSel.label : 'Filter', filter:'Filter and sort', coverage:'Territory coverage', territory: ins ? 'Target lists' : 'Target list', form: !s.fm ? '' : s.fm.kind === 'terr' ? 'New target list' : s.fm.kind === 'terrEdit' ? 'Edit states' : s.fm.kind === 'zipEdit' ? 'Edit ZIP codes' : s.fm.kind === 'zipNew' ? 'Upload ZIP codes' : s.fm.kind === 'list' ? 'Create target list' : 'Edit rules', share: 'Share “' + ((TLISTS.find(t => t.id === s.sheetData) || {}).name || '') + '”', choose:'Who will you see?', email:'Draft email', fu:'New follow-up', meet: s.meetEditId ? 'Edit meeting' : 'Log a meeting', note:'Add a note', full:'Full profile', tracker: s.trkForm && s.trkForm.mode === 'edit' ? 'Edit your assessment' : 'New assessment', status:'Status', rmTarget:'Remove ' + ((HCPS[s.sheetData] || NO_HCP).name || 'them') + ' from your target HCPs?', people: ins ? 'Add HCP to list' : s.peopleOrgs ? 'Add target accounts' : 'Add target HCPs', me:'Your workspace', sync: ins ? 'CRM Integration' : 'Sync to CRM', account:'Account', insight: s.insRec ? 'Recording' : W.one === 'Note' ? 'Add note' : 'Add Insight', summary:'Build your summary', smyf:SMY_PICK[s.sheetData] || '', smydates:'Start date – End date', smyrev:'Review Insights' };
+      mymenu: MYV && MYV.ix ? (s.myMenu ? 'Delete insight' : MYV.ix.hcp || (MYV.ix.noHcp ? 'No HCP attributed' : 'Third-party')) : '', range: rangeType ? 'Area and type' : 'Search area', xf: xfSel ? xfSel.label : 'Filter', filter:'Filter and sort', coverage:'Territory coverage', territory: ins ? 'All target lists' : 'Target list', form: !s.fm ? '' : s.fm.kind === 'terr' ? 'New target list' : s.fm.kind === 'terrEdit' ? 'Edit states' : s.fm.kind === 'zipEdit' ? 'Edit ZIP codes' : s.fm.kind === 'zipNew' ? 'Upload ZIP codes' : s.fm.kind === 'list' ? 'Create target list' : 'Edit rules', share: 'Share “' + ((TLISTS.find(t => t.id === s.sheetData) || {}).name || '') + '”', choose:'Who will you see?', email:'Draft email', fu:'New follow-up', meet: s.meetEditId ? 'Edit meeting' : 'Log a meeting', note:'Add a note', full:'Full profile', tracker: s.trkForm && s.trkForm.mode === 'edit' ? 'Edit your assessment' : 'New assessment', status:'Status', rmTarget:'Remove ' + ((HCPS[s.sheetData] || NO_HCP).name || 'them') + ' from your target HCPs?', people: ins ? 'Add HCP to list' : s.peopleOrgs ? 'Add target accounts' : 'Add target HCPs', me:'Your workspace', sync: ins ? 'CRM Integration' : 'Sync to CRM', account:'Account', insight: s.insRec ? 'Recording' : W.one === 'Note' ? 'Add note' : 'Add Insight', summary:'Build your summary', smyf:SMY_PICK[s.sheetData] || '', smydates:'Start date – End date', smyrev:'Review Insights' };
 
     const jumpDefs = [
       ['Sign in', () => this.signOutTo('signIn')],
@@ -7263,10 +7543,15 @@ class Component extends DCLogic {
     const myMet = (rows, since) => rows.filter(v => v.my && v.my.at !== null && v.my.at >= since).length;
 
     // add insight sheet
-    const insPer = this.insPerOf(), insPerOn = !A.fieldPro && s.insWho.length > 1;
+    // Without HCP: the choice shows when the server has it on or the draft already chose it; typed notes take general insights
+    const genCap = s.insGenCap === true, noHcp = !A.fieldPro && s.insNoHcp === true, genTyped = noHcp && s.insMode === 'notes';
+    const genEntries = noHcp ? s.insGen.filter(g => g.text.trim()) : [], genCats = [...new Set(genEntries.flatMap(g => g.attrs.map(a => a.category)))], genSubs = [...new Set(genEntries.flatMap(g => g.attrs.flatMap(a => a.subs)))];
+    const gs = genTyped ? this.genView(s.insGen, { put:fn => this.setState(st => ({ insGen:fn(st.insGen) })), polish:k => this.genPolish('ins', k), busy:s.insGenBusy, prev:s.insGenPrev,
+      keep:() => this.setState({ insGenPrev:null }), use:() => this.genUse('ins') }) : GEN0;
+    const insPer = this.insPerOf(), insPerOn = !A.fieldPro && !noHcp && s.insWho.length > 1;
     const thirdParty = s.insType === 'Third Party', insProblems = A.fieldPro ? [] : this.insProblems(insPer, thirdParty);
     const insReady = (A.fieldPro ? (s.insWho.length > 0 || thirdParty) && !!s.insNote.trim() : !insProblems.length) && (!A.areas || !!s.insArea);
-    const insStarted = s.insWho.length > 0 || !!s.insNote.trim() || insPer.length > 0 || s.insTried;
+    const insStarted = s.insWho.length > 0 || !!s.insNote.trim() || insPer.length > 0 || s.insTried || (noHcp && s.insGen.some(g => g.text.trim() || g.attrs.length));
     const advDot = on => on ? { bg:'#2447C4', fg:'#fff', bd:'#2447C4' } : { bg:'#fff', fg:'#3C4557', bd:'#D7DEEC' };
     const topicsNow = this.topicsFor(s.insArea), subsNow = A.subs ? s.insTopics.flatMap(t => A.subs[t] || []) : [];
     const toggleIn = (key, val) => this.setState(st => ({ [key]: st[key].includes(val) ? st[key].filter(x => x !== val) : [...st[key], val] }));
@@ -7308,12 +7593,12 @@ class Component extends DCLogic {
       toAsk: () => s.q.trim() ? this.ask(s.q) : this.setTab('ask'),
       scopeSeg: [['mine','My targets'], ['explore','Explore']].map(([k, label]) => ({ label, ...seg(s.scope === k), go: () => this.setState({ scope:k }) })),
       // the website's lens tabs: "My HCOs 22" on the book, the bare kind in Explore
-      kindChips: [['hco','HCOs'], ['hcp','HCPs']].map(([k,short]) => {
-        const mine = s.scope === 'mine';
+      kindChips: [['hco','HCOs','Explore HCOs','My HCOs'], ['hcp','HCPs','Explore HCPs','My HCPs']].map(([k,short,explore,mine]) => {
+        const isMine = s.scope === 'mine';
         const status = k === 'hco' ? WORKSPACE.hcoTargetsState : WORKSPACE.hcpTargetsState;
-        const showCount = mine && !this.props?.loading && !workspaceFailed && status !== 'failed' && status !== 'loading';
+        const showCount = isMine && !this.props?.loading && !workspaceFailed && status !== 'failed' && status !== 'loading';
         const count = showCount ? Object.values(k === 'hco' ? HCOS : HCPS).filter(x => x.mine).length.toLocaleString('en-US') : '';
-        const label = (mine ? 'My ' : 'Explore ') + short + (count ? ' ' + count : '');
+        const label = (isMine ? mine : explore) + (count ? ' ' + count : '');
         return { label, short, aria:label + (s.kind === k ? ', selected' : ''), ...chip(s.kind === k), go:() => this.setState({ kind:k }) };
       }),
       qHint: ins ? 'Search name, NPI, institution' : exploreMode ? (s.kind === 'hcp' ? 'HCP name, hospital or city' : 'Name or city') : 'Search doctors or accounts',
@@ -7633,7 +7918,7 @@ class Component extends DCLogic {
       // a card's menu: Open, Delete, and the website's delete dialog
       myMenuAsk: s.myMenu, myMenuOpts: !s.myMenu,
       myMenuOpen: () => { const v = s.visits.find(x => x.id === s.sheetData) || (s.trRows || []).find(x => x.id === s.sheetData); if (v) this.openVisit(v); },
-      myMenuSyncOn: TRON && !!SERVICE.crm, myMenuSync: () => this.trAct('sync', s.sheetData), myMenuReOn: TRON && !!SERVICE.transcriptReanalyze, myMenuRe: () => this.trAct('re', s.sheetData), myMenuBusy: !!s.trBusy,
+      myMenuSyncOn: TRON && !!SERVICE.crm && !(MYV && MYV.ix && MYV.ix.noHcp), myMenuSync: () => this.trAct('sync', s.sheetData), myMenuReOn: TRON && !!SERVICE.transcriptReanalyze, myMenuRe: () => this.trAct('re', s.sheetData), myMenuBusy: !!s.trBusy,
       myMenuDel: () => this.setState({ myMenu:true, myDelErr:'' }), myMenuNo: () => { if (!s.myDelBusy) this.setState({ myMenu:false, myDelErr:'', sheet:null }); }, myMenuErr:s.myDelErr,
       myMenuYes: () => this.deleteInsight(s.sheetData), myMenuYesLabel: s.myDelBusy ? 'Deleting…' : 'Delete',
       myMenuText: (() => { const v = s.visits.find(x => x.id === s.sheetData) || (s.trRows || []).find(x => x.id === s.sheetData), ix = v && v.ix;
@@ -7662,7 +7947,7 @@ class Component extends DCLogic {
       ...this.changesView(ins, tlist),
       ...this.pickerView(ins, pickedTerritory), ...this.formView(), ...this.covView(), ...this.shareView(),
       // Add HCP sits on the Targets list: Insights' manual lists, Field Pro's own doctors (Explore finds by place)
-      canAddPeople: !ins && s.scope === 'mine', addInsightHcpOn, openPeople: () => this.openPeople(),
+      canAddPeople: !ins && s.scope === 'mine', addInsightHcpOn, smartAutoOn: ins && !!tlist.id && !!tlist.smart && !tlist.archived, openPeople: () => this.openPeople(),
       addPeopleLabel: s.kind === 'hco' ? '＋ Add target accounts' : '＋ Add target HCPs',
       meetWho: (HCPS[s.sheetData] || NO_HCP).name,
       meetDateLabel: (s.meetDateN === 0 ? 'Today ' + dateOf(0) : s.meetDateN === 1 ? 'Yesterday ' + dateOf(-1) : dayFull(-s.meetDateN)).toUpperCase(),
@@ -7726,7 +8011,11 @@ class Component extends DCLogic {
       insShowModes: !s.insRec && !!(SH.upload || A.record),
       insModes: [['notes', ins ? 'Notes' : 'Type'], ...(SH.upload ? [['upload','Upload']] : []), ...(A.record ? [['record','Record']] : [])].map(([k, label]) => ({ label, ...seg(s.insMode === k), go: () => this.setState({ insMode:k }) })),
       insNotes: s.insMode === 'notes', insUpload: s.insMode === 'upload', insRecord: s.insMode === 'record', insForm: s.insMode === 'notes' || (s.insMode === 'upload' && !!SERVICE.insightUpload),
-      insShowConv: !!A.conv,
+      insShowConv: !!A.conv && !genTyped,
+      insChoiceOn: !A.fieldPro && !!SERVICE.insightCaps && (genCap || noHcp),
+      insChoice: [[false, 'With HCP'], [true, 'Without HCP']].map(([on, label]) => ({ label, ...seg(noHcp === on), go: () => this.setState({ insNoHcp:on }) })),
+      insNoHcp: noHcp, insGenGone: noHcp && !genCap, insWithHcp: !noHcp, insGenOn: genTyped,
+      insGenRows: gs.rows, insGenCanAdd: gs.canAdd, insGenAdd: gs.add, insGenPrevOn: gs.prevOn, insGenPrevText: gs.prevText, insGenKeep: gs.keep, insGenUse: gs.use, insGenErr: s.insGenErr,
       // the website's "Insight" and "Notes": neither to start, and tapping the chosen one clears it
       insConvOpts: (A.conv || []).map(t => ({ label: t === 'Note' ? 'Notes' : t, ...chip(s.insConv === t), go: () => this.setState({ insConv: s.insConv === t ? '' : t }) })),
       insShowAdv: !!A.adv,
@@ -7741,18 +8030,18 @@ class Component extends DCLogic {
       insAddHcp: () => { this.findInsightWho(''); this.setState({ insPickMore: !s.insPickMore }); }, insAddLabel: s.insPickMore ? 'Cancel' : '＋ Add another HCP',
       insBusy: !!s.insBusy, insHasSource: !!s.insSource && !s.insBusy, insSourceLabel: s.insSource === 'Recording' ? 'Transcribed from your recording' + (s.insSecs ? ' · ' + Math.floor(s.insSecs / 60) + ':' + String(s.insSecs % 60).padStart(2, '0') : '') : 'Transcribed from ' + (s.insFile || 'your upload'),
       // with several doctors, each has their own words, as the website's per-HCP insights; the shared box is for a transcript
-      insPerOn: insPerOn && s.insMode === 'notes', insSharedOn: s.insMode === 'notes' && (!insPerOn || !!(s.insNote.trim() || s.insSource || s.insRef || s.insBusy)),
+      insPerOn: insPerOn && s.insMode === 'notes', insSharedOn: s.insMode === 'notes' && !noHcp && (!insPerOn || !!(s.insNote.trim() || s.insSource || s.insRef || s.insBusy)),
       insPerRows: insPerOn ? s.insWho.map(id => ({ name:(HCPS[id] || NO_HCP).name, text:(s.insPer || {})[id] || '',
         change: e => { const v = e.target.value; this.setState(st => ({ insPer:{ ...(st.insPer || {}), [id]:v } })); } })) : [],
       insNote: s.insNote, onInsNote: e => this.setState({ insNote: A.fieldPro ? e.target.value.slice(0, NOTE_MAX) : e.target.value }),
       insNotePh: A.fieldPro ? 'What happened, what’s next' : 'What did you hear? Quotes, asks, next steps.',
       insWhoHead: A.fieldPro ? 'WHO YOU SAW' : 'ATTENDEES',
-      insWhoLabel: A.fieldPro ? 'WHO YOU SAW' : s.insType === 'Third Party' ? 'HCP NAME' : 'HCP NAME *',
+      insWhoLabel: A.fieldPro ? 'WHO YOU SAW' : noHcp ? 'ATTENDEES' : s.insType === 'Third Party' ? 'HCP NAME' : 'HCP NAME *',
       insTopicHead: this.state.account === 'stemline' ? 'ATTRIBUTION' : 'TOPIC',
       insShowArea: !!A.areas,
       insAreaOpts: Object.keys(A.areas || {}).map(k => ({ label:k, sub:AREA_PRODUCT[k] || '', ...chip(s.insArea === k), go: () => this.setState({ insArea:k, insTopics:[] }) })),
       // Stemline tags topics on an Insight only (AddInsightSheet.tsx:2198)
-      insShowTopics: topicsNow.length > 0 && (!A.conv || s.insConv === 'Insight'),
+      insShowTopics: topicsNow.length > 0 && (!A.conv || s.insConv === 'Insight') && !genTyped,
       insTopicOpts: topicsNow.map(t => ({ label:t, ...chip(s.insTopics.includes(t)), go: () => toggleIn('insTopics', t) })),
       insHasSubs: subsNow.length > 0,
       insSubOpts: subsNow.map(t => ({ label:t, ...chip(s.insSubs.includes(t)), go: () => toggleIn('insSubs', t) })),
@@ -7786,7 +8075,7 @@ class Component extends DCLogic {
         if (insProblems.length) return this.setState({ insTried:true });
         if (A.fieldPro && s.insNote.trim().length > NOTE_MAX) return this.toast('A note takes up to ' + NOTE_MAX.toLocaleString('en-US') + ' characters · shorten it a little');
         if (A.areas && !s.insArea) return this.toast('Pick the therapeutic area');
-        const who = s.insWho, first = who[0] || null, dN = s.insDateN, id = Date.now(), form = this.draftForm(), draft = s.insDraft;
+        const who = noHcp ? [] : s.insWho, first = who[0] || null, dN = s.insDateN, id = Date.now(), form = this.draftForm(), draft = s.insDraft;
         // Field Pro writes what its website's Log a visit writes: the type as the topic, its interaction as the type,
         // and "Logged a visit at …" when nothing was typed (visitNoteData)
         const vType = A.meetTypes.includes(s.insType) ? s.insType : A.fieldPro ? A.meetTypes[0] : '';
@@ -7794,11 +8083,11 @@ class Component extends DCLogic {
         const visit = { id, who:first, attendees:who, advs: A.adv ? s.insAdv : {}, qtrs: A.adv ? s.insQtr : {}, adv: A.adv && first ? s.insAdv[first] || null : null, date:dateOf(-dN), dN,
           ...(A.fieldPro
             ? { type:interactionOf(vType), topic:vType, note:s.insNote.trim() || 'Logged a ' + vType.toLowerCase() + (place ? ' at ' + place : '') }
-            : { type:[vType, A.live ? s.insLive : ''].filter(Boolean).join(' · '), topic:s.insTopics[0] || s.insArea || wordsOf(A).one,
-              note:!insPer.length ? s.insNote.trim() : [s.insNote.trim(), (s.insNote.trim() ? '--- Per-HCP Insights ---\n\n' : '') + insPer.map(([pid, t]) => { const h = HCPS[pid] || NO_HCP; return h.name + (s.insNote.trim() && h.spec ? ' (' + h.spec + ')' : '') + ':\n' + t; }).join('\n\n')].filter(Boolean).join('\n\n'),
+            : { type:[vType, A.live ? s.insLive : ''].filter(Boolean).join(' · '), topic:(noHcp ? genCats[0] : s.insTopics[0]) || s.insArea || wordsOf(A).one,
+              note:noHcp ? genEntries.map(g => g.text.trim()).join('\n\n') : !insPer.length ? s.insNote.trim() : [s.insNote.trim(), (s.insNote.trim() ? '--- Per-HCP Insights ---\n\n' : '') + insPer.map(([pid, t]) => { const h = HCPS[pid] || NO_HCP; return h.name + (s.insNote.trim() && h.spec ? ' (' + h.spec + ')' : '') + ':\n' + t; }).join('\n\n')].filter(Boolean).join('\n\n'),
               ...(insPer.length ? { perNotes:Object.fromEntries(insPer) } : {}) }),
-          topics: A.conv && s.insConv !== 'Insight' ? [] : s.insTopics,
-          subs: A.conv && s.insConv !== 'Insight' ? [] : s.insSubs.filter(x => subsNow.includes(x)), tags: A.tags.length ? s.insTags : [], src:s.insSource || 'Notes',
+          topics: noHcp ? genCats : A.conv && s.insConv !== 'Insight' ? [] : s.insTopics,
+          subs: noHcp ? genSubs : A.conv && s.insConv !== 'Insight' ? [] : s.insSubs.filter(x => subsNow.includes(x)), tags: A.tags.length ? s.insTags : [], src:s.insSource || 'Notes',
           ...(A.conv ? { conv:s.insConv } : {}), ...(A.areas ? { area:s.insArea } : {}), ...(A.stages ? { stage:s.insStage, prio:s.insPrio } : {}),
           ...(A.extra && s.insType === 'Third Party' ? { vendor: s.insVendor === 'Other' ? s.insVendorName.trim() || 'Other' : s.insVendor, vendorSub: s.insVendorSub, count: s.insCount } : {}),
           ...(A.extra && s.insType === 'Conference' ? { conf: s.insConf === 'Other' ? s.insConfName.trim() || 'Other' : s.insConf } : {}),
@@ -7820,7 +8109,7 @@ class Component extends DCLogic {
       insNoFile: !s.insFiles.length, insHasFile: s.insFiles.length > 0, insFilesHead: 'Files (' + s.insFiles.length + ')',
       insFileRows: s.insFiles.map((f, i) => ({ name:f.name, meta:[typeof f.size === 'number' ? fileSize(f.size) : '', f.type].filter(Boolean).join(' • '), clear: () => { if (!s.insUpBusy) this.insSetFiles(s.insFiles.filter((_, j) => j !== i)); } })),
       insPickFile: () => this.insPick(), insMoreOn: !!SERVICE.pickMany && !!SERVICE.insightUpload && !s.insUpBusy, insUpErr: s.insUpErr,
-      insTranscribeOn: s.insFiles.length === 1, insTranscribe: () => this.finishTranscript('Upload'),
+      insTranscribeOn: s.insFiles.length === 1 && !noHcp, insTranscribe: () => this.finishTranscript('Upload'),
       insUploadOn: !!SERVICE.insightUpload && s.insFiles.length > 0, insUploadGo: () => this.insUploadGo(),
       insUpLabel: s.insUpBusy ? 'Uploading ' + s.insFiles.length + ' of ' + s.insFiles.length + '...' : 'Upload ' + s.insFiles.length + ' File' + (s.insFiles.length > 1 ? 's' : ''),
       insUpBg: s.insFiles.length > 1 || s.insUpBusy ? '#2447C4' : '#fff', insUpFg: s.insFiles.length > 1 || s.insUpBusy ? '#fff' : '#22409F', insUpBd: s.insFiles.length > 1 || s.insUpBusy ? '#2447C4' : '#9DB3EE',
