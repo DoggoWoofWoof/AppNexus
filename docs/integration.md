@@ -1,45 +1,48 @@
 # Integration plan
 
-The [field app design](../design/) is one HTML page that anyone can open in a browser. The production app will be **React Native with Expo**. This page covers the stack, the data services it needs and the build order.
+The [field app design](../design/) is one HTML page that anyone can open in a browser. The phone app is **React Native with Expo**, built from this design in a separate, private repository. This page covers the stack as built, the data services it uses and the build order.
 
 ## App stack
 
-| Concern | React Native app |
+| Concern | React Native app, as built |
 | --- | --- |
-| Screens and navigation | Expo Router. Tabs, with a stack inside each tab, so Back returns to where the rep was. |
-| UI components | NativeWind (Tailwind classes) plus react-native-reusables, the React Native port of shadcn/ui |
-| Design tokens | NativeWind theme with the design's colours, radii and type scale, in light and dark |
-| Icons | `lucide-react-native` |
-| Data loading, cache, retry | TanStack Query: cached results, retry, and an offline-first query cache |
-| On-device data (notes, drafts, recordings waiting to upload) | SQLite (`expo-sqlite`) or MMKV, with a sync queue |
+| Screens and navigation | Expo Router with one route. Every screen, sheet and overlay is generated from the design, and the design's own logic moves between them, so the app can't drift from the design. |
+| UI components | The generated screens, plus a small hand-written kit that makes React Native lay out like the design's CSS (grids, inline chips, animations) |
+| Design tokens | The design's own colours, radii and type, carried into each generated style. Light only. |
+| Icons | The design's own characters and inline SVG (`react-native-svg`) |
+| Data loading, cache, retry | The app's own HTTP client, with a read cache and retry. Every screen shows its saved copy at once and swaps in fresh data the moment it arrives. |
+| On-device data | Saved copies of each account's lists and figures (IndexedDB or local storage on the web, files on the phone), sign-in tokens in the secure store, and an outbox that keeps every change, recordings included, until the server has it |
 | Maps | Mapbox's map tiles drawn by the app itself, so the pins, the radius circle and the ZIP areas sit on a map you can drag and pinch, with road times from Mapbox's routing |
-| Recording and voice | Audio recording that keeps going when the screen locks, native speech recognition, `expo-speech`, and later a realtime session (see [ask-and-voice.md](ask-and-voice.md)) |
-| Large text | System font scale (Dynamic Type), tested at 200% |
-| Tests | Jest and React Native Testing Library for logic and screens; Maestro for flows |
+| Recording and voice | `expo-audio` and the document picker for Record and Upload, set to keep recording with the screen locked; `expo-speech-recognition` for the mic, on the device; `expo-speech` for Listen. A realtime session comes later (see [ask-and-voice.md](ask-and-voice.md)). |
+| Large text | The system font scale isn't set or tested yet |
+| Tests | Jest, for the logic, the adapters and the writes; no screen or flow tests yet |
+
+Not adopted, though planned earlier: NativeWind, react-native-reusables, `lucide-react-native`, TanStack Query, SQLite or MMKV, and Maestro. Generating the screens from the design made the component and token layers unnecessary, and the app's own cache and outbox cover the rest.
 
 ## Data services
 
-The app needs the services below. Several already exist in the Field backend that the website uses. The route-level mapping is kept in internal notes, not in this public repository.
+The app uses the services below. Most already existed in the backends the websites use. The route-level mapping is kept in internal notes, not in this public repository.
 
 | App need | Status |
 | --- | --- |
-| Rep's book: assigned people and accounts, with signals | Exists for the website. Needs a compact mobile response. |
-| One set of filters for the target list and the opportunity map: near a place (start point and radius), state and city, and account type | **To check.** The design gives Targets the map's filters. When wiring the endpoints, check how many of them both endpoints can share. If the target list can't filter by distance, drop the radius from Targets. |
-| Each customer account's setup: Record on or off, topics, meeting types and extra fields (see the [field app design](../design/)) | **To check.** Insights keeps this in the web client, keyed by email domain. The app should get it from the server, per person where it differs: Kura MSLs get the KOMET topic list, and Stemline's view-only users can't add insights. Third Party meetings need Insights' vendor fields. |
-| Recording a meeting on the phone | Built, not yet tried on a phone: recording keeps going with the screen locked. Insights accounts upload the audio for transcription; Field Pro accounts transcribe on the device, so no audio leaves the phone. |
+| Rep's book: assigned people and accounts, with signals | Exists for the website. Read page by page, twenty to a page; a compact mobile response would make the first screen faster. |
+| One set of filters for the target list and the opportunity map: near a place (start point and radius), state and city, and account type | Exists. Targets (Explore) and the map share one filter, radius included: the radius becomes the ZIP areas inside it, which the server filters on, then a straight-line trim on the phone. State and account type filter on the server; city filters on the phone. |
+| Each customer account's setup: Record on or off, topics, meeting types and extra fields (see the [field app design](../design/)) | Works today from a table in the app that matches Insights' web client (keyed by email domain), plus the Field Pro setup reads. A server that serves each account's setup would replace it. Views are per account, picked in the account selector, never per person. The screens would not change. |
+| Recording a meeting on the phone | Built, not yet tried on a phone. Insights accounts that record upload the audio for transcription. Field Pro accounts have no Record, as their website has none: the visit is typed. |
 | HCP and HCO profile: identity, affiliations, volumes, referrals, network, people | Largely exists, spread across several website calls. One profile call per entity would suit mobile better. |
 | Leakage for an account and its top destinations | Exists |
 | The hospital leakage report (a PDF, built on demand in 3–5 minutes) | Exists, as on the website |
 | Account and HCP briefs | Exists |
-| Ask | Exists: the Ask the Field Pro website uses, for every account, with the book or target list the phone holds. It needs to get faster for voice (see [ask-and-voice.md](ask-and-voice.md)). |
-| Summaries of conversations | Exists for Insights accounts: the server writes the summary and a slide deck. For Field Pro accounts the phone writes it. |
-| Log a visit or note | Exists: the app saves to each account's own backend, as its website does. A failed save comes back as a draft. |
-| Follow-ups with due dates | Insights accounts: saved on Insights. Field Pro accounts: saved as a follow-up note; a store with due dates comes with unifying the accounts. |
-| The route (the day plan) | Kept on the phone, as both websites keep it in the browser. The visits themselves reach the server. |
+| Ask | Field Pro accounts only: they send the picked target list to the Ask the Field Pro website uses, and the answer is checked against what was sent. Insights accounts have no Ask; Stemline and Kura have Sphere of Influence in its place, as their website does. Ask needs to get faster for voice (see [ask-and-voice.md](ask-and-voice.md)). |
+| Summaries of conversations | Exists for Insights accounts: the server writes the summary and a slide deck. Field Pro accounts have none, as their website has none. |
+| Log a visit or note | Exists: the app saves to each account's own backend, as its website does. A change made offline waits on the phone and is sent when the connection is back. |
+| Follow-ups with due dates | Insights accounts: saved on Insights, added and ticked on a person's page (the Pipeline task board and Activity's Follow-ups list were taken out on 2026-11-24). Field Pro accounts have none, as their website has none; a store with due dates comes with unifying the accounts. |
+| The route (the day plan) | Field Pro accounts only, kept on the phone, as the website keeps it in the browser. The visits themselves reach the server. |
 | Road routing and drive times | Mapbox's driving times, as the website uses, with its public token; without one, Add places stops by straight-line distance. The route shows the miles between stops and a map of them. |
 | The opportunity map | Exists: Mapbox tiles you drag and pinch, with zoom and fit buttons, numbered pins that name the doctor on a tap, the radius around the start, and ZIP areas. It needs a latitude and longitude on each account, which the book gives. |
 | Reading answers aloud | Exists: each answer has a Listen button, and a question asked by voice is answered aloud, using the phone's own voice. |
-| CRM sync | **Not connected.** |
+| CRM sync | Built for Insights accounts, as the website's CRM page: connection status, test connection, sync one insight, sync all pending. Only Stemline has a CRM connected today, so the others see the website's "connect your CRM" message. The two syncs push real insights into a customer's CRM, so they are tested with fakes only. Since 2026-11-24 the Me sheet has no CRM row, so the page has no way in; a transcript's own Sync to CRM still works. |
+| Removing someone straight from a list | On for Insights and Field Pro since 2026-11-23: a plain ✕, last among a card's and a page's buttons, takes the person off that list. Adding from Explore, and taking that row off again, stays on. |
 
 ## Design system
 
@@ -47,18 +50,18 @@ The look follows the **Ottava** design exports: Source Serif 4 for headings, IBM
 
 The exports themselves contain real physician names. They stay in the git-ignored `reference/` folder and must not be committed.
 
-Lorick's tool suggestions, and where each fits:
+Tool suggestions from the team, and where each landed:
 
-- **shadcn/ui.** Use its React Native port, react-native-reusables, with NativeWind. The component names and patterns stay the same.
-- **impeccable.style and tasteskill.dev.** These are design-quality skills for AI coding agents. Use them as review passes on the React Native screens once they exist.
-- **Magic UI and React Bits.** These are web (React DOM) component sets and do not run in React Native. Use them for motion and pattern ideas only, such as list reveals, number tickers and the voice orb.
-- **saaspo.com and other reference sites.** Collect three to five product screens the team likes, and give them as examples when generating or reviewing screens.
+- **shadcn/ui** (through react-native-reusables and NativeWind): not adopted. The screens are generated from the design instead.
+- **impeccable.style and tasteskill.dev.** Design-quality skills for AI coding agents; still useful as review passes on the screens.
+- **Magic UI and React Bits.** Web (React DOM) component sets that do not run in React Native; ideas for motion only, such as list reveals, number tickers and the voice orb.
+- **saaspo.com and other reference sites.** Collect three to five product screens the team likes, and give them as examples when reviewing screens.
 
-## Suggested build order
+## Build order
 
-1. **Shell.** Expo app with the design's tabs and centre button, theme tokens, large-text support, sign-in, and each account's setup from the server.
-2. **Book and profiles.** Targets search, then HCP and HCO profiles on live data, with loading, empty, offline and error states.
-3. **Planning.** Add, the route plan, the run sheet and the day summary, with the route kept on the phone.
-4. **Record and Activity.** Recording, insights, notes and follow-ups, kept offline and synced when back online.
-5. **Ask.** Typed and push-to-talk, on the Ask service. Then hands-free.
+1. **Shell.** Done: the design's tabs and centre button, sign-in, and each account's setup (from the app's table until a server serves it). Large-text support is still to do.
+2. **Book and profiles.** Done: Targets, Explore, and HCP and HCO profiles on live data, with loading, empty, offline and error states.
+3. **Planning.** Done for Field Pro: Add, the route plan, the run sheet (with the website's Work step, Leakage report and Book appointment) and the day summary, with the route kept on the phone.
+4. **Record and Activity.** Done: recording, insights, notes and follow-ups, kept on the phone until the server has them. Not yet tried on a phone.
+5. **Ask.** Done for Field Pro: typed and push-to-talk, on the Ask service, with answers read aloud. Hands-free is next.
 6. **Live voice mode,** once the Ask service is fast enough.

@@ -6,6 +6,8 @@ How Ask should take questions in the phone app. A rep can ask in three ways:
 - **Push-to-talk.** Tap the mic, speak, pause. The words appear as they are heard, and the question is sent when the rep stops.
 - **Hands-free.** The app reads each answer aloud, then listens again, until the rep says "stop" or turns hands-free off.
 
+**Where it stands (2026-11-18):** Ask is on Field Pro accounts only; Insights accounts have no Ask; Stemline and Kura have Sphere of Influence in its place, as their website does. Typing and push-to-talk are built, with speech recognised on the device, and every answer has **Listen** to read it aloud. Hands-free and Live mode are not built. None of it has been tried on a phone yet.
+
 Every answer has the same shape, so it is quick to read, and it is the same card a live voice mode would fill:
 
 1. **One sentence** that answers the question.
@@ -68,10 +70,10 @@ The app side is the same either way: tools, cards and confirmations.
 
 | Piece | How |
 | --- | --- |
-| Speech to text (push-to-talk) | Native speech recognition through an Expo module |
-| Read aloud | `expo-speech` |
+| Speech to text (push-to-talk) | `expo-speech-recognition`, on the device (built) |
+| Read aloud | `expo-speech` (built) |
 | Live mode audio | WebRTC (OpenAI) or a WebSocket with raw mic audio (Gemini). Both need a development build, not Expo Go. |
-| Answer cards | One `AnswerCard` component, used by typed, push-to-talk and Live answers alike |
+| Answer cards | One answer card in the design, used by typed and push-to-talk answers, and later by Live ones |
 | Hands-free on the road | Car-friendly prompts, short spoken answers and large stop targets. Later: CarPlay and Android Auto. |
 
 ## Open questions
