@@ -4798,9 +4798,9 @@ const pageTop = () => { if (typeof document === 'undefined') return; const run =
 const panelTop = label => { if (typeof document === 'undefined') return; setTimeout(() => { const el = document.querySelector('[aria-label="' + label + '"]'); if (el && el.scrollIntoView) el.scrollIntoView({ block:'start' }); }, 30); };
 // the coverage map's County results are read 100 at a time (countyResults.ts COUNTY_READ_SIZE, the website's FETCH_SIZE) and shown 20 a page
 const COUNTY_READ = 100;
-// the website's tags on Add insight (AddInsightSheet.tsx:69-74)
-const TAGS = ['Clinical Trial','Follow Up','KOL','Drug Interactions'];
-// the rep's own tags (Insights' /user-tags), offered after the four, as the website's Add insight does; none in the sample
+// the website's tags on Add insight (AddInsightSheet.tsx:69-74) without Follow Up: the phone has no follow-ups, so no tag for one (user, 2026-11-25)
+const TAGS = ['Clinical Trial','KOL','Drug Interactions'];
+// the rep's own tags (Insights' /user-tags), offered after these, as the website's Add insight does; none in the sample
 const MY_TAGS = [];
 // "1mo ago", as the website's Last meeting says how long ago (DetailDrawer.tsx:144-153)
 // "Oct 3, 2026" is read by hand: the phone's JavaScript engine (Hermes) doesn't parse that form
