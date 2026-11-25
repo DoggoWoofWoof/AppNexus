@@ -43,7 +43,7 @@ Where Live mode clearly wins: **driving between accounts**, and **prepping in th
 ```
 
 1. The app opens a realtime session with a short-lived token issued by our backend. No model API key is ever stored on the phone.
-2. The model is given **tools**, not data. Each tool is an existing DocNexus service: Ask, account brief, HCP brief, leakage, the rep's plan and follow-ups.
+2. The model is given **tools**, not data. Each tool is an existing DocNexus service: Ask, account brief, HCP brief, leakage and the rep's plan.
 3. When the rep asks something, the model calls a tool. The tool result is drawn on screen as the same answer card as above. The model then speaks a one-line summary.
 4. Actions that change data ("add her to Thursday", "log that visit") come back as a **proposed change the rep confirms with a tap**. The model never writes on its own.
 5. Barge-in is supported: the rep can talk over the answer to redirect it.
