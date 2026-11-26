@@ -1680,12 +1680,12 @@ input,textarea,button{font-family:inherit}
                 <span style="flex:1;min-width:0;"><span style="display:block;font-size:11px;color:#2447C4;font-weight:650;">{{ omAreaKicker }}</span><span style="display:block;font-size:14px;font-weight:650;color:#0B1220;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ omAreaLabel }}</span></span>
                 <span style="padding:7px 11px;border-radius:9px;background:#2447C4;color:#fff;font-size:12.5px;font-weight:700;">Change</span>
               </button>
-              <div style="display:flex;gap:7px;align-items:center;">
-                <div style="flex:1 1 0;min-width:0;display:flex;padding:3px;border-radius:11px;background:#fff;box-shadow:0 6px 18px -8px rgba(11,18,32,.35);">
-                  <sc-for list="{{ omKinds }}" as="o" hint-placeholder-count="2"><button onClick="{{ o.go }}" style="flex:1;min-width:0;padding:7px 4px;border:0;border-radius:9px;background:{{ o.bg }};color:{{ o.fg }};font-size:12.5px;font-weight:650;cursor:pointer;white-space:nowrap;">{{ o.label }}</button></sc-for>
+              <div style="display:flex;flex-wrap:wrap;gap:7px;align-items:center;">
+                <div style="flex:1 0 96px;min-width:96px;display:flex;padding:3px;border-radius:11px;background:#fff;box-shadow:0 6px 18px -8px rgba(11,18,32,.35);">
+                  <sc-for list="{{ omKinds }}" as="o" hint-placeholder-count="2"><button onClick="{{ o.go }}" aria-label="{{ o.label }}" style="flex:1;min-width:0;min-height:44px;padding:7px 4px;border:0;border-radius:9px;background:{{ o.bg }};color:{{ o.fg }};font-size:12.5px;font-weight:650;cursor:pointer;white-space:nowrap;">{{ o.short }}</button></sc-for>
                 </div>
-                <div aria-label="Heat map" style="flex:0 0 auto;display:flex;padding:3px;border-radius:11px;background:#fff;box-shadow:0 6px 18px -8px rgba(11,18,32,.35);">
-                  <sc-for list="{{ omLayers }}" as="l" hint-placeholder-count="4"><button onClick="{{ l.go }}" title="{{ l.hint }}" style="padding:7px 7px;border:0;border-radius:9px;background:{{ l.bg }};color:{{ l.fg }};font-size:11.5px;font-weight:700;cursor:pointer;white-space:nowrap;">{{ l.label }}</button></sc-for>
+                <div aria-label="Heat map" style="flex:0 1 auto;max-width:100%;display:flex;flex-wrap:wrap;padding:3px;border-radius:11px;background:#fff;box-shadow:0 6px 18px -8px rgba(11,18,32,.35);">
+                  <sc-for list="{{ omLayers }}" as="l" hint-placeholder-count="4"><button onClick="{{ l.go }}" title="{{ l.hint }}" style="min-height:44px;padding:7px 7px;border:0;border-radius:9px;background:{{ l.bg }};color:{{ l.fg }};font-size:11.5px;font-weight:700;cursor:pointer;white-space:nowrap;">{{ l.label }}</button></sc-for>
                 </div>
               </div>
               <sc-if value="{{ omShowClear }}" hint-placeholder-val="{{ false }}"><button onClick="{{ omClearArea }}" style="align-self:flex-start;padding:5px 10px;border:1px solid #9DB3EE;border-radius:999px;background:#EEF3FD;color:#22409F;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;">Clear map filters<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18 M6 6l12 12"></path></svg></button></sc-if>
@@ -9994,7 +9994,7 @@ class Component extends DCLogic {
       omStateTint: layer === 'State', omRegions: regions,
       omBubbles: src.map((r, i) => { const [bg, fg] = omColor(vn(r.v)); const size = Math.round(22 + Math.sqrt(vn(r.v)) * 2); const on = s.omSel === r.id || inSel(r);
         return { x:r.x, y:py(r.y), size:size + 'px', off:(-size / 2) + 'px', bg, fg, n:i + 1, sh: on ? '0 0 0 3px #0B1220, 0 6px 14px rgba(11,18,32,.3)' : '0 4px 10px rgba(11,18,32,.22)', go: () => this.setState({ omSel: r.id, omGroup:'all', omExpanded:false }) }; }),
-      omKinds: [['acc','Accounts'], ['doc','Doctors']].map(([k, label]) => ({ label, ...segOf(s.omKind === k), go: () => this.setState({ omKind:k, omSel:null, omCity:'All cities' }) })),
+      omKinds: [['acc','Accounts'], ['doc','Doctors']].map(([k, label]) => ({ label, short:k === 'acc' ? 'HCOs' : 'HCPs', ...segOf(s.omKind === k), go: () => this.setState({ omKind:k, omSel:null, omCity:'All cities' }) })),
       omAreaKicker: near ? (typeOn ? Nouns + ' within ' : 'Within ') + s.omRadius + ' mi of' : typeOn ? Nouns + ' in' : 'Searching in',
       omAreaLabel: near ? startLabel : [city, stateLabel].join(' · '),
       omState: stateLabel, omStatesOn: !!s.omStatesOn && !!service, omOpenStates: () => this.setState({ omStatesOn:!s.omStatesOn }),
