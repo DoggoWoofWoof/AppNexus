@@ -268,14 +268,14 @@ input,textarea,button{font-family:inherit}
                         </span>
                       </sc-if>
                       <sc-if value="{{ t.hcoCard.showMetrics }}" hint-placeholder-val="{{ true }}">
-                        <span data-kit="metrics" data-fit-em="{{ targetMetricEm }}" data-label-em="{{ targetLabelEm }}" style="display:flex;align-items:flex-start;gap:4px;">
+                        <span data-kit="metrics" data-fit-em="{{ t.metricValueEm }}" data-label-em="{{ t.metricLabelEm }}" style="display:flex;align-items:flex-start;gap:4px;">
                           <span style="display:flex;flex:1 1 0;flex-direction:column;align-items:flex-start;gap:3px;min-width:0;text-align:center;">
-                            <span data-native="fit-metric" style="white-space:nowrap;font-size:10.5px;line-height:1.3;font-weight:500;color:#5B6478;">{{ t.hcoCard.lead.label }}</span>
-                            <span data-native="fit-metric" style="white-space:nowrap;font-size:16px;line-height:1.35;font-weight:700;color:#0B1220;">{{ t.hcoCard.lead.v }}</span>
+                            <span data-native="fit-metric" style="white-space:nowrap;font-size:11.5px;line-height:1.3;font-weight:500;color:#5B6478;">{{ t.hcoCard.lead.label }}</span>
+                            <span data-native="fit-metric" style="white-space:nowrap;font-size:18px;line-height:1.35;font-weight:700;color:#0B1220;">{{ t.hcoCard.lead.v }}</span>
                           </span>
                           <sc-for list="{{ t.hcoCard.stats }}" as="m" hint-placeholder-count="3">
                             <span style="display:flex;flex:1 1 0;flex-direction:column;align-items:flex-start;gap:3px;min-width:0;text-align:center;">
-                              <span data-native="fit-metric" style="white-space:nowrap;font-size:10.5px;line-height:1.3;font-weight:500;color:#5B6478;">{{ m.label }}</span><span data-native="fit-metric" style="white-space:nowrap;font-size:16px;line-height:1.35;font-weight:700;color:{{ m.c }};">{{ m.v }}</span>
+                              <span data-native="fit-metric" style="white-space:nowrap;font-size:11.5px;line-height:1.3;font-weight:500;color:#5B6478;">{{ m.label }}</span><span data-native="fit-metric" style="white-space:nowrap;font-size:18px;line-height:1.35;font-weight:700;color:{{ m.c }};">{{ m.v }}</span>
                             </span>
                           </sc-for>
                         </span>
@@ -285,11 +285,11 @@ input,textarea,button{font-family:inherit}
                   </sc-if>
                 </sc-if>
                 <sc-if value="{{ t.standardMetrics }}" hint-placeholder-val="{{ true }}">
-                 <button data-kit="metrics" data-fit-em="{{ targetMetricEm }}" data-label-em="{{ targetLabelEm }}" onClick="{{ t.open }}" style="display:flex;align-items:flex-start;gap:4px;width:100%;border:0;border-top:1px solid #DDE4EF;background:#EDF1F7;padding:10px;text-align:left;cursor:pointer;">
+                 <button data-kit="metrics" data-fit-em="{{ t.metricValueEm }}" data-label-em="{{ t.metricLabelEm }}" onClick="{{ t.open }}" style="display:flex;align-items:flex-start;gap:4px;width:100%;border:0;border-top:1px solid #DDE4EF;background:#EDF1F7;padding:10px;text-align:left;cursor:pointer;">
                   <sc-for list="{{ t.metrics }}" as="m" hint-placeholder-count="3">
                      <span title="{{ m.tip }}" style="display:flex;flex:1 1 0;flex-direction:column;align-items:flex-start;min-width:0;text-align:center;">
-                       <span data-native="fit-metric" title="{{ m.ktip }}" style="display:block;white-space:nowrap;font-size:10.5px;line-height:1.3;font-weight:500;color:#5B6478;">{{ m.label }}</span>
-                       <sc-if value="{{ m.big }}" hint-placeholder-val="{{ true }}"><span data-native="fit-metric" style="display:block;white-space:nowrap;font-size:16px;line-height:1.35;font-weight:700;margin-top:3px;text-align:center;color:{{ m.c }};">{{ m.v }}</span></sc-if>
+                       <span data-native="fit-metric" title="{{ m.ktip }}" style="display:block;white-space:nowrap;font-size:11.5px;line-height:1.3;font-weight:500;color:#5B6478;">{{ m.label }}</span>
+                       <sc-if value="{{ m.big }}" hint-placeholder-val="{{ true }}"><span data-native="fit-metric" style="display:block;white-space:nowrap;font-size:18px;line-height:1.35;font-weight:700;margin-top:3px;text-align:center;color:{{ m.c }};">{{ m.v }}</span></sc-if>
                        <sc-if value="{{ m.hasPips }}" hint-placeholder-val="{{ false }}"><span style="display:flex;align-items:center;justify-content:center;gap:5px;margin-top:5px;"><span style="display:flex;gap:2px;"><sc-for list="{{ m.pips }}" as="d" hint-placeholder-count="5"><span style="width:5px;height:12px;border-radius:2px;background:{{ d.c }};"></span></sc-for></span><span style="font-size:11.5px;color:#5B6478;">{{ m.pipV }}</span></span></sc-if>
                        <sc-if value="{{ m.small }}" hint-placeholder-val="{{ false }}"><span style="display:block;font-family:'Source Serif 4',Georgia,serif;font-size:15.5px;line-height:1.2;margin-top:3px;text-align:center;color:{{ m.c }};">{{ m.v }}</span></sc-if>
                        <sc-if value="{{ m.hasDots }}" hint-placeholder-val="{{ false }}"><span aria-label="Current score per statement" style="display:flex;flex-wrap:wrap;justify-content:center;gap:3px;margin-top:4px;"><sc-for list="{{ m.dots }}" as="d" hint-placeholder-count="6"><span style="width:7px;height:7px;border-radius:50%;background:{{ d.c }};"></span></sc-for></span></sc-if>
@@ -10833,10 +10833,11 @@ class Component extends DCLogic {
     const topicsNow = this.topicsFor(s.insArea), subsNow = A.subs ? s.insTopics.flatMap(t => A.subs[t] || []) : [];
     const toggleIn = (key, val) => this.setState(st => ({ [key]: st[key].includes(val) ? st[key].filter(x => x !== val) : [...st[key], val] }));
     const omv = !ins && (scr === 'map' || s.sheet === 'range') ? this.omVals() : {};
-    const targetCards = pageRows.map(makeCard || (row => row));
-    const metricCells = targetCards.flatMap(t => t.hcoCard ? [t.hcoCard.lead,...t.hcoCard.stats] : (t.metrics || []).map(m => ({v:m.v,label:readableMetric(m.k)})));
-    const targetMetricEm = Math.max(5.2,...metricCells.map(m=>metricEm(m.v)));
-    const targetLabelEm = Math.max(4.5,...metricCells.map(m=>metricEm(m.label)));
+    const targetCards = pageRows.map(makeCard || (row => row)).map(t => {
+      // Fit this card only: an unusually long percentage must not shrink unrelated cards.
+      const cells = t.hcoCard ? [t.hcoCard.lead,...t.hcoCard.stats] : (t.metrics || []).map(m => ({v:m.v,label:readableMetric(m.k)}));
+      return {...t, metricValueEm:Math.max(1,...cells.map(m=>metricEm(m.v))), metricLabelEm:Math.max(1,...cells.map(m=>metricEm(m.label)))};
+    });
     const onIns = scr === 'insights' || (!!A.sphere && scr === 'activity');
     const dash = ins && (scr === 'targets' || scr === 'activity') ? this.dashView() : {};
 
@@ -10893,7 +10894,6 @@ class Component extends DCLogic {
       xChips, xClearOn, xClear,
       spec: s.spec, sortNow, openFilter: () => this.sheet('filter'),
       groupsChip: cgOn.length + (cgOn.length === 1 ? ' group · ' : ' groups · ') + cgOn.reduce((n, g) => n + g.codes, 0) + (cgOn.reduce((n, g) => n + g.codes, 0) === 1 ? ' code' : ' codes'),
-      targetMetricEm, targetLabelEm,
       targetItems: targetCards.map(t => ({ prio:'', prioTip:'', rmOn:false, insRmOn:false, rmGo:() => {}, ...t, rmLabel:'Remove ' + t.name + (ins ? ' from this list' : ' from your list'), rmTitle: ins ? 'Remove from list' : 'Remove from your list',
         profileLabel:'Open ' + t.name, routeLabel:(t.addLabel === 'Add' ? 'Add to route' : t.addLabel) + (t.addIcon === '✓' ? ', ' : ' ') + t.name,
         leadingOnly:!!t.hcoCard && !t.hcoCard.showMetrics,
