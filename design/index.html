@@ -207,11 +207,13 @@ input,textarea,button{font-family:inherit}
               <span style="flex:1;min-width:0;font-size:12.5px;font-weight:650;line-height:1.3;color:#22409F;">{{ exBarText }}</span>
               <button onClick="{{ exAddSel }}" disabled="{{ exBarBusy }}" style="flex:0 0 auto;max-width:60%;padding:8px 12px;border:0;border-radius:9px;background:{{ exBarBg }};color:#fff;font-size:12.5px;font-weight:700;cursor:pointer;">{{ exBarLabel }}</button>
             </div></sc-if>
-            <sc-if value="{{ targetToolbarOn }}" hint-placeholder-val="{{ true }}"><div style="display:flex;align-items:center;gap:10px;padding:0 2px;">
-              <span style="flex:1;min-width:0;font-size:12px;font-weight:600;color:#5B6478;">{{ targetCount }}</span>
-              <sc-if value="{{ iFilterChipOn }}" hint-placeholder-val="{{ false }}"><button onClick="{{ openFilter }}" title="Filter or sort HCPs" style="flex:0 0 auto;padding:7px 10px;border-radius:999px;border:1px solid {{ iFilterChipBd }};background:{{ iFilterChipBg }};color:{{ iFilterChipFg }};font-size:12px;font-weight:650;cursor:pointer;display:flex;align-items:center;gap:4px;">{{ iFilterChip }}<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg></button></sc-if>
-              <sc-if value="{{ removedOn }}" hint-placeholder-val="{{ false }}"><button onClick="{{ openRemoved }}" style="flex:0 0 auto;padding:6px 10px;border:1px solid #D7DEEC;border-radius:999px;background:#fff;color:#3C4557;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap;">Removed · {{ removedN }}</button></sc-if>
-              <sc-if value="{{ toolbarAddOn }}" hint-placeholder-val="{{ true }}"><button onClick="{{ openPeople }}" style="flex:0 0 auto;padding:6px 10px;border:1px solid #D7DEEC;border-radius:999px;background:#fff;color:#22409F;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:4px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14 M5 12h14"></path></svg>{{ addPeopleLabel }}</button></sc-if>
+            <sc-if value="{{ targetToolbarOn }}" hint-placeholder-val="{{ true }}"><div style="display:flex;flex-direction:column;gap:8px;padding:0 2px;">
+              <span style="font-size:13px;line-height:1.4;font-weight:600;color:#5B6478;">{{ targetCount }}</span>
+              <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;">
+              <sc-if value="{{ iFilterChipOn }}" hint-placeholder-val="{{ false }}"><button onClick="{{ openFilter }}" title="Filter or sort HCPs" style="flex:0 0 auto;max-width:100%;padding:7px 10px;border-radius:999px;border:1px solid {{ iFilterChipBd }};background:{{ iFilterChipBg }};color:{{ iFilterChipFg }};font-size:12px;font-weight:650;cursor:pointer;display:flex;align-items:center;gap:4px;">{{ iFilterChip }}<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg></button></sc-if>
+              <sc-if value="{{ removedOn }}" hint-placeholder-val="{{ false }}"><button onClick="{{ openRemoved }}" style="flex:0 0 auto;max-width:100%;padding:6px 10px;border:1px solid #D7DEEC;border-radius:999px;background:#fff;color:#3C4557;font-size:12.5px;font-weight:700;cursor:pointer;">Removed · {{ removedN }}</button></sc-if>
+              <sc-if value="{{ toolbarAddOn }}" hint-placeholder-val="{{ true }}"><button onClick="{{ openPeople }}" style="flex:0 0 auto;max-width:100%;padding:6px 10px;border:1px solid #D7DEEC;border-radius:999px;background:#fff;color:#22409F;font-size:12.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14 M5 12h14"></path></svg><span style="flex-shrink:1;min-width:0;line-height:1.35;">{{ addPeopleLabel }}</span></button></sc-if>
+              </div>
             </div></sc-if>
             <sc-for list="{{ targetItems }}" as="t" hint-placeholder-count="3">
               <div style="display:flex;flex-direction:column;gap:12px;">
@@ -1652,7 +1654,7 @@ input,textarea,button{font-family:inherit}
         </sc-if>
 
         <sc-if value="{{ isMap }}" hint-placeholder-val="{{ false }}">
-          <div style="position:relative;height:772px;overflow:hidden;">
+          <div style="position:relative;height:100%;overflow:hidden;">
             <div data-kit="map" data-map="{{ omMap }}" style="position:absolute;inset:0;overflow:hidden;">
             <div style="position:absolute;inset:0;background-color:#EEF1F4;background-image:repeating-linear-gradient(28deg,transparent 0 22px,#E1E6EE 22px 23.5px),repeating-linear-gradient(118deg,transparent 0 30px,#E1E6EE 30px 31.5px);"></div>
             <span style="position:absolute;left:-40px;top:0;bottom:0;width:100px;background:#D8E4F1;transform:skewX(-14deg);"></span>
@@ -1697,7 +1699,7 @@ input,textarea,button{font-family:inherit}
               </div>
             </sc-if>
 
-            <div style="position:absolute;left:0;right:0;bottom:84px;height:{{ omSheetH }};background:#fff;border-radius:24px 24px 0 0;box-shadow:0 -10px 30px -12px rgba(11,18,32,.3);display:flex;flex-direction:column;transition:height .28s cubic-bezier(.2,.8,.2,1);">
+            <div style="position:absolute;left:0;right:0;bottom:84px;height:{{ omSheetH }};max-height:{{ omSheetMax }};background:#fff;border-radius:24px 24px 0 0;box-shadow:0 -10px 30px -12px rgba(11,18,32,.3);display:flex;flex-direction:column;transition:height .28s cubic-bezier(.2,.8,.2,1);">
               <button onClick="{{ omToggleSheet }}" style="border:0;background:none;padding:8px 0 4px;cursor:pointer;display:flex;justify-content:center;"><span style="width:38px;height:5px;border-radius:3px;background:#D3D9E6;display:block;"></span></button>
               <div style="padding:2px 16px 10px;display:flex;flex-direction:column;">
                 <div style="min-width:0;">
@@ -2487,7 +2489,7 @@ input,textarea,button{font-family:inherit}
       </sc-if>
 
       <sc-if value="{{ showTabs }}" hint-placeholder-val="{{ true }}">
-        <div style="position:absolute;left:0;right:0;bottom:0;z-index:25;height:84px;background:#ffffffeb;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-top:1px solid #E1E6F0;display:grid;grid-template-columns:1fr 84px 1fr;align-items:start;padding:7px 6px 0;box-sizing:border-box;">
+        <div data-native="tab-bar" style="position:absolute;left:0;right:0;bottom:0;z-index:25;height:84px;background:#ffffffeb;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-top:1px solid #E1E6F0;display:grid;grid-template-columns:1fr 84px 1fr;align-items:start;padding:7px 6px 0;box-sizing:border-box;">
           <div style="display:flex;">
             <button onClick="{{ goTargets }}" style="position:relative;flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;border:0;background:none;cursor:pointer;color:{{ tc.targets }};padding:4px 0;">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="8.5"></circle><circle cx="12" cy="12" r="4.5"></circle><circle cx="12" cy="12" r="1" fill="currentColor"></circle></svg>
@@ -10021,7 +10023,7 @@ class Component extends DCLogic {
       omBands: hState === 'ready' && detail === 'county' ? heatBandLabels(hv.breaks, bandFmt).map((label, i) => ({ label, c:hv.colors[i] })) : [],
       omGrad: HEAT_PALETTE.map(c => ({ c })),
       omHeatNoteOn: !!heatNote, omHeatNote: heatNote, omHeatRetryOn: hState === 'error', omHeatRetry: () => this.omHeatLoad(),
-      omSheetH: sheetH + 'px', omToggleSheet: () => this.setState({ omExpanded: !s.omExpanded }),
+      omSheetH: sheetH + 'px', omSheetMax: s.omExpanded ? '75%' : '40%', omToggleSheet: () => this.setState({ omExpanded: !s.omExpanded }),
       omTitle: 'Find someone new',
       omQ: s.omQ || '', onOmQ: e => this.setState({ omQ:e.target.value, omSel:null, omExpanded:true }), hasOmQ: !!s.omQ, clearOmQ: () => this.setState({ omQ:'', omSel:null }),
       omQHint: s.omKind === 'acc' ? 'Name or city' : 'Name, hospital or city',
@@ -10055,10 +10057,11 @@ class Component extends DCLogic {
     };
   }
 
-  renderVals() {
+  renderVals(activeOnly = false) {
     const s = this.state;
     const top = s.stack[s.stack.length - 1] || { s: s.tab };
     const scr = top.s;
+    const shown = (...screens) => !activeOnly || screens.includes(scr);
     const groups = this.groups();
     const viewList = s.route, viewGroups = this.groupsOf(viewList), routeMap = this.routeMapOf(viewGroups);
     const routeLegs = s.routeLegs?.key === this.routeLegKey(viewGroups) ? s.routeLegs.legs : [];
@@ -10111,9 +10114,9 @@ class Component extends DCLogic {
     const fieldMatches = (r, hcp) => hcp
       ? matches(r.name,r.id,r.spec,HCOS[r.hco]?.name,HCOS[r.hco]?.city,HCOS[r.hco]?.boro,r.profileSite,r.profilePlace,r.emailIdentity?.city,r.emailIdentity?.state)
       : matches(r.name,r.city,r.boro,r.type);
-    const exploreMode = !ins && s.scope === 'explore' && !!WORKSPACE.explore;
+    const exploreMode = shown('targets') && !ins && s.scope === 'explore' && !!WORKSPACE.explore;
     const mfKey = JSON.stringify([s.territory,s.kind]), mf = s.mineF?.key === mfKey ? s.mineF : s.mineFs?.[mfKey] || {};
-    const mineGeo = !ins && s.scope === 'mine';
+    const mineGeo = shown('targets') && !ins && s.scope === 'mine';
     const cgOn = CODE_GROUPS.filter(g => s.cgs.includes(g.name)), cgSpecs = cgOn.flatMap(g => g.specs);
     const specOk = x => !(x.specs || []).length || ((s.spec === 'All codes' || x.specs.includes(s.spec)) && x.specs.some(sp => cgSpecs.includes(sp)));
     // the website's list filters (fe:AccountWorkspace/lib/homeLists.ts): a value is one key whatever its case or "&" / "and" (listKey);
@@ -10525,7 +10528,7 @@ class Component extends DCLogic {
       })];
     const xClearOn = mineGeo ? mineFiltered : !!xv && xv.status === 'ready' && xv.clearable;
     const TRON = ins && this.trOn(), ACTPG = TRON ? s.trPage : s.myPage, ACTPK = TRON ? 'trPage' : 'myPage';
-    const MY = ins ? this.myView() : null;
+    const MY = ins ? (shown('activity', 'insights') || /^(my|tr):/.test(String(s.sheetData)) ? this.myView() : { shown:[],base:[],types:[],selects:[],acts:[],status:'',sub:'' }) : null;
     const xfSpec = s.sheet === 'xf' && s.sheetData === 'codeSpec' ? SPC : null;
     const xfSel = s.sheet !== 'xf' ? null : xfSpec ? { key:'codeSpec', label:'Specialty' } : (MY && /^(my|tr):/.test(String(s.sheetData)) ? MY.selects : xv?.selects || mineSelects).find(x => x.key === s.sheetData) || null;
     // each row's title is the website's chip title ("Laparoscopy: 12 codes of your 40"); with no hover on a phone its code count shows too
@@ -10569,9 +10572,9 @@ class Component extends DCLogic {
       + ' · ' + xv.group + ' · ' + xv.year + xSearch : '';
 
     // hco / hcp detail
-    const hId = scr === 'hco' ? top.id : Object.keys(HCOS)[0];
+    const hId = scr === 'hco' ? top.id : activeOnly ? null : Object.keys(HCOS)[0];
     const H = HCOS[hId] || NO_HCO;
-    const pId = scr === 'hcp' ? top.id : Object.keys(HCPS)[0];
+    const pId = scr === 'hcp' ? top.id : activeOnly ? null : Object.keys(HCPS)[0];
     const P = HCPS[pId] || NO_HCP;
     const pTarget = ins ? tlist.profiles?.[pId] : null;
     const pInsBrief = !!pTarget && SH.brief;
@@ -11233,7 +11236,7 @@ class Component extends DCLogic {
       toActivity: () => this.setTab('activity'),
 
       // reports
-      ...this.reportView(),
+      ...(shown('reports') ? this.reportView() : {}),
 
       // ask
       askEmpty: s.thread.length === 0,
@@ -11318,7 +11321,7 @@ class Component extends DCLogic {
         return { label: 'Continue ' + (A.conv && d.form.insConv === 'Note' ? 'note' : W.one.toLowerCase()) + (w ? ' · ' + HCPS[w].name : at ? ' · ' + HCOS[at].name : ''), open: () => this.openDraft(d) }; }),
 
       // summaries
-      ...this.smyView(scr),
+      ...(shown('summaries', 'summary') || /^(smy|summary)/.test(s.sheet || '') ? this.smyView(scr) : { showSummaries:false }),
 
       // sheets
       hasSheet: !!s.sheet, sheetHeight: s.sheet === 'insight' ? '88%' : 'auto', sheetTitle: s.sheet === 'leakage' ? 'Leakage report' : s.sheet === 'views' ? 'Workspace view' : s.sheet === 'smysrc' ? (s.smySrc && s.smySrc.view && s.smySrc.view.state === 'pending' ? 'Review the saved source interpretation' : 'Saved source evidence') : titles[s.sheet] || '', closeSheet: () => {
