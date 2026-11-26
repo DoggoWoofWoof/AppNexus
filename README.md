@@ -1,8 +1,8 @@
-# AppNexus · docnexus Field App
+# AppNexus · DocNexus
 
 [Open the field app design](https://doggowoofwoof.github.io/AppNexus/design/)
 
-The docnexus Field App is one app for both DocNexus products: Field Pro (the book of accounts and doctors, the opportunity map, claims) and Insights (logging what doctors say). Every customer gets the same flow; each account shows only what its own product has, in that product's words.
+DocNexus is one app for both DocNexus products: Field Pro (the book of accounts and doctors, the opportunity map, claims) and Insights (logging what doctors say). Every customer gets the same flow; each account shows only what its own product has, in that product's words.
 
 ## The design
 
