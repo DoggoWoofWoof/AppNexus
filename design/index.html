@@ -2140,6 +2140,7 @@ input,textarea,button{font-family:inherit}
                   <sc-if value="{{ hasActQ }}" hint-placeholder-val="{{ false }}"><button onClick="{{ clearActQ }}" aria-label="Clear search" style="width:26px;height:26px;border-radius:50%;border:0;background:#EEF1F7;color:#5B6478;cursor:pointer;font-size:12px;padding:0;display:flex;align-items:center;justify-content:center;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18 M6 6l12 12"></path></svg></button></sc-if>
                 </div>
                 <sc-if value="{{ myOn }}" hint-placeholder-val="{{ false }}"><div style="display:flex;gap:6px;overflow-x:auto;margin:0 -18px;padding:0 18px;"><sc-for list="{{ myChips }}" as="x" hint-placeholder-count="3"><button onClick="{{ x.go }}" style="flex:0 0 auto;padding:8px 12px;border-radius:999px;border:1px solid {{ x.bd }};background:{{ x.bg }};color:{{ x.fg }};font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:4px;">{{ x.value }}<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg></button></sc-for><sc-for list="{{ myActs }}" as="a" hint-placeholder-count="1"><button onClick="{{ a.go }}" disabled="{{ a.off }}" style="flex:0 0 auto;padding:8px 12px;border-radius:999px;border:1px solid {{ a.bd }};background:{{ a.bg }};color:{{ a.fg }};font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:5px;opacity:{{ a.op }};"><sc-if value="{{ a.iconD }}" hint-placeholder-val="{{ false }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="{{ a.iconD }}"></path></svg></sc-if>{{ a.label }}</button></sc-for></div></sc-if>
+                <sc-if value="{{ myReadErrorOn }}" hint-placeholder-val="{{ false }}"><div role="alert" style="display:flex;align-items:center;gap:10px;padding:12px;border:1px solid #E2C9C2;border-radius:13px;background:#FFF8F5;"><span style="flex:1;min-width:0;font-size:13px;line-height:1.4;color:#8D3F2A;">{{ myReadError }}</span><button onClick="{{ myReadRetry }}" aria-label="Retry loading transcripts" style="padding:8px 12px;border:1px solid #D7DEEC;border-radius:10px;background:#fff;color:#2447C4;font-size:13px;font-weight:650;cursor:pointer;">Retry</button></div></sc-if>
                 <sc-if value="{{ actStatus }}" hint-placeholder-val="{{ false }}"><div role="status" style="padding:22px 14px;background:#fff;border:1px dashed #C9D2E4;border-radius:16px;display:flex;flex-direction:column;align-items:center;gap:4px;"><span style="font-size:13.5px;font-weight:650;color:#3C4557;text-align:center;">{{ actStatus }}</span><sc-if value="{{ myEmptySub }}" hint-placeholder-val="{{ false }}"><span style="font-size:12.5px;color:#5B6478;line-height:1.4;text-align:center;">{{ myEmptySub }}</span></sc-if></div></sc-if>
                 <sc-if value="{{ myEmptySubAlone }}" hint-placeholder-val="{{ false }}"><div style="font-size:12.5px;color:#7A839A;">{{ myEmptySubAlone }}</div></sc-if>
                 <sc-if value="{{ actNoQ }}" hint-placeholder-val="{{ true }}"><div style="display:flex;flex-direction:column;gap:10px;">
@@ -2542,12 +2543,12 @@ input,textarea,button{font-family:inherit}
       <sc-if value="{{ askBar }}" hint-placeholder-val="{{ false }}">
         <div style="position:absolute;left:0;right:0;bottom:84px;z-index:20;padding:16px 14px 28px;background:linear-gradient(180deg,rgba(244,246,250,0),#F4F6FA 30%);">
           <div style="width:100%;display:flex;align-items:center;gap:6px;padding:5px 5px 5px 14px;border-radius:999px;background:#fff;border:1px solid #D7DEEC;box-sizing:border-box;">
-            <input value="{{ askIn }}" onChange="{{ onAskIn }}" onKeyDown="{{ askKey }}" placeholder="{{ askPh }}" readonly="{{ askFull }}" style="flex:1;min-width:0;border:0;outline:0;font-size:14.5px;background:transparent;">
-            <button onClick="{{ toggleMic }}" style="position:relative;width:36px;height:36px;border-radius:50%;border:0;background:{{ micBg }};color:{{ micFg }};cursor:pointer;display:grid;place-items:center;padding:0;">
+            <input aria-label="Ask a question" value="{{ askIn }}" onChange="{{ onAskIn }}" onKeyDown="{{ askKey }}" placeholder="{{ askPh }}" readonly="{{ askFull }}" style="flex:1;min-width:0;border:0;outline:0;font-size:14.5px;background:transparent;">
+            <button role="button" aria-label="{{ micLabel }}" onClick="{{ toggleMic }}" style="position:relative;width:36px;height:36px;border-radius:50%;border:0;background:{{ micBg }};color:{{ micFg }};cursor:pointer;display:grid;place-items:center;padding:0;">
               <sc-if value="{{ listening }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;inset:0;border-radius:50%;background:#DD6134;animation:ring 1.2s infinite;"></span></sc-if>
               <svg style="position:relative;" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"></path></svg>
             </button>
-            <button onClick="{{ askSend }}" style="width:36px;height:36px;border-radius:50%;border:0;background:#2447C4;color:#fff;cursor:pointer;font-size:15px;font-weight:700;opacity:{{ askSendOp }};display:flex;align-items:center;justify-content:center;gap:5px;padding:0;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5 M6 11l6-6 6 6"></path></svg></button>
+            <button role="button" aria-label="Send question" onClick="{{ askSend }}" style="width:36px;height:36px;border-radius:50%;border:0;background:#2447C4;color:#fff;cursor:pointer;font-size:15px;font-weight:700;opacity:{{ askSendOp }};display:flex;align-items:center;justify-content:center;gap:5px;padding:0;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5 M6 11l6-6 6 6"></path></svg></button>
           </div>
         </div>
       </sc-if>
@@ -2555,7 +2556,7 @@ input,textarea,button{font-family:inherit}
       <sc-if value="{{ hasSheet }}" hint-placeholder-val="{{ false }}">
         <div style="position:absolute;inset:0;z-index:40;">
           <div onClick="{{ closeSheet }}" style="position:absolute;inset:0;background:rgba(11,18,32,.42);animation:fadeIn .2s ease;"></div>
-          <div style="position:absolute;left:0;right:0;bottom:0;max-height:88%;overflow-y:auto;background:#fff;border-radius:26px 26px 0 0;animation:sheetUp .28s cubic-bezier(.2,.8,.2,1);padding:8px 0 30px;">
+          <div style="position:absolute;left:0;right:0;bottom:0;height:{{ sheetHeight }};max-height:88%;overflow-y:auto;background:#fff;border-radius:26px 26px 0 0;animation:sheetUp .28s cubic-bezier(.2,.8,.2,1);padding:8px 0 30px;">
             <div style="width:38px;height:5px;border-radius:3px;background:#D3D9E6;margin:0 auto 6px;"></div>
             <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 18px 12px;border-bottom:1px solid #F0F3F8;">
               <span style="font-size:17px;font-weight:700;">{{ sheetTitle }}</span>
@@ -2945,6 +2946,26 @@ input,textarea,button{font-family:inherit}
                   <span style="flex:1;font-size:12px;color:#7A839A;">Visible only to you</span>
                   <button onClick="{{ saveNote }}" style="padding:13px 20px;border:0;border-radius:13px;background:{{ noteSaveBg }};color:#fff;font-size:14.5px;font-weight:700;cursor:pointer;">{{ noteSaveLabel }}</button>
                 </div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ shLeakage }}" hint-placeholder-val="{{ false }}">
+              <div style="padding:16px 18px 0;display:flex;flex-direction:column;gap:16px;">
+                <div><div style="font-size:11px;color:#7A839A;letter-spacing:.06em;">HOSPITAL</div><div style="font-size:16px;font-weight:650;margin-top:5px;">{{ lrHospital }}</div><div style="font-size:12px;color:#5B6478;margin-top:4px;">{{ lrMatched }}</div></div>
+                <sc-if value="{{ lrLoading }}" hint-placeholder-val="{{ false }}"><div style="font-size:13px;color:#5B6478;">Reading procedure groups…</div></sc-if>
+                <sc-if value="{{ lrError }}" hint-placeholder-val="{{ false }}"><div role="alert" style="font-size:13px;color:#B33C24;">{{ lrError }}</div><button onClick="{{ lrRetry }}" style="padding:9px;border:1px solid #D7DEEC;border-radius:10px;background:#fff;color:#2447C4;">Retry</button></sc-if>
+                <sc-if value="{{ lrEmpty }}" hint-placeholder-val="{{ false }}"><div style="font-size:13px;color:#5B6478;">No procedure or diagnosis groups are available to your login.</div></sc-if>
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                  <div style="font-size:13px;font-weight:650;">Procedure group</div>
+                  <input value="{{ lrGroupQuery }}" onChange="{{ lrOnGroupQuery }}" placeholder="Search groups" aria-label="Search procedure groups" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid #D7DEEC;border-radius:12px;font-size:14px;outline:0;">
+                  <sc-if value="{{ lrSelected }}" hint-placeholder-val="{{ false }}"><div style="font-size:12px;line-height:1.4;color:#2447C4;">{{ lrSelected }}</div></sc-if>
+                  <sc-if value="{{ lrGroupNone }}" hint-placeholder-val="{{ false }}"><div style="font-size:13px;color:#5B6478;">No groups match this search.</div></sc-if>
+                  <div style="display:flex;flex-direction:column;gap:6px;max-height:210px;overflow-y:auto;"><sc-for list="{{ lrGroups }}" as="g" hint-placeholder-count="3"><button onClick="{{ g.go }}" style="padding:10px 12px;border:1px solid {{ g.bd }};background:{{ g.bg }};border-radius:12px;text-align:left;cursor:pointer;"><span style="display:block;font-size:14px;font-weight:600;color:#0B1220;">{{ g.label }}</span><span style="display:block;font-size:12px;color:#5B6478;margin-top:3px;">{{ g.meta }}</span></button></sc-for></div>
+                  <sc-if value="{{ lrGroupPaged }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px;"><button onClick="{{ lrGroupPrev }}" disabled="{{ lrGroupPrevOff }}" aria-label="Previous procedure groups" style="padding:7px 10px;border:1px solid #D7DEEC;border-radius:9px;background:#fff;color:#2447C4;font-size:12px;cursor:pointer;">Previous</button><span style="font-size:12px;color:#5B6478;">{{ lrGroupRange }}</span><button onClick="{{ lrGroupNext }}" disabled="{{ lrGroupNextOff }}" aria-label="Next procedure groups" style="padding:7px 10px;border:1px solid #D7DEEC;border-radius:9px;background:#fff;color:#2447C4;font-size:12px;cursor:pointer;">Next</button></div></sc-if>
+                </div>
+                <div><div style="font-size:13px;font-weight:650;margin-bottom:7px;">Report title</div><input value="{{ lrTitle }}" onChange="{{ lrOnTitle }}" aria-label="Report title" style="width:100%;box-sizing:border-box;padding:12px;border:1px solid #D7DEEC;border-radius:12px;font-size:14px;outline:0;"></div>
+                <div><div style="font-size:13px;font-weight:650;margin-bottom:7px;">Radius</div><div style="display:flex;flex-wrap:wrap;gap:6px;"><sc-for list="{{ lrRadii }}" as="r" hint-placeholder-count="5"><button onClick="{{ r.go }}" style="padding:8px 11px;border:1px solid {{ r.bd }};border-radius:999px;background:{{ r.bg }};font-size:13px;color:#0B1220;cursor:pointer;">{{ r.label }}</button></sc-for></div></div>
+                <button onClick="{{ lrGo }}" disabled="{{ lrOff }}" style="padding:14px;border:0;border-radius:14px;background:#2447C4;color:#fff;font-size:14px;font-weight:700;opacity:{{ lrOpacity }};cursor:pointer;">Generate report</button>
               </div>
             </sc-if>
 
@@ -3570,7 +3591,7 @@ input,textarea,button{font-family:inherit}
                 <sc-if value="{{ insRecord }}" hint-placeholder-val="{{ false }}">
                   <div style="display:flex;flex-direction:column;align-items:center;gap:12px;padding:6px 0 2px;">
                     <sc-if value="{{ insRecIdle }}" hint-placeholder-val="{{ true }}">
-                      <button onClick="{{ insStartRec }}" style="position:relative;width:84px;height:84px;border-radius:50%;border:0;background:radial-gradient(120% 120% at 20% 10%,#3D6BF0 0%,#22409F 70%);color:#fff;cursor:pointer;box-shadow:0 12px 24px -10px rgba(36,71,196,.8);display:grid;place-items:center;">
+                      <button role="button" aria-label="Start meeting recording" onClick="{{ insStartRec }}" style="position:relative;width:84px;height:84px;border-radius:50%;border:0;background:radial-gradient(120% 120% at 20% 10%,#3D6BF0 0%,#22409F 70%);color:#fff;cursor:pointer;box-shadow:0 12px 24px -10px rgba(36,71,196,.8);display:grid;place-items:center;">
                         <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"></path></svg>
                       </button>
                       <div style="font-size:14px;font-weight:650;">Tap to record the conversation</div>
@@ -3586,7 +3607,7 @@ input,textarea,button{font-family:inherit}
                       </sc-if>
                       <div style="display:flex;gap:8px;width:100%;margin-top:4px;">
                         <button onClick="{{ insPauseRec }}" style="flex:1;padding:14px;border:1px solid #D7DEEC;border-radius:13px;background:#fff;font-size:14px;font-weight:650;cursor:pointer;color:#0B1220;display:flex;align-items:center;justify-content:center;gap:7px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="{{ insPauseD }}"></path></svg>{{ insPauseLabel }}</button>
-                        <button onClick="{{ insStopRec }}" style="flex:2;padding:14px;border:0;border-radius:13px;background:#2447C4;color:#fff;font-size:14.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z"></path></svg>Stop</button>
+                        <button role="button" aria-label="Stop and transcribe recording" onClick="{{ insStopRec }}" style="flex:2;padding:14px;border:0;border-radius:13px;background:#2447C4;color:#fff;font-size:14.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z"></path></svg>Stop &amp; transcribe</button>
                       </div>
                     </sc-if>
                     <sc-if value="{{ insClipOn }}" hint-placeholder-val="{{ false }}">
@@ -4619,6 +4640,7 @@ input,textarea,button{font-family:inherit}
             <sc-if value="{{ hasAuthErr }}" hint-placeholder-val="{{ false }}"><div style="padding:10px 12px;border-radius:12px;background:#FDEDE4;color:#A94D1B;font-size:13px;line-height:1.45;">{{ authErr }}</div></sc-if>
             <button onClick="{{ authGo }}" style="margin-top:4px;padding:14px;border:0;border-radius:13px;background:{{ authGoBg }};color:#fff;font-size:14.5px;font-weight:700;cursor:pointer;">{{ authGoLabel }}</button>
             <button onClick="{{ authAlt }}" style="align-self:center;border:0;background:none;padding:8px 4px;color:#2447C4;font-size:13.5px;font-weight:650;cursor:pointer;">{{ authAltLabel }}</button>
+            <button onClick="{{ openPrivacy }}" aria-label="Privacy policy" style="align-self:center;border:0;background:none;padding:8px 4px;color:#5B6478;font-size:12.5px;cursor:pointer;">Privacy policy</button>
             <div style="margin-top:26px;display:flex;flex-direction:column;align-items:center;gap:6px;">
               <span style="font-size:15px;color:#5B6478;text-align:center;">Supercharge your HCP &amp; HCO Strategy</span>
               <span style="font-size:12px;color:#7A839A;">{{ brandLine }}</span>
@@ -4628,7 +4650,7 @@ input,textarea,button{font-family:inherit}
       </sc-if>
 
       <sc-if value="{{ hasToast }}" hint-placeholder-val="{{ false }}">
-        <div style="position:absolute;top:58px;left:50%;transform:translateX(-50%);z-index:60;padding:10px 16px;border-radius:999px;background:#0B1220;color:#fff;font-size:13px;font-weight:600;white-space:nowrap;box-shadow:0 10px 24px -8px rgba(11,18,32,.5);animation:fadeIn .2s ease;display:flex;align-items:center;gap:12px;"><span>{{ toast }}</span><sc-if value="{{ hasUndo }}" hint-placeholder-val="{{ false }}"><button onClick="{{ toastUndo }}" style="border:0;background:none;padding:0;color:#9DB8FF;font-size:13px;font-weight:700;cursor:pointer;">Undo</button></sc-if></div>
+        <div style="position:absolute;top:58px;left:50%;transform:translateX(-50%);z-index:60;width:90%;max-width:420px;box-sizing:border-box;padding:10px 16px;border-radius:18px;background:#0B1220;color:#fff;font-size:13px;font-weight:600;white-space:normal;line-height:1.4;box-shadow:0 10px 24px -8px rgba(11,18,32,.5);animation:fadeIn .2s ease;display:flex;align-items:center;gap:12px;"><span style="min-width:0;flex:1;">{{ toast }}</span><sc-if value="{{ hasUndo }}" hint-placeholder-val="{{ false }}"><button onClick="{{ toastUndo }}" aria-label="Undo last action" style="flex:0 0 auto;border:0;background:none;padding:0;color:#9DB8FF;font-size:13px;font-weight:700;cursor:pointer;">Undo</button></sc-if></div>
       </sc-if>
 
       <div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:134px;height:5px;border-radius:3px;background:#0B1220;z-index:70;pointer-events:none;"></div>
@@ -5317,22 +5339,31 @@ class Component extends DCLogic {
   scrollRef = React.createRef();
   _at = [];
   _routeWork = new Map();
+  // One loading-to-ready handoff only, scoped to the login, account, staff pick and consecutive model versions.
+  static openingNavigation = null;
+  keepLoadingNavigation() {
+    const p = this.props || {}, s = this.state;
+    if (p.loading && Number.isInteger(p.workspaceVersion) && p.workspaceOwner && s.account === p.account)
+      FieldModel.openingNavigation = { version:p.workspaceVersion, owner:p.workspaceOwner, account:s.account, pick:ME.pick || '', tab:s.tab, actSeg:s.actSeg };
+  }
   state = (() => {
     const pr = this.props || {};
     const account = ACCOUNTS[pr.account] ? pr.account : 'ottava', A = ACCOUNTS[account];
     this._pa = pr.account;
     applyPeople(A);
-    const initial = seed(A);
+    const initial = seed(A), candidate = FieldModel.openingNavigation;
+    const navigation = !pr.loading && Number.isInteger(pr.workspaceVersion) && candidate && candidate.version + 1 === pr.workspaceVersion && candidate.owner === pr.workspaceOwner && candidate.account === account && candidate.pick === (ME.pick || '') ? candidate : null;
+    if (!pr.loading) FieldModel.openingNavigation = null;
     return {
     account,
     stack: [], sheet: null, sheetData: null,
-    repTab: 'mine', scope: 'mine', kind: ACCOUNTS[account].fieldPro ? 'hco' : 'hcp', q: '', spec: 'All codes', cgs: CODE_GROUPS.map(g => g.name), sort: WORKSPACE.lens === 'hcp' || WORKSPACE.drugAccount ? 'Volume' : 'Opportunity', iSort: 'Last met', ...I_FILTERS, briefing: null, briefErr: {}, peopleAdding: [], peopleAdded: [], listTab: 'all', listSort: 'recent', listConfirm: null, listBusy: null, pkQ: '', pkPage:0, pkMenu: null, fm: null, shr: null, changes: {}, chBusy: {}, chHidden: {}, actQ: '', myF:MY_F0, myPage:0, trF:TR_F0, trPage:0, trRows:null, trLoad:false, trBusy:null, myMenu:false, myDelBusy:false, myDelErr:'', ixFull:{}, ixTab:'transcript', ixView:'normal', ixSub:'document', ixTopics:[], ixHcpAll:false, ixBusy:null, ixRegen:false, ...IX0, meetEditId:null, dash: null, impJobs:[], impErr:'', impAccepting:false, impBusy:false, impDialog:null, impDialogErr:'', trk: {}, tlist: TLISTS[0] ? TLISTS[0].id || TLISTS[0].name : '',
+    repTab: 'mine', scope: 'mine', kind: ACCOUNTS[account].fieldPro ? 'hco' : 'hcp', q: '', spec: 'All codes', cgs: CODE_GROUPS.map(g => g.name), sort: WORKSPACE.lens === 'hcp' || WORKSPACE.drugAccount ? 'Volume' : 'Opportunity', iSort: 'Last met', ...I_FILTERS, briefing: null, briefErr: {}, peopleAdding: [], peopleAdded: [], listTab: 'all', listSort: 'recent', listConfirm: null, listBusy: null, pkQ: '', pkPage:0, pkMenu: null, fm: null, shr: null, changes: {}, chBusy: {}, chHidden: {}, actQ: '', myF:MY_F0, myPage:0, trF:TR_F0, trPage:0, trRows:null, trLoad:false, trErr:'', trBusy:null, myMenu:false, myDelBusy:false, myDelErr:'', ixFull:{}, ixTab:'transcript', ixView:'normal', ixSub:'document', ixTopics:[], ixHcpAll:false, ixBusy:null, ixRegen:false, ...IX0, meetEditId:null, dash: null, impJobs:[], impErr:'', impAccepting:false, impBusy:false, impDialog:null, impDialogErr:'', trk: {}, tlist: TLISTS[0] ? TLISTS[0].id || TLISTS[0].name : '',
     route: [], routeOpen: {}, runIdx: 0, runDone: [], runSkip: [], logged: [],
     ...initial,
-    tab: [initial.tab, pr.startTab].find(t => this.tabsFor({ account }).includes(t)) || 'targets',
+    tab: [navigation?.tab, initial.tab, pr.startTab].map(t => t === 'insights' && A.sphere ? 'activity' : t).find(t => this.tabsFor({ account }).includes(t)) || 'targets',
     targetMetricsOpen: initial.targetMetricsOpen === true,
     thread: [], askIn: '', listening: false, email: null, switching: null,
-    actSeg: 'visits', ...SPH0, pSeg: 'overview', pRowF: 'all', trkHist: false, trkAsk: null, trkForm: null, trkBusy: false, trkFormErr: '', trkBlocked: false, trkCal: null, trkCalOn: false, bk: null, booked: {}, noteText: '', noteBusy: false, full: null, fullDone: false, fullErr: '', exporting: false,
+    actSeg: !A.fieldPro && !A.sphere ? (navigation?.actSeg === 'tr' ? 'tr' : 'visits') : navigation?.actSeg || (A.fieldPro ? 'visits' : 'dash'), ...SPH0, pSeg: 'overview', pRowF: 'all', trkHist: false, trkAsk: null, trkForm: null, trkBusy: false, trkFormErr: '', trkBlocked: false, trkCal: null, trkCalOn: false, bk: null, booked: {}, noteText: '', noteBusy: false, full: null, fullDone: false, fullErr: '', exporting: false,
     territory: initial.territory || (TERRS[0] ? TERRS[0].id || TERRS[0].name : ''), targetPage: initial.targetPage || 0, targetPageKey: initial.targetPageKey || '', toast: null, toastUndo: null, omKind:'acc', omRadius:25, mapTypes:null, omTypeNote:'', omHeat:{ status:'idle', err:'' }, omMode:AREA.mode || 'near', omStart:AREA.centre, omCity:AREA.city, omGroup:'all', omSel:null, omQ:'', omExpanded:false, omLayer:'Pins', omCmd:{ kind:'', n:0 }, speaking: null,
     ...this.insFresh([], A),
     smySeg:'new', smyQ:'', smySel:[], smyName:'', smyOpen:null, ...smyFresh(),
@@ -5344,6 +5375,7 @@ class Component extends DCLogic {
   // the runtime passes only prevProps, so keep the last screen and props here
   componentDidUpdate() {
     const s = this.state;
+    this.keepLoadingNavigation();
     const key = s.tab + '|' + s.scope + '|' + s.kind + '|' + s.stack.map(x => x.s + (x.id || '')).join('/') + '|' + s.targetPage;
     if (this._k !== undefined && this._k !== key && this.scrollRef.current) this.scrollRef.current.scrollTop = 0;
     this._k = key;
@@ -5366,7 +5398,7 @@ class Component extends DCLogic {
     this.warmInsights();
     // Overview reads its figures each time it opens, as the website's Dashboard does on each visit
     // (Dashboard.tsx:155-158, at most once in 5 s); what is on screen stays until the new read is in
-    const dashOpen = !this.acct().fieldPro && s.tab === 'activity' && (s.stack[s.stack.length - 1]?.s || s.tab) === 'activity';
+    const dashOpen = !this.acct().fieldPro && (!this.acct().sphere || s.actSeg === 'dash') && (s.stack[s.stack.length - 1]?.s || s.tab) === 'activity';
     if (dashOpen && (!s.dash || (!this._dashOpen && Date.now() - (this._dashAt || 0) > 5000))) this.loadDash(true);
     this._dashOpen = dashOpen;
     this.autoKeep();
@@ -5379,7 +5411,7 @@ class Component extends DCLogic {
     const na = (this.props || {}).account;
     if (na !== this._pa) { this._pa = na; if (ACCOUNTS[na]) this.setAccount(na); }
   }
-  componentWillUnmount() { clearInterval(this._obxT); this.finishEmail(); clearTimeout(this._smyDetT); clearTimeout(this._smyHistTimer); clearTimeout(this._whoTimer); this._routeWork.clear(); this._routeLegKey = null; this._exploreKey = null; this._gone = true; clearTimeout(this._targetSearchTimer); clearTimeout(this._kindSearchTimer); clearTimeout(this._exploreTimer); clearTimeout(this._pageWarmTimer); clearTimeout(this._sphWarmT); clearTimeout(this._insWarmT); if (SERVICE.hush) SERVICE.hush(); clearTimeout(this._t); clearTimeout(this._a); clearTimeout(this._m); clearTimeout(this._s); clearTimeout(this._smyT); clearTimeout(this._trT); clearTimeout(this._auto); clearInterval(this._i); this._at.forEach(clearTimeout); }
+  componentWillUnmount() { this.stopListening(false); this.dropRec(); clearTimeout(this._peopleT); clearTimeout(this._pkT); clearTimeout(this._impT); this._impKey = null; clearInterval(this._obxT); this.finishEmail(); clearTimeout(this._smyDetT); clearTimeout(this._smyHistTimer); clearTimeout(this._whoTimer); this._routeWork.clear(); this._routeLegKey = null; this._exploreKey = null; this._gone = true; clearTimeout(this._targetSearchTimer); clearTimeout(this._kindSearchTimer); clearTimeout(this._exploreTimer); clearTimeout(this._pageWarmTimer); clearTimeout(this._sphWarmT); clearTimeout(this._insWarmT); if (SERVICE.hush) SERVICE.hush(); clearTimeout(this._t); clearTimeout(this._a); clearTimeout(this._m); clearTimeout(this._s); clearTimeout(this._smyT); clearTimeout(this._trT); clearTimeout(this._auto); clearInterval(this._i); this._at.forEach(clearTimeout); }
 
   // A Field Pro book with no one in any of its lists (J&J MedTech's staff book) opens on Explore, the first screen with
   // people on it; one empty list the rep picks stays on My targets. Once a screen: decided when the book's reads are in,
@@ -5589,14 +5621,14 @@ class Component extends DCLogic {
     if (s.insUpBusy || !SERVICE.insightUpload || !s.insFiles.length) return;
     if (!s.insWho.length && s.insType !== 'Third Party' && !s.insNoHcp) return this.setState({ insUpErr:'Please fill in all required fields before uploading' });
     if (s.insNoHcp && s.insGenCap !== true) return this.setState({ insUpErr:'Without HCP is currently unavailable. Your input has been kept.' });
-    const key = s.insKey;
+    const key = s.insKey, scope = this.workScope(), current = () => this.workCurrent(scope) && this.state.insKey === key;
     this.setState({ insUpBusy:true, insUpErr:'' });
     SERVICE.insightUpload(s.insWho, s.insFiles, this.draftForm(), s.insTitle.trim()).then(r => {
+      if (!current()) return;
       if (r && r.warn) this.toast(r.warn);
-      if (this.state.insKey !== key) return this.setState({ insUpBusy:false });
       this._trKey = null;
-      this.setState(st => ({ ...this.insFresh([]), insUpBusy:false, sheet:null, stack:[], tab:'insights', ...(SERVICE.transcriptList ? { actSeg:'tr', trPage:0, trF:{ ...TR_F0 }, actQ:'' } : {}) }));
-    }, e => this.setState(st => st.insKey === key ? { insUpBusy:false, insUpErr:(e && e.message) || 'Upload failed' } : { insUpBusy:false }));
+      this.setState(st => ({ ...this.insFresh([]), insUpBusy:false, sheet:null, stack:[], tab:this.insightTab(), ...(SERVICE.transcriptList ? { actSeg:'tr', trPage:0, trF:{ ...TR_F0 }, actQ:'' } : {}) }));
+    }, e => { if (current()) this.setState({ insUpBusy:false, insUpErr:(e && e.message) || 'Upload failed' }); });
   }
   // Import links (LinkImportPanel.tsx, utils/linkImports.ts): one complete HTTPS link per line, up to 20 at a time, checked before anything goes
   parseLinks(value) {
@@ -5654,17 +5686,17 @@ class Component extends DCLogic {
   }
   // the import: every link in one request with the meeting's details; the rep lands on Transcripts, where Your imports shows how it is going
   insLinkSend(links, mode) {
-    const s = this.state, key = s.insKey;
+    const s = this.state, key = s.insKey, scope = this.workScope(), current = () => this.workCurrent(scope) && this.state.insKey === key;
     if (s.insUpBusy) return;
     if (!(s.insCaps && s.insCaps.accepting === true)) return this.setState({ insUpErr:'Imports are not available yet. Your selection is still here.' });
     if (!SERVICE.linkImport) return this.toast('This isn’t connected for this account');
     this.setState({ insUpBusy:true, insUpErr:'' });
     SERVICE.linkImport(s.insWho, links, mode, this.draftForm(), s.insTitle.trim(), key).then(r => {
+      if (!current()) return;
       if (r && r.warn) this.toast(r.warn);
-      if (this.state.insKey !== key) return this.setState({ insUpBusy:false });
       this._trKey = null; this._impKey = null;
-      this.setState(st => ({ ...this.insFresh([]), insUpBusy:false, sheet:null, stack:[], tab:'insights', ...(SERVICE.transcriptList ? { actSeg:'tr', trPage:0, trF:{ ...TR_F0 }, actQ:'' } : {}) }));
-    }, e => this.setState(st => st.insKey === key ? { insUpBusy:false, insUpErr:(e && e.message) || 'The import could not be completed. Try again.' } : { insUpBusy:false }));
+      this.setState(st => ({ ...this.insFresh([]), insUpBusy:false, sheet:null, stack:[], tab:this.insightTab(), ...(SERVICE.transcriptList ? { actSeg:'tr', trPage:0, trF:{ ...TR_F0 }, actQ:'' } : {}) }));
+    }, e => { if (current()) this.setState({ insUpBusy:false, insUpErr:(e && e.message) || 'The import could not be completed. Try again.' }); });
   }
   // whether the server takes links, asked each time Upload opens (LinkImportPanel.tsx:68-84); a failed ask says so with a Retry, a missing one (404) shows no links
   loadLinkCaps() {
@@ -5679,72 +5711,77 @@ class Component extends DCLogic {
   // Your imports (ImportActivity.tsx): the rep's imports that are still going or need a look, read when the Transcripts list opens and every 5 s while one
   // is running; one that finished, or new insights, reads the transcripts again
   loadImports() {
-    const s = this.state;
-    if (this.acct().fieldPro || !SERVICE.importList) return;
-    if (!this.trOn() || (s.stack[s.stack.length - 1]?.s || s.tab) !== 'insights') { this._impKey = null; clearTimeout(this._impT); return; }
-    if (this._impKey === s.account) return;
-    this._impKey = s.account;
+    const scope = this.workScope();
+    if (this.acct().fieldPro || !SERVICE.importList || !this.trOn()) { this._impKey = null; clearTimeout(this._impT); return; }
+    if (this._impKey === scope) return;
+    this._impKey = scope;
     this.readImports();
   }
   readImports() {
-    const acct = this.state.account, now = () => this._impKey === acct && this.state.account === acct, live = j => j.status === 'queued' || j.status === 'processing';
+    const scope = this._impKey, read = SERVICE.importList;
+    if (!scope || !read || !this.workCurrent(scope)) return;
+    const now = () => this._impKey === scope && this.workCurrent(scope) && this.trOn(), live = j => j.status === 'queued' || j.status === 'processing';
     clearTimeout(this._impT);
-    SERVICE.importList().then(r => {
+    read().then(r => {
       if (!now()) return;
       const next = ((r && r.jobs) || []).filter(j => j.status !== 'completed'), old = this.state.impJobs;
       const changed = old.some(j => live(j) && !next.some(n => n.id === j.id)) || next.some(j => (j.transcriptIds || []).some(id => !((old.find(x => x.id === j.id) || {}).transcriptIds || []).includes(id)));
-      this.setState({ impJobs:next, impAccepting:!!(r && r.accepting), impErr:'' });
+      this.setState({ impJobs:next,impAccepting:!!(r && r.accepting),impErr:'' });
       if (changed && old.length) { this._trKey = null; this.loadTranscripts(); }
-      if (next.some(live)) this._impT = setTimeout(() => { if (now()) this.readImports(); }, 5000);
+      if (next.some(live)) this._impT = setTimeout(() => { if (now()) this.readImports(); },5000);
     }, e => { if (now()) this.setState({ impErr:'Could not load imports. ' + ((e && e.message) || 'The request could not be completed. Try again.') }); });
   }
   // Retry import, Finish without failed sources and Remove (mutate): one at a time; a retry's failure shows on the card, the others' in their own box
   impAct(kind, job) {
     if (this.state.impBusy) return;
-    const run = kind === 'remove' ? SERVICE.importRemove && (() => SERVICE.importRemove(job.id))
-      : SERVICE.importRetry && (() => SERVICE.importRetry(job.id, kind === 'exclude' ? job.sources.filter(x => x.status === 'failed').map(x => x.id) : []));
+    const scope = this.workScope(), dialog = this.state.impDialog, remove = SERVICE.importRemove, retry = SERVICE.importRetry;
+    const run = kind === 'remove' ? remove && (() => remove(job.id))
+      : retry && (() => retry(job.id, kind === 'exclude' ? job.sources.filter(x => x.status === 'failed').map(x => x.id) : []));
     if (!run) return this.toast('This isn’t connected for this account');
     this.setState({ impBusy:true, impDialogErr:'', impErr:'' });
-    run().then(() => { this.setState({ impBusy:false, impDialog:null }); this._impKey = null; this.loadImports(); },
-      e => { const m = (e && e.message) || 'The request could not be completed. Try again.'; this.setState(kind === 'retry' ? { impBusy:false, impErr:m } : { impBusy:false, impDialogErr:m }); });
+    run().then(() => { if (!this.workCurrent(scope)) return; this.setState(st => ({ impBusy:false, ...(st.impDialog === dialog ? { impDialog:null } : {}) })); this._impKey = null; this.loadImports(); },
+      e => { if (!this.workCurrent(scope)) return; const m = (e && e.message) || 'The request could not be completed. Try again.'; this.setState(st => kind === 'retry' ? { impBusy:false, impErr:m } : { impBusy:false, ...(st.impDialog === dialog ? { impDialogErr:m } : {}) }); });
   }
   // an import's name on its card: the title the rep gave it, else the link or file when there is one source, else how many
   impTitle(j) { return j.title || (j.sources.length === 1 ? (j.sources[0] && (j.sources[0].title || j.sources[0].displayUrl)) : j.sources.length + ' sources') || 'Import'; }
   // Transcripts (Transcripts.tsx): every transcript the person may see, read each time the page opens; the search reads the matching
   // ones from the server once the typing settles (and the whole list when that fails), a failed read leaves what is on show
   loadTranscripts() {
-    const s = this.state, A = this.acct();
-    if (A.fieldPro || !SERVICE.transcriptList) return;
-    if (s.actSeg !== 'tr' || (s.stack[s.stack.length - 1]?.s || s.tab) !== 'insights') { this._trKey = null; return; }
-    const acct = s.account, q = s.actQ.trim(), key = JSON.stringify([acct, q]);
+    const s = this.state, A = this.acct(), list = SERVICE.transcriptList;
+    if (A.fieldPro || !list || !this.trOn()) { clearTimeout(this._trT); this._trKey = null; return; }
+    const scope = this.workScope(), q = s.actQ.trim(), key = JSON.stringify([scope,q]);
     if (key === this._trKey) return;
     this._trKey = key;
     clearTimeout(this._trT);
-    const now = () => this._trKey === key && this.state.account === acct;
+    const now = () => this._trKey === key && this.workCurrent(scope) && this.trOn();
     const read = () => {
-      this.setState({ trLoad:true });
-      SERVICE.transcriptList(q).then(rows => now() && this.setState({ trRows:rows, trLoad:false, trPage:0 }), () => now() && this.setState(st => ({ trRows:st.trRows || [], trLoad:false })));
+      if (!now()) return;
+      this.setState({ trLoad:true,trErr:'' });
+      list(q).then(rows => now() && this.setState({ trRows:rows,trLoad:false,trErr:'',trPage:0 }),
+        () => now() && this.setState(st => ({ trRows:st.trRows || [],trLoad:false,trErr:'Transcripts could not be loaded. Try again.' })));
     };
-    if (q && s.trRows) this._trT = setTimeout(read, 300); else read();
+    if (q && s.trRows) this._trT = setTimeout(read,300); else read();
   }
   // a Transcripts card's menu: Reanalyze, then the list is read again (handleReanalyze)
   trAct(kind, id) {
     if (this.state.trBusy) return;
-    const run = SERVICE.transcriptReanalyze && (() => SERVICE.transcriptReanalyze(id));
+    const scope = this.workScope(), sheet = this.state.sheet, reanalyze = SERVICE.transcriptReanalyze;
+    const run = reanalyze && (() => reanalyze(id));
     if (!run) return this.toast('This isn’t connected for this account');
     this.setState({ trBusy:kind });
-    run().then(() => { this.setState({ trBusy:null, sheet:null }); this._trKey = null; this.loadTranscripts(); },
-      e => { this.setState({ trBusy:null }); this.toast((e && e.message) || 'The transcript could not be reanalyzed. Please try again.'); });
+    run().then(() => { if (!this.workCurrent(scope)) return; this.setState(st => ({ trBusy:null, ...(st.sheet === sheet && st.sheetData === id ? { sheet:null } : {}) })); this._trKey = null; this.loadTranscripts(); },
+      e => { if (!this.workCurrent(scope)) return; this.setState({ trBusy:null }); this.toast((e && e.message) || 'The transcript could not be reanalyzed. Please try again.'); });
   }
   // Export Excel (handleExportExcel): the transcripts on show, every page, in their order, saved on the device
   trExport(ids) {
     if (this.state.trBusy) return;
     if (!SERVICE.transcriptsExport) return this.toast('Export isn’t connected for this account');
+    const scope = this.workScope();
     this.setState({ trBusy:'export' });
-    SERVICE.transcriptsExport(ids).then(name => { this.setState({ trBusy:null }); this.toast(name ? 'Exported · ' + name : 'Exported'); },
-      e => { this.setState({ trBusy:null }); this.toast((e && e.message) || 'Failed to download. Please try again.'); });
+    SERVICE.transcriptsExport(ids).then(name => { if (!this.workCurrent(scope)) return; this.setState({ trBusy:null }); this.toast(name ? 'Exported · ' + name : 'Exported'); },
+      e => { if (!this.workCurrent(scope)) return; this.setState({ trBusy:null }); this.toast((e && e.message) || 'Failed to download. Please try again.'); });
   }
-  trOn() { return !this.acct().fieldPro && !!SERVICE.transcriptList && this.state.actSeg === 'tr'; }
+  trOn() { const s = this.state; return !this.acct().fieldPro && !!SERVICE.transcriptList && s.actSeg === 'tr' && (s.stack[s.stack.length - 1]?.s || s.tab) === this.insightTab(); }
   // New Summary's conversations, read as the website's page reads them: every one the team can summarise, once; a
   // filter or the search reads the matching ones (the search once the typing settles) and ticks them, unless the rep
   // has ticked by hand since the filters last changed. With no filter or search, every one shows again, and the ticks
@@ -6224,10 +6261,18 @@ class Component extends DCLogic {
   // Ask is Field Pro's. An Insights account has the Sphere of Influence website's Activity tab in its place
   // Insights: Sphere of Influence where the login has it (Stemline, Kura), then Insights (My Insights and Transcripts, the website's two
   // pages, which were Activity's segments until 2026-11-24; Activity keeps the Overview). Field Analytics was removed 2026-11-24: its endpoint isn't valid
-  tabsFor(st) { const A = ACCOUNTS[st.account]; return A.fieldPro ? ['targets', 'ask', 'map', 'activity'] : ['targets', ...(A.sphere ? ['sphere'] : []), 'insights', 'summaries', 'activity']; }
+  insightTab(st = this.state) { return ACCOUNTS[st.account].sphere ? 'activity' : 'insights'; }
+  workScope(st = this.state) { return JSON.stringify([(this.props || {}).workspaceOwner || '',st.account,ME.pick || '',WORKSPACE.company || '',WORKSPACE.unit || '',WORKSPACE.view || '']); }
+  workCurrent(scope, st = this.state) { return !this._gone && scope === this.workScope(st); }
+  insightWork() { const scope = this.workScope(), sheet = this.state.sheet, id = this.state.sheetData, version = this._visitN; return () => this.workCurrent(scope) && this.state.sheet === sheet && this.state.sheetData === id && this._visitN === version; }
+  tabsFor(st) { const A = ACCOUNTS[st.account]; return A.fieldPro ? ['targets', 'ask', 'map', 'activity'] : ['targets', ...(A.sphere ? ['sphere'] : ['insights']), 'summaries', 'activity']; }
   setAccount(account) {
+    this.stopListening(); this.dropRec();
     clearInterval(this._i);
+    clearTimeout(this._auto); this._autoText = null;
+    clearTimeout(this._t); this._toastVersion = (this._toastVersion || 0) + 1; this._toastUndo = null;
     clearTimeout(this._impT); this._impKey = null; this._linkCapOpen = false;
+    clearTimeout(this._trT); this._trKey = null;
     this._sphKey = null; this._sphKolKey = null; this._sphTrkKey = null; this._sphFeedKey = null; this._sphConfKey = null;
     clearTimeout(this._smyT); clearTimeout(this._smyDetT); this._smyKey = null; this._smyOptsFor = null; this._revN = (this._revN || 0) + 1;
     applyPeople(ACCOUNTS[account]);
@@ -6238,10 +6283,11 @@ class Component extends DCLogic {
         smyDet:null, smyDets:{}, smyDetTab:'overview', smyDrugs:[], smyDetExp:false, smyAsk:null, smyDel:null, smyRev:null, smySrc:null, smyRetrying:null,
         toast: null, toastUndo: null,
         impJobs:[], impErr:'', impAccepting:false, impBusy:false, impDialog:null, impDialogErr:'',
-        dash:null,...SPH0,visitById:{},omSearch:null,omMoney:null,mineF:null,mineFs:null,omState:null,omCity:'All cities',omStart:null,omAnchor:null };
-      if (!this.tabsFor({ account }).includes(st.tab)) { out.tab = 'targets'; out.stack = []; }
+        stack:[],dAdding:false,hcoAdding:null,hcoAddFailed:null,stBusy:null,tgtBusy:null,tagDraft:'',dash:null,leakage:null,bk:null,booked:{},briefing:null,briefErr:{},noteBusy:false,meetBusy:false,trBusy:null,trRows:null,trLoad:false,trErr:'',trPage:0,trF:{ ...TR_F0 },actQ:'',...SPH0,visitById:{},omSearch:null,omMoney:null,mineF:null,mineFs:null,omState:null,omCity:'All cities',omStart:null,omAnchor:null };
+      if (st.tab === 'insights' && A.sphere) { out.tab = 'activity'; out.stack = []; }
+      else if (!this.tabsFor({ account }).includes(st.tab)) { out.tab = 'targets'; out.stack = []; }
       else if (!A.fieldPro && st.stack.some(x => x.s === 'hco' || x.s === 'reports')) out.stack = [];
-      if (!A.fieldPro) { out.kind = 'hcp'; out.scope = 'mine'; out.actSeg = 'visits'; }
+      if (!A.fieldPro) { out.kind = 'hcp'; out.scope = 'mine'; out.actSeg = A.sphere ? 'dash' : 'visits'; }
       else if (!ACCOUNTS[st.account].fieldPro) { out.kind = 'hco'; out.actSeg = 'visits'; }
       return out;
     });
@@ -6444,11 +6490,11 @@ class Component extends DCLogic {
     if (this.acct().fieldPro || s.sheet !== 'insight' || s.insMode !== 'notes' || s.insBusy) return;
     const words = !!s.insNote.trim() || Object.values(s.insPer || {}).some(t => String(t || '').trim()) || (s.insNoHcp && (s.insGen || []).some(g => g.text.trim()));
     if (!words) return;
-    const form = this.draftForm(), text = JSON.stringify(form);
+    const form = this.draftForm(), text = JSON.stringify(form), scope = this.workScope();
     if (text === this._autoText) return;
     this._autoText = text;
     clearTimeout(this._auto);
-    this._auto = setTimeout(() => { if (this._autoText === text) this.setState(st => ({ drafts:[{ id:'auto', auto:true, at:Date.now(), form }, ...st.drafts.filter(d => !d.auto)] })); }, 1500);
+    this._auto = setTimeout(() => { if (this.workCurrent(scope) && this._autoText === text) this.setState(st => ({ drafts:[{ id:'auto', auto:true, at:Date.now(), form }, ...st.drafts.filter(d => !d.auto)] })); }, 1500);
   }
   // drafts keep the whole form; opening one picks up where it was left
   draftForm() { const s = this.state, form = {}; DRAFT_KEYS.forEach(k => { form[k] = s[k]; }); return form; }
@@ -6469,15 +6515,16 @@ class Component extends DCLogic {
   // 'people' (Add HCP's Name). Insights asks for the website's 150 (RESULT_LIMIT); a failure keeps
   // whether the server answered ('http') or the network failed ('net'), the website's two lines
   peopleSearch(q, intl, type, pre = 'people') {
-    const T = '_' + pre + 'T', N = '_' + pre + 'Seq', acct = this.state.account;
+    const T = '_' + pre + 'T', N = '_' + pre + 'Seq', scope = this.workScope(), orgs = pre === 'people' && this.state.peopleOrgs, find = orgs ? SERVICE.directoryOrgs : SERVICE.directory;
+    const fieldPro = this.acct().fieldPro, orgType = type == null ? this.state.peopleType || '' : type;
     clearTimeout(this[T]);
-    const seq = this[N] = (this[N] || 0) + 1, now = () => seq === this[N] && acct === this.state.account;
+    const seq = this[N] = (this[N] || 0) + 1, now = () => seq === this[N] && this.workCurrent(scope);
     if (q.replace(/\s+/g, ' ').trim().length < 2) { this.setState({ [pre + 'Rows']:null, [pre + 'Busy']:false, [pre + 'Err']:'' }); return; }
     this.setState({ [pre + 'Rows']:null, [pre + 'Busy']:true, [pre + 'Err']:'', [pre + 'Spec']:'', [pre + 'State']:'', [pre + 'Page']:0 });
     this[T] = setTimeout(() => {
-      const orgs = pre === 'people' && this.state.peopleOrgs, find = orgs ? SERVICE.directoryOrgs : SERVICE.directory;
+      if (!now()) return;
       if (!find) { this.setState({ [pre + 'Busy']:false, [pre + 'Err']:'http' }); return; }
-      (orgs ? find(q, type == null ? this.state.peopleType || '' : type) : find(q, this.acct().fieldPro ? { intl } : { intl, limit:150 }))
+      (orgs ? find(q, orgType) : find(q, fieldPro ? { intl } : { intl, limit:150 }))
         .then(rows => { if (now()) this.setState({ [pre + 'Rows']:rows, [pre + 'Busy']:false }); },
           e => { if (now()) this.setState({ [pre + 'Rows']:null, [pre + 'Busy']:false, [pre + 'Err']:e && typeof e.status === 'number' ? 'http' : 'net' }); });
     }, 300);
@@ -6833,15 +6880,16 @@ class Component extends DCLogic {
     };
   }
   // the website's Notes tab: a note on the target, saved to the list (DetailDrawer.tsx:1625-1700)
-  openNote(id) { this.setState({ sheet:'note', sheetData:id, noteText:'', noteBusy:false }); }
+  openNote(id) { this._noteN = (this._noteN || 0) + 1; this.setState({ sheet:'note', sheetData:id, noteText:'', noteBusy:false }); }
   saveNote(listId) {
     const s = this.state, id = s.sheetData, body = (s.noteText || '').trim();
     if (s.noteBusy || !body) return;
     if (!SERVICE.note) { this.toast('Notes are not connected'); return; }
+    const scope = this.workScope(), token = this._noteN, current = () => this.workCurrent(scope) && this._noteN === token && this.state.sheet === 'note' && this.state.sheetData === id;
     this.setState({ noteBusy:true });
     SERVICE.note(listId, id, body)
-      .then(() => { this.setState({ noteBusy:false, sheet:null, noteText:'', pSeg:'note' }); this.toast('Note saved'); },
-        e => { this.setState({ noteBusy:false }); this.toast((e && e.message) || 'That note didn’t save · try again'); });
+      .then(() => { if (!current()) return; this.setState({ noteBusy:false, sheet:null, noteText:'', pSeg:'note' }); this.toast('Note saved'); },
+        e => { if (!current()) return; this.setState({ noteBusy:false }); this.toast((e && e.message) || 'That note didn’t save · try again'); });
   }
   // the website drawer's Priority and Tags (DetailDrawer.tsx:615-667): the target is saved, then the page shows it
   targetOf(listId, id) { const l = TLISTS.find(t => t.id === listId); return (l && l.profiles && l.profiles[id]) || null; }
@@ -6882,9 +6930,10 @@ class Component extends DCLogic {
   // Full profile: the doctor's platform record (who they are, contact, hospitals, their week, research), in place of
   // the website's "Open in platform" (DetailDrawer.tsx:804-815), which leaves the app
   openFull(id) {
+    const scope = this.workScope(), request = this._fullN = (this._fullN || 0) + 1;
     this.setState({ sheet:'full', sheetData:id, full:null, fullDone:false, fullErr:'' });
     if (!SERVICE.platform) { this.setState({ fullDone:true, fullErr:'The full profile isn’t connected for this account' }); return; }
-    const mine = () => this.state.sheet === 'full' && this.state.sheetData === id;
+    const mine = () => this.workCurrent(scope) && this._fullN === request && this.state.sheet === 'full' && this.state.sheetData === id;
     SERVICE.platform(id, part => { if (mine()) this.setState(st => ({ full:{ ...(st.full || {}), ...part } })); })
       .then(() => { if (mine()) this.setState({ fullDone:true }); },
         e => { if (mine()) this.setState({ fullDone:true, fullErr:(e && e.message) || 'The full profile didn’t load · try again' }); });
@@ -8282,27 +8331,30 @@ class Component extends DCLogic {
     const s = this.state, p = HCPS[id];
     if (!p || s.dAdding) return;
     if (!SERVICE.addTarget) { this.toast('Adding targets is not connected'); return; }
-    const was = this.removedIds().includes(id);
+    const was = this.removedIds().includes(id), scope = this.workScope(), restore = SERVICE.removedDelete;
     this.setState({ dAdding:true });
     p.mine = true;
-    const back = was && SERVICE.removedDelete ? () => SERVICE.removedDelete('hcp', id) : () => null;
+    const back = was && restore ? () => restore('hcp', id) : () => null;
     SERVICE.addTarget({ id, name:p.name }).then(back).then(() => {
+      if (!this.workCurrent(scope)) return;
       if (was) { WORKSPACE.hcpExcluded = this.removedIds().filter(x => x !== id); WORKSPACE.removed = this.removedRows().filter(r => !(r.kind === 'hcp' && r.id === id)); }
       this.setState({ dAdding:false });
       this.toast('Added 1 HCP to My target HCPs.');
-    }, () => { p.mine = false; this.setState({ dAdding:false }); this.toast('Target HCPs couldn’t be saved. Try again.'); });
+    }, () => { p.mine = false; if (!this.workCurrent(scope)) return; this.setState({ dAdding:false }); this.toast('Target HCPs couldn’t be saved. Try again.'); });
   }
   // the website's ＋ Add to target accounts on an account outside the book: Adding…, then it is a target, or Couldn't add
   addAccount(id) {
     const s = this.state, h = HCOS[id];
     if (!h || s.hcoAdding === id) return;
     if (!SERVICE.addTarget) { this.toast('Adding targets is not connected'); return; }
+    const scope = this.workScope();
     this.setState({ hcoAdding:id, hcoAddFailed:null });
     SERVICE.addTarget({ id, name:h.name, type:h.type, org:true }).then(() => {
       h.mine = true;
+      if (!this.workCurrent(scope)) return;
       this.setState({ hcoAdding:null });
       this.toast('Added ' + h.name + ' to your target accounts');
-    }, () => { this.setState({ hcoAdding:null, hcoAddFailed:id }); });
+    }, () => { if (this.workCurrent(scope)) this.setState({ hcoAdding:null, hcoAddFailed:id }); });
   }
   rmView() {
     // 'list' is Insights' Remove from list, from a Targets card's remove button or the Remove tile on the person's page (the title asks, as the website's
@@ -8321,23 +8373,27 @@ class Component extends DCLogic {
     if (!pr || s.stBusy) return;
     if (pr.status === next) { this.setState({ sheet:null }); return; }
     if (!SERVICE.targetStatus) { this.toast('Changing status is not connected'); return; }
+    const current = this.insightWork(), name = caseName(HCPS[id]?.name) || 'Status';
     this.setState({ stBusy:next });
     SERVICE.targetStatus(tlist.id, id, next.toLowerCase()).then(() => {
+      if (!current()) return;
       this.setState({ stBusy:null, sheet:null });
-      this.toast((caseName(HCPS[id]?.name) || 'Status') + ' · ' + next);
-    }, e => { this.setState({ stBusy:null }); this.toast((e && e.message) || 'Failed to update status'); });
+      this.toast(name + ' · ' + next);
+    }, e => { if (!current()) return; this.setState({ stBusy:null }); this.toast((e && e.message) || 'Failed to update status'); });
   }
   removeTarget() {
     if (!showOf(this.acct()).removeRow) return;
     const s = this.state, id = s.sheetData, tlist = this.statusList(), name = caseName(HCPS[id]?.name) || 'They';
     if (!tlist?.profiles?.[id] || s.stBusy) return;
     if (!SERVICE.targetRemove) { this.toast('Removing from a list is not connected'); return; }
+    const current = this.insightWork();
     this.setState({ stBusy:'remove' });
     SERVICE.targetRemove(tlist.id, id).then(() => {
+      if (!current()) return;
       // off the list, their page has nothing of the list's to show, so it closes, as the website's drawer does
       this.setState(st => ({ stBusy:null, sheet:null, stack: st.stack.length && st.stack[st.stack.length - 1].id === id ? st.stack.slice(0, -1) : st.stack }));
       this.toast('Removed ' + name + ' from ' + tlist.name);
-    }, e => { this.setState({ stBusy:null }); this.toast((e && e.message) || 'They weren’t removed · try again'); });
+    }, e => { if (!current()) return; this.setState({ stBusy:null }); this.toast((e && e.message) || 'They weren’t removed · try again'); });
   }
   statusView() {
     const s = this.state, id = s.sheetData, tlist = s.sheet === 'status' ? this.statusList() : null, pr = tlist?.profiles?.[id];
@@ -8354,26 +8410,30 @@ class Component extends DCLogic {
   // a conversation the app hasn't read yet opens by its id (GET /transcripts/:id), kept for the sheet's lookup until the account changes
   openById(tid) {
     if (!SERVICE.visitById || !tid) return;
-    const acct = this.state.account;
-    SERVICE.visitById(tid).then(v => { if (this.state.account !== acct) return; this.setState(st => ({ visitById:{ ...(st.visitById || {}), [v.id]:v } })); this.openVisit(v); },
-      e => this.state.account === acct && this.toast((e && e.message) || 'Transcript not found'));
+    const scope = this.workScope(), request = this._openVisitN = (this._openVisitN || 0) + 1;
+    const current = () => this.workCurrent(scope) && this._openVisitN === request;
+    SERVICE.visitById(tid).then(v => { if (!current()) return; this.setState(st => ({ visitById:{ ...(st.visitById || {}), [v.id]:v } })); this.openVisit(v); },
+      e => current() && this.toast((e && e.message) || 'Transcript not found'));
   }
   openVisit(v) {
+    this._openVisitN = (this._openVisitN || 0) + 1; this._visitN = (this._visitN || 0) + 1;
     this.setState({ sheet:'visit', sheetData:v.id, ixTab:'transcript', ixView:'normal', ixSub:'document', ixTopics:[], ixHcpAll:false, ixRegen:false, ...IX0 });
     const full = v.ix && this.state.ixFull[v.ix.id];
     if (v.ix && v.ix.id && !(v.mtg && v.mtg.manual) && SERVICE.insightRead && (!full || full === 'failed')) this.readInsight(v.ix.id);
   }
   readInsight(id) {
+    const scope = this.workScope();
     this.setState(st => ({ ixFull:{ ...st.ixFull, [id]:'loading' } }));
-    SERVICE.insightRead(id).then(full => this.setState(st => this.ixKeep(st, id, full)), () => this.setState(st => ({ ixFull:{ ...st.ixFull, [id]:'failed' } })));
+    SERVICE.insightRead(id).then(full => { if (this.workCurrent(scope)) this.setState(st => this.ixKeep(st, id, full)); }, () => { if (this.workCurrent(scope)) this.setState(st => ({ ixFull:{ ...st.ixFull, [id]:'failed' } })); });
   }
   // Generate / Regenerate Summary, the Insights tab's Retry and Assign Topics, then the page is read again (TranscriptDetail.tsx)
   insightAct(id, what, done) {
     if (this.state.ixBusy) return;
     if (!SERVICE.insightAct) return this.toast('This isn’t connected for this account');
+    const current = this.insightWork();
     this.setState({ ixBusy:what, ixRegen:false });
-    SERVICE.insightAct(id, what).then(full => { this.setState(st => ({ ixBusy:null, ixFull:{ ...st.ixFull, [id]:full } })); if (done) this.toast(done); },
-      e => { this.setState({ ixBusy:null }); this.toast(what === 'summary' ? 'Failed to generate summary. Please try again.' : (e && e.message) || (what === 'retry' ? 'Could not retry insight generation' : 'Failed to assign topics')); });
+    SERVICE.insightAct(id, what).then(full => { if (!current()) return; this.setState(st => ({ ixBusy:null, ixFull:{ ...st.ixFull, [id]:full } })); if (done) this.toast(done); },
+      e => { if (!current()) return; this.setState({ ixBusy:null }); this.toast(what === 'summary' ? 'Failed to generate summary. Please try again.' : (e && e.message) || (what === 'retry' ? 'Could not retry insight generation' : 'Failed to assign topics')); });
   }
   // a page read again: kept, and the website's "Transcript is ready!" when it has just become ready (TranscriptDetail.tsx showSuccessMessage)
   ixKeep(st, id, full) {
@@ -8394,36 +8454,42 @@ class Component extends DCLogic {
     const bad = d.gen ? this.genProblems(d.gen) : [];
     if (bad.length) return this.toast(bad[0]);
     if (!SERVICE.insightSave) return this.toast('This isn’t connected for this account');
+    const current = this.insightWork();
     this.setState({ ixsBusy:true });
     SERVICE.insightSave(id, F.raw, { ...d, text:s.ixsText != null ? s.ixsText : d.text, summary:s.ixsSum != null ? s.ixsSum : d.summary }).then(full => {
+      if (!current()) return;
       this.setState(st => ({ ixsBusy:false, ixsDraft:null, ixsText:null, ixsSum:null, ixsPolish:null, ixsSeg:-1, ...(full ? this.ixKeep(st, id, full) : {}) }));
       this.toast(full ? 'Changes saved successfully' : 'No changes to save');
-    }, e => { this.setState({ ixsBusy:false }); this.toast((e && e.message) || 'Failed to save changes'); });
+    }, e => { if (!current()) return; this.setState({ ixsBusy:false }); this.toast((e && e.message) || 'Failed to save changes'); });
   }
   // the transcript's text and the summary typed over outside Edit: Save, Save Summary
   ixSaveText(id, F) {
     const s = this.state;
     if (s.ixsText == null || s.ixsTextBusy || !SERVICE.insightSave) return;
+    const current = this.insightWork();
     this.setState({ ixsTextBusy:true });
-    SERVICE.insightSave(id, F.raw, { ...F.edit, text:s.ixsText }).then(full => { this.setState(st => ({ ixsTextBusy:false, ixsText:null, ...(full ? this.ixKeep(st, id, full) : {}) })); this.toast('Transcript saved'); },
-      e => { this.setState({ ixsTextBusy:false }); this.toast((e && e.message) || 'Failed to save'); });
+    SERVICE.insightSave(id, F.raw, { ...F.edit, text:s.ixsText }).then(full => { if (!current()) return; this.setState(st => ({ ixsTextBusy:false, ixsText:null, ...(full ? this.ixKeep(st, id, full) : {}) })); this.toast('Transcript saved'); },
+      e => { if (!current()) return; this.setState({ ixsTextBusy:false }); this.toast((e && e.message) || 'Failed to save'); });
   }
   ixSaveSummary(id) {
     const s = this.state;
     if (s.ixsSum == null || s.ixsSumBusy || !SERVICE.insightSummarySave) return;
+    const current = this.insightWork();
     this.setState({ ixsSumBusy:true });
-    SERVICE.insightSummarySave(id, s.ixsSum).then(full => { this.setState(st => ({ ixsSumBusy:false, ixsSum:null, ...this.ixKeep(st, id, full) })); this.toast('Summary saved successfully!'); },
-      e => { this.setState({ ixsSumBusy:false }); this.toast((e && e.message) || 'Failed to save summary. Please try again.'); });
+    SERVICE.insightSummarySave(id, s.ixsSum).then(full => { if (!current()) return; this.setState(st => ({ ixsSumBusy:false, ixsSum:null, ...this.ixKeep(st, id, full) })); this.toast('Summary saved successfully!'); },
+      e => { if (!current()) return; this.setState({ ixsSumBusy:false }); this.toast((e && e.message) || 'Failed to save summary. Please try again.'); });
   }
   // AI Generate on one insight: the comparison, then Use AI Version or Keep Original (TranscriptDetail.tsx polishModal)
   ixPolish(id, p, i) {
     if (this.state.ixsPolBusy || !SERVICE.insightPolish) return;
+    const current = this.insightWork();
     this.setState({ ixsPolBusy:p + '-' + i });
-    SERVICE.insightPolish(id, p, i).then(r => this.setState({ ixsPolBusy:'', ixsPolish:{ p, i, originalText:r.originalText, polishedText:r.polishedText } }), e => { this.setState({ ixsPolBusy:'' }); this.toast((e && e.message) || 'AI polish failed'); });
+    SERVICE.insightPolish(id, p, i).then(r => { if (current()) this.setState({ ixsPolBusy:'', ixsPolish:{ p, i, originalText:r.originalText, polishedText:r.polishedText } }); }, e => { if (!current()) return; this.setState({ ixsPolBusy:'' }); this.toast((e && e.message) || 'AI polish failed'); });
   }
   ixRevert(id, p, at, row) {
     if (!SERVICE.insightRevert) return;
-    SERVICE.insightRevert(id, p, at).then(text => this.ixPut(d => { const r = d.people[p].insights[row]; if (r) { r.text = text; r.orig = ''; } return d; }), e => this.toast((e && e.message) || 'Revert failed'));
+    const current = this.insightWork();
+    SERVICE.insightRevert(id, p, at).then(text => { if (current()) this.ixPut(d => { const r = d.people[p].insights[row]; if (r) { r.text = text; r.orig = ''; } return d; }); }, e => { if (current()) this.toast((e && e.message) || 'Revert failed'); });
   }
   ixPolishKeep(id) {
     const pl = this.state.ixsPolish;
@@ -8533,8 +8599,8 @@ class Component extends DCLogic {
       { label:'Export Excel', bd:'#D7DEEC', bg:'#fff', fg:'#22409F', off:!shown.length, op:shown.length ? 1 : 0.45, go:() => { if (shown.length) this.trExport(shown.map(v => v.id)); } }];
     // the empty list's two lines (Transcripts.tsx:2017-2030): the second says to adjust the search only for a search, priority, stage, tag or date
     const wait = s.trRows === null || s.trLoad;
-    const status = shown.length ? '' : wait ? 'Loading…' : listWait ? 'Loading target list…' : 'No transcripts found.';
-    const sub = shown.length || wait || listWait ? '' : s.actQ.trim() || f.prio !== 'all' || f.stage !== 'all' || f.tag !== 'all' || f.date !== 'all' ? 'Try adjusting your search criteria.' : 'Upload your first recording to get started.';
+    const status = s.trErr ? '' : shown.length ? '' : wait ? 'Loading…' : listWait ? 'Loading target list…' : 'No transcripts found.';
+    const sub = s.trErr || shown.length || wait || listWait ? '' : s.actQ.trim() || f.prio !== 'all' || f.stage !== 'all' || f.tag !== 'all' || f.date !== 'all' ? 'Try adjusting your search criteria.' : 'Upload your first recording to get started.';
     return { base:rows, shown, types:[], selects, acts, status, sub };
   }
   // My Insights (MyInsights.tsx): Stemline's Insights/Notes, then search, meeting type, date and source; newest saved first
@@ -8753,12 +8819,14 @@ class Component extends DCLogic {
     if (s.meetBusy) return;
     if (!SERVICE.meet) { this.toast('Logging meetings is not connected'); return; }
     const d = dateAt(-s.meetDateN), two = n => String(n).padStart(2, '0');
+    const scope = this.workScope(), edit = s.meetEditId;
+    const current = () => this.workCurrent(scope) && this.state.sheet === 'meet' && this.state.sheetData === id && this.state.meetEditId === edit;
     this.setState({ meetBusy:true });
     const meeting = { meetingDate:d.getFullYear() + '-' + two(d.getMonth() + 1) + '-' + two(d.getDate()), meetingType:s.meetType, sentiment:s.meetSent, notes:s.meetNote.trim() };
     if (s.meetEditId && !SERVICE.meetEdit) { this.setState({ meetBusy:false }); return this.toast('This isn’t connected for this account'); }
     (s.meetEditId ? SERVICE.meetEdit(listId, id, s.meetEditId, meeting) : SERVICE.meet(listId, id, meeting))
-      .then(() => { this.setState({ meetBusy:false, sheet:null, pSeg:'meeting', meetEditId:null }); if (!s.meetEditId) this.toast('Meeting logged'); },
-        e => { this.setState({ meetBusy:false }); this.toast((e && e.message) || 'Could not save the meeting. Please try again.'); });
+      .then(() => { if (!current()) return; this.setState({ meetBusy:false, sheet:null, pSeg:'meeting', meetEditId:null }); if (!s.meetEditId) this.toast('Meeting logged'); },
+        e => { if (!current()) return; this.setState({ meetBusy:false }); this.toast((e && e.message) || 'Could not save the meeting. Please try again.'); });
   }
   // who can be picked: the account's doctors first, then the rest of the book (insights accounts: the target list)
   people(hco) {
@@ -8767,13 +8835,13 @@ class Component extends DCLogic {
   }
   findInsightWho(q) {
     clearTimeout(this._whoTimer);
-    const seq = this._whoSeq = (this._whoSeq || 0) + 1, account = this.state.account;
-    const current = () => this._whoSeq === seq && this.state.account === account && this.state.sheet === 'insight' && this.state.insWhoQ === q;
+    const seq = this._whoSeq = (this._whoSeq || 0) + 1, scope = this.workScope();
+    const current = () => this._whoSeq === seq && this.workCurrent(scope) && this.state.sheet === 'insight' && this.state.insWhoQ === q;
     const term = q.trim(), find = SERVICE.directory, wait = term.length >= 2 && !!find;
     this.setState({ insWhoQ:q,insWhoRows:[],insWhoWait:wait,insWhoErr:false });
-    if (wait) this._whoTimer = setTimeout(() => find(term,{ limit:10 }).then(rows => {
+    if (wait) this._whoTimer = setTimeout(() => { if (!current()) return; find(term,{ limit:10 }).then(rows => {
       if (current()) this.setState({ insWhoRows:rows,insWhoWait:false });
-    }, () => { if (current()) this.setState({ insWhoWait:false,insWhoErr:true }); }),250);
+    }, () => { if (current()) this.setState({ insWhoWait:false,insWhoErr:true }); }); },250);
   }
   insightWhoView() {
     const s = this.state, q = (s.insWhoQ || '').trim().toLowerCase(), words = q.split(/\s+/).filter(Boolean);
@@ -8831,16 +8899,20 @@ class Component extends DCLogic {
   }
   startRec() {
     clearInterval(this._i); this.recUnwatch();
-    if (!SERVICE.rec || !SERVICE.transcript) { this.setState({ insMode:'notes' }); return this.toast('Recording isn’t connected yet · type the ' + wordsOf(this.acct()).one.toLowerCase()); }
+    const rec = SERVICE.rec, watch = SERVICE.recWatch, scope = this.workScope(), key = this.state.insKey;
+    if (!rec || !SERVICE.transcript) { this.setState({ insMode:'notes' }); return this.toast('Recording isn’t connected yet · type the ' + wordsOf(this.acct()).one.toLowerCase()); }
+    const current = () => this.workCurrent(scope) && this.state.insKey === key && this.state.insRec;
+    this._recordingService = rec;
     this.setState({ insRec:true, insDiscardAsk:false, insPaused:false, insMuted:false, insSecs:0 });
-    this._i = setInterval(() => { if (!this.state.insPaused) this.setState(st => ({ insSecs: st.insSecs + 1 })); }, 1000);
-    SERVICE.rec('start').then(() => { if (SERVICE.recWatch && this.state.insRec) this._recOff = SERVICE.recWatch(ev => this.recEvent(ev)); }, e => {
+    this._i = setInterval(() => { if (current() && !this.state.insPaused) this.setState(st => ({ insSecs:st.insSecs + 1 })); },1000);
+    rec('start').then(() => { if (current() && watch) this._recOff = watch(ev => this.recEvent(ev)); },error => {
+      if (!current()) return;
       clearInterval(this._i); this.setState({ insRec:false, insPaused:false, insMuted:false, insMode:'notes' });
-      this.toast((e && e.message) || 'The microphone didn’t start · type the ' + wordsOf(this.acct()).one.toLowerCase());
+      this.toast((error && error.message) || 'The microphone didn’t start · type the ' + wordsOf(this.acct()).one.toLowerCase());
     });
   }
-  // a recording still running is thrown away (closing the sheet, opening another form)
-  dropRec() { clearInterval(this._i); this.recUnwatch(); if (this.state.insRec && SERVICE.rec) SERVICE.rec('discard'); }
+  // The submitting recorder is captured before an account can replace SERVICE.
+  dropRec() { clearInterval(this._i); this.recUnwatch(); const rec = this._recordingService || (this.state.insRec ? SERVICE.rec : null); this._recordingService = null; if (rec) Promise.resolve(rec('discard')).catch(() => {}); }
   recUnwatch() { if (this._recOff) { this._recOff(); this._recOff = null; } }
   // the microphone as the device reports it (AddInsightSheet.tsx:1020-1235): a call or another app taking it only warns, and a recording the
   // device stopped keeps what was captured, which then waits on the sheet as a stopped one does
@@ -8876,28 +8948,40 @@ class Component extends DCLogic {
   clipWaits(s = this.state) { return (s.insNoHcp && !this.acct().fieldPro) || !s.insWho.length; }
   clipUploads(s = this.state) { return (s.insNoHcp && !this.acct().fieldPro) || (!s.insWho.length && s.insType === 'Third Party'); }
   finishTranscript(source, held) {
+    const s = this.state, who = s.insWho[0], key = s.insKey, A = this.acct(), scope = this.workScope(), rec = SERVICE.rec, transcribe = SERVICE.transcript;
+    if (this._transcriptWork && this._transcriptWork.scope === scope && this._transcriptWork.key === key) return;
+    const waiting = source === 'Recording' && !held && this.clipWaits(s);
+    if (!held && source !== 'Upload' && !rec) return this.toast('Recording isn’t connected yet · type the note');
+    if (!waiting && !transcribe) return this.toast('Transcription isn’t connected yet · keep the recording and try again');
+    const job = { scope,key }, form = { ...this.draftForm(),insSource:source };
+    this._transcriptWork = job;
+    const current = () => this.workCurrent(scope) && this.state.insKey === key && this._transcriptWork === job;
+    const release = () => { if (this._transcriptWork === job) this._transcriptWork = null; };
     clearInterval(this._i); this.recUnwatch();
-    const s = this.state, who = s.insWho[0], key = s.insKey, A = this.acct();
-    if (source === 'Recording' && !held && this.clipWaits(s)) {
+    let reading;
+    try { reading = held ? Promise.resolve(held) : source === 'Upload' ? Promise.resolve(s.insMedia) : Promise.resolve(rec('stop')); }
+    catch (error) { reading = Promise.reject(error); }
+    if (waiting) {
       this.setState({ insRec:false, insDiscardAsk:false, insPaused:false, insMuted:false, insBusy:true });
-      SERVICE.rec('stop').then(media => { if (this.state.insKey === key) this.setState({ insBusy:false, insClip:media || null }); },
-        e => { if (this.state.insKey === key) this.setState({ insBusy:false }); this.toast((e && e.message) || 'The recording didn’t stop · try again'); });
+      reading.then(media => { if (current()) this.setState({ insBusy:false, insClip:media || null }); },
+        e => { if (!current()) return; this.setState({ insBusy:false }); this.toast((e && e.message) || 'The recording didn’t stop · try again'); }).finally(release);
       return;
     }
     this.setState({ insRec:false, insDiscardAsk:false, insPaused:false, insMuted:false, insMode:'notes', insBusy:true, insClip:null });
     let clip = held || null;
-    (held ? Promise.resolve(held) : source === 'Upload' ? Promise.resolve(s.insMedia) : SERVICE.rec('stop')).then(media => { clip = media; return SERVICE.transcript(s.insWho, this.transcript(who), media, { ...this.draftForm(), insSource:source }); }).then(r => {
+    reading.then(media => { clip = media; if (!current()) return null; return transcribe(s.insWho, this.transcript(who), media, form); }).then(r => {
       // the sheet was closed or saved meanwhile
-      if (this.state.insKey !== key) return;
+      if (!current() || !r) return;
       // topics stay as the rep left them: the server's AI tags the rest (upload.js), as on the website
       this.setState(st => ({ insBusy:false, insSource:source, insRef: r.ref || st.insRef, insNote:[st.insNote.trim(), r.text].filter(Boolean).join('\n\n'),
         insArea: st.insArea || (A.areas ? Object.keys(A.areas)[0] : null) }));
       this.toast('Transcript ready. Check the details');
     }, e => {
       // a recording that didn't transcribe stays on the sheet, to try again
-      if (this.state.insKey === key) this.setState(clip && source === 'Recording' ? { insBusy:false, insMode:'record', insClip:clip } : { insBusy:false });
+      if (!current()) return;
+      this.setState(clip && source === 'Recording' ? { insBusy:false, insMode:'record', insClip:clip } : { insBusy:false });
       this.toast((e && e.message) || 'The transcript didn’t come through · type the ' + wordsOf(A).one.toLowerCase());
-    });
+    }).finally(release);
   }
   // the waiting clip: Transcribe once someone is named, or Upload Recording for Without HCP and a third-party meeting with no doctor
   clipGo() {
@@ -8916,10 +9000,11 @@ class Component extends DCLogic {
     const write = () => {
       if (this.state.briefing) return;
       if (!SERVICE.brief) { this.toast('Pre-call briefs are not connected'); return; }
+      const scope = this.workScope();
       const clear = st => { const rest = { ...st.briefErr }; delete rest[id]; return rest; };
       this.setState(st => ({ briefing:id, briefErr:clear(st) }));
       // a failed brief says why inside its card, as the website's drawer does (DetailDrawer.tsx:500-502, 1020)
-      SERVICE.brief(listId, id).then(() => this.setState({ briefing:null }), e => this.setState(st => ({ briefing:null, briefErr:{ ...st.briefErr, [id]:String((e && e.message) || 'The brief could not be generated. Please try again.').slice(0, 500) } })));
+      SERVICE.brief(listId, id).then(() => { if (this.workCurrent(scope)) this.setState({ briefing:null }); }, e => { if (this.workCurrent(scope)) this.setState(st => ({ briefing:null, briefErr:{ ...st.briefErr, [id]:String((e && e.message) || 'The brief could not be generated. Please try again.').slice(0, 500) } })); });
     };
     // a quote's meeting opens as the logged insights' rows do, once the target's meetings have been read
     const meetings = t.activity || [], from = tid => tid ? meetings.find(m => m.id === 'target:' + listId + ':meeting:' + tid) : null;
@@ -9027,39 +9112,89 @@ class Component extends DCLogic {
   }
   // Field Pro's leakage report: a PDF built on the server for the page's code group, one at a time, in 3–5 minutes
   leakReport(hid) {
-    if (!SERVICE.report) return this.toast('Leakage reports aren’t connected yet');
-    if (this.state.reports.some(r => r.busy)) return this.toast('A report is already being built');
-    // the code group is the server's (the page's group, or the view's own report): the website's drawer names none while it builds
-    const id = Date.now();
-    this.setState(st => ({ reports: [{ id, hco:hid, group:'', name:HCOS[hid].name, date:dateOf(0), when:whenOf(0), size:'—', busy:true }, ...st.reports] }));
+    const report = SERVICE.report, name = HCOS[hid]?.name, scope = this.workScope();
+    if (!report) return this.toast('Leakage reports aren’t connected yet');
+    if (!name) return this.toast('That account is not loaded. Open it again.');
+    if (this.state.reports.some(r => r.busy) || this._reportRequest?.scope === scope) return this.toast('A report is already being built');
+    const id = Date.now(), request = { scope }; this._reportRequest = request;
+    this.setState(st => ({ reports:[{ id,hco:hid,group:'',name,date:dateOf(0),when:whenOf(0),size:'—',busy:true },...st.reports] }));
     this.toast('Building the leakage report · usually 3–5 minutes');
-    SERVICE.report(hid).then(r => {
-      this.setState(st => ({ reports: st.reports.map(x => x.id === id ? { ...x, ...r, busy:false, seconds:(Date.now() - id) / 1000 } : x) }));
-      this.toast('Leakage report ready · ' + HCOS[hid].name);
+    report(hid).then(r => {
+      if (!this.workCurrent(scope)) return;
+      this.setState(st => ({ reports:st.reports.map(x => x.id === id ? { ...x,...r,busy:false,seconds:(Date.now()-id)/1000 } : x) }));
+      this.toast('Leakage report ready · ' + name);
     }, e => {
-      this.setState(st => ({ reports: st.reports.filter(x => x.id !== id) }));
+      if (!this.workCurrent(scope)) return;
+      this.setState(st => ({ sheet:st.sheet === 'report' && st.sheetData === 'job' ? null : st.sheet,reports:st.reports.filter(x => x.id !== id) }));
       this.toast((e && e.message) || 'The report didn’t build · try again');
-    });
+    }).finally(() => { if (this._reportRequest === request) this._reportRequest = null; });
+  }
+  // Work's Leakage report resolves its own hospital and offers the rep's groups, even outside the book or with a drug cohort open.
+  openRunLeakage(key, name, city) {
+    if (!SERVICE.runLeakage) return this.toast('Leakage reports aren’t connected yet');
+    name = String(name || '').trim(); if (name === '—' || name === '-') name = '';
+    const scope = this.workScope(), service = SERVICE.runLeakage, state = /\b([A-Z]{2})$/.exec(String(city || ''))?.[1];
+    const previous = this.state.leakage, request = this._leakageN = (this._leakageN || 0) + 1;
+    const same = previous && previous.key === (key || name), draft = { key:key || name,request,hospital:{ name,...(state ? { state } : {}) },groups:[],group:same ? previous.group : '',title:same ? previous.title : 'Case Loss Analysis Report',radius:same ? previous.radius : 100,query:same ? previous.query || '' : '',page:same ? previous.page || 0 : 0,loading:true,error:'' };
+    this.setState({ sheet:'leakage',leakage:draft });
+    const current = () => this.workCurrent(scope) && this.state.sheet === 'leakage' && this.state.leakage?.request === request;
+    service.prepare(draft.hospital).then(r => {
+      if (current()) this.setState(st => ({ leakage:{ ...st.leakage,...r,group:r.groups.some(g => g.id === st.leakage.group) ? st.leakage.group : '',loading:false } }));
+    }, e => { if (current()) this.setState(st => ({ leakage:{ ...st.leakage,loading:false,error:(e && e.message) || 'Could not read the procedure groups. Try again.' } })); });
+  }
+  runLeakageSet(patch) { this.setState(st => st.leakage ? { leakage:{ ...st.leakage,...patch } } : null); }
+  runLeakageGenerate() {
+    const d = this.state.leakage, service = SERVICE.runLeakage, scope = this.workScope();
+    if (!d || d.loading || !service || (this._reportRequest && this._reportRequest.scope === scope)) return;
+    const group = d.groups.find(g => g.id === d.group);
+    if (!d.hospital.name.trim() || !group || !d.title.trim()) return this.runLeakageSet({ error:!group ? 'Pick a procedure group.' : !d.title.trim() ? 'Give the report a title.' : 'No hospital resolved for this HCP.' });
+    if (this.state.reports.some(r => r.busy)) return this.runLeakageSet({ error:'A report is already being built. Open Reports to check its progress.' });
+    const id = Date.now(), name = d.hospital.name, request = { scope };
+    this._reportRequest = request;
+    this.setState(st => ({ sheet:'report',sheetData:'job',leakage:null,reports:[{ id,hco:d.key,group:group.name,name,date:dateOf(0),when:whenOf(0),size:'—',busy:true },...st.reports] }));
+    service.generate({ hospital:d.hospital,group,title:d.title,radius:d.radius }).then(r => {
+      if (!this.workCurrent(scope)) return;
+      this.setState(st => ({ reports:st.reports.map(x => x.id === id ? { ...x,...r,busy:false,seconds:(Date.now()-id)/1000 } : x) }));
+      this.toast('Leakage report ready · ' + name);
+    }, e => { if (!this.workCurrent(scope)) return; this.setState(st => ({ sheet:st.sheet === 'report' && st.sheetData === 'job' ? null : st.sheet,reports:st.reports.filter(x => x.id !== id) })); this.toast((e && e.message) || 'The report didn’t build · try again'); })
+      .finally(() => { if (this._reportRequest === request) this._reportRequest = null; });
+  }
+  runLeakageView() {
+    const d = this.state.leakage, on = this.state.sheet === 'leakage' && !!d, bg = yes => yes ? '#E7ECFA' : '#fff';
+    if (!on) return { shLeakage:false,lrGroups:[],lrRadii:[] };
+    const words = String(d.query || '').trim().toLowerCase().split(/\s+/).filter(Boolean);
+    const filtered = d.groups.filter(g => words.every(w => g.name.toLowerCase().includes(w))), pages = Math.max(1,Math.ceil(filtered.length / 20));
+    const page = Math.max(0,Math.min(pages - 1,d.page || 0)), rows = filtered.slice(page * 20,(page + 1) * 20), selected = d.groups.find(g => g.id === d.group);
+    return { shLeakage:true,lrHospital:d.hospital.name || 'No hospital resolved for this HCP',lrMatched:d.hospital.matched ? 'Matched' + (d.hospital.state ? ' · ' + d.hospital.state : '') : 'Hospital from this stop',
+      lrLoading:d.loading,lrError:d.error,lrEmpty:!d.loading && !d.error && !d.groups.length,lrRetry:() => this.openRunLeakage(d.key,d.hospital.name,d.hospital.state),
+      lrGroupQuery:d.query || '',lrOnGroupQuery:e => this.runLeakageSet({ query:e.target.value,page:0 }),
+      lrSelected:selected ? 'Selected: ' + selected.name : '',lrGroupNone:!d.loading && !d.error && !!d.groups.length && !filtered.length,
+      lrGroupPaged:pages > 1,lrGroupRange:filtered.length ? (page * 20 + 1) + '–' + Math.min(filtered.length,(page + 1) * 20) + ' of ' + filtered.length : '',
+      lrGroupPrevOff:page === 0,lrGroupNextOff:page === pages - 1,lrGroupPrev:() => this.runLeakageSet({ page:Math.max(0,page - 1) }),lrGroupNext:() => this.runLeakageSet({ page:Math.min(pages - 1,page + 1) }),
+      lrGroups:rows.map(g => ({ label:g.name,meta:g.count + ' Dx/Px codes',bg:bg(g.id === d.group),bd:g.id === d.group ? '#2447C4' : '#D7DEEC',go:() => this.runLeakageSet({ group:g.id,error:'' }) })),
+      lrTitle:d.title,lrOnTitle:e => this.runLeakageSet({ title:e.target.value,error:'' }),
+      lrRadii:[25,50,100,150,200].map(n => ({ label:n + ' mi',bg:bg(n === d.radius),bd:n === d.radius ? '#2447C4' : '#D7DEEC',go:() => this.runLeakageSet({ radius:n }) })),lrGo:() => this.runLeakageGenerate(),lrOff:d.loading || !d.group || !d.title.trim() || !d.hospital.name.trim(),lrOpacity:d.loading || !d.group ? .45 : 1 };
   }
   // Field Pro's Book appointment (the website's Work step, BookMeetingPanel.tsx): a week out at ten, an hour long, the doctor's email as the guest.
   // Open invite hands the phone the prefilled calendar page inside the tap, then writes "Meeting booked" to the doctor's notes. Nothing is sent to anyone.
   openBook(id) {
     if (!SERVICE.book) return this.toast('Booking isn’t connected yet');
     const mail = String((HCPS[id] || NO_HCP).email || '').trim();
-    this.setState({ sheet:'book', sheetData:id, bk:{ id, len:60, day:localDay(7), cal:null, h12:10, min:0, pm:false, email: mail.includes('@') ? mail : '', agenda:'', pick:null, busy:false, res:null } });
+    this.setState({ sheet:'book', sheetData:id, bk:{ id, token:this._bookN = (this._bookN || 0) + 1, len:60, day:localDay(7), cal:null, h12:10, min:0, pm:false, email: mail.includes('@') ? mail : '', agenda:'', pick:null, busy:false, res:null } });
   }
   bookSet(patch) { this.setState(st => st.bk ? { bk:{ ...st.bk, ...patch } } : null); }
   bookGo() {
-    const b = this.state.bk;
-    if (!b || b.busy || !SERVICE.book) return;
+    const b = this.state.bk, scope = this.workScope();
+    if (!b || b.busy || !SERVICE.book || (this._bookingRequest && this._bookingRequest.scope === scope && this._bookingRequest.form === b.token)) return;
+    const request = { scope,form:b.token }; this._bookingRequest = request;
     let r;
     try { r = SERVICE.book({ id:b.id, day:b.day, hour:b.h12 % 12 + (b.pm ? 12 : 0), minute:b.min, minutes:b.len, email:b.email, agenda:b.agenda }); }
-    catch (e) { return this.bookSet({ res:{ ok:false, text:(e && e.message) || 'Pick a day and a time' } }); }
+    catch (e) { if (this._bookingRequest === request) this._bookingRequest = null; return this.bookSet({ res:{ ok:false, text:(e && e.message) || 'Pick a day and a time' } }); }
     // the invite opens inside the tap, so the phone lets the page through; the note follows it (a result for another doctor's sheet is not this one's)
     this.openLink(r.url);
     this.bookSet({ busy:true, res:null, pick:null });
     // the booking counts as made once the note has been tried, whichever way it went (the website's onBooked, BookMeetingPanel.tsx:117): the run sheet reads Booked
-    const done = res => this.setState(st => ({ booked:{ ...st.booked, [b.id]:true }, ...(st.bk && st.bk.id === b.id ? { bk:{ ...st.bk, busy:false, res } } : null) }));
+    const done = res => { if (this._bookingRequest === request) this._bookingRequest = null; if (this.workCurrent(scope)) this.setState(st => this.workCurrent(scope,st) ? ({ booked:{ ...st.booked, [b.id]:true }, ...(st.bk && st.bk.id === b.id && st.bk.token === b.token ? { bk:{ ...st.bk, busy:false, res } } : null) }) : null); };
     r.saved.then(v => done(v && v.warn ? { ok:false, text:v.warn } : { ok:true, text:'Logged to this HCP’s notes.' }),
       () => done({ ok:false, text:'Invite opened, but the note couldn’t be saved.' }));
   }
@@ -9103,7 +9238,7 @@ class Component extends DCLogic {
   // doctor's page opened from a hospital's page (its HCP rows, the people on its cards), whose Also visit starts at that hospital (live.open)
   go(s, id, more) { if (s === 'hco' && !this.acct().fieldPro) return; this.setState(st => ({ stack: [...st.stack, { s, id, ...more }], sheet:null,pSeg:'overview',hPeoplePage:0,hDestPage:0,hcoAddFailed:null })); }
   replaceTop(s, id) { this.setState(st => ({ stack: [...st.stack.slice(0, -1), { s, id }] })); }
-  setTab(t, extra) { this.setState({ tab: t, stack: [], sheet: null, ...(extra || {}) }); }
+  setTab(t, extra) { if (t !== 'ask') this.stopListening(); if (t === 'insights' && this.acct().sphere) t = 'activity'; this.setState({ tab: t, stack: [], sheet: null, ...(extra || {}) }); }
   sheet(sheet, data) { this.setState({ sheet, sheetData: data == null ? null : data }); }
   toggleTargetMetrics() {
     const open = !this.state.targetMetricsOpen;
@@ -9112,18 +9247,56 @@ class Component extends DCLogic {
   }
   // an Add or a removal can be undone for a few seconds
   // the dialler, clipboard, share sheet and links (SERVICE); each says so when it isn't connected
+  openPrivacy() {
+    const scope = this.workScope(), open = AUTH.openPrivacy || (SERVICE.open ? () => SERVICE.open('https://www.docnexus.ai/privacy-policy') : null);
+    const fail = () => { if (!this.workCurrent(scope)) return; const text = 'The privacy policy could not open. Please try again.'; if (this.state.signedIn) this.toast(text); else this.setState({ authErr:text }); };
+    if (!open) return fail();
+    try { return Promise.resolve(open()).catch(fail); } catch { fail(); }
+  }
+  handleBack() {
+    const s = this.state;
+    if (s.listening) { this.stopListening(); return true; }
+    if (s.sheet) { if (s.insDiscardAsk) this.setState({ insDiscardAsk:false }); else this.renderVals().closeSheet(); return true; }
+    if (s.stack.length) { this.renderVals().back(); return true; }
+    if (!s.signedIn && s.auth !== 'signIn') { this.setState(this.authFresh()); return true; }
+    if (s.tab !== 'targets') { this.setTab('targets'); return true; }
+    return false;
+  }
+  stopListening(redraw = true) {
+    const input = this._voiceInput; this._voiceInput = null; this._voiceRequest = (this._voiceRequest || 0) + 1;
+    if (input && input.cancel) input.cancel();
+    if (redraw && !this._gone && this.state.listening) this.setState({ listening:false });
+  }
+  toggleMic() {
+    if (this.state.listening || this._voiceInput) return this.stopListening();
+    this.hush(); const listen = SERVICE.listen;
+    if (!listen) return this.toast('Voice input isn’t connected yet · type the question');
+    const scope = this.workScope(), request = this._voiceRequest = (this._voiceRequest || 0) + 1;
+    const current = () => this.workCurrent(scope) && this._voiceRequest === request;
+    this._voiceInput = listen; this.setState({ listening:true });
+    const failed = error => { if (!current()) return; this._voiceInput = null; this.setState({ listening:false }); this.toast((error && error.message) || 'Voice input could not start. Try again, or type your question.'); };
+    try { Promise.resolve(listen()).then(text => { if (!current()) return; this._voiceInput = null; this.setState({ listening:false }); if (text && text.trim()) this.ask(text.trim(),true,true); },failed); }
+    catch (error) { failed(error); }
+  }
+  deviceAction(run, done, failed) {
+    const scope = this.workScope(), fail = error => { if (this.workCurrent(scope)) this.toast(typeof failed === 'function' ? failed(error) : failed); };
+    try { return Promise.resolve(run()).then(value => { if (!this.workCurrent(scope)) return; const message = typeof done === 'function' ? done(value) : done; if (message) this.toast(message); },fail); }
+    catch (error) { fail(error); return Promise.resolve(); }
+  }
   call(phone) {
     if (phone == null || phone === '' || phone === '—') return this.toast('No phone number on record');
+    if (phone === 'Restricted') return this.toast('Phone numbers are restricted for this account');
     if (!SERVICE.call) return this.toast('Calling isn’t connected yet · ' + phone);
-    SERVICE.call(phone).then(null, () => this.toast('That didn’t start the call · ' + phone));
+    return this.deviceAction(() => SERVICE.call(phone),null,'That didn’t start the call · ' + phone);
   }
-  copy(text, done) {
+  copy(text, done = 'Copied', failed = 'That didn’t copy · try again') {
+    if (typeof text !== 'string' || !text.trim()) return this.toast('Nothing to copy yet');
     if (!SERVICE.copy) return this.toast('Copying isn’t connected yet');
-    SERVICE.copy(text).then(() => this.toast(done), () => this.toast('That didn’t copy · try again'));
+    return this.deviceAction(() => SERVICE.copy(text),done,failed);
   }
   share(what) {
     if (!SERVICE.share) return this.toast('Sharing isn’t connected yet');
-    SERVICE.share(what).then(m => { if (m) this.toast(m); }, e => this.toast((e && e.message) || 'That didn’t share · try again'));
+    return this.deviceAction(() => SERVICE.share(what),message => message,error => (error && error.message) || 'That didn’t share · try again');
   }
   // the website's export lock (the team's saved brand): nothing leaves the app as a file, and it says so
   exportsLocked() {
@@ -9134,17 +9307,14 @@ class Component extends DCLogic {
   openLink(url) {
     if (!url) return this.toast('The link isn’t ready yet');
     if (!SERVICE.open) return this.toast('Opening links isn’t connected yet');
-    SERVICE.open(url).then(null, () => this.toast('That didn’t open · try again'));
+    return this.deviceAction(() => SERVICE.open(url),null,'That didn’t open · try again');
   }
-  // a card's tel: or mailto: line (Primary information's numbers and addresses): the dialler with the link's own number, the mail app with its
-  // address, as the contact strip opens them; `text` is the line as shown
+  // A card's phone/email line opens only its own protocol and retains the account that made the request.
   openHref(href, text) {
-    if (/^tel:/i.test(href)) {
-      if (!SERVICE.call) return this.toast('Calling isn’t connected yet · ' + text);
-      return SERVICE.call(href.slice(4)).then(null, () => this.toast('That didn’t start the call · ' + text));
-    }
-    if (!SERVICE.email) return this.toast('Opening email isn’t connected yet');
-    SERVICE.email.open(href).then(null, () => this.toast('That didn’t open · try again'));
+    if (!href) return this.toast('The link isn’t ready yet');
+    if (/^tel:/i.test(href)) return this.call(href.slice(4));
+    if (!SERVICE.email || typeof SERVICE.email.open !== 'function') return this.toast('Opening email isn’t connected yet');
+    return this.deviceAction(() => SERVICE.email.open(href),null,'That didn’t open · try again');
   }
   // Field Pro writes after the rep picks a purpose. The design preview has its own sample.
   sampleEmail(id) {
@@ -9336,7 +9506,20 @@ class Component extends DCLogic {
     const A = this.acct(), row = PICKS.find(p => ME.pick ? p.id === ME.pick : p.account === this.state.account) || A;
     return A.fieldPro && row.name === A.name ? '' : row.name;
   }
-  toast(msg, undo) { clearTimeout(this._t); this.setState({ toast: msg, toastUndo: undo || null }); this._t = setTimeout(() => this.setState({ toast: null, toastUndo: null }), undo ? 4000 : 2000); }
+  toast(msg, undo) {
+    clearTimeout(this._t);
+    const text = String(msg == null ? '' : msg), version = this._toastVersion = (this._toastVersion || 0) + 1, scope = this.workScope();
+    this._toastUndo = text && typeof undo === 'function' ? { version,scope,run:undo } : null;
+    this.setState({ toast:text,toastUndo:this._toastUndo ? undo : null });
+    this._t = setTimeout(() => { if (!this.workCurrent(scope) || this._toastVersion !== version) return; this._toastUndo = null; this.setState({ toast:null,toastUndo:null }); },undo ? 4000 : text.length > 100 ? 6000 : 2000);
+  }
+  undoToast(version) {
+    const action = this._toastUndo;
+    if (!action || action.version !== version || !this.workCurrent(action.scope)) return;
+    this._toastUndo = null; clearTimeout(this._t);
+    this.setState({ toast:null,toastUndo:null });
+    action.run();
+  }
   // the one Add: a visit goes where it adds the least driving; a doctor at a hospital already on the route joins that stop
   hcoOf(id) { return HCPS[id] ? HCPS[id].hco : id; }
   stopOf(id) { if (HCPS[id]) return HCPS[id]; const h = HCOS[id] || NO_HCO; return { id, name:h.name, ini:h.ini, photo:h.photo, spec:h.type, hco:id, isHco:true }; }
@@ -9656,6 +9839,7 @@ class Component extends DCLogic {
     return ANSWERS[q] || { a:'From your book: nothing matched “' + q + '” exactly. Dr. Maya Patel and Mount Sinai Hospital are the closest results in ' + this.state.territory + '.', tags:['Search'], rows:['maya'] };
   }
   jump(tab, push, sheet, extra) {
+    if (tab === 'insights' && this.acct().sphere) tab = 'activity';
     this.setState({ signedIn:true, tab, stack: push ? [push] : [], sheet: sheet || null, sheetData: null, pSeg:'overview', ...(extra || {}) });
   }
 
@@ -9702,7 +9886,7 @@ class Component extends DCLogic {
     }[step];
     const field = k => e => this.setState({ [k]: e.target.value, authErr:'' });
     return {
-      showSignIn: !s.signedIn, authTitle:title, authSub:sub,
+      openPrivacy:() => this.openPrivacy(),showSignIn: !s.signedIn, authTitle:title, authSub:sub,
       authShowEmail: step === 'signIn' || step === 'forgot', authShowPw: step === 'signIn', authShowCode: step === 'reset', authShowNew: step === 'newPassword' || step === 'reset',
       authAskGiven: step === 'newPassword' && s.authMissing.includes('given_name'), authAskFamily: step === 'newPassword' && s.authMissing.includes('family_name'),
       authEmail:s.authEmail, authPw:s.authPw, authCode:s.authCode, authGiven:s.authGiven, authFamily:s.authFamily, authNew:s.authNew, authConfirm:s.authConfirm,
@@ -10099,7 +10283,11 @@ class Component extends DCLogic {
         // the table's entry, or on a list narrowed by the Specialty chips the row's own (its figures count their codes alone), as for a
         // stand-in the table keeps from such a list
         const own = hcp ? row.hcp : row.hco, kept = hcp ? HCPS[row.id] : HCOS[row.id];
-        const entity = xv.narrowed || kept?.narrowed ? own || kept : kept || own;
+        // Explore's measured row owns its current/prior figures. A saved/profile entry may have another snapshot;
+        // it supplies only the photo and all-claims weekday, never a count or growth rate from that snapshot.
+        const entity = hcp && own ? { ...own, photo:own.photo || kept?.photo,
+          day:has(own.day) ? own.day : kept?.day || '—', dayL:has(own.dayL) ? own.dayL : kept?.dayL || '—' }
+          : xv.narrowed || kept?.narrowed ? own || kept : kept || own;
         if (!entity) return [];
         const here = row.tone === 'here', adding = !!(s.exAdding || {})[listId + '|' + row.id];
         return [{
@@ -10321,7 +10509,7 @@ class Component extends DCLogic {
     const viewsOpen = s.sheet === 'views';
     const viewPickLabel = WORKSPACE.viewLabel || 'Default view';
     const openViews = () => this.sheet(viewsOpen ? null : 'views');
-    const reportsShortcutOn = !ins && !!SH.reports;
+    const reportsShortcutOn = !ins && (!!SH.reports || !!SERVICE.runLeakage);
     const openReports = () => { this.setState({ repTab:'mine' }); this.go('reports'); };
     const pickerRows = PICKS.filter(p => s.sheet === 'views' ? p.action === 'view' : p.action !== 'view');
     // Explore's Specialty chips (the website's SpecialtySwitch, in its words): All codes, then each procedure type, several on at once.
@@ -10471,7 +10659,7 @@ class Component extends DCLogic {
     // the website's Booked beside the name (WorkflowRunner.tsx:4522): a meeting booked with this doctor today, from this session or from the met index that outlives it
     const runBooked = runBookOn && (!!(s.booked || {})[curId] || !!RSV.rsBooked);
     const rrHid = C.isHco ? curId : C.hco, rrRow = (s.reports || []).find(x => x.hco === rrHid && x.busy) || (s.reports || []).find(x => x.hco === rrHid && !x.busy);
-    const runRepOn = isRun && !!SH.reports && !WORKSPACE.drugAccount && !!HCOS[rrHid] && !String(rrHid).startsWith('org:');
+    const runRepOn = isRun && !ins && (!!SERVICE.runLeakage || (!!SH.reports && !WORKSPACE.drugAccount && !!HCOS[rrHid] && !String(rrHid).startsWith('org:')));
 
 
     const chId = (s.sheet === 'choose' && s.sheetData) || Object.keys(HCOS)[0];
@@ -10499,7 +10687,7 @@ class Component extends DCLogic {
       SH.route && ['Day summary', () => this.jump('targets', { s:'summary' })],
       !ins && ['Ask', () => this.jump('ask')],
       ins && A.sphere && ['Sphere', () => this.jump('sphere')],
-      ins && ['Insights', () => this.jump('insights')],
+      ins && [A.sphere ? 'Activity' : 'Insights', () => this.jump(this.insightTab())],
       !ins && ['Opportunity map', () => this.jump('map')],
       ['Activity', () => this.jump('activity', null, null, ins ? null : { actSeg:'visits' })],
       ['Summaries', () => ins ? this.jump('summaries') : this.jump('activity', null, null, { actSeg:'sum' })],
@@ -10639,8 +10827,8 @@ class Component extends DCLogic {
     const topicsNow = this.topicsFor(s.insArea), subsNow = A.subs ? s.insTopics.flatMap(t => A.subs[t] || []) : [];
     const toggleIn = (key, val) => this.setState(st => ({ [key]: st[key].includes(val) ? st[key].filter(x => x !== val) : [...st[key], val] }));
     const omv = !ins && (scr === 'map' || s.sheet === 'range') ? this.omVals() : {};
+    const onIns = scr === 'insights' || (!!A.sphere && scr === 'activity');
     const dash = ins && (scr === 'targets' || scr === 'activity') ? this.dashView() : {};
-    const onIns = scr === 'insights';
 
     return {
       scrollRef: this.scrollRef,
@@ -10660,7 +10848,7 @@ class Component extends DCLogic {
       territory: ins ? tlist.name : territoryName,
       territoryChip: (ins ? tlist.name : territoryName) || 'Target list',
       targetListOpen: s.sheet === 'territory',
-      openMe: () => this.sheet('me'), openTerritory: () => this.setState({ sheet:s.sheet === 'territory' ? null : 'territory',pkMenu:null,listConfirm:null,pkQ:'' }),
+      openPrivacy:() => this.openPrivacy(),openMe: () => this.sheet('me'), openTerritory: () => this.setState({ sheet:s.sheet === 'territory' ? null : 'territory',pkMenu:null,listConfirm:null,pkQ:'' }),
       meIni: ME.ini, meName: ME.name, ...this.authVals(),
       viewPickOn:canChangeView, viewPickLabel, viewPickAria:'Choose workspace view, current view ' + viewPickLabel, viewsOpen, openViews,
       reportsShortcutOn, openReports,
@@ -11024,7 +11212,7 @@ class Component extends DCLogic {
       runLogLabel: s.logged.includes(curId) ? (ins ? W.one : 'Visit') + ' saved' : 'Nothing logged for this visit yet', runLogged: s.logged.includes(curId),
       runLogColor: s.logged.includes(curId) ? '#1C7A4E' : '#7A839A',
       runExtraOn: runBookOn || runRepOn, runBookOn, runBooked, runBook: () => this.openBook(curId),
-      runRepOn, runRep: () => rrRow ? this.sheet('report', rrRow.busy ? 'job' : String(rrRow.id)) : this.leakReport(rrHid),
+      runRepOn, runRep: () => rrRow ? this.sheet('report', rrRow.busy ? 'job' : String(rrRow.id)) : SERVICE.runLeakage ? this.openRunLeakage(rrHid, runPlace?.name || (HCOS[rrHid] || {}).name || C.profileSite || '', (HCOS[rrHid] || {}).city || runPlace?.city || '') : this.leakReport(rrHid),
       runRepLabel: rrRow && rrRow.busy ? 'Generating…' : 'Leakage report',
       runRepTip: rrRow ? (rrRow.busy ? 'Open the report being generated' : 'Open the leakage report') : (s.reports || []).some(x => x.busy) ? 'One report at a time. Another is generating' : 'Generate leakage report',
       runNext: () => advance('done'), runSkip: () => advance('skip'),
@@ -11081,28 +11269,23 @@ class Component extends DCLogic {
               : company ? "Answers use the company's own accounts in this view." : 'Answers use your saved targets. Explore top providers to find more.' };
       })(),
       askKey: e => { if (e.key === 'Enter') this.ask(s.askIn, false, true); }, askSend: () => this.ask(s.askIn, false, true),
-      listening: s.listening, micBg: s.listening ? '#DD6134' : '#EEF1F7', micFg: s.listening ? '#fff' : '#2447C4',
-      toggleMic: () => {
-        if (s.listening) return this.setState({ listening:false });
-        this.hush();
-        if (!SERVICE.listen) return this.toast('Voice input isn’t connected yet · type the question');
-        this.setState({ listening:true });
-        SERVICE.listen('Who should I see today?').then(q => { if (!this.state.listening) return; this.setState({ listening:false }); if (q) this.ask(q, true, true); }, () => this.setState({ listening:false }));
-      },
+      listening: s.listening, micLabel:s.listening ? 'Stop voice input' : 'Start voice input', micBg: s.listening ? '#DD6134' : '#EEF1F7', micFg: s.listening ? '#fff' : '#2447C4',
+      toggleMic: () => this.toggleMic(),
 
 
-      // activity (Field Pro: Visits, Summaries) and Insights (My Insights, Transcripts)
-      actSegs: [['visits', ins ? 'My Insights' : W.many], ...(ins && SERVICE.transcriptList ? [['tr', 'Transcripts']] : []), ...(ins || !SH.summaries ? [] : [['sum', 'Summaries']])].map(([k, label]) => ({ label, ...seg(s.actSeg === k), go: () => this.setState({ actSeg:k }) })),
-      actSegsOn: ins ? onIns && !!SERVICE.transcriptList : !!SH.summaries,
-      actVisits: ins ? onIns && (TRON || s.actSeg !== 'tr') : s.actSeg === 'visits',
-      actTitle: onIns ? 'Insights' : 'Activity',
-      // on an Insights account Activity is the Overview alone; My Insights and Transcripts are the Insights tab
-      actDash: ins && scr === 'activity' && !!SERVICE.dashboard, actNoneOn: ins && scr === 'activity' && !SERVICE.dashboard, actNoneText: 'Overview isn’t connected for this account yet.', ...dash,
+      // Insights keeps the original Activity screens; the extra shortcut is only for accounts without Sphere.
+      actSegs: [...(ins && A.sphere ? [['dash', 'Overview']] : []), ['visits', ins ? 'My Insights' : W.many], ...(ins && SERVICE.transcriptList ? [['tr', 'Transcripts']] : []), ...(ins || !SH.summaries ? [] : [['sum', 'Summaries']])].map(([k, label]) => ({ label, ...seg(s.actSeg === k), go: () => this.setState({ actSeg:k }) })),
+      actSegsOn: ins ? onIns && (A.sphere || !!SERVICE.transcriptList) : !!SH.summaries,
+      actVisits: ins ? onIns && (!A.sphere || s.actSeg !== 'dash') : s.actSeg === 'visits',
+      actTitle: scr === 'insights' ? 'Insights' : 'Activity',
+      // Sphere accounts keep all three screens in Activity. Without Sphere, Activity is Overview and Insights holds the two lists.
+      actDash: ins && scr === 'activity' && (!A.sphere || s.actSeg === 'dash') && !!SERVICE.dashboard, actNoneOn: ins && scr === 'activity' && (!A.sphere || s.actSeg === 'dash') && !SERVICE.dashboard, actNoneText: 'Overview isn’t connected for this account yet.', ...dash,
       actQ: s.actQ, onActQ: e => this.setState({ actQ:e.target.value, myPage:0 }), hasActQ: !!s.actQ, clearActQ: () => this.setState({ actQ:'', myPage:0 }),
       actHint: ins ? (TRON ? 'Search HCP, quote text, file…' : 'Search by HCP name, file name, or content...') : 'Search notes or HCPs',
       // while the first read is on its way, the website shows its loader, not the empty list
       actStatus: TRON ? MY.status : ins ? (MY.shown.length || (!s.actQ.trim() && s.drafts.some(d => !d.auto)) ? '' : (this.props || {}).loading ? 'Loading…' : 'No insights found')
         : !s.actQ.trim() ? (actShown.length || s.drafts.some(d => !d.auto) ? '' : 'No ' + W.many.toLowerCase() + ' yet.') : !actShown.length ? 'Nothing matches “' + s.actQ.trim() + '”.' : '',
+      myReadErrorOn:TRON && !!s.trErr, myReadError:s.trErr || '', myReadRetry:() => { this._trKey = null; this.loadTranscripts(); },
       myOn: ins, myHeadOn: ins && !TRON, myActs: TRON ? MY.acts : [], myCount: ins ? MY.shown.length + ' insights' : '',
       // the empty list's second line (MyInsights.tsx:340-352)
       myEmptySubAlone: TRON && !MY.status ? MY.sub || '' : '',
@@ -11138,7 +11321,7 @@ class Component extends DCLogic {
       ...this.smyView(scr),
 
       // sheets
-      hasSheet: !!s.sheet, sheetTitle: s.sheet === 'views' ? 'Workspace view' : s.sheet === 'smysrc' ? (s.smySrc && s.smySrc.view && s.smySrc.view.state === 'pending' ? 'Review the saved source interpretation' : 'Saved source evidence') : titles[s.sheet] || '', closeSheet: () => {
+      hasSheet: !!s.sheet, sheetHeight: s.sheet === 'insight' ? '88%' : 'auto', sheetTitle: s.sheet === 'leakage' ? 'Leakage report' : s.sheet === 'views' ? 'Workspace view' : s.sheet === 'smysrc' ? (s.smySrc && s.smySrc.view && s.smySrc.view.state === 'pending' ? 'Review the saved source interpretation' : 'Saved source evidence') : titles[s.sheet] || '', closeSheet: () => {
         if (s.sheet === 'range') { this.setState({ ...s.omBefore, sheet:null, omBefore:null, omStatesOn:false }); return; }
         if (s.sheet === 'form' && s.fm && s.fm.fromCov) { if (!s.fm.busy) this.formDone(false); return; }
         if (s.sheet === 'smysrc') { this.smySrcClose(); return; }
@@ -11156,7 +11339,7 @@ class Component extends DCLogic {
       shInsight: s.sheet === 'insight', shFilter: s.sheet === 'filter', shTerritory: s.sheet === 'territory', shChoose: s.sheet === 'choose', shContact: ctOn, ctWho: caseName(CT.name),
         ctOpts: [{ icon:'☎', iconD:ICON_D.phone, label:'Call', sub:CT.phone, tip:'Call ' + CT.phone, go: () => { this.setState({ sheet:null }); this.call(CT.phone); } },
           { icon:'✉', iconD:ICON_D.mail, label:'Email', sub:'Write a draft email', tip:'Write an email to ' + caseName(CT.name), go: () => { this.setState({ sheet:null }); this.openEmail(CT.id); } }],
-        shEmail: s.sheet === 'email', shMeet: s.sheet === 'meet', shStatus: s.sheet === 'status', shPurpose: s.sheet === 'purpose', shRmTarget: s.sheet === 'rmTarget', ...this.rmView(), shRemoved: s.sheet === 'removed', ...this.removedView(), shOutbox: s.sheet === 'outbox', ...this.obxView(), shSphKol: s.sheet === 'sphkol', ...this.sphView(scr), shXf: s.sheet === 'xf', xfOpts, ...this.statusView(), ...this.trackerFormView(), ...this.bookView(), shTracker: s.sheet === 'tracker', shNote: s.sheet === 'note', ...this.fullView(), shPeople: s.sheet === 'people', shSummary: s.sheet === 'summary', shMe: s.sheet === 'me', ...RS.view, shAccount: !!ME.staff && (s.sheet === 'account' || s.sheet === 'views'), shVisit: s.sheet === 'visit', vd: visitDetail,
+        shEmail: s.sheet === 'email', shMeet: s.sheet === 'meet', shStatus: s.sheet === 'status', shPurpose: s.sheet === 'purpose', shRmTarget: s.sheet === 'rmTarget', ...this.rmView(), shRemoved: s.sheet === 'removed', ...this.removedView(), shOutbox: s.sheet === 'outbox', ...this.obxView(), shSphKol: s.sheet === 'sphkol', ...this.sphView(scr), shXf: s.sheet === 'xf', xfOpts, ...this.statusView(), ...this.trackerFormView(), ...this.bookView(), ...this.runLeakageView(), shTracker: s.sheet === 'tracker', shNote: s.sheet === 'note', ...this.fullView(), shPeople: s.sheet === 'people', shSummary: s.sheet === 'summary', shMe: s.sheet === 'me', ...RS.view, shAccount: !!ME.staff && (s.sheet === 'account' || s.sheet === 'views'), shVisit: s.sheet === 'visit', vd: visitDetail,
       ...this.peopleView(ins, tlist),
       ...this.changesView(ins, tlist),
       ...this.pickerView(ins, pickedTerritory), ...this.formView(), ...this.covView(), ...this.shareView(),
@@ -11195,6 +11378,7 @@ class Component extends DCLogic {
         ...(reportsShortcutOn ? [{ icon:'▤', label:'Reports', meta:s.reports.filter(r => !r.busy).length + ' ready' + (s.reports.some(r => r.busy) ? ' · generating' : ''), go:openReports }] : []),
         ...(ME.staff ? [{ icon:'⇄', label:'Account', meta:(PICKS.find(p => ME.pick ? p.id === ME.pick : p.account === s.account) || A).name, go: () => this.sheet('account') }] : []),
         ...(canChangeView ? [{ icon:'▤', label:'Workspace view', meta:viewPickLabel, go:openViews }] : []),
+        { icon:'▤',label:'Privacy policy',meta:'docnexus.ai',go:() => this.openPrivacy() },
         { icon:'↪', label:'Sign out', meta:'', go: () => this.signOut() }
       ].map(r => ({ ...r, iconD:glyphD(r.icon) })),
 
@@ -11297,6 +11481,8 @@ class Component extends DCLogic {
           ...(A.extra && s.insType === 'Third Party' ? { vendor: s.insVendor === 'Other' ? s.insVendorName.trim() || 'Other' : s.insVendor, vendorSub: s.insVendorSub, count: s.insCount } : {}),
           ...(A.extra && s.insType === 'Conference' ? { conf: s.insConf === 'Other' ? s.insConfName.trim() || 'Other' : s.insConf } : {}),
           ...(A.fieldPro ? {} : this.savedInsight(who, dN, vType)) };
+        const save = SERVICE.save, recover = SERVICE.recoverDraft, clearRecovery = SERVICE.clearRecoveredDraft, recoveryId = draft || id, saveScope = this.workScope();
+        if (!save) return this.toast(this.props.loading ? 'This account is still loading. Try again in a moment.' : 'Logging isn’t connected for this account.');
         clearTimeout(this._auto); this._autoText = null;
         // who this save marks as logged: a save that fails gives them back, so the run sheet and the day summary never say saved for a draft
         const marked = [...who, ...(s.insHco ? [s.insHco] : [])].filter(x => !s.logged.includes(x));
@@ -11304,14 +11490,17 @@ class Component extends DCLogic {
         this.setState(st => ({ ...this.insFresh([]), sheet:null, logged:[...new Set([...st.logged, ...who, ...(st.insHco ? [st.insHco] : [])])],
           drafts: st.drafts.filter(d => d.id !== draft && !d.auto), visits:[visit, ...st.visits].sort((a, b) => a.dN - b.dN) }));
         // Field Pro saved a visit (its website's "Visit saved on the profile"), not a note
-        this.toast((A.fieldPro ? 'Visit' : A.conv && s.insConv === 'Note' ? 'Note' : wordsOf(A).one) + ' saved' + (first ? ' · ' + caseName(HCPS[first].name) + (who.length > 1 ? ' +' + (who.length - 1) : '') : ''));
-        if (!SERVICE.save) return;
-        // a save that fails comes back as a draft
-        SERVICE.save(visit, { ...form, media: s.insMedia }).then(r => {
+        this.toast((A.fieldPro ? 'Visit' : A.conv && s.insConv === 'Note' ? 'Note' : wordsOf(A).one) + ' saved' + (first ? ' · ' + caseName(HCPS[first]?.name || first) + (who.length > 1 ? ' +' + (who.length - 1) : '') : ''));
+        // Recovery is bound to the submitting account, even if the component was replaced before the failure arrived.
+        save(visit, { ...form, media:s.insMedia }).then(r => {
+          void clearRecovery?.(recoveryId).catch(() => {});
+          if (!this.workCurrent(saveScope)) return;
           if (r && r.id) this.setState(st => ({ visits: st.visits.map(v => v.id === id ? { ...v, id: r.id, ...(v.ix ? { ix:{ ...v.ix, id:String(r.id) } } : {}) } : v) }));
           if (r && r.warn) this.toast(r.warn);
         }, e => {
           const done = (e && e.done) || [];
+          void recover?.({ id:recoveryId,form:draftsOf(form,done) }).catch(() => {});
+          if (!this.workCurrent(saveScope)) return;
           this.setState(st => ({ logged: st.logged.filter(x => !marked.includes(x) || done.includes(x)), visits: st.visits.filter(v => v.id !== id), drafts: [{ id: draft || id, form: draftsOf(form, done) }, ...st.drafts.filter(d => d.id !== draft)] }));
           this.toast(((e && e.message) || 'That didn’t save') + (done.length ? ' Kept as a draft: save it again to retry.' : ' · kept as a draft'));
         });
@@ -11358,7 +11547,7 @@ class Component extends DCLogic {
       insRecState: s.insPaused ? 'Paused' : 'Recording', insRecStateFg: s.insPaused ? '#7A839A' : '#DD6134', insRecPulse: s.insPaused ? 'none' : 'pulseDot 1.2s infinite',
       insRecTime: Math.floor(s.insSecs / 60) + ':' + String(s.insSecs % 60).padStart(2, '0'),
       insWave: [5,9,14,8,18,26,16,10,22,30,20,12,24,34,18,9,15,27,19,11,17,8,12,6].map((h, i) => ({ h: (s.insPaused ? 4 : h) + 'px', bg: s.insPaused ? '#C3CAD8' : '#2447C4', anim: s.insPaused ? 'none' : 'pulseDot ' + (0.8 + (i % 5) * 0.15) + 's infinite' })),
-      insRecHintOn: !s.insClip, insRecHint: s.insRec ? 'One recording can cover a 1:1, a group of doctors or a conference session.' : 'Ask before you record. We transcribe it, then you check the details.',
+      insRecHintOn: !s.insClip, insRecHint: s.insRec ? 'Recording continues with your screen locked. Tap Stop & transcribe when you finish.' : 'Ask everyone before you record. Audio is sent to DocNexus for transcription; review the text before saving.',
 
       // Your imports (ImportActivity.tsx): above the Transcripts filters while one is going or needs a look, or the list can't be read
       impOn: TRON && (s.impJobs.length > 0 || !!s.impErr), impErrOn: !!s.impErr, impErr: s.impErr, impRefreshD: ICON_D.refresh, impBusy: !!s.impBusy,
@@ -11395,7 +11584,7 @@ class Component extends DCLogic {
       omTypesOnly: () => this.omTypesOnly(), omTypeNoteOn: !!s.omTypeNote, omTypeNote: s.omTypeNote,
       // the app passes loading while an account's data loads (at sign-in, and after Me → Account)
       hasToast: !!s.toast || !!(this.props || {}).loading, toast: s.toast || ((this.props || {}).loading ? ['Loading', this.loadingName()].filter(Boolean).join(' ') + '…' : ''),
-      hasUndo: !!s.toastUndo, toastUndo: () => { const u = s.toastUndo; clearTimeout(this._t); this.setState({ toast:null, toastUndo:null }); if (u) u(); }
+      hasUndo: !!s.toastUndo, toastUndo: (() => { const version = this._toastVersion; return () => this.undoToast(version); })()
     };
   }
 }
