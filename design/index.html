@@ -10542,7 +10542,7 @@ class Component extends DCLogic {
     const viewsOpen = s.sheet === 'views';
     const viewPickLabel = WORKSPACE.viewLabel || 'Default view';
     const openViews = () => this.sheet(viewsOpen ? null : 'views');
-    const reportsShortcutOn = !ins && (!!SH.reports || !!SERVICE.runLeakage);
+    const reportsShortcutOn = !ins && (!!SH.reports || !!SERVICE.runLeakage || !!WORKSPACE.reportsView?.scopeWarning);
     const openReports = () => { this.setState({ repTab:'mine' }); this.go('reports'); };
     const pickerRows = PICKS.filter(p => s.sheet === 'views' ? p.action === 'view' : p.action !== 'view');
     // Explore's Specialty chips (the website's SpecialtySwitch, in its words): All codes, then each procedure type, several on at once.
@@ -11415,7 +11415,7 @@ class Component extends DCLogic {
       ...this.emailVals(),
       meSub: [ins ? A.name : WORKSPACE.company || A.name, ins ? tlist.name : territoryName, !ins && WORKSPACE.unitLabel ? 'Unit: ' + WORKSPACE.unitLabel : '', WORKSPACE.viewLabel].filter(Boolean).join(' · '),
       meRows: [
-        ...(reportsShortcutOn ? [{ icon:'▤', label:'Reports', meta:s.reports.filter(r => !r.busy).length + ' ready' + (s.reports.some(r => r.busy) ? ' · generating' : ''), go:openReports }] : []),
+        ...(reportsShortcutOn ? [{ icon:'▤', label:'Reports', meta:WORKSPACE.reportsView?.scopeWarning ? 'Unavailable in this context' : s.reports.filter(r => !r.busy).length + ' ready' + (s.reports.some(r => r.busy) ? ' · generating' : ''), go:openReports }] : []),
         ...(ME.staff ? [{ icon:'⇄', label:'Account', meta:(PICKS.find(p => ME.pick ? p.id === ME.pick : p.account === s.account) || A).name, go: () => this.sheet('account') }] : []),
         ...(canChangeView ? [{ icon:'▤', label:'Workspace view', meta:viewPickLabel, go:openViews }] : []),
         { icon:'▤',label:'Privacy policy',meta:'docnexus.ai',go:() => this.openPrivacy() },
