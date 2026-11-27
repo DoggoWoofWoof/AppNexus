@@ -9267,7 +9267,7 @@ class Component extends DCLogic {
   go(s, id, more) { if (s === 'hco' && !this.acct().fieldPro) return; this.setState(st => ({ stack: [...st.stack, { s, id, ...more }], sheet:null,pSeg:'overview',hPeoplePage:0,hDestPage:0,hcoAddFailed:null })); }
   replaceTop(s, id) { this.setState(st => ({ stack: [...st.stack.slice(0, -1), { s, id }] })); }
   setTab(t, extra) { if (t !== 'ask') this.stopListening(); if (t === 'insights' && this.acct().sphere) t = 'activity'; this.setState({ tab: t, stack: [], sheet: null, ...(extra || {}) }); }
-  sheet(sheet, data) { this.setState({ sheet, sheetData: data == null ? null : data }); }
+  sheet(sheet, data) { this._sheetVersion=(this._sheetVersion || 0)+1; this.setState({ sheet, sheetData: data == null ? null : data }); }
   toggleTargetMetrics() {
     const open = !this.state.targetMetricsOpen;
     this.setState({ targetMetricsOpen:open });
@@ -10895,10 +10895,10 @@ class Component extends DCLogic {
       accountRows: ME.staff && (!activeOnly || s.sheet === 'account' || s.sheet === 'views') ? pickerRows.map((p, i) => { const on = p.action ? !!p.selected : ME.pick ? ME.pick === p.id : s.account === p.account; return { hasHead: !viewsOpen && (i === 0 || pickerRows[i - 1].kind !== p.kind), head: p.kind.toUpperCase(),
         name:p.name, aria:p.name + (on ? ', selected' : ''), disabled:!!s.switching, meta:s.switching === p.id ? 'Opening…' : on && viewsOpen ? 'Current view' : pickerRows.filter(q => q.kind === p.kind && q.meta === p.meta).length > 1 ? '' : p.meta,
         check:on ? '✓' : '', bg:on || s.switching === p.id ? '#EDF1FB' : '#fff', bd:on ? '#2447C4' : '#E1E6F0',
-        go: () => { if (!ME.staff || s.switching) return; if (on) { this.sheet(null); return; } this.setState({ switching:p.id });
+        go: () => { if (!ME.staff || s.switching) return; if (on) { this.sheet(null); return; } const sheetVersion=this._sheetVersion; this.setState({ switching:p.id });
           const change = p.action === 'view' ? AUTH.pickView?.(p.value || null) : p.action === 'unit' ? AUTH.pickUnit?.(p.value || p.id) : AUTH.pickAccount?.(p.id);
-          Promise.resolve(change).then(() => { if (!this._gone) this.setState(st => st.switching !== p.id ? {} : { switching:null, ...(st.sheet === s.sheet ? { sheet:null } : {}) }); },
-            e => { if (this._gone || this.state.switching !== p.id) return; this.setState({ switching:null }); if (this.state.sheet === s.sheet) this.toast((e && e.message) || 'That account didn’t open · try again'); }); } }; }) : [],
+          Promise.resolve(change).then(() => { if (!this._gone) this.setState(st => st.switching !== p.id ? {} : { switching:null, ...(st.sheet === s.sheet && this._sheetVersion === sheetVersion ? { sheet:null } : {}) }); },
+            e => { if (this._gone || this.state.switching !== p.id) return; this.setState({ switching:null }); if (this.state.sheet === s.sheet && this._sheetVersion === sheetVersion) this.toast((e && e.message) || 'That account didn’t open · try again'); }); } }; }) : [],
 
       // targets
       q: s.q, hasQ: !!s.q, onQ: e => this.setState({ q: e.target.value }), clearQ: () => this.setState({ q:'' }),
