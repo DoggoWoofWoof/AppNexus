@@ -832,6 +832,7 @@ input,textarea,button{font-family:inherit}
                     </div>
                     <div style="display:flex;flex-direction:column;gap:10px;padding:0 14px 14px;">
                       <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.09em;color:#7A839A;">PURPOSE</span>
+                      <span style="font-size:12px;line-height:1.4;color:#5B6478;">{{ pEmailScope }}</span>
                       <button onClick="{{ pEmailPick }}" aria-label="Purpose" style="display:flex;align-items:center;justify-content:space-between;padding:12px;border:1px solid #D7DEEC;border-radius:12px;background:#F7F9FC;color:#0B1220;font-weight:650;cursor:pointer;"><span>{{ pEmailPurpose }}</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5B6478" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg></button>
                       <sc-if value="{{ pEmailPicking }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;gap:5px;"><sc-for list="{{ pEmailPurposes }}" as="o" hint-placeholder-count="4">
                         <button onClick="{{ o.go }}" aria-label="{{ o.label }}" style="padding:10px 12px;text-align:left;border:1px solid {{ o.bd }};border-radius:10px;background:{{ o.bg }};color:{{ o.fg }};font-size:13.5px;font-weight:600;cursor:pointer;">{{ o.label }}</button>
@@ -1731,13 +1732,16 @@ input,textarea,button{font-family:inherit}
                 <sc-if value="{{ omQEmpty }}" hint-placeholder-val="{{ false }}"><div style="padding:14px 16px;font-size:13px;line-height:1.4;color:#5B6478;">{{ omQEmpty }}</div></sc-if>
                 <sc-if value="{{ omIsAll }}" hint-placeholder-val="{{ true }}">
                   <sc-for list="{{ omRows }}" as="r" hint-placeholder-count="4">
-                    <div style="display:flex;align-items:center;gap:11px;padding:11px 12px 11px 16px;border-bottom:1px solid #F0F3F8;background:{{ r.rowBg }};">
-                      <button onClick="{{ r.select }}" style="flex:1;min-width:0;display:flex;gap:11px;align-items:center;border:0;background:none;padding:0;cursor:pointer;text-align:left;color:#0B1220;">
-                        <span style="width:28px;height:28px;flex:0 0 28px;border-radius:50%;background:{{ r.bg }};color:{{ r.fg }};display:grid;place-items:center;font-size:11.5px;font-weight:700;">{{ r.n }}</span>
-                        <span style="flex:1;min-width:0;"><span style="display:block;font-size:11.5px;color:#7A839A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ r.meta }}</span><span style="display:block;font-size:14px;font-weight:650;line-height:1.3;margin-top:1px;">{{ r.name }}</span></span>
-                        <span style="font-family:'Source Serif 4',Georgia,serif;font-size:17px;">{{ r.value }}</span>
-                      </button>
-                      <button onClick="{{ r.toggle }}" aria-label="{{ r.addLabel }}" style="width:38px;height:38px;flex:0 0 38px;border-radius:11px;border:1px solid {{ r.addBd }};background:{{ r.addBg }};display:flex;align-items:center;justify-content:center;cursor:pointer;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="{{ r.addFg }}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="{{ r.addD }}"></path></svg></button>
+                    <div style="display:flex;flex-direction:column;gap:3px;padding:10px 12px 10px 16px;border-bottom:1px solid #F0F3F8;background:{{ r.rowBg }};">
+                      <span style="display:block;margin-left:39px;font-size:11.5px;line-height:1.35;color:#7A839A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ r.meta }}</span>
+                      <div style="display:flex;align-items:center;gap:11px;">
+                        <button onClick="{{ r.select }}" style="flex:1;min-width:0;display:flex;gap:11px;align-items:center;border:0;background:none;padding:0;cursor:pointer;text-align:left;color:#0B1220;">
+                          <span style="width:28px;height:28px;flex:0 0 28px;border-radius:50%;background:{{ r.bg }};color:{{ r.fg }};display:grid;place-items:center;font-size:11.5px;line-height:1.3;font-weight:700;">{{ r.n }}</span>
+                          <span style="flex:1;min-width:0;font-size:14px;font-weight:650;line-height:1.35;">{{ r.name }}</span>
+                          <span style="flex:0 0 auto;white-space:nowrap;font-family:'Source Serif 4',Georgia,serif;font-size:17px;line-height:1.35;">{{ r.value }}</span>
+                        </button>
+                        <button onClick="{{ r.toggle }}" aria-label="{{ r.addLabel }}" style="width:38px;height:38px;flex:0 0 38px;border-radius:11px;border:1px solid {{ r.addBd }};background:{{ r.addBg }};display:flex;align-items:center;justify-content:center;cursor:pointer;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="{{ r.addFg }}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="{{ r.addD }}"></path></svg></button>
+                      </div>
                     </div>
                   </sc-for>
                 </sc-if>
@@ -2700,6 +2704,7 @@ input,textarea,button{font-family:inherit}
                 <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.09em;color:#7A839A;">EMAIL TO SEND</div>
                 <div style="font-size:13px;line-height:1.45;color:#5B6478;">Pick what it's for, and it's written from their biography, papers, trials and focus, with no case volumes. Change anything in it, then copy it or open it in your email app.</div>
                 <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.09em;color:#7A839A;">PURPOSE</div>
+                <span style="font-size:12px;line-height:1.4;color:#5B6478;">{{ emailScope }}</span>
                 <button onClick="{{ emailPick }}" disabled="{{ emailLocked }}" aria-label="Purpose" style="display:flex;align-items:center;justify-content:space-between;padding:12px;border:1px solid #D7DEEC;border-radius:12px;background:#F7F9FC;color:#0B1220;font-weight:650;cursor:pointer;"><span>{{ emailPurpose }}</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5B6478" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg></button>
                 <sc-if value="{{ emailPicking }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;gap:5px;"><sc-for list="{{ emailPurposes }}" as="o" hint-placeholder-count="4">
                   <button onClick="{{ o.go }}" aria-label="{{ o.label }}" style="padding:10px 12px;text-align:left;border:1px solid {{ o.bd }};border-radius:10px;background:{{ o.bg }};color:{{ o.fg }};font-size:13.5px;font-weight:600;cursor:pointer;">{{ o.label }}</button>
@@ -3788,6 +3793,7 @@ input,textarea,button{font-family:inherit}
                         <sc-for list="{{ insPerRows }}" as="r" hint-placeholder-count="2"><div style="display:flex;flex-direction:column;gap:6px;"><div style="font-size:12.5px;font-weight:650;color:#0B1220;">{{ r.name }}</div><textarea value="{{ r.text }}" onChange="{{ r.change }}" placeholder="{{ insNotePh }}" aria-label="{{ r.name }}" style="width:100%;box-sizing:border-box;min-height:84px;border:1px solid #D7DEEC;border-radius:14px;padding:12px 13px;font-size:14.5px;line-height:1.5;background:#F7F9FC;outline:0;resize:none;color:#0B1220;"></textarea></div></sc-for>
                       </div>
                     </sc-if>
+                    <sc-if value="{{ insCaptureWait }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px;line-height:1.45;color:#5B6478;"><span>{{ insCaptureMessage }}</span><sc-if value="{{ insCaptureRetryOn }}" hint-placeholder-val="{{ false }}"><button onClick="{{ insCaptureRetry }}" style="border:0;background:none;padding:4px 0;font-size:12.5px;font-weight:650;color:#2447C4;cursor:pointer;">Retry topics</button></sc-if></div></sc-if>
                     <sc-if value="{{ insShowTopics }}" hint-placeholder-val="{{ true }}">
                     <div>
                       <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.09em;color:#7A839A;">{{ insTopicHead }}</div>
@@ -5253,7 +5259,7 @@ const ONC_PEOPLE = {
   jun: { spec:'Hematology/Oncology', iOpen:'Send the publication he asked for on 27 Oct.', iBrief:'Asked for a publication on 27 Oct, still not sent. Prefers email to visits.' },
   elena: { spec:'Medical Oncology', iOpen:'Introduce yourself and learn what she needs.', iBrief:'Not met yet. No insights logged.' }
 };
-const applyPeople = A => Object.values(HCPS).forEach(p => Object.assign(p, (A.fieldPro ? FP_PEOPLE : ONC_PEOPLE)[p.id]));
+const applyPeople = A => Object.entries(A.fieldPro ? FP_PEOPLE : ONC_PEOPLE).forEach(([id,fields]) => { if (HCPS[id]) Object.assign(HCPS[id],fields); });
 const FP_TEXT = { h:['Visit','Call','Visit','Case observation'],
   n:['Discussed referral patterns. Maya asked for a one-page account summary.', 'Agreed to review the procedure mix on the next visit.', 'Cautious about adding robotic cases until the November OR block changes settle. Wants peer outcome data first.', 'Asked how his outcomes compare with peers using a competing system. Prefers email over visits.'] };
 const ONC_TEXT = { h:['Trial data','Patient selection','Sequencing','Competitor comparison'],
@@ -5408,6 +5414,7 @@ class Component extends DCLogic {
     this._dashOpen = dashOpen;
     this.autoKeep();
     this.loadGenCap();
+    this.readCapture();
     this.loadLinkCaps();
     this.loadImports();
     const pTop = s.stack[s.stack.length - 1];
@@ -5599,7 +5606,7 @@ class Component extends DCLogic {
   }
 
   // customer account: same flow everywhere, the views change where an account needs it
-  acct() { return ACCOUNTS[this.state.account]; }
+  acct() { const A=ACCOUNTS[this.state.account], capture=this.state.captureConfig; return this.state.account==='kura' && capture && capture.scope===this.workScope() ? { ...A,topics:capture.value.topics,subs:capture.value.subs } : A; }
   // Field Pro has the Map; an insights-only account has Summaries in its place
   // Build summary: pick the conversations on the page, then name it in a sheet
   smyBuild() {
@@ -6272,6 +6279,7 @@ class Component extends DCLogic {
   insightWork() { const scope = this.workScope(), sheet = this.state.sheet, id = this.state.sheetData, version = this._visitN; return () => this.workCurrent(scope) && this.state.sheet === sheet && this.state.sheetData === id && this._visitN === version; }
   tabsFor(st) { const A = ACCOUNTS[st.account]; return A.fieldPro ? ['targets', 'ask', 'map', 'activity'] : ['targets', ...(A.sphere ? ['sphere'] : ['insights']), 'summaries', 'activity']; }
   setAccount(account) {
+    this.finishEmail(); this._captureKey=null;
     this.stopListening(); this.dropRec();
     clearInterval(this._i);
     clearTimeout(this._auto); this._autoText = null;
@@ -6283,7 +6291,7 @@ class Component extends DCLogic {
     applyPeople(ACCOUNTS[account]);
     this.setState(st => {
       // the day's plan before the account's own seed, so a plan kept on the phone (how far through today) comes back, as at the start
-      const A = ACCOUNTS[account], out = { account, sheet: null, routeOpen: {}, runIdx: 0, runDone: [], runSkip: [], ...this.insFresh([], A), codeSpec: null, ...seed(A), iSort: 'Last met', ...I_FILTERS,
+      const A = ACCOUNTS[account], out = { account, sheet:null,email:null,emailCard:null,captureConfig:null,captureError:'',routeOpen: {}, runIdx: 0, runDone: [], runSkip: [], ...this.insFresh([], A), codeSpec: null, ...seed(A), iSort: 'Last met', ...I_FILTERS,
         thread: [], askIn: '', logged: [], smySel: [], smyOpen: null, smyQ: '', smyName: '', ...smyFresh(),
         smyDet:null, smyDets:{}, smyDetTab:'overview', smyDrugs:[], smyDetExp:false, smyAsk:null, smyDel:null, smyRev:null, smySrc:null, smyRetrying:null,
         toast: null, toastUndo: null,
@@ -6480,6 +6488,7 @@ class Component extends DCLogic {
   // Insights puts back the rep's unsaved typed insight when the sheet opens blank on typed notes, within 7 days
   // (AddInsightSheet.tsx:1593-1640); opened for a doctor, it starts fresh and the kept one waits
   openInsight(who, mode, hco, page) {
+    if(this.acct().fieldPro && WORKSPACE.personalScopeRestricted)return this.toast('Visit logging is unavailable in this company context because the notes service does not identify a company.');
     this.dropRec();
     const A = this.acct(), m = mode === 'record' && !A.record ? 'notes' : mode || 'notes';
     const kept = !A.fieldPro && m === 'notes' && !(who || []).length && !hco ? this.state.drafts.find(d => d.auto) : null;
@@ -6487,6 +6496,20 @@ class Component extends DCLogic {
     this._autoText = fresh ? JSON.stringify(kept.form) : null;
     this.setState(st => ({ ...this.insFresh(who), insHco: hco || null, insPage: page || null, ...(fresh ? { ...kept.form, insDraft:null } : {}), sheet:'insight', sheetData:null, insMode: m,
       ...(kept && !fresh ? { drafts: st.drafts.filter(d => !d.auto) } : {}) }));
+  }
+  // Capture uses the authenticated team; a slow/failed check never shows another team's topics.
+  readCapture(force) {
+    const read=SERVICE.insightCapture, scope=this.workScope();
+    if(this.state.account!=='kura' || this.state.sheet!=='insight' || !read || this.state.captureConfig?.scope===scope)return;
+    if(!force && this._captureKey===scope)return;
+    const ticket=this._captureTicket={scope};this._captureKey=scope;this.setState({captureError:''});
+    const current=()=>this.workCurrent(scope) && this._captureTicket===ticket;
+    Promise.resolve().then(()=>read()).then(value=>{
+      if(!current())return;
+      const topics=(this.state.insTopics || []).filter(topic=>value.topics.includes(topic));
+      const subs=new Set(topics.flatMap(topic=>value.subs[topic] || []));
+      this.setState({captureConfig:{scope,value},captureError:'',insTopics:topics,insSubs:(this.state.insSubs || []).filter(sub=>subs.has(sub))});
+    }).catch(error=>{if(current())this.setState({captureError:error?.message || 'Team topics could not be loaded. Try again.'});});
   }
   // the website's autosave (AddInsightSheet.tsx:1569-1591): Insights' typed form, once it has a doctor or words and some
   // words, a moment after the last change; one per rep, on the phone only, until it is generated
@@ -7059,7 +7082,7 @@ class Component extends DCLogic {
     const tkey = acct + '|' + (q.disease || '') + '|' + s.sphTrkSort;
     if (!force && tkey === this._sphTrkKey) return;
     this._sphTrkKey = tkey;
-    const now = () => this._sphTrkKey === tkey && this.state.account === acct;
+    const now = () => !this._gone && this._sphTrkKey === tkey && this.state.account === acct;
     const ask = { disease:q.disease, sort:s.sphTrkSort };
     let live = false;
     this.setState({ sphTrkBusy:true, sphTrkErr:'' });
@@ -7078,7 +7101,7 @@ class Component extends DCLogic {
     const aged = !!(SERVICE.sphere.liveOnly && SERVICE.sphere.liveOnly(q.disease)) && Date.now() - (this._sphAt || 0) > 5 * 60000;
     if (!force && key === this._sphKey && !aged) return;
     this._sphKey = key; this._sphAt = Date.now();
-    const now = () => this._sphKey === key && this.state.account === acct;
+    const now = () => !this._gone && this._sphKey === key && this.state.account === acct;
     // a failed read ('busy') keeps what this disease's last answer said (its lists and filters, and that Sentiment is on when the failed read is the one that would say)
     const head = v => {
       const prev = this.state.sphHead, same = prev && prev.disease === v.disease ? prev : null;
@@ -7103,7 +7126,7 @@ class Component extends DCLogic {
     const key = acct + '|' + JSON.stringify(q);
     if (!force && key === this._sphFeedKey) return;
     this._sphFeedKey = key;
-    const now = () => this._sphFeedKey === key && this.state.account === acct;
+    const now = () => !this._gone && this._sphFeedKey === key && this.state.account === acct;
     this.setState({ sphFeedBusy:true, sphFeedErr:'' });
     fs.load(q, f => { if (now()) this.setState({ sphFeed:f, sphFeedBusy:false }); })
       .then(() => now() && this.setState({ sphFeedBusy:false }),
@@ -7145,7 +7168,7 @@ class Component extends DCLogic {
     const s = this.state, acct = s.account, q = this.sphQuery(), key = acct + '|' + r.npi + '|' + JSON.stringify(q) + '|' + Date.now();
     this._sphKolKey = key;
     this.setState({ sheet:'sphkol', sphKol:null, sphKolRow:r, sphKolBusy:true, sphKolErr:'', skPage:0 });
-    const now = () => this._sphKolKey === key && this.state.account === acct;
+    const now = () => !this._gone && this._sphKolKey === key && this.state.account === acct;
     SERVICE.sphere.kol({ ...q, disease:(s.sphHead && s.sphHead.disease) || q.disease, npi:r.npi, name:r.name, tier:r.tier, org:r.org, spec:r.spec })
       .then(v => now() && this.setState({ sphKol:v, sphKolBusy:false }), e => now() && this.setState({ sphKolBusy:false, sphKolErr:(e && e.message) || "Could not load this KOL's items. The sentiment service may be busy. Try again shortly." }));
   }
@@ -7179,7 +7202,7 @@ class Component extends DCLogic {
     const key = acct + '|' + F.disease + '|' + Date.now();
     this._sphConfKey = key; this._sphConfDirty = false; this._sphConfLast = null;
     this.setState({ sheet:'sphconf', sphConf:null, sphConfQ:'', sphConfPage:0, sphConfBusy:true, sphConfErr:'' });
-    const now = () => this._sphConfKey === key && this.state.account === acct;
+    const now = () => !this._gone && this._sphConfKey === key && this.state.account === acct;
     fs.catalogue(F.disease, F.conf.selected).then(rows => now() && this.setState({ sphConf:{ disease:F.disease, rows }, sphConfBusy:false }),
       e => now() && this.setState({ sphConfBusy:false, sphConfErr:(e && e.message) || 'Could not load conferences. The service may be busy. Try again shortly.' }));
   }
@@ -8893,7 +8916,7 @@ class Component extends DCLogic {
     if (top && top.s === 'run') { const list = this.groups().flatMap(g => g.ids), id = list[Math.min(s.runIdx, list.length - 1)]; return HCPS[id] ? [id] : []; }
     return [];
   }
-  topicsFor(area) { const A = this.acct(); return A.areas ? (area ? A.areas[area].topics : []) : A.topics; }
+  topicsFor(area) { const A=this.acct(); if(this.state.account==='kura' && SERVICE.insightCapture && this.state.captureConfig?.scope!==this.workScope())return []; return A.areas ? (area ? A.areas[area].topics : []) : A.topics; }
   // the centre button: start recording straight away and tag who was there afterwards
   recordNow() {
     const who = this.onScreenDoc();
@@ -9087,8 +9110,8 @@ class Component extends DCLogic {
       : tab === 'shared' ? shared.map(e => row({ nm:e.name, sub:e.group, c1:e.sharedBy, c2:e.when, size:e.size, badge:e.missing ? 'Removed' : e.unresolved ? 'Checking…' : 'Shared', tone:e.missing || e.unresolved ? '' : 'new', op:e.missing ? .5 : 1, go: () => e.missing ? null : this.sheet('report', 's:' + e.id) }))
       : s.reports.map(r => r.busy ? row({ nm:nameOf(r), c1:'You', c2:'Usually 3–5 minutes', size:'—', badge:'Generating', tone:'run', go: () => this.sheet('report', 'job') })
         : row({ nm:nameOf(r), sub:r.group, c1:'You', c2:r.when || r.date, size:r.size || '—', badge:'Ready', tone:'ok', go: () => this.sheet('report', String(r.id)) }));
-    const msg = tab === 'mine' ? (RV.loading ? 'Loading your reports…' : RV.failed ? 'Your reports could not be loaded. Reload the page to try again.' : '')
-      : tab === 'shared' ? (RV.loading ? 'Loading shared reports…' : shared.length ? '' : 'Nobody has shared a report with you yet.') : '';
+    const msg = RV.scopeWarning || (tab === 'mine' ? (RV.loading ? 'Loading your reports…' : RV.failed ? 'Your reports could not be loaded. Reload the page to try again.' : '')
+      : tab === 'shared' ? (RV.loading ? 'Loading shared reports…' : shared.length ? '' : 'Nobody has shared a report with you yet.') : '');
     return {
       repEyebrow: RV.eyebrow, repSub: tab === 'emails' ? 'Emails written for your HCPs, one row per batch. Open one to fill in its blanks and download it for a mail merge.' : 'One PDF per account. Shared links open in DocNexus.',
       repTabs: [['mine', 'My reports', s.reports.length], ['shared', 'Shared with me', shared.length], ...(jobs ? [['emails', 'Batch email jobs', jobs.length]] : [])]
@@ -9465,6 +9488,7 @@ class Component extends DCLogic {
     const canOpen = canCopy && !!prepared.href;
     return {
       emailWho:p?.name || 'this HCP', emailLocked:locked, emailPicking:!locked && e.picking,
+      emailScope:service?.context || '',
       emailPurpose:service?.purposes.find(o => o.id === e?.purpose)?.label || '',
       emailPick:() => { if (!locked) this.changeEmail({ ...e,picking:!e.picking }); },
       emailPurposes:(service?.purposes || []).map(o => ({
@@ -10065,6 +10089,8 @@ class Component extends DCLogic {
     const top = s.stack[s.stack.length - 1] || { s: s.tab };
     const scr = top.s;
     const shown = (...screens) => !activeOnly || screens.includes(scr);
+    let allHcos,allHcps;
+    const hcoRows=()=>allHcos ??= Object.values(HCOS), hcpRows=()=>allHcps ??= Object.values(HCPS);
     const groups = this.groups();
     const viewList = s.route, viewGroups = this.groupsOf(viewList), routeMap = this.routeMapOf(viewGroups);
     const routeLegs = s.routeLegs?.key === this.routeLegKey(viewGroups) ? s.routeLegs.legs : [];
@@ -10185,12 +10211,12 @@ class Component extends DCLogic {
     // Insights list (TargetListDetail.tsx). A sort whose figures aren't there isn't offered; the default is the website's.
     const hasOpp = !WORKSPACE.drugAccount && (!WORKSPACE.companyId || !!WORKSPACE.explore?.opportunity);
     // the leakage sorts only when this list's own accounts that can be opened have stored leakage (HomeView.tsx:487-491, homeLists.ts:385)
-    const hasLeak = !WORKSPACE.drugAccount && WORKSPACE.view !== 'hema_sales' && Object.values(HCOS).some(h => h.mine && h.drillable !== false && (h.leftN != null || h.leakN != null));
+    const hasLeak = shown('targets') && !WORKSPACE.drugAccount && WORKSPACE.view !== 'hema_sales' && hcoRows().some(h => h.mine && h.drillable !== false && (h.leftN != null || h.leakN != null));
     // year on year once last year's counts are in (the website's has.trend, HomeView.tsx:557)
-    const hasTrend = !WORKSPACE.companyId || Object.values(HCOS).some(h => h.askPrior != null);
+    const hasTrend = shown('targets') && (!WORKSPACE.companyId || hcoRows().some(h => h.askPrior != null));
     const sortKeys = ins ? ['Last met', 'Meetings', 'Name']
       : s.kind === 'hco' ? [...(hasOpp ? ['Opportunity'] : []), 'Volume', ...(hasTrend ? ['Year on year'] : []), ...(hasLeak ? ['Left %', 'Leaking $'] : []), 'Name']
-      : ['Volume', ...(Object.values(HCPS).some(p => p.priorN != null) ? ['Last year', 'Year on year'] : []), 'Name'];
+      : ['Volume', ...(shown('targets') && hcpRows().some(p => p.priorN != null) ? ['Last year', 'Year on year'] : []), 'Name'];
     const sortKey = ins ? (sortKeys.includes(s.iSort) ? s.iSort : 'Last met') : sortKeys.includes(s.sort) ? s.sort : sortKeys[0] === 'Opportunity' ? 'Opportunity' : 'Volume';
     const volWord = String(s.kind === 'hcp' ? measure : WORKSPACE.metric || 'PROCEDURES').toLowerCase().replace(/^./, c => c.toUpperCase());
     // the website's sort labels, with the book's year and the one before
@@ -10242,7 +10268,8 @@ class Component extends DCLogic {
       // oldest), meetings in the last 12 months, or the name; the first tap sorts high to low, so Name runs Z to A
       const metT = id => { const pr = prOf(id); return pr ? new Date(pr.lastAt || 0).getTime() || 0 : -(this.lastOf(id).n ?? 1e9); };
       const sortV = p => sortKey === 'Name' ? p.name : sortKey === 'Meetings' ? prOf(p.id)?.meetings12 ?? 0 : metT(p.id), dir = s.iDir === 'asc' ? 1 : -1;
-      items.sort((a, b) => { const x = sortV(a), y = sortV(b); return x < y ? -dir : x > y ? dir : 0; });
+      const sortValues=new Map(items.map(p=>[p.id,sortV(p)]));
+      items.sort((a, b) => { const x = sortValues.get(a.id), y = sortValues.get(b.id); return x < y ? -dir : x > y ? dir : 0; });
       makeCard = p => {
         const adv = this.advOf(p.id), pr = tlist.profiles?.[p.id];
         // the website's row: priority, status, last meeting, meetings (last 12 months / all) and the top topic
@@ -10312,7 +10339,7 @@ class Component extends DCLogic {
         }];
       });
     } else if (s.kind === 'hco') {
-      items = Object.values(HCOS).filter(h => s.scope === 'explore' || h.mine).filter(mineOk).filter(h => fieldMatches(h,false)).filter(specOk);
+      items = hcoRows().filter(h => s.scope === 'explore' || h.mine).filter(mineOk).filter(h => fieldMatches(h,false)).filter(specOk);
       // as the website orders the book: the sort's figure, then the volume, then the name
       const fig = { Opportunity:h => h.oppN, Volume:h => h.volN, 'Year on year':h => h.listYoy != null ? (has(h.listYoy) ? h.listYoyN : null) : has(h.yoy) ? h.yoyN : null,
         'Left %':h => h.leftN ?? null, 'Leaking $':h => h.leakN ?? null };
@@ -10328,7 +10355,7 @@ class Component extends DCLogic {
           toggle: () => h.hcps.length ? this.sheet('choose', h.id) : this.toggleRoute(h.id), rmOn:!!SERVICE.removedPut && !!h.mine && !!showOf(this.acct()).removeRow, rmGo: () => this.openRemoveTarget(h.id, 'account'), hcoCard, metrics:[] };
       };
     } else {
-      items = Object.values(HCPS).filter(p => s.scope === 'explore' || p.mine).filter(mineOk).filter(p => fieldMatches(p,true)).filter(specOk);
+      items = hcpRows().filter(p => s.scope === 'explore' || p.mine).filter(mineOk).filter(p => fieldMatches(p,true)).filter(specOk);
       // as the website orders doctors: the count, then the name; the change puts new first (no count a year
       // earlier), then the biggest rise down to the biggest fall, then none
       const byCount = (a, b) => desc(a.claimsN, b.claimsN) || a.name.localeCompare(b.name);
@@ -10342,8 +10369,8 @@ class Component extends DCLogic {
       };
     }
     const unit = !ins && s.kind === 'hco' ? ['account','accounts'] : ['HCP','HCPs'];
-    const syncAccounts = Object.values(HCOS).filter(x => x.mine).length;
-    const bookDoctorCount = ins ? 0 : Object.values(HCPS).filter(x => x.mine).length;
+    const syncAccounts = !ins && shown('targets','ask') ? hcoRows().filter(x => x.mine).length : 0;
+    const bookDoctorCount = !ins && shown('targets','ask') ? hcpRows().filter(x => x.mine).length : 0;
     // Field Pro's chat is full at ASK_MAX_TURNS questions
     const askFull = !ins && s.thread.length >= ASK_MAX_TURNS;
     const bookN = ins ? 0 : s.kind === 'hco' ? syncAccounts : bookDoctorCount;
@@ -10356,7 +10383,7 @@ class Component extends DCLogic {
     // "N of M measured" for both leakage figures (bookLeakage, 507), and the change rounded half away from zero (format.ts pctChange)
     const fpTiles = (() => {
       if (!fieldMetrics || !targetMetricsOpen) return [];
-      const book = Object.values(HCOS).filter(h => h.mine && h.drillable !== false);
+      const book = hcoRows().filter(h => h.mine && h.drillable !== false);
       const measured = book.filter(h => h.leftCount != null && h.leftOf != null);
       const measuredOf = measured.length + ' of ' + book.length + ' measured';
       const left = measured.reduce((n, h) => n + h.leftCount, 0), total = measured.reduce((n, h) => n + h.leftOf, 0);
@@ -10377,7 +10404,7 @@ class Component extends DCLogic {
         { eb:'Trend', n:trend == null ? '—' : (trend > 0 ? '+' : '') + trend.toFixed(1) + '%', k:'volume, ' + bookY + ' vs ' + (bookY - 1), color:trend == null ? '#5B6478' : trend < 0 ? '#A94D1B' : '#1C7A4E' },
       ];
     })();
-    const insTotal = ins ? tlist.ids.filter(id => HCPS[id]).length : 0;
+    const insTotal = ins && shown('targets') ? tlist.ids.filter(id => HCPS[id]).length : 0;
     const pickedTerritory = this.pickedList();
     const territoryName = (TERRS.find(t => (t.id || t.name) === pickedTerritory) || {}).name || (this.props?.loading ? 'Target list' : s.territory);
     const targetPageKey = exploreQuery?.filterKey || JSON.stringify([s.account,s.territory,s.tlist,s.q,s.scope,s.kind,s.spec,s.cgs,s.sort,s.iSort,s.iDir,mf.state || null,mf.city || null,mf.type || null]);
@@ -10507,7 +10534,7 @@ class Component extends DCLogic {
           emptyA:'Add your first HCP', emptyAGo: () => this.openPeople(), hasEmptyA:addInsightHcpOn, emptyB:'', emptyBGo: () => {}, hasEmptyB:false })
       // the website's wording for an empty book (its "Add your targets" upload isn't in the app; Explore is)
       : savedHcps ? { emptyTitle:pickedTerritory === ':other' ? 'No unassigned target HCPs.' : 'No target HCPs in ' + territoryName + ' yet.',emptySub:'',emptyA:'Explore HCPs',emptyAGo:() => this.setState({ scope:'explore' }),hasEmptyB:false }
-      : toExploreFirst && s.kind === 'hco' && !Object.values(HCOS).some(h => h.mine) ? { emptyTitle:pickedTerritory === ':other' ? 'No unassigned target accounts.' : 'No target accounts in ' + territoryName + ' yet.',emptySub:'',emptyA:'Explore accounts',emptyAGo:() => this.setState({ scope:'explore' }),hasEmptyB:false }
+      : toExploreFirst && s.kind === 'hco' && !hcoRows().some(h => h.mine) ? { emptyTitle:pickedTerritory === ':other' ? 'No unassigned target accounts.' : 'No target accounts in ' + territoryName + ' yet.',emptySub:'',emptyA:'Explore accounts',emptyAGo:() => this.setState({ scope:'explore' }),hasEmptyB:false }
       : { emptyTitle:'Nothing in ' + territoryName + ' yet', emptySub:'', hasEmptyA:false, hasEmptyB:false };
     const rangeType = s.omKind === 'acc';
     const viewRows = !ins && ME.staff ? PICKS.filter(p => p.action === 'view') : [];
@@ -10531,7 +10558,7 @@ class Component extends DCLogic {
       })];
     const xClearOn = mineGeo ? mineFiltered : !!xv && xv.status === 'ready' && xv.clearable;
     const TRON = ins && this.trOn(), ACTPG = TRON ? s.trPage : s.myPage, ACTPK = TRON ? 'trPage' : 'myPage';
-    const MY = ins ? (shown('activity', 'insights') || /^(my|tr):/.test(String(s.sheetData)) ? this.myView() : { shown:[],base:[],types:[],selects:[],acts:[],status:'',sub:'' }) : null;
+    const MY = ins ? ((scr === 'insights' || scr === 'activity' && A.sphere && s.actSeg !== 'dash') || /^(my|tr):/.test(String(s.sheetData)) ? this.myView() : { shown:[],base:[],types:[],selects:[],acts:[],status:'',sub:'' }) : null;
     const xfSpec = s.sheet === 'xf' && s.sheetData === 'codeSpec' ? SPC : null;
     const xfSel = s.sheet !== 'xf' ? null : xfSpec ? { key:'codeSpec', label:'Specialty' } : (MY && /^(my|tr):/.test(String(s.sheetData)) ? MY.selects : xv?.selects || mineSelects).find(x => x.key === s.sheetData) || null;
     // each row's title is the website's chip title ("Laparoscopy: 12 codes of your 40"); with no hover on a phone its code count shows too
@@ -10629,7 +10656,7 @@ class Component extends DCLogic {
 
     // run
     const idx = Math.min(s.runIdx, Math.max(runList.length - 1, 0));
-    const curId = runList[idx] || Object.keys(HCPS)[0];
+    const curId = !activeOnly || isRun ? runList[idx] || Object.keys(HCPS)[0] : null;
     const C = curId ? this.stopOf(curId) : NO_HCP, CH = HCOS[C.hco] || NO_HCO;
     // Call, on a doctor with a number; an account stop has none to call
     const runCallOn = !C.isHco && has(C.phone);
@@ -10668,7 +10695,7 @@ class Component extends DCLogic {
     const runRepOn = isRun && !ins && (!!SERVICE.runLeakage || (!!SH.reports && !WORKSPACE.drugAccount && !!HCOS[rrHid] && !String(rrHid).startsWith('org:')));
 
 
-    const chId = (s.sheet === 'choose' && s.sheetData) || Object.keys(HCOS)[0];
+    const chId = s.sheet === 'choose' ? s.sheetData : activeOnly ? null : Object.keys(HCOS)[0];
 
     // insight detail
     const VD = s.sheet === 'visit' && (s.visits.find(v => v.id === s.sheetData) || (s.trRows || []).find(v => v.id === s.sheetData) || pHistory.find(v => v.id === s.sheetData) || (s.visitById || {})[s.sheetData]), VV = VD && this.visitView(VD);
@@ -10810,7 +10837,7 @@ class Component extends DCLogic {
     // Activity's search: My Insights' (HCP name, file name, specialty or summary; MyInsights.tsx:73-80) on Insights,
     // the rep's own notes that mention it on Field Pro
     const actQ = s.actQ.trim().toLowerCase();
-    const actShown = !actQ ? s.visits : s.visits.filter(v => (ins && v.my ? v.my.find
+    const actShown = !shown('activity','insights') ? [] : !actQ ? s.visits : s.visits.filter(v => (ins && v.my ? v.my.find
       : (this.visitView(v).name + ' ' + v.note + ' ' + v.topic + ' ' + (v.topics || []).join(' ')).toLowerCase()).includes(actQ));
     const visPage = Math.min(ACTPG, Math.max(0, Math.ceil(actShown.length / TARGET_PAGE_SIZE) - 1));
     // My Insights' tiles count every row, whatever the search (MyInsights.tsx:200-255)
@@ -10826,7 +10853,8 @@ class Component extends DCLogic {
     const gs = genTyped ? this.genView(s.insGen, { put:fn => this.setState(st => ({ insGen:fn(st.insGen) })), polish:k => this.genPolish('ins', k), busy:s.insGenBusy, prev:s.insGenPrev,
       keep:() => this.setState({ insGenPrev:null }), use:() => this.genUse('ins') }) : GEN0;
     const insPer = this.insPerOf(), insPerOn = !A.fieldPro && !noHcp && s.insWho.length > 1;
-    const thirdParty = s.insType === 'Third Party', insProblems = A.fieldPro ? [] : this.insProblems(insPer, thirdParty);
+    const captureReady=s.account!=='kura' || !SERVICE.insightCapture || s.captureConfig?.scope===this.workScope();
+    const thirdParty=s.insType==='Third Party',insProblems=A.fieldPro ? [] : [...this.insProblems(insPer,thirdParty),...(!captureReady ? ['Check your team’s topics before saving.'] : [])];
     const insReady = (A.fieldPro ? (s.insWho.length > 0 || thirdParty) && !!s.insNote.trim() : !insProblems.length) && (!A.areas || !!s.insArea);
     const insStarted = s.insWho.length > 0 || !!s.insNote.trim() || insPer.length > 0 || s.insTried || (noHcp && s.insGen.some(g => g.text.trim() || g.attrs.length));
     const advDot = on => on ? { bg:'#2447C4', fg:'#fff', bd:'#2447C4' } : { bg:'#fff', fg:'#3C4557', bd:'#D7DEEC' };
@@ -10894,6 +10922,7 @@ class Component extends DCLogic {
       xChips, xClearOn, xClear,
       spec: s.spec, sortNow, openFilter: () => this.sheet('filter'),
       groupsChip: cgOn.length + (cgOn.length === 1 ? ' group · ' : ' groups · ') + cgOn.reduce((n, g) => n + g.codes, 0) + (cgOn.reduce((n, g) => n + g.codes, 0) === 1 ? ' code' : ' codes'),
+      targetWeekdayPages:this._targetWeekdayPages,
       targetItems: targetCards.map(t => ({ prio:'', prioTip:'', rmOn:false, insRmOn:false, rmGo:() => {}, ...t, rmLabel:'Remove ' + t.name + (ins ? ' from this list' : ' from your list'), rmTitle: ins ? 'Remove from list' : 'Remove from your list',
         profileLabel:'Open ' + t.name, routeLabel:(t.addLabel === 'Add' ? 'Add to route' : t.addLabel) + (t.addIcon === '✓' ? ', ' : ' ') + t.name,
         leadingOnly:!!t.hcoCard && !t.hcoCard.showMetrics,
@@ -11108,7 +11137,7 @@ class Component extends DCLogic {
       pTopics:pTarget ? (pTarget.topics || []).map((t, i) => ({ label:t, n:(pTarget.topicN || [])[i] != null ? '×' + pTarget.topicN[i] : '' })) : [],
       pDrugsOn:pSegNow === 'insight' && !!pTarget, pNoDrugs:!!pTarget && !(pTarget.drugs || []).length,
       pDrugs:(pTarget?.drugs || []).map(d => ({ label:d.name, n:'×' + d.count })),
-      pEmailOn:emOn, pEmailPurpose:emService?.purposes.find(o => o.id === emCard.purpose)?.label || '', pEmailPicking:emCard.picking,
+      pEmailOn:emOn,pEmailScope:emService?.context || '', pEmailPurpose:emService?.purposes.find(o => o.id === emCard.purpose)?.label || '', pEmailPicking:emCard.picking,
       pEmailPick:() => this.setState({ emailCard:{ ...emCard, picking:!emCard.picking } }),
       pEmailPurposes:(emService?.purposes || []).map(o => ({ label:o.label, ...chip(o.id === emCard.purpose),
         go:() => this.setState({ emailCard:{ ...emCard, purpose:o.id, picking:false } }) })),
@@ -11294,7 +11323,7 @@ class Component extends DCLogic {
       actQ: s.actQ, onActQ: e => this.setState({ actQ:e.target.value, myPage:0 }), hasActQ: !!s.actQ, clearActQ: () => this.setState({ actQ:'', myPage:0 }),
       actHint: ins ? (TRON ? 'Search HCP, quote text, file…' : 'Search by HCP name, file name, or content...') : 'Search notes or HCPs',
       // while the first read is on its way, the website shows its loader, not the empty list
-      actStatus: TRON ? MY.status : ins ? (MY.shown.length || (!s.actQ.trim() && s.drafts.some(d => !d.auto)) ? '' : (this.props || {}).loading ? 'Loading…' : 'No insights found')
+      actStatus: !ins && WORKSPACE.personalScopeRestricted ? 'Company-specific activity is unavailable for this sign-in until the notes service can identify the company.' : TRON ? MY.status : ins ? (MY.shown.length || (!s.actQ.trim() && s.drafts.some(d => !d.auto)) ? '' : (this.props || {}).loading ? 'Loading…' : 'No insights found')
         : !s.actQ.trim() ? (actShown.length || s.drafts.some(d => !d.auto) ? '' : 'No ' + W.many.toLowerCase() + ' yet.') : !actShown.length ? 'Nothing matches “' + s.actQ.trim() + '”.' : '',
       myReadErrorOn:TRON && !!s.trErr, myReadError:s.trErr || '', myReadRetry:() => { this._trKey = null; this.loadTranscripts(); },
       myOn: ins, myHeadOn: ins && !TRON, myActs: TRON ? MY.acts : [], myCount: ins ? MY.shown.length + ' insights' : '',
@@ -11350,8 +11379,8 @@ class Component extends DCLogic {
       shInsight: s.sheet === 'insight', shFilter: s.sheet === 'filter', shTerritory: s.sheet === 'territory', shChoose: s.sheet === 'choose', shContact: ctOn, ctWho: caseName(CT.name),
         ctOpts: [{ icon:'☎', iconD:ICON_D.phone, label:'Call', sub:CT.phone, tip:'Call ' + CT.phone, go: () => { this.setState({ sheet:null }); this.call(CT.phone); } },
           { icon:'✉', iconD:ICON_D.mail, label:'Email', sub:'Write a draft email', tip:'Write an email to ' + caseName(CT.name), go: () => { this.setState({ sheet:null }); this.openEmail(CT.id); } }],
-        shEmail: s.sheet === 'email', shMeet: s.sheet === 'meet', shStatus: s.sheet === 'status', shPurpose: s.sheet === 'purpose', shRmTarget: s.sheet === 'rmTarget', ...this.rmView(), shRemoved: s.sheet === 'removed', ...this.removedView(), shOutbox: s.sheet === 'outbox', ...this.obxView(), shSphKol: s.sheet === 'sphkol', ...this.sphView(scr), shXf: s.sheet === 'xf', xfOpts, ...this.statusView(), ...this.trackerFormView(), ...this.bookView(), ...this.runLeakageView(), shTracker: s.sheet === 'tracker', shNote: s.sheet === 'note', ...this.fullView(), shPeople: s.sheet === 'people', shSummary: s.sheet === 'summary', shMe: s.sheet === 'me', ...RS.view, shAccount: !!ME.staff && (s.sheet === 'account' || s.sheet === 'views'), shVisit: s.sheet === 'visit', vd: visitDetail,
-      ...this.peopleView(ins, tlist),
+        shEmail: s.sheet === 'email', shMeet: s.sheet === 'meet', shStatus: s.sheet === 'status', shPurpose: s.sheet === 'purpose', shRmTarget: s.sheet === 'rmTarget', ...this.rmView(), shRemoved: s.sheet === 'removed', ...this.removedView(), shOutbox: s.sheet === 'outbox', ...this.obxView(), shSphKol: s.sheet === 'sphkol', ...(!activeOnly || scr === 'sphere' || s.sheet === 'sphkol' ? this.sphView(scr) : {}), shXf: s.sheet === 'xf', xfOpts, ...this.statusView(), ...this.trackerFormView(), ...this.bookView(), ...this.runLeakageView(), shTracker: s.sheet === 'tracker', shNote: s.sheet === 'note', ...this.fullView(), shPeople: s.sheet === 'people', shSummary: s.sheet === 'summary', shMe: s.sheet === 'me', ...RS.view, shAccount: !!ME.staff && (s.sheet === 'account' || s.sheet === 'views'), shVisit: s.sheet === 'visit', vd: visitDetail,
+      ...(!activeOnly || s.sheet === 'people' ? this.peopleView(ins,tlist) : {}),
       ...this.changesView(ins, tlist),
       ...this.pickerView(ins, pickedTerritory), ...this.formView(), ...this.covView(), ...this.shareView(),
       // Add HCP sits on the Targets list: Insights' manual lists, Field Pro's own doctors (Explore finds by place)
@@ -11384,7 +11413,7 @@ class Component extends DCLogic {
       chooseHco: caseName((HCOS[chId] || NO_HCO).name),
       chooseRows: (HCOS[chId] || NO_HCO).hcps.map(id => { const on = viewList.includes(id); return { name:caseName(HCPS[id].name), spec:caseSpec(HCPS[id].spec), check: on ? '✓' : '', bg: on ? '#EDF1FB' : '#fff', bd: on ? '#2447C4' : '#E1E6F0', boxBd: on ? '#2447C4' : '#B9C3D8', boxBg: on ? '#2447C4' : '#fff', toggle: () => this.toggleRoute(id,chId) }; }),
       ...this.emailVals(),
-      meSub: [ins ? A.name : WORKSPACE.company || A.name, ins ? tlist.name : territoryName, WORKSPACE.viewLabel].filter(Boolean).join(' · '),
+      meSub: [ins ? A.name : WORKSPACE.company || A.name, ins ? tlist.name : territoryName, !ins && WORKSPACE.unitLabel ? 'Unit: ' + WORKSPACE.unitLabel : '', WORKSPACE.viewLabel].filter(Boolean).join(' · '),
       meRows: [
         ...(reportsShortcutOn ? [{ icon:'▤', label:'Reports', meta:s.reports.filter(r => !r.busy).length + ' ready' + (s.reports.some(r => r.busy) ? ' · generating' : ''), go:openReports }] : []),
         ...(ME.staff ? [{ icon:'⇄', label:'Account', meta:(PICKS.find(p => ME.pick ? p.id === ME.pick : p.account === s.account) || A).name, go: () => this.sheet('account') }] : []),
@@ -11436,6 +11465,7 @@ class Component extends DCLogic {
       insAreaOpts: Object.keys(A.areas || {}).map(k => ({ label:k, sub:AREA_PRODUCT[k] || '', ...chip(s.insArea === k), go: () => this.setState({ insArea:k, insTopics:[] }) })),
       // Stemline tags topics on an Insight only (AddInsightSheet.tsx:2198)
       insShowTopics: topicsNow.length > 0 && (!A.conv || s.insConv === 'Insight') && !genTyped && s.insMode !== 'record',
+      insCaptureWait:!captureReady,insCaptureMessage:s.captureError || 'Loading your team’s topics…',insCaptureRetryOn:!!s.captureError,insCaptureRetry:()=>this.readCapture(true),
       insTopicOpts: topicsNow.map(t => ({ label:t, ...chip(s.insTopics.includes(t)), go: () => toggleIn('insTopics', t) })),
       insHasSubs: subsNow.length > 0,
       insSubOpts: subsNow.map(t => ({ label:t, ...chip(s.insSubs.includes(t)), go: () => toggleIn('insSubs', t) })),

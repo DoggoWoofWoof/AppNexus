@@ -56,5 +56,12 @@ The public design mirrors the private app's current source. Sphere accounts keep
 Transcripts together in Activity; other Insights accounts split My Insights/Transcripts into Insights and keep
 Overview in Activity. Explore HCP cards retain one measured snapshot, and microphone/recording controls have
 explicit labels. The [live app demo](https://docnexus-field.vercel.app) is deployed manually from the private app;
-a public-design push alone does not deploy it. Native store identifiers remain undecided; nothing was registered
-or submitted under a proposed identifier.
+a public-design push alone does not deploy it. The approved app name is DocNexus and package ID is
+`ai.docnexus.app`; store registration and submission remain separate steps.
+
+
+## Navigation sync, 2026-11-27
+
+The mirrored design avoids hidden profile/list presentation work and guards late Sphere callbacks after an
+account closes. The private runtime also coalesces loading progress, retains complete native tab views and
+slices device cache writes so they yield to navigation. The public design continues to use sample data.
