@@ -10897,8 +10897,8 @@ class Component extends DCLogic {
         check:on ? '✓' : '', bg:on || s.switching === p.id ? '#EDF1FB' : '#fff', bd:on ? '#2447C4' : '#E1E6F0',
         go: () => { if (!ME.staff || s.switching) return; if (on) { this.sheet(null); return; } this.setState({ switching:p.id });
           const change = p.action === 'view' ? AUTH.pickView?.(p.value || null) : p.action === 'unit' ? AUTH.pickUnit?.(p.value || p.id) : AUTH.pickAccount?.(p.id);
-          Promise.resolve(change).then(() => { this.setState({ switching: null, sheet:null }); },
-            e => { this.setState({ switching: null }); this.toast((e && e.message) || 'That account didn’t open · try again'); }); } }; }) : [],
+          Promise.resolve(change).then(() => { if (!this._gone) this.setState(st => st.switching !== p.id ? {} : { switching:null, ...(st.sheet === s.sheet ? { sheet:null } : {}) }); },
+            e => { if (this._gone || this.state.switching !== p.id) return; this.setState({ switching:null }); if (this.state.sheet === s.sheet) this.toast((e && e.message) || 'That account didn’t open · try again'); }); } }; }) : [],
 
       // targets
       q: s.q, hasQ: !!s.q, onQ: e => this.setState({ q: e.target.value }), clearQ: () => this.setState({ q:'' }),
