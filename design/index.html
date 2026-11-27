@@ -5355,7 +5355,7 @@ class Component extends DCLogic {
   keepLoadingNavigation() {
     const p = this.props || {}, s = this.state;
     if (p.loading && Number.isInteger(p.workspaceVersion) && p.workspaceOwner && s.account === p.account)
-      FieldModel.openingNavigation = { version:p.workspaceVersion, owner:p.workspaceOwner, account:s.account, pick:ME.pick || '', tab:s.tab, actSeg:s.actSeg };
+      FieldModel.openingNavigation = { version:p.workspaceVersion, owner:p.workspaceOwner, account:s.account, pick:ME.pick || '', tab:s.tab, actSeg:s.actSeg, sheet:['me','account','views'].includes(s.sheet) ? s.sheet : null };
   }
   state = (() => {
     const pr = this.props || {};
@@ -5367,7 +5367,7 @@ class Component extends DCLogic {
     if (!pr.loading) FieldModel.openingNavigation = null;
     return {
     account,
-    stack: [], sheet: null, sheetData: null,
+    stack: [], sheet: navigation?.sheet || null, sheetData: null,
     repTab: 'mine', scope: 'mine', kind: ACCOUNTS[account].fieldPro ? 'hco' : 'hcp', q: '', spec: 'All codes', cgs: CODE_GROUPS.map(g => g.name), sort: WORKSPACE.lens === 'hcp' || WORKSPACE.drugAccount ? 'Volume' : 'Opportunity', iSort: 'Last met', ...I_FILTERS, briefing: null, briefErr: {}, peopleAdding: [], peopleAdded: [], listTab: 'all', listSort: 'recent', listConfirm: null, listBusy: null, pkQ: '', pkPage:0, pkMenu: null, fm: null, shr: null, changes: {}, chBusy: {}, chHidden: {}, actQ: '', myF:MY_F0, myPage:0, trF:TR_F0, trPage:0, trRows:null, trLoad:false, trErr:'', trBusy:null, myMenu:false, myDelBusy:false, myDelErr:'', ixFull:{}, ixTab:'transcript', ixView:'normal', ixSub:'document', ixTopics:[], ixHcpAll:false, ixBusy:null, ixRegen:false, ...IX0, meetEditId:null, dash: null, impJobs:[], impErr:'', impAccepting:false, impBusy:false, impDialog:null, impDialogErr:'', trk: {}, tlist: TLISTS[0] ? TLISTS[0].id || TLISTS[0].name : '',
     route: [], routeOpen: {}, runIdx: 0, runDone: [], runSkip: [], logged: [],
     ...initial,
